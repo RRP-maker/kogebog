@@ -1,0 +1,47 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1d2b36;
+  background: linear-gradient(135deg, #ffd9a8, #f7a8c4 50%, #a8c8f7);
+  background-attachment: fixed;
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: max(1.5rem, env(safe-area-inset-top)) 1rem 2rem;
+}
+
+.side { display: none; }
+.side.aktiv { display: block; }
+
+h1 { text-align: center; margin: 1rem 0 1.5rem; }
+
+.knap, .tilbage {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.knap {
+  padding: 1.6rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 24px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.tilbage {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+}
