@@ -3,14 +3,33 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fffdf5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Kogebog">
   <title>Kogebog</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="ikon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="ikon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Patrick+Hand&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="top"><a href="#/" class="logo">🍳 Kogebog</a></header>
+  <header class="top">
+    <a href="#/" class="logo">Kogebog</a>
+    <nav>
+      <a href="#/indkob" aria-label="Indkøbsliste">🛒</a>
+      <a href="#/mere" aria-label="Mere">⚙️</a>
+    </nav>
+  </header>
+  <div id="ure" aria-live="polite"></div>
   <main id="app"></main>
   <div id="toast" role="status"></div>
   <script src="config.js"></script>
+  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
   <script src="app.js"></script>
+  <script src="hjaelper.js"></script>
+  <script src="laerred.js"></script>
 </body>
 </html>
