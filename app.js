@@ -76,6 +76,20 @@ function toast(tekst) {
   clearTimeout(tt); tt = setTimeout(() => el.classList.remove('vis'), 2600);
 }
 const info = t => { app.innerHTML = `<p class="tomt">${t}</p>`; };
+const henter = () => { app.innerHTML = '<p class="tomt henter">Henter…</p>'; };
+
+// ---------- Sideskift ----------
+// Det nye indhold glider ind, når det er klar (ikke mens der står «Henter…»).
+let indKlar = false, foerste = true, dybde = 0, indTimer;
+function spilInd() {
+  app.classList.remove('sideud', 'sideind');
+  void app.offsetWidth; // start animationen forfra
+  app.classList.add('sideind');
+  clearTimeout(indTimer); indTimer = setTimeout(() => app.classList.remove('sideind'), 700);
+}
+new MutationObserver(() => {
+  if (indKlar && app.firstChild && !$('.henter', app)) { indKlar = false; spilInd(); }
+}).observe(app, { childList: true });
 function fejl(e) {
   console.error(e);
   app.innerHTML = `<div class="fejlboks">Siden kunne ikke hentes. Tjek internettet, og prøv igen.</div>
@@ -238,10 +252,18 @@ function tael(noegle) {
 
 // ---------- Router ----------
 async function route() {
-  visning++;
+  const id = ++visning;
   lukArk(); lukForklaring(); slipSkaerm();
+  const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
+  app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
+  dybde = dele.length;
+  if (!foerste && app.firstChild) {
+    app.classList.remove('sideind'); app.classList.add('sideud');
+    await new Promise(r => setTimeout(r, 120));
+    if (id !== visning) return;
+  }
+  foerste = false; indKlar = true;
   window.scrollTo(0, 0);
-  const [a, b, c] = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent);
   document.body.dataset.side = c === 'lav' ? 'lav' : (a || 'forside');
   try {
     if (a === 'indkob') return await indkobSide();
@@ -288,7 +310,7 @@ const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><s
 let L = {}; // data til den liste, der vises
 async function liste(type) {
   const id = visning, T = TYPER[type];
-  info('Henter…');
+  henter();
   const [rader, ekstra] = await Promise.all([
     api(`${type}?select=*&order=${type === 'opskrifter' || type === 'metoder' ? 'titel' : 'oprettet.desc'}`),
     type === 'tips' ? api('opskrifter?select=id,titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : []
@@ -333,7 +355,7 @@ const knapper = (type, id, ekstra = '') => `<div class="rakke skaerm">
 // ---------- Metode ----------
 async function metodeSide(rid) {
   const id = visning;
-  info('Henter…');
+  henter();
   const [r] = await api(`metoder?id=eq.${enc(rid)}&select=*`);
   if (id !== visning) return;
   if (!r) return info('Metoden findes ikke længere.<br><a href="#/metoder">Tilbage til Metode</a>');
@@ -351,7 +373,7 @@ let S = null; // den opskrift, der vises
 const portValg = {};
 async function opskriftSide(rid) {
   const id = visning;
-  info('Henter…');
+  henter();
   const q = `opskrift_id=eq.${enc(rid)}`;
   const [rr, tips, metoder, fav, stj, lr] = await Promise.all([
     api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*&order=oprettet.desc'), api('metoder?select=*'),
@@ -436,7 +458,7 @@ async function holdSkaerm() { try { if (navigator.wakeLock) skaermlaas = await n
 function slipSkaerm() { if (skaermlaas) { skaermlaas.release().catch(() => {}); skaermlaas = null; } }
 async function lavSide(rid) {
   const id = visning;
-  info('Henter…');
+  henter();
   const q = `opskrift_id=eq.${enc(rid)}`;
   const [rr, tips, metoder, stj] = await Promise.all([api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*'), api('metoder?select=*'), api(`stjerner?${q}&select=antal,bruger_id`)]);
   if (id !== visning) return;
@@ -519,7 +541,7 @@ function laesFelter(form, felter, visFejl) {
 }
 async function formular(type, rid) {
   const id = visning, T = TYPER[type];
-  info('Henter…');
+  henter();
   const [r, ekstra] = await Promise.all([
     rid ? api(`${type}?id=eq.${enc(rid)}&select=*`) : [],
     type === 'tips' ? api('opskrifter?select=id,titel&order=titel') : type === 'opskrifter' ? api('opskrifter?select=kategori') : []
@@ -562,7 +584,7 @@ async function formular(type, rid) {
 // ---------- Indkøbsliste ----------
 async function indkobSide() {
   const id = visning;
-  info('Henter…');
+  henter();
   const varer = await api('indkob?select=*&order=oprettet');
   if (id !== visning) return;
   app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Indkøbsliste</h1>
@@ -621,7 +643,7 @@ function beregnForslag(opskrifter, harTekst) {
 let F = [];
 async function forslagSide() {
   const id = visning;
-  info('Henter…');
+  henter();
   F = await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser&order=titel');
   if (id !== visning) return;
   app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Hvad kan jeg lave?</h1>
@@ -779,7 +801,15 @@ const H = {
     tegnStjerner(); toast('Tak! Dine stjerner er gemt.'); Hjaelper.glad();
   },
   lav() { location.hash = `#/opskrifter/${S.r.id}/lav`; },
-  lavTrin(el) { K.i = Math.max(-1, Math.min(K.trin.length, K.i + Number(el.dataset.v))); Hjaelper.stille(); tegnLav(); },
+  lavTrin(el) {
+    const foer = K.i;
+    K.i = Math.max(-1, Math.min(K.trin.length, K.i + Number(el.dataset.v)));
+    if (K.i === foer) return;
+    Hjaelper.stille();
+    app.dataset.retning = K.i > foer ? 'frem' : 'tilbage';
+    tegnLav();
+    $('.lav-midte').classList.add('trinind');
+  },
   ur(el) {
     ure = ure.filter(u => u.navn !== el.dataset.navn);
     startUr(el.dataset.navn, Number(el.dataset.v)); tegnLav();
