@@ -469,7 +469,7 @@ body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none
 
 /* Hvad har du derhjemme? */
 .hj-grp { font: 26px/32px var(--hoved); font-weight: 400; margin: 32px 0 0; color: var(--gryde-mork); }
-.hj-rk { display: grid; grid-template-columns: 52px 64px minmax(0, 1fr) 40px 40px; gap: 4px; align-items: center; margin: var(--m) 0 var(--pt); }
+.hj-rk { display: grid; grid-template-columns: 52px 64px minmax(0, 1fr) 40px 40px; gap: 4px; align-items: center; }
 .hj-rk input, .hj-rk select { margin: 0; padding: 14px 8px; }
 .hj-rk .hj-mgd { text-align: center; padding: 14px 2px; }
 .hj-rk select { padding: 14px 16px 14px 8px; background-position: calc(100% - 11px) 50%, calc(100% - 6px) 50%; background-size: 5px 5px; }
@@ -479,3 +479,15 @@ body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none
 .hj-rk.blink .hj-navn, .hj-rk.blink .hj-mgd { animation: hjblink 1.2s var(--ud); }
 @keyframes hjblink { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 217, 90, 0); } 30% { box-shadow: 0 0 0 5px var(--smor); } }
 .hj-katvalg { display: flex; flex-wrap: wrap; gap: 0 6px; margin: var(--m) 0 var(--pt); }
+
+/* SKABELON til nye elementer (hører ikke til tilpasseren). Alt står på notesbogens rækker à 32 px.
+   Felt (knap, skrivefelt, række): .felt + felt-s / felt-m / felt-l = 32 / 64 / 96 px høj. M og L: margen foroven --m, forneden --pt. S: kanterne på linjerne.
+   Tekst: .tekst + tekst-s / tekst-m / tekst-l / tekst-xl = 17 / 20 / 24 / 29 px, altid 32 px linjehøjde. Skrivefelter og opskrifter kan ikke tilpasses. */
+.felt { height: 64px; margin: var(--m) 0 var(--pt); font-size: 20px; line-height: 32px; }
+.felt-s { height: 32px; margin: 0; font-size: 18px; }
+.felt-l { height: 96px; font-size: 28px; }
+input.felt, select.felt { padding: 0 12px; }
+.tekst, .tekst-m { font-size: 20px; line-height: 32px; }
+.tekst-s { font-size: 17px; line-height: 32px; }
+.tekst-l { font-size: 24px; line-height: 32px; }
+.tekst-xl { font-size: 29px; line-height: 32px; }

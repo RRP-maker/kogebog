@@ -46,7 +46,7 @@ const Hjemme = (() => {
 
   function raekke(h) {
     const i = ingAf(h.ingrediens_id);
-    return `<div class="hj-rk" data-id="${h.id}">
+    return `<div class="hj-rk felt felt-m" data-id="${h.id}">
       <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal" value="${h.maengde != null ? esc(visTal(Number(h.maengde))) : ''}">
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
@@ -122,7 +122,7 @@ const Hjemme = (() => {
     D = { kat, ing, hj }; ved = aendret;
     boks.innerHTML = `<h2>Tilføj ingrediens</h2>
       <small>Skriv én ting i hvert felt. Tryk retur for at gemme og skrive næste.</small>
-      <div class="hj-rk hj-ny" id="hj-ny">
+      <div class="hj-rk felt felt-m hj-ny" id="hj-ny">
         <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal">
         <select class="hj-enh" aria-label="Enhed">${enhHtml('stk')}</select>
         <input id="hj-ny-navn" class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ny ingrediens" placeholder="fx gulerødder">
