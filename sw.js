@@ -1,5 +1,5 @@
 // Gør, at Kogebog kan åbnes uden internet: nettet først, ellers den gemte kopi.
-const LAGER = 'kogebog-v51';
+const LAGER = 'kogebog-v52';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
