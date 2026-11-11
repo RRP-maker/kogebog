@@ -412,8 +412,11 @@ async function opskriftSide(rid) {
     ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
     <button class="knap primaer stor skaerm" data-h="lav">▶ Lav retten trin for trin</button>
     <h2 class="opsk">Ingredienser</h2>
-    <div class="portioner skaerm"><button class="rund" data-h="port" data-v="-1" aria-label="Færre portioner">−</button>
-      <span id="portvis"></span><button class="rund" data-h="port" data-v="1" aria-label="Flere portioner">+</button></div>
+    <div class="portioner skaerm"><div class="stepper" role="group" aria-label="Antal portioner">
+      <button type="button" class="rund felt felt-s" data-h="port" data-v="-1" aria-label="Færre portioner">−</button>
+      <input id="portinp" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="" aria-label="Antal portioner">
+      <button type="button" class="rund felt felt-s" data-h="port" data-v="1" aria-label="Flere portioner">+</button></div>
+      <small id="portvis"></small></div>
     <ul class="ing" id="ing"></ul>
     <h2 class="opsk">Sådan gør du</h2>
     <div id="trin"></div>
@@ -440,7 +443,7 @@ const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="
 const ingOverskrift = navn => `<li class="grp">${esc(navn)}</li>`;
 function tegnIng() {
   const grp = ingGrupper(S.r), f = S.port / (S.r.portioner || S.port);
-  $('#portvis').textContent = S.port + (S.port === 1 ? ' portion' : ' portioner');
+  $('#portinp').value = S.port; $('#portvis').textContent = S.port === 1 ? 'portion' : 'portioner';
   $('#ing').innerHTML = grp.length ? grp.map(g => (g.navn ? ingOverskrift(g.navn) : '') + g.ing.map(i => `<li><span>${esc(visIng(i, f))}</span></li>`).join('')).join('')
     : '<li class="lille">Ingen ingredienser endnu. Tryk på «Rediger» for at skrive dem.</li>';
 }
@@ -1107,7 +1110,10 @@ const H = {
     toast('Sikkerhedskopien er hentet');
   }
 };
-document.addEventListener('change', e => { if (e.target.id === 'maks') saetMaks(e.target.value); });
+document.addEventListener('change', e => {
+  if (e.target.id === 'maks') saetMaks(e.target.value);
+  if (e.target.id === 'portinp') { S.port = Math.max(1, Math.min(50, Math.round(Number(e.target.value)) || S.r.portioner || 4)); portValg[S.r.id] = S.port; tegnIng(); }
+});
 document.addEventListener('click', async e => {
   const el = e.target.closest('[data-h]');
   if (!el) { if (!e.target.closest('.forklaring')) lukForklaring(); return; }

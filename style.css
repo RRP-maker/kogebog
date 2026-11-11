@@ -176,7 +176,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .favknap.hop { animation: stjernehop .5s var(--ud); }
 @keyframes stjernehop { 40% { transform: scale(1.5) rotate(18deg); } }
 .portioner { display: flex; align-items: center; gap: 12px; margin: var(--m) 0 var(--pt); }
-.portioner span { min-width: 124px; text-align: center; font: 26px/32px var(--hoved); }
+.portioner small { font: 17px/32px var(--hoved); }
 .ing { list-style: none; padding: 0; margin: 0; }
 /* stiplet streg på linjen: dækker den blå linje, så den ikke skinner igennem */
 .ing li {
