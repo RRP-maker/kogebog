@@ -170,7 +170,7 @@ const Tilpas = (() => {
     const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, x = !!o.x, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
-    const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap primaer" type="button" data-tp="gem">Gem</button><button class="knap" type="button" data-tp="nulstil">Nulstil</button><button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button></div></div>
+    const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button><button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button></div></div>
       <label for="tp-tekst">Tekst</label>
       <input type="text" id="tp-tekst" value="${esc(o.t || k)}" maxlength="200" autocomplete="off">
       <label>Tekststørrelse</label>
