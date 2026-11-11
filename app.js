@@ -135,6 +135,18 @@ function tal(v) {
   const n = parseFloat(s.replace(',', '.'));
   return isFinite(n) ? n : null;
 }
+// Gør et ingrediensnavn simpelt: «finthakket løg» og «løg skåret i tynde skiver» bliver til «løg». Forkortelser skrives ud («hakk» -> «hakket»).
+// Rigtige produkter som «hakkede tomater» og «hakket svinekød» beholdes.
+const FORKORT = [[/\bfinthakk\b/gi, 'finthakket'], [/\bgrofthakk\b/gi, 'grofthakket'], [/\bhakk\b/gi, 'hakket'], [/\brev\b/gi, 'revet'], [/\bskr\b/gi, 'skrællet']];
+const PRODUKT = /^(hakkede|flåede|knuste|pillede|hele|tørrede) tomater\b|^hakket (okse|svine|kalve|lamme|kylling|kalkun|and|blandet )?\s?kød$|^hakket (okse|svine|kalve|lamme|kylling|kalkun)kød$/i;
+const TILBEREDT = /\b(finthakket|grofthakket|hakket|hakkede|revet|revne|skåret|skårne|snittet|snittede|pillet|pillede|skrællet|skrællede|presset|pressede|knust|knuste|smuldret|smuldrede|fint|groft)\b/gi;
+function simpel(navn) {
+  let n = String(navn).trim();
+  FORKORT.forEach(([r, t]) => { n = n.replace(r, t); });
+  if (PRODUKT.test(n)) return n;
+  let s = n.replace(/\([^)]*\)/g, ' ').replace(/,.*$/, ' ').replace(/\b(skåret|skårne|snittet|snittede|i tern|i skiver|i tynde|i strimler|i både|i stykker|i bidder)\b.*$/i, ' ').replace(TILBEREDT, ' ').replace(/\s+/g, ' ').trim();
+  return s || n;
+}
 function parseIng(linje) {
   const s = String(linje).trim().replace(/^[-•*]\s*/, '');
   const m = s.match(/^(\d+\/\d+|\d+(?:[.,]\d+)?|[½¼¾])\s*(.*)$/);
@@ -584,7 +596,7 @@ function laesIngEd(ed) {
   const ud = [];
   for (const rk of ed.querySelectorAll('.rk')) {
     const t = rkFelt(rk).value.replace(/\s*\n\s*/g, ' ').trim();
-    if (t) ud.push(rk.dataset.art === 'over' ? { g: t } : parseIng(t));
+    if (t) ud.push(rk.dataset.art === 'over' ? { g: t } : (p => ({ ...p, n: simpel(p.n) }))(parseIng(t)));
   }
   return ud;
 }
@@ -698,8 +710,9 @@ const passer = (a, b) => a === b || (a.length >= 3 && b.length >= 3 && (a.includ
 function beregnForslag(opskrifter, harTekst) {
   const har = harTekst.split(/[,\n]/).map(stamme).filter(Boolean);
   const rader = opskrifter.map(r => {
-    const brug = ingAf(r).map(i => i.n.toLowerCase()).filter(n => !erBasis(n));
-    const mangler = [...new Set(brug.filter(n => !har.some(h => passer(stamme(n), h))).map(stamme))];
+    const brug = ingAf(r).map(i => simpel(i.n.toLowerCase())).filter(n => !erBasis(n));
+    const set = new Set(), mangler = []; // vises med hele ord («sojasauce»), men tæller kun én gang pr. stamme
+    for (const n of brug) { const s = stamme(n); if (!har.some(h => passer(s, h)) && !set.has(s)) { set.add(s); mangler.push(n); } }
     return { r, antal: brug.length, mangler };
   }).filter(x => x.antal > 0);
   const kan = rader.filter(x => !x.mangler.length), naesten = rader.filter(x => x.mangler.length);
@@ -760,6 +773,8 @@ Regler:
 - Skriv konkrete værdier: komfurets varme fra 1 til 9, om ovnen skal forvarmes (og til hvor mange grader), og hvor lang tid det tager. Skriv tiden i den sætning, den hører til, fx "Kog i 10 minutter".
 - Har retten flere dele, fx sovs og kødboller, så del ingredienserne op i grupper med en overskrift. Har den kun én del, så brug én gruppe med "overskrift": null.
 - Mængder skal være tal, fx 2,5 dl skrives som 2.5. Mangler der en mængde (fx "salt"), så udelad "mængde" og "enhed".
+- Ingrediensens "navn" er kun selve varen. Skriv "løg", ikke "hakket løg" eller "løg skåret i tynde skiver". Hvordan varen skal gøres klar, skriver du i trinene. Er det et rigtigt produkt, som man køber sådan, så behold navnet, fx "hakkede tomater" eller "hakket svinekød".
+- Skriv ingen forkortelser i navne. Skriv "hakket", ikke "hakk", og "revet", ikke "rev".
 - Giv hver ingrediens en "kategori". Brug præcis en af disse: §KAT§. Passer ingen, så skriv "Andet".
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
@@ -850,7 +865,7 @@ function laesEn(j) {
   if (!navn) mangler.push('navn');
   // Ingredienser: enten en flad liste eller grupper med overskrift og varer. Gemmes som liste med { g: overskrift } imellem.
   const ing = [], kat = {}; // kat: ingrediens -> kategori fra Claude
-  const vare = v => { const i = normIng(v); if (!i) return null; const k = v && typeof v === 'object' ? (v.kategori ?? v.kat) : null; if (k) kat[Katalog.rens(i.n)] = String(k).trim(); return i; };
+  const vare = v => { const i = normIng(v); if (!i) return null; i.n = simpel(i.n); const k = v && typeof v === 'object' ? (v.kategori ?? v.kat) : null; if (k) kat[Katalog.rens(i.n)] = String(k).trim(); return i; };
   for (const x of Array.isArray(j.ingredienser) ? j.ingredienser : []) {
     const varer = x && (Array.isArray(x.varer) ? x.varer : Array.isArray(x.ingredienser) ? x.ingredienser : null);
     const over = x && typeof x === 'object' ? String(x.overskrift ?? x.gruppe ?? '').trim() : '';

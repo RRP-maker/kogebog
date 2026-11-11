@@ -65,13 +65,16 @@ const Katalog = (() => {
     const alle = [...ing].sort((a, b) => a.navn.localeCompare(b.navn, 'da'));
     andre = modus === 'alle' ? alle : alle.filter(i => !i.kategori_id);
     const regel = modus === 'alle'
-      ? 'Står en kategori i parentes, er det den nuværende. Tag KUN ingredienser med, hvor kategorien skal ændres, eller hvor navnet skal rettes.'
+      ? 'Står en kategori i parentes, er det den nuværende. Tag KUN ingredienser med, hvor kategorien skal ændres, eller hvor navnet skal rettes eller gøres simplere.'
       : 'Tag alle ingredienserne med.';
     besked = `Sorter og ret disse ingredienser til min kogebog-app.
 
 Brug præcis en af disse kategorier: ${kategorier().join(', ')}.
 Passer ingen, så skriv "Andet".
-Ret også stavefejl i navnet, fx "grønsagsbouillon" -> "grøntsagsbouillon". Skriv det rettede navn i "rettet". Er navnet rigtigt, så skriv det samme navn igen.
+Ret også stavefejl i navnet, fx "grønsagsbouillon" -> "grøntsagsbouillon".
+Gør navnet simpelt: det er kun selve varen. Skriv "løg", ikke "hakket løg" eller "løg skåret i tynde skiver". Er det et rigtigt produkt, som man køber sådan, så behold navnet, fx "hakkede tomater" eller "hakket svinekød".
+Skriv ingen forkortelser i navne. Skriv "hakket", ikke "hakk", og "revet", ikke "rev".
+Skriv det rettede navn i "rettet". Er navnet rigtigt, så skriv det samme navn igen.
 ${regel}
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingrediensen som nøgle):
@@ -160,6 +163,7 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.
         const r = svar[i.navn_norm];
         if (!r) continue;
         const kid = r.kat && (modus === 'alle' || !i.kategori_id) ? katId(r.kat) : null; // «Ret alle kategorier» må også ændre en kategori, der er sat
+        if (r.rettet) r.rettet = rens(simpel(r.rettet)); // navnet gøres simpelt, også hvis Claude glemmer det
         if (r.rettet && r.rettet !== i.navn_norm) {
           const fund = ing.find(x => x.navn_norm === r.rettet && x.id !== i.id);
           if (fund) { // det rettede navn findes: ingredienserne lægges sammen
