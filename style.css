@@ -447,7 +447,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 [data-tilstand=lander] .h-krop { animation: none; }
 @keyframes laagop { from { transform: none; } to { transform: translateY(-9px) rotate(10deg); } }
 @keyframes indreop { from { transform: scaleY(.02); } to { transform: none; } }
-.h-ben { fill: none; stroke: var(--paa-lys); stroke-width: 5; stroke-linecap: round; }
+.h-ben { fill: none; stroke: var(--paa-lys); stroke-width: 10; stroke-linecap: round; }
 [data-tilstand=flyv] .h-pupil { animation: snurr .4s linear infinite; }
 [data-tilstand=flyv] .h-pegearm { animation: vild .18s ease-in-out infinite alternate; }
 [data-tilstand=flyv] .h-tunge { animation: vrikke .12s ease-in-out infinite alternate; }
@@ -469,11 +469,13 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-tur { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .h-tur[hidden] { display: none; }
 .h-tal { flex: 1; text-align: center; font-size: 15px; color: var(--blyant); }
-.h-stop, .h-naeste { font: inherit; font-size: 17px; line-height: 24px; padding: 6px 14px; border: 0; border-radius: 14px; cursor: pointer; }
+.h-tilbage, .h-naeste { font: inherit; font-size: 17px; line-height: 24px; padding: 6px 14px; border: 0; border-radius: 14px; cursor: pointer; }
 .h-naeste { color: #fff; background: var(--sek); }
-.h-stop { color: var(--blaek); background: rgba(var(--blaek-rgb), .1); }
+.h-tilbage { color: var(--blaek); background: rgba(var(--blaek-rgb), .1); }
+.h-tilbage:disabled { opacity: .35; cursor: default; }
 .h-partikel { position: fixed; z-index: 39; pointer-events: none; }
 .h-partikel.stoev { width: 12px; height: 12px; border-radius: 50%; background: rgba(var(--blaek-rgb), .22); }
+.h-partikel.roeg { width: 14px; height: 14px; border-radius: 50%; width: 18px; height: 18px; background: radial-gradient(circle, rgba(225, 229, 236, .95) 30%, rgba(150, 160, 178, .75)); box-shadow: 0 0 6px rgba(120, 130, 150, .35); }
 .h-partikel.stjerne { color: var(--guld); font-size: 18px; line-height: 1; }
 .h-maal { outline: 3px dashed var(--gryde-mork); outline-offset: 4px; border-radius: 12px; animation: maalpuls 1.2s ease-in-out infinite; }
 @keyframes maalpuls { 50% { outline-offset: 8px; } }

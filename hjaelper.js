@@ -20,6 +20,7 @@ const Lyd = (() => {
       if (navn === 'glad') { tone(660, 0, 0.12); tone(880, 0.1, 0.12); tone(1320, 0.2, 0.2); }
       else if (navn === 'ur') { for (let i = 0; i < 3; i++) { tone(988, i * 0.5, 0.18, 0.2); tone(1319, i * 0.5 + 0.18, 0.25, 0.2); } }
       else if (navn === 'hop') { tone(520, 0, 0.08); tone(780, 0.07, 0.1); }
+      else if (navn === 'raket') { for (let i = 0; i < 10; i++) tone(180 + i * 70, i * 0.07, 0.09, 0.08); }
       else if (navn === 'salto') { tone(440, 0, 0.1); tone(660, 0.09, 0.1); tone(990, 0.18, 0.16); }
       else if (navn === 'bump') tone(190, 0, 0.1, 0.2);
       else tone(740, 0, 0.1);
@@ -75,7 +76,7 @@ const Hjaelper = (() => {
     rod = document.createElement('div');
     rod.id = 'hjaelper';
     rod.innerHTML = `<div class="h-boble" hidden><p></p><button class="h-knap" type="button" hidden></button>
-        <div class="h-tur" hidden><button class="h-stop" type="button">Stop</button><span class="h-tal"></span><button class="h-naeste" type="button">Næste ›</button></div>
+        <div class="h-tur" hidden><button class="h-tilbage" type="button">‹ Tilbage</button><span class="h-tal"></span><button class="h-naeste" type="button">Næste ›</button></div>
         <span class="h-videre">Tryk for at fortsætte</span></div>
       <button class="h-figur" type="button" aria-label="Hjælperen. Tryk for hjælp.">${SVG}</button>
       <button class="h-skjul" type="button" aria-label="Skjul hjælperen">×</button>`;
@@ -85,7 +86,7 @@ const Hjaelper = (() => {
     document.body.append(rod, visKnap);
     figur = rod.querySelector('.h-figur'); boble = rod.querySelector('.h-boble'); tekst = boble.querySelector('p'); knapEl = boble.querySelector('.h-knap');
     turEl = boble.querySelector('.h-tur'); talEl = boble.querySelector('.h-tal'); naesteKnap = boble.querySelector('.h-naeste');
-    boble.querySelector('.h-stop').addEventListener('click', e => { e.stopPropagation(); stopTur(true); });
+    boble.querySelector('.h-tilbage').addEventListener('click', e => { e.stopPropagation(); if (tur && !flytter && tur.i > 0) trinTur(tur.i - 1); });
     naesteKnap.addEventListener('click', e => { e.stopPropagation(); videre(); });
     knapEl.addEventListener('click', e => { e.stopPropagation(); const k = aktiv && aktiv.knap; if (!k) return; stop(); if (k.href) location.hash = k.href; });
     figur.addEventListener('click', () => {
@@ -152,6 +153,7 @@ const Hjaelper = (() => {
     if (aktiv.tur) { // rundvisningen venter på dig: Næste eller Stop
       talEl.textContent = `${aktiv.nr} af ${aktiv.af}`;
       naesteKnap.textContent = aktiv.nr === aktiv.af ? 'Færdig' : 'Næste ›';
+      boble.querySelector('.h-tilbage').disabled = aktiv.nr === 1;
       turEl.hidden = false; return;
     }
     ventTimer = setTimeout(naeste, 2600 + aktiv.tekst.length * 55);
@@ -220,6 +222,7 @@ const Hjaelper = (() => {
     if (rolig() || dist < 6) { sat(); return; }
     const svg = figur.querySelector('svg'), top0 = figur.getBoundingClientRect().top - fy;
     if (navn === 'skridt') return skridt(mit, fx, fy, dx, dy, dist, ret, sat);
+    if (navn === 'raket') return raket(mit, fx, fy, dx, dy, dist, ret, sat, svg);
     const D = { salto: 1500, dans: 2000, skridt: 1500, rul: 1700, hop: 1300 }[navn] || 1300;
     const d = Math.round(D + Math.min(400, dist * .5));
     // én funktion pr. bevægelse: t (0-1) → position (bevægelse frem, løft) og kropsform (drej, bred, høj)
@@ -304,13 +307,63 @@ const Hjaelper = (() => {
       requestAnimationFrame(ramme);
     });
   }
+  // Raket: drejer låget væk fra målet, ryster, og flyver af sted på røgen, der pruster ud af låget
+  function raket(mit, fx, fy, dx, dy, dist, ret, sat, svg) {
+    const vinkel = Math.atan2(-dx, dy) * 180 / Math.PI, d = Math.round(Math.max(1700, Math.min(2500, 1300 + dist * 1.5)));
+    const laag = rod.querySelector('.h-laag');
+    saetTilstand('flyv'); Lyd.spil('raket');
+    return new Promise(slut => {
+      const t0 = performance.now(); let sidstRoeg = 0;
+      const ramme = nu => {
+        if (mit !== bevNr) return slut();
+        const t = Math.min(1, (nu - t0) / d);
+        const drej = io(seg(t, 0, .2)), fart = seg(t, .2, .82), op = io(seg(t, .82, 1));
+        const e = fart < .5 ? 2 * fart * fart * fart * 2 : 1 - (-2 * fart + 2) ** 3 / 2; // speeder op og bremser
+        const ryst = t < .22 ? Math.sin(nu / 18) * 3 * seg(t, .05, .2) : Math.sin(nu / 40) * 1.5;
+        const bue = Math.sin(Math.PI * fart) * Math.min(80, dist * .2);
+        rod.style.transform = `translate(${fx + dx * e + ryst}px, ${fy + dy * e - bue + Math.sin(Math.PI * op) * -30}px)`;
+        const r = vinkel * drej * (1 - op) + (op > 0 ? ret * 360 * op : 0);
+        const kl = 1 - .2 * Math.sin(Math.PI * seg(t, .12, .2)) - .3 * Math.sin(Math.PI * seg(t, .94, 1));
+        svg.style.transform = `translateY(${(1 - kl) * 30}px) rotate(${r}deg) scale(${2 - kl}, ${kl})`;
+        if (t > .1 && t < .86 && nu - sidstRoeg > 45) { // røg ud af låget
+          sidstRoeg = nu;
+          const b = laag.getBoundingClientRect(), rad = (r - 0) * Math.PI / 180;
+          roeg(b.left + b.width / 2, b.top + b.height / 2, -Math.sin(rad), Math.cos(rad) * -1, t < .2);
+        }
+        if (t < 1) return requestAnimationFrame(ramme);
+        svg.style.transform = ''; sat(); Lyd.spil('bump');
+        const rr = figur.getBoundingClientRect(); partikler(rr.left + rr.width / 2, rr.bottom - 6, 'stoev');
+        lander(mit).then(slut);
+      };
+      requestAnimationFrame(ramme);
+    });
+  }
+  function roeg(x, y, ux, uy, lille) { // ux, uy: lågets retning; røgen pustes den vej ud
+    if (rolig()) return;
+    const p = document.createElement('span');
+    p.className = 'h-partikel roeg'; p.style.left = x + 'px'; p.style.top = y + 'px';
+    document.body.append(p);
+    const l = (lille ? 25 : 55) + Math.random() * 30, sp = (Math.random() - .5) * 30;
+    p.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: .9 },
+      { transform: `translate(calc(-50% + ${ux * l - uy * sp}px), calc(-50% + ${uy * l + ux * sp - 10}px)) scale(${2.4 + Math.random()})`, opacity: 0 }],
+      { duration: 700 + Math.random() * 300, easing: 'cubic-bezier(.1,.7,.3,1)' }).finished.then(() => p.remove(), () => p.remove());
+  }
   // blød overgang tilbage til hvile: låget lukker roligt, i stedet for at klappe i
   async function lander(mit) {
     saetTilstand('lander'); await vent(300);
     if (mit === bevNr) saetTilstand('hvile');
   }
 
-  async function startTur() {
+  // Bevægelsen passer til turens længde: korte ture små hop, lange ture raket. Samme bevægelse to gange i træk undgås.
+  let sidsteBev = '';
+  function vaelg(dx, dy) {
+    const l = Math.hypot(dx, dy), vandret = Math.abs(dx) > Math.abs(dy);
+    const muligt = l < 70 ? ['hop'] : l < 150 ? ['skridt', 'hop'] : l < 240 ? (vandret ? ['rul', 'dans'] : ['dans', 'salto']) : l < 360 ? ['salto', 'raket'] : ['raket', 'salto'];
+    const b = muligt.find(x => x !== sidsteBev) || muligt[0];
+    sidsteBev = b; return b;
+  }
+
+  async function startTur() { sidsteBev = '';
     koe = []; stop();
     tur = { id: ++turId, trin: sideTekst, i: -1 };
     trinTur(0);
@@ -331,9 +384,11 @@ const Hjaelper = (() => {
       }
     }
     const p = el ? plan(el) : null, f = figur.getBoundingClientRect();
-    await flyt(p ? p.x - (f.left - offX) : (el ? 0 : offX), p ? p.y - (f.top - offY) : (el ? 0 : offY), s.bev || 'hop');
+    const nx = p ? p.x - (f.left - offX) : (el ? 0 : offX), ny = p ? p.y - (f.top - offY) : (el ? 0 : offY);
+    const bev = vaelg(nx - offX, ny - offY);
+    await flyt(nx, ny, bev);
     if (!tur || tur.id !== id) return;
-    if (s.bev === 'dans') { saetTilstand('dans'); await vent(1440); if (!tur || tur.id !== id) return; }
+    if (bev === 'dans') { saetTilstand('dans'); await vent(1440); if (!tur || tur.id !== id) return; }
     if (el) el.classList.add('h-maal');
     flytter = false;
     sig(s.tekst, { peg: el, nu: true, tur: true, under: !!(p && p.under), nr: i + 1, af: t.trin.length });
@@ -341,14 +396,14 @@ const Hjaelper = (() => {
   function naesteTur() { if (tur && !flytter) trinTur(tur.i + 1); }
   async function slutTur() {
     tur = null; stop(); markerFjern(); flytter = true;
-    await flyt(0, 0, 'hop');
+    await flyt(0, 0, vaelg(-offX, -offY));
     flytter = false; glad();
   }
   async function stopTur(animer) {
     tur = null; ++bevNr; stopAnim(); markerFjern(); stop(); flytter = false;
     if (rod) rod.classList.remove('skridt');
     if (!offX && !offY) return;
-    if (animer) { flytter = true; await flyt(0, 0, 'hop'); flytter = false; }
+    if (animer) { flytter = true; await flyt(0, 0, vaelg(-offX, -offY)); flytter = false; }
     else { offX = offY = 0; rod.style.transform = ''; saetTilstand('hvile'); }
   }
 
