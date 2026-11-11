@@ -56,11 +56,13 @@ const Tilpas = (() => {
     const ryd = []; // beskyttede tekster, der står som skjulte: flaget fjernes
     document.querySelectorAll(VALG).forEach(el => {
       if (el.classList.contains('plads')) return;
-      const k = el.dataset.org ?? tekstAf(el);
+      // Felter med data-tpid har deres egen tilpasning, selv om en anden knap har samme tekst
+      if (el.dataset.tpid && el.dataset.orgtekst === undefined) el.dataset.orgtekst = tekstAf(el);
+      const k = el.dataset.org ?? el.dataset.tpid ?? tekstAf(el);
       if (!egnet(el, k)) return;
       el.dataset.org = k;
       if (document.body.dataset.side === 'forside' && !beskyttet.has(k)) { beskyttet.add(k); lager.gem('tpForside', [...beskyttet]); }
-      const o = data[k] || {}, ny = o.t || k, n = noder(el);
+      const o = data[k] || {}, ny = o.t || el.dataset.orgtekst || k, n = noder(el);
       if (n.length && tekstAf(el) !== ny) { n[0].nodeValue = ny; n.slice(1).forEach(x => { x.nodeValue = ''; }); }
       if (!el.dataset.fs) el.dataset.fs = parseFloat(getComputedStyle(el).fontSize);
       el.style.fontSize = o.s ? pxAf(o.s) + 'px' : ''; el.classList.toggle('tp-staerst', !!o.s && pxAf(o.s) === 34); // de fire størrelser er faste skriftstørrelser i hele appen
@@ -179,13 +181,13 @@ const Tilpas = (() => {
     const sw = (liste, v, nøgle, glas) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
     const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
       <label for="tp-tekst">Tekst</label>
-      <input type="text" id="tp-tekst" value="${esc(o.t || k)}" maxlength="200" autocomplete="off">
+      <input type="text" id="tp-tekst" value="${esc(o.t || el.dataset.orgtekst || k)}" maxlength="200" autocomplete="off">
       <label>Tekststørrelse</label>
       <div class="rakke venstre">${STR.map(([v, n]) => `<button class="chip${v === st ? ' valgt' : ''}" type="button" data-st="${v}">${n}</button>`).join('')}</div>
       ${felt ? `<label>Feltets størrelse</label><div class="rakke venstre">${FELTSTR.map(([v, n]) => `<button class="chip${v === z ? ' valgt' : ''}" type="button" data-fz="${v}">${n}</button>`).join('')}</div>` : ''}
       <label>Tekstfarve</label>${sw(TEKSTFARVER, f, 'f')}
       ${felt ? `<label>Feltets farve</label>${sw(FELTFARVER, b, 'b', true)}` : ''}
-      <p class="lille">Ændringen gælder alle steder, hvor «${esc(k)}» står.</p>
+      <p class="lille">${el.dataset.tpid ? 'Ændringen gælder kun dette felt.' : `Ændringen gælder alle steder, hvor «${esc(k)}» står.`}</p>
       ${opsk ? '<p class="lille">Teksten i opskriften kan ændres, men ikke flyttes.</p>' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
       <p class="lille" id="tp-flyttekst">${flytTekst(m)}</p>`}
       ${el.closest('.top') || opsk ? '' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button></div>
@@ -206,7 +208,7 @@ const Tilpas = (() => {
         if (a.dataset.tp === 'skjul') x = !x;
         if (x) ny.x = true;
         const t = $('#tp-tekst', d).value.trim();
-        if (t && t !== k) ny.t = t;
+        if (t && t !== (el.dataset.orgtekst || k)) ny.t = t;
         if (o.s || st !== st0) ny.s = st;
         if (f !== std.f) ny.f = f; // en farve, der er appens egen, gemmes ikke
         if (felt && b !== std.b) ny.b = b;

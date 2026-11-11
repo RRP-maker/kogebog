@@ -809,7 +809,7 @@ function importSide() {
         <div class="rakke venstre"><a class="knap stor" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
       <li>Kopiér Claudes svar, og sæt det ind her:
         <textarea id="claudesvar" rows="7" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea>
-        <div class="felt-knapper"><button type="button" class="knap" data-h="saetInd" data-v="claudesvar">Sæt svar ind</button><button type="button" class="knap mini fare" data-h="rydFelt" data-v="claudesvar">Ryd svar</button></div></li>
+        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-svar-saet" data-h="saetInd" data-v="claudesvar">Sæt ind</button><button type="button" class="knap mini fare" data-tpid="import-svar-ryd" data-h="rydFelt" data-v="claudesvar">Ryd</button></div></li>
     </ol>
     <div id="formfejl"></div>
     <button class="knap primaer stor" data-h="gemImport">Gem opskriften</button>`;
