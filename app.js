@@ -733,20 +733,20 @@ async function forslagSide() {
   F = await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser&order=titel');
   if (id !== visning) return;
   app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Hvad kan jeg lave?</h1>
-    <h2>Hvad har du derhjemme?</h2>
+    <div id="forslag-nu"></div>
     <div id="hj-boks"></div>
-    <div id="forslag"></div>`;
+    <div id="forslag-resten"></div>`;
   Hjaelper.side('Skriv det, du har derhjemme, ét ord i hvert felt. Så finder jeg retter, du kan lave, og siger, hvad du kan købe for at lave flere.');
   await Hjemme.vis($('#hj-boks'), tegnForslag);
 }
 function tegnForslag() {
-  const el = $('#forslag'), tekst = Hjemme.navne().join(',');
-  if (!el) return;
-  if (!tekst.trim()) { el.innerHTML = '<p class="tomt">Skriv mindst én ting i listen, så finder jeg retter.</p>'; return; }
+  const nu = $('#forslag-nu'), rest = $('#forslag-resten'), tekst = Hjemme.navne().join(',');
+  if (!nu) return;
+  if (!tekst.trim()) { nu.innerHTML = '<h2>Det kan du lave nu</h2><p class="tomt">Skriv mindst én ting herunder, så finder jeg retter.</p>'; rest.innerHTML = ''; return; }
   const f = beregnForslag(F, tekst);
-  $('#forslag').innerHTML = `<h2>Det kan du lave nu</h2>
-    ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe herunder.</p>'}
-    ${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.join(' og '))}</strong>
+  nu.innerHTML = `<h2>Det kan du lave nu</h2>
+    ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe længere nede.</p>'}`;
+  rest.innerHTML = `${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.join(' og '))}</strong>
       <span>Så kan du også lave: ${k.retter.map(r => `<a href="#/opskrifter/${r.id}">${esc(r.titel)}</a>`).join(', ')}</span></div>`).join('')}` : ''}
     ${f.naesten.length ? `<h2>Du mangler lidt</h2>${f.naesten.slice(0, 8).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.join(', '))}</span></a>`).join('')}` : ''}`;
 }

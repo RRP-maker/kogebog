@@ -66,7 +66,7 @@ const Hjemme = (() => {
         .sort((x, y) => navn(x).localeCompare(navn(y), 'da'));
       return rader.length ? `<h3 class="hj-grp">${esc(g.navn)}</h3>${rader.map(raekke).join('')}` : '';
     }).join('');
-    el.innerHTML = html || '<p class="tomt">Der står ikke noget endnu. Skriv den første ting i feltet herunder.</p>';
+    el.innerHTML = html || '<p class="tomt">Der står ikke noget endnu. Skriv den første ting i feltet ovenfor.</p>';
     if (fokus) { const x = el.querySelector(`.hj-rk[data-id="${fokus.id}"] .${fokus.k}`); if (x) x.focus(); }
     if (ved) ved();
   }
@@ -120,14 +120,15 @@ const Hjemme = (() => {
     const [kat, ing, hj] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('hjemme?select=*&order=oprettet')]);
     if (id !== visning) return;
     D = { kat, ing, hj }; ved = aendret;
-    boks.innerHTML = `<small>Skriv én ting i hvert felt. Tryk retur for at gemme og skrive næste.</small>
-      <div id="hj-liste"></div>
-      <h3 class="hj-grp">Ny ting</h3>
+    boks.innerHTML = `<h2>Tilføj ingrediens</h2>
+      <small>Skriv én ting i hvert felt. Tryk retur for at gemme og skrive næste.</small>
       <div class="hj-rk hj-ny" id="hj-ny">
         <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal">
         <select class="hj-enh" aria-label="Enhed">${enhHtml('stk')}</select>
         <input id="hj-ny-navn" class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ny ingrediens" placeholder="fx gulerødder">
-      </div>`;
+      </div>
+      <h2>Hvad har du derhjemme?</h2>
+      <div id="hj-liste"></div>`;
     tegn();
   }
 
@@ -177,7 +178,7 @@ const Hjemme = (() => {
       if (rk.id === 'hj-ny') { if (e.target.classList.contains('hj-navn')) await tilfoej(); else $('#hj-ny-navn').focus(); return; }
       if (e.target.classList.contains('hj-navn')) await gemNavn(rk);
       const alle = [...app.querySelectorAll('.hj-rk')], nu = alle.indexOf(rk), naeste = alle[nu + 1];
-      if (naeste) naeste.querySelector(e.target.classList.contains('hj-navn') ? '.hj-navn' : '.hj-navn').focus();
+      (naeste || $('#hj-ny')).querySelector('.hj-navn').focus();
     } catch (err) { console.error(err); toast('Det virkede ikke. Tjek internettet, og prøv igen.'); }
   });
   // Ændringer gemmes, når man forlader feltet
