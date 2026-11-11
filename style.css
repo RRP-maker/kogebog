@@ -346,7 +346,7 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 body[data-side=lav] #hjaelper { bottom: calc(100px + env(safe-area-inset-bottom)); }
 #hjaelper > * { pointer-events: auto; }
 .h-figur { display: block; width: 80px; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
-.h-figur svg { display: block; width: 100%; overflow: visible; }
+.h-figur svg { display: block; width: 100%; overflow: visible; transform-origin: 50% 62%; }
 .h-skjul { position: absolute; right: 0; top: -6px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--valgt-fast); color: #fff; font: 20px/1 sans-serif; cursor: pointer; opacity: .75; }
 .h-skjul::after { content: ""; position: absolute; inset: -8px; }
 #hjaelper-vis { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 40; font: 18px/1 var(--skrift); color: var(--blaek); border-radius: 20px; padding: 10px 14px; cursor: pointer; }
@@ -398,7 +398,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 @keyframes pendel { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
 @keyframes tungehvile { 50% { transform: translateY(1.5px) rotate(3deg); } }
 /* Tale: låget klapper op og i som en mund, tungen vrikker, øjnene rasler */
-[data-tilstand=tale] .h-indre, [data-tilstand=peg] .h-indre, [data-tilstand=glad] .h-indre { display: block; }
+[data-tilstand=tale] .h-indre, [data-tilstand=peg] .h-indre, [data-tilstand=glad] .h-indre, [data-tilstand=dans] .h-indre, [data-tilstand=flyv] .h-indre { display: block; }
 [data-tilstand=tale] .h-laag, [data-tilstand=peg] .h-laag { animation: snak .7s ease-in-out infinite; }
 [data-tilstand=tale] .h-indre, [data-tilstand=peg] .h-indre { animation: snakinde .7s ease-in-out infinite; }
 [data-tilstand=tale] .h-tunge, [data-tilstand=peg] .h-tunge { animation: vrikke .3s ease-in-out infinite alternate; }
@@ -435,6 +435,41 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 @keyframes indrehop { 0%, 100% { transform: scaleY(.02); } 30%, 70% { transform: scaleY(1.15); } }
 @keyframes snurr { to { transform: rotate(360deg); } }
 @keyframes glimt { 20%, 70% { opacity: 1; } }
+
+/* Rundvisning: bevægelser mellem emnerne */
+.h-fod1, .h-fod2 { transform-box: fill-box; transform-origin: center; }
+/* Flyv (salto, rul, hop): munden står åben, tungen ude og øjnene snurrer */
+[data-tilstand=flyv] .h-krop { animation: none; }
+[data-tilstand=flyv] .h-laag { transform: translateY(-9px) rotate(10deg); }
+[data-tilstand=flyv] .h-indre { transform: none; }
+[data-tilstand=flyv] .h-pupil { animation: snurr .5s linear infinite; }
+/* Dans: svinger i hofterne, hopper fra fod til fod, skeen vifter, låget klapper */
+[data-tilstand=dans] .h-krop { animation: dans .34s ease-in-out infinite alternate; }
+[data-tilstand=dans] .h-pegearm { animation: vift .22s ease-in-out infinite alternate; }
+[data-tilstand=dans] .h-laag { animation: snak .68s ease-in-out infinite; }
+[data-tilstand=dans] .h-indre { animation: snakinde .68s ease-in-out infinite; }
+[data-tilstand=dans] .h-pupil { animation: rasl .22s linear infinite alternate; }
+[data-tilstand=dans] .h-fod1 { animation: fodop .34s ease-in-out infinite alternate; }
+[data-tilstand=dans] .h-fod2 { animation: fodop .34s ease-in-out infinite alternate-reverse; }
+@keyframes dans { from { transform: rotate(-11deg) translateY(0); } to { transform: rotate(9deg) translateY(-9px); } }
+@keyframes fodop { to { transform: translateY(-7px); } }
+/* Langt skridt: benene strækkes helt ud til hver side */
+.skridt .h-fod1 { animation: skridt1 var(--d, 800ms) ease-in-out both; }
+.skridt .h-fod2 { animation: skridt2 var(--d, 800ms) ease-in-out both; }
+@keyframes skridt1 { 0%, 100% { transform: none; } 45% { transform: translateX(-20px) scaleX(1.9); } }
+@keyframes skridt2 { 0%, 100% { transform: none; } 45% { transform: translateX(20px) scaleX(1.9); } }
+/* Bobler og markering under rundvisning */
+.h-boble.tur { width: min(270px, calc(100vw - 24px)); max-width: none; }
+.h-boble.under { bottom: auto; top: 94px; transform-origin: 100% 0; border-radius: 6px 22px 22px 22px; }
+.h-boble.tur .h-videre { display: none; }
+.h-tur { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.h-tur[hidden] { display: none; }
+.h-tal { flex: 1; text-align: center; font-size: 15px; color: var(--blyant); }
+.h-stop, .h-naeste { font: inherit; font-size: 17px; line-height: 24px; padding: 6px 14px; border: 0; border-radius: 14px; cursor: pointer; }
+.h-naeste { color: #fff; background: var(--sek); }
+.h-stop { color: var(--blaek); background: rgba(var(--blaek-rgb), .1); }
+.h-maal { outline: 3px dashed var(--gryde-mork); outline-offset: 4px; border-radius: 12px; animation: maalpuls 1.2s ease-in-out infinite; }
+@keyframes maalpuls { 50% { outline-offset: 8px; } }
 
 /* Sideskift: det gamle toner ud, det nye glider ind fra den vej, man går.
    Bundbjælken i trin-tilstand er undtaget, fordi den sidder fast på skærmen. */

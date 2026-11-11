@@ -315,6 +315,7 @@ async function route() {
   const nuHash = location.hash || '#/';
   if (spor[spor.length - 2] === nuHash) spor.pop(); else if (spor[spor.length - 1] !== nuHash) spor.push(nuHash);
   lukArk(); lukForklaring(); slipSkaerm(); sidsteValg = '';
+  Hjaelper.side(null);
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
   dybde = dele.length;
@@ -355,7 +356,11 @@ async function forside() {
     </nav>
     <h2>Favoritter</h2>
     <div id="favoritter"><p class="lille">Henter…</p></div>`;
-  Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Tips kan du læse små råd. Favoritter er dem med stjerne.');
+  Hjaelper.side([
+    { tekst: 'Se her! Tryk på Opskrifter, når du vil finde en ret.', maal: '.fane.f1', bev: 'salto' },
+    { tekst: 'Her er Tips. Det er små råd til køkkenet.', maal: '.fane.f3', bev: 'skridt' },
+    { tekst: 'Har du varer derhjemme? Tryk her, så finder jeg en ret.', maal: '.genveje .knap', bev: 'dans' },
+    { tekst: 'Dine favoritter står her. Tryk på stjernen i en opskrift.', maal: '#app h2', bev: 'rul' }]);;
   tilfoejTilHjem();
   const [fav, ops] = await Promise.all([api('favoritter?select=opskrift_id'), api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter&order=titel')]);
   if (id !== visning) return;
@@ -401,8 +406,14 @@ async function liste(type) {
   tegnListe();
   const s = $('#soeg');
   if (s) s.addEventListener('input', () => { L.q = s.value.trim().toLowerCase(); tegnListe(); });
-  Hjaelper.side({ opskrifter: 'Her er alle opskrifter. Skriv i søgefeltet for at finde en ret, eller tryk på en kategori. Tryk på «Ny opskrift» for at skrive din egen.',
-    tips: 'Et tip er et lille råd. Hvis et tip har samme navn som et ord i en opskrift, bliver ordet til et link.' }[type]);
+  Hjaelper.side(type === 'opskrifter' ? [
+    { tekst: 'Vil du skrive din egen ret? Tryk her.', maal: '.rakke .primaer', bev: 'salto' },
+    { tekst: 'Har du en opskrift fra nettet? Claude skriver den ind for dig.', maal: 'a[href="#/import"]', bev: 'skridt', valgfri: true },
+    { tekst: 'Skriv et navn eller en ingrediens. Så finder jeg retten.', maal: '#soeg', bev: 'dans', valgfri: true },
+    { tekst: 'Tryk på en kategori for at sortere.', maal: '.filter', bev: 'hop', valgfri: true },
+    { tekst: 'Tryk på en ret for at åbne den.', maal: '#liste .kort, #liste a', bev: 'rul', valgfri: true }] : [
+    { tekst: 'Skriv dit eget tip her. Det er et lille råd.', maal: '.rakke .primaer', bev: 'salto' },
+    { tekst: 'Står tipsets navn i en opskrift, bliver ordet blåt. Tryk på det.', maal: '#liste .kort', bev: 'rul', valgfri: true }]);
 }
 function tegnListe() {
   const { type, rader, q, kat } = L, T = TYPER[type];
@@ -466,7 +477,11 @@ async function opskriftSide(rid) {
   $('#billedfil').addEventListener('change', nytBillede);
   const lel = $('#laerred');
   lel.addEventListener('valgt', e => { const k = $('#fjernvalgt'); if (k) k.disabled = !e.detail; });
-  Hjaelper.side('Her er opskriften. Tryk på plus og minus for at ændre antal portioner. Blå ord kan du trykke på. Tryk på «Lav retten trin for trin» øverst, når du er klar.');
+  Hjaelper.side([
+    { tekst: 'Tryk på stjernen. Så bliver retten en favorit.', maal: '#favknap', bev: 'salto' },
+    { tekst: 'Skal I være flere? Tryk på plus og minus.', maal: '.portioner', bev: 'skridt' },
+    { tekst: 'Tryk på et blåt ord. Så forklarer jeg det.', maal: '#trin .begreb', bev: 'dans', valgfri: true },
+    { tekst: 'Klar? Tryk her, så går vi trin for trin.', maal: 'button[data-h=lav]', bev: 'rul' }]);;
   await Laerred.start(lel, lr, r.id);
 }
 // Knapperne øverst. «Tilføj tip» sidder fast øverst til venstre, mens man ruller. Ekstra knapper kommer til højre.
@@ -525,7 +540,11 @@ async function lavSide(rid) {
   S = { r, tips, stj, port: K.port, fav: false };
   holdSkaerm();
   tegnLav();
-  Hjaelper.side('Her laver du retten. Der er ét trin ad gangen. Tryk på «Næste», når du er færdig med et trin. Står der en tid, kan du starte et ur.');
+  Hjaelper.side([
+    { tekst: 'Her kan du se, hvor langt du er.', maal: 'progress', bev: 'hop' },
+    { tekst: 'Her står, hvad du skal gøre. Ét trin ad gangen.', maal: '.lav-midte', bev: 'skridt' },
+    { tekst: 'Står der en tid? Tryk her for at starte et ur.', maal: '.lav-ur .knap', bev: 'dans', valgfri: true },
+    { tekst: 'Tryk på Næste, når du er klar til næste trin.', maal: '.lav-bund .primaer', bev: 'salto' }]);;
 }
 const urKnap = (tekst, navn, stor) => {
   const sek = tidISek(tekst);
@@ -703,7 +722,13 @@ async function formular(type, rid) {
       <div id="formfejl"></div>
       <button class="knap primaer stor" data-tpid="gem" type="submit">Gem</button>
     </form>`;
-  Hjaelper.side(type === 'opskrifter' ? 'Skriv opskriften her. Skriv én ingrediens i hvert felt og ét trin i hvert felt. Tryk på retur for at komme til næste felt. Tryk på «Gem», når du er færdig.' : 'Skriv i felterne, og tryk på «Gem». Navnet bliver til et link i opskrifter, hvor ordet står.');
+  Hjaelper.side(type === 'opskrifter' ? [
+    { tekst: 'Start med navnet på retten.', maal: '#form input:not([type=hidden])', bev: 'salto' },
+    { tekst: 'Skriv én ingrediens i hvert felt. Tryk på retur for et nyt felt.', maal: '#ed_ingredienser', bev: 'skridt', valgfri: true },
+    { tekst: 'Skriv ét trin i hvert felt. Korte trin er lettest at følge.', maal: '#ed_trin', bev: 'dans', valgfri: true },
+    { tekst: 'Tryk på Gem, når du er færdig.', maal: '[data-tpid=gem]', bev: 'rul' }] : [
+    { tekst: 'Giv tippet et navn. Står navnet i en opskrift, bliver ordet et link.', maal: '#form input:not([type=hidden])', bev: 'salto' },
+    { tekst: 'Tryk på Gem, når du er færdig.', maal: '[data-tpid=gem]', bev: 'rul' }]);
   const form = $('#form');
   form.querySelectorAll('.rk-tekst').forEach(rkVokser);
   form.addEventListener('input', e => { if (e.target.classList.contains('rk-tekst')) rkInput(e.target); });
@@ -798,7 +823,10 @@ async function forslagSide() {
     <button type="button" class="knap" data-h="sorterAndet">${ik('gnist')} Sortér og ret ingredienser med Claude</button>
     <div id="forslag-resten"></div>
     <button type="button" class="knap" data-h="ingOversigt">${ik('tag')} Se alle ingredienser</button>`;
-  Hjaelper.side('Skriv det, du har derhjemme, ét ord i hvert felt. Så finder jeg retter, du kan lave, og siger, hvad du kan købe for at lave flere.');
+  Hjaelper.side([
+    { tekst: 'Skriv det, du har derhjemme. Ét ord i hvert felt.', maal: '#hj-boks', bev: 'salto' },
+    { tekst: 'Her kommer de retter, du kan lave nu.', maal: '#forslag-nu', bev: 'skridt', valgfri: true },
+    { tekst: 'Står der noget skævt? Claude kan rydde op.', maal: '[data-h=sorterAndet]', bev: 'dans' }]);;
   await Hjemme.vis($('#hj-boks'), tegnForslag);
 }
 const maksMangler = () => Math.max(0, Math.min(20, Math.round(Number(lager.hent('maxMangler', 3))) || 0));
@@ -887,7 +915,11 @@ function importSide() {
     <div id="formfejl"></div>
     <button class="knap primaer stor" data-h="gemImport">Gem opskriften</button>`;
   document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); }); // teksten huskes, til opskriften er gemt
-  Hjaelper.side('Her kan Claude skrive en opskrift om for dig. Kopiér først din opskrift, eller flere links. Tryk så på den første knap, åbn Claude, og sæt beskeden ind. Sæt til sidst Claudes svar ind i feltet her.');
+  Hjaelper.side([
+    { tekst: 'Sæt din opskrift eller dine links ind her.', maal: '#egen', bev: 'salto' },
+    { tekst: 'Tryk her. Så kopierer jeg en besked til Claude.', maal: '[data-h=kopierBesked]', bev: 'skridt' },
+    { tekst: 'Åbn Claude, og sæt beskeden ind.', maal: '#aabnClaude', bev: 'dans' },
+    { tekst: 'Sæt Claudes svar ind her. Tryk så på Gem.', maal: '#claudesvar', bev: 'rul' }]);;
 }
 // Læser Claudes svar. Giver { data } eller { fejl } med en besked på dansk.
 const tekstAf = x => typeof x === 'string' ? x : (x && (x.tekst ?? x.trin ?? x.beskrivelse)) || '';
@@ -996,7 +1028,11 @@ function mereSide() {
   $('#tphoejde').addEventListener('change', e => saetHoejde(e.target.value));
   $('#tilpasnul').addEventListener('click', async () => { if (await bekraeft('Vil du sætte alle tekster og størrelser tilbage?', 'Nulstil')) { Tilpas.nulstil(); toast('Teksterne er nulstillet'); } });
   $('#lydtil').addEventListener('change', e => { Lyd.saet(e.target.checked); Lyd.spil('klik'); });
-  Hjaelper.side('Her kan du slå mig og lydene til og fra, og hente en sikkerhedskopi.');
+  Hjaelper.side([
+    { tekst: 'Vælg lyst eller mørkt udseende.', maal: '[role=radiogroup]', bev: 'salto' },
+    { tekst: 'Her kan du skjule mig. Du kan altid hente mig igen.', maal: '#vishj', bev: 'skridt' },
+    { tekst: 'Slå lydene til og fra her.', maal: '#lydtil', bev: 'hop' },
+    { tekst: 'Hent en sikkerhedskopi. Så har du alle opskrifter i en fil.', maal: '[data-h=eksport]', bev: 'rul' }]);;
 }
 
 // ---------- Klik ----------
