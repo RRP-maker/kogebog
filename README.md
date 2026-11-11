@@ -34,4 +34,5 @@ alter table tilpasning add column skjult boolean;
 alter table tilpasning add column pos text; -- feltets plads, «dx,dy»
 alter table tilpasning add column felt text; -- feltets størrelse: s, m eller l
 alter table tilpasning add column laast boolean; -- feltet er låst
+alter table tilpasning add column ikkeflyt boolean; -- feltet kan ikke flyttes
 ```

@@ -491,3 +491,19 @@ input.felt, select.felt { padding: 0 12px; }
 .tekst-s { font-size: 17px; line-height: 32px; }
 .tekst-l { font-size: 24px; line-height: 32px; }
 .tekst-xl { font-size: 29px; line-height: 32px; }
+
+/* Tilpas: fortryd/gentag, glas-farveknap, felter der ikke kan flyttes, og forbudt sted */
+#tilpas-fortryd, #tilpas-gentag {
+  position: fixed; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 16px; border-radius: 24px;
+  font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
+  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
+}
+#tilpas-fortryd { left: max(10px, env(safe-area-inset-left)); }
+#tilpas-gentag { left: calc(max(10px, env(safe-area-inset-left)) + 112px); }
+#tilpas-fortryd:disabled, #tilpas-gentag:disabled { opacity: .4; cursor: default; }
+.sw.glas { position: relative; overflow: hidden; border: 1px solid var(--glaskant); background: linear-gradient(135deg, #ffd95a 0 34%, #9fd6e6 34% 67%, #ffbeb6 67%); }
+.sw.glas::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--glas); -webkit-backdrop-filter: blur(3px) saturate(1.8); backdrop-filter: blur(3px) saturate(1.8); box-shadow: var(--glans); }
+.sw.glas::after { content: ""; position: absolute; left: 20%; top: 12%; width: 46%; height: 22%; border-radius: 50%; background: rgba(255, 255, 255, .85); transform: rotate(-30deg); }
+body.tilpas [data-ikkeflyt] { outline-style: solid; outline-color: var(--blyant); cursor: pointer; }
+body.tilpas [data-ikkeflyt][data-laast] { outline-color: var(--tomat); }
+.traekker.ulovlig { outline: 3px solid var(--tomat) !important; outline-offset: 3px; opacity: .75; }
