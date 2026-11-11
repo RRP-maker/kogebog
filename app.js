@@ -291,11 +291,11 @@ async function forside() {
       <a class="fane f1" href="#/opskrifter"><span aria-hidden="true">${ik('gryde')}</span>Opskrifter</a>
       <a class="fane f3" href="#/tips"><span aria-hidden="true">${ik('paere')}</span>Tips</a>
     </nav>
-    <h2>Favoritter</h2>
-    <div id="favoritter"><p class="lille">Henter…</p></div>
     <nav class="genveje">
       <a class="knap" href="#/forslag">${ik('kurv')} Hvad kan jeg lave?</a>
-    </nav>`;
+    </nav>
+    <h2>Favoritter</h2>
+    <div id="favoritter"><p class="lille">Henter…</p></div>`;
   Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Tips kan du læse små råd. Favoritter er dem med stjerne.');
   tilfoejTilHjem();
   const [fav, ops] = await Promise.all([api('favoritter?select=opskrift_id'), api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter&order=titel')]);
