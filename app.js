@@ -364,8 +364,8 @@ function tegnListe() {
   }).join('') : `<p class="tomt">${rader.length ? 'Ingen opskrifter passer. Prøv et andet ord.' : T.tom}</p>`;
 }
 const knapper = (type, id, ekstra = '') => `<div class="rakke skaerm">
-  <a class="knap" href="#/${type}/${id}/rediger">Rediger</a>${ekstra}
-  <button class="knap fare" data-h="slet" data-v="${type}:${id}">Slet</button></div>`;
+  <a class="knap" data-tpid="rediger" href="#/${type}/${id}/rediger">Rediger</a>${ekstra}
+  <button class="knap fare" data-tpid="slet" data-h="slet" data-v="${type}:${id}">Slet</button></div>`;
 
 // ---------- Opskrift ----------
 let S = null; // den opskrift, der vises
@@ -385,7 +385,7 @@ async function opskriftSide(rid) {
   kendteBegreber = begreberAf(tips);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
   app.innerHTML = `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>
-    ${vaerktoej(`<a class="knap" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
+    ${vaerktoej(`<a class="knap" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
     <div class="titelrakke"><h1>${esc(r.titel)}</h1>
       <button id="favknap" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
     ${c.length ? `<p class="chips">${c.map(x => `<span>${x}</span>`).join('')}</p>` : ''}
@@ -409,7 +409,7 @@ async function opskriftSide(rid) {
     <div id="stjerner" class="skaerm"></div>
     ${egne.length ? `<h2 class="opsk">Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}` : ''}
     <div class="rakke skaerm"><button class="knap" data-h="print">Print</button>
-      <button class="knap fare" data-h="slet" data-v="opskrifter:${r.id}">Slet</button></div>`;
+      <button class="knap fare" data-tpid="slet" data-h="slet" data-v="opskrifter:${r.id}">Slet</button></div>`;
   tegnIng(); tegnTrin(); tegnStjerner(); tegnLaerredKnapper(false);
   $('#billedfil').addEventListener('change', nytBillede);
   const lel = $('#laerred');
@@ -503,7 +503,7 @@ function tegnLav() {
     naeste = '';
   }
   app.innerHTML = `<div class="lav">
-    <div class="lav-top"><a class="knap" href="#/opskrifter/${r.id}">× Luk</a>
+    <div class="lav-top"><a class="knap" data-tpid="luk" href="#/opskrifter/${r.id}">× Luk</a>
       <span>${i === -1 ? 'Før du går i gang' : i < n ? `Trin ${i + 1} af ${n}` : 'Færdig'}</span></div>
     <progress max="${n + 1}" value="${i + 1}" aria-label="Hvor langt du er"></progress>
     <div class="lav-midte">${midte}</div>
@@ -649,7 +649,7 @@ async function formular(type, rid) {
     <form id="form" novalidate>
       ${T.felter.map(f => felt(f, rad, ekstra)).join('')}
       <div id="formfejl"></div>
-      <button class="knap primaer stor" type="submit">Gem</button>
+      <button class="knap primaer stor" data-tpid="gem" type="submit">Gem</button>
     </form>`;
   Hjaelper.side(type === 'opskrifter' ? 'Skriv opskriften her. Skriv én ingrediens i hvert felt og ét trin i hvert felt. Tryk på retur for at komme til næste felt. Tryk på «Gem», når du er færdig.' : 'Skriv i felterne, og tryk på «Gem». Navnet bliver til et link i opskrifter, hvor ordet står.');
   const form = $('#form');
@@ -802,11 +802,11 @@ function importSide() {
     <ol class="trin vejledning">
       <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
         <textarea id="egen" rows="5" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
-        <div class="felt-knapper"><button type="button" class="knap" data-h="saetInd" data-v="egen">Sæt ind</button><button type="button" class="knap mini fare" data-h="rydFelt" data-v="egen">Ryd</button></div>
-        <button class="knap primaer stor" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
+        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-egen-saet" data-h="saetInd" data-v="egen">Sæt ind</button><button type="button" class="knap mini fare" data-tpid="import-egen-ryd" data-h="rydFelt" data-v="egen">Ryd</button></div>
+        <button class="knap primaer stor" data-tpid="kopier-besked" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
         <p class="lille" id="kopinote" role="status"></p></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
-        <div class="rakke venstre"><a class="knap stor" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
+        <div class="rakke venstre"><a class="knap stor" data-tpid="aabn-claude" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
       <li>Kopiér Claudes svar, og sæt det ind her:
         <textarea id="claudesvar" rows="7" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea>
         <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-svar-saet" data-h="saetInd" data-v="claudesvar">Sæt ind</button><button type="button" class="knap mini fare" data-tpid="import-svar-ryd" data-h="rydFelt" data-v="claudesvar">Ryd</button></div></li>
@@ -1003,7 +1003,7 @@ const H = {
         <input id="b_navn" type="text" value="${esc(valgt)}" autocomplete="off">
         <label for="b_tekst">Forklaring</label><textarea id="b_tekst" rows="4"></textarea>
         <div id="arkfejl"></div>
-        <div class="rakke"><button class="knap" type="button" data-h="lukArk">Fortryd</button><button class="knap primaer" type="submit">Gem</button></div>
+        <div class="rakke"><button class="knap" type="button" data-tpid="fortryd" data-h="lukArk">Fortryd</button><button class="knap primaer" data-tpid="gem" type="submit">Gem</button></div>
       </form>`);
     const form = $('#begrebform', d);
     $('.ark-bag', d).addEventListener('click', lukArk);

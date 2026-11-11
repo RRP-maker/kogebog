@@ -145,7 +145,7 @@ const Hjemme = (() => {
         <label for="hj_nykat">Ny kategori</label>
         <div class="linjeform"><input id="hj_nykat" type="text" maxlength="30" autocomplete="off" placeholder="fx Brød"><button type="button" class="knap primaer" data-h="hjNyKat">Opret</button></div>
         <div id="arkfejl"></div>
-        <div class="rakke"><button type="button" class="knap" data-h="lukArk">Luk</button></div>`);
+        <div class="rakke"><button type="button" class="knap" data-tpid="luk" data-h="lukArk">Luk</button></div>`);
       $('.ark-bag', d).addEventListener('click', lukArk);
     },
     hjVaelgKat(el) { return gemKat(valgtIng, el.dataset.v || null); },

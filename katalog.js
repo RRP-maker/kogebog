@@ -28,7 +28,7 @@ const Katalog = (() => {
       const valg = sorteret().map(k => `<option value="${k.id}">${esc(k.navn)}</option>`).join('');
       const d = ark(`<h2>Hvilken kategori?</h2><small>Vælg en kategori til hver ny ingrediens. Springer du over, står de under «Andet».</small>
         ${uk.map((n, i) => `<label for="kn${i}">${esc(n)}</label><select id="kn${i}" class="felt felt-m" data-n="${i}"><option value="">Andet</option>${valg}</select>`).join('')}
-        <div class="rakke"><button type="button" class="knap" data-kat="spring">Spring over</button><button type="button" class="knap primaer" data-kat="gem">Gem</button></div>`);
+        <div class="rakke"><button type="button" class="knap" data-kat="spring">Spring over</button><button type="button" class="knap primaer" data-tpid="gem" data-kat="gem">Gem</button></div>`);
       d.addEventListener('click', e => {
         const a = e.target.closest('[data-kat]');
         if (!a && !e.target.closest('.ark-bag')) return;
@@ -80,14 +80,14 @@ ${andre.map(i => '- ' + i.navn + (i.kategori_id ? ` (${(kat.find(c => c.id === i
     const d = ark(`<h2>Sortér og ret med Claude</h2><small>${n} ${n === 1 ? 'ingrediens' : 'ingredienser'}. ${uden} står uden kategori.</small>
       <ol class="trin vejledning">
         <li>Tryk her, så kopieres beskeden til Claude.
-          <button type="button" class="knap primaer" data-h="katKopier">${ik('gnist')} Kopiér besked</button><p class="lille" id="katnote" role="status"></p></li>
+          <button type="button" class="knap primaer" data-tpid="kopier-besked" data-h="katKopier">${ik('gnist')} Kopiér besked</button><p class="lille" id="katnote" role="status"></p></li>
         <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt.
-          <a class="knap" id="katClaude" href="https://claude.ai/new${kodet.length < 7000 ? '?q=' + kodet : ''}" target="_blank" rel="noopener">Åbn Claude ›</a></li>
+          <a class="knap" data-tpid="aabn-claude" id="katClaude" href="https://claude.ai/new${kodet.length < 7000 ? '?q=' + kodet : ''}" target="_blank" rel="noopener">Åbn Claude ›</a></li>
         <li>Kopiér Claudes svar, og sæt det ind her:
           <textarea id="katsvar" rows="5" placeholder='{ "gulerødder": "Grøntsager" }' aria-label="Claudes svar"></textarea></li>
       </ol>
       <div id="arkfejl"></div>
-      <div class="rakke"><button type="button" class="knap" data-h="lukArk">Luk</button><button type="button" class="knap primaer" data-h="katGem">Gem kategorier</button></div>`);
+      <div class="rakke"><button type="button" class="knap" data-tpid="luk" data-h="lukArk">Luk</button><button type="button" class="knap primaer" data-h="katGem">Gem kategorier</button></div>`);
     $('.ark-bag', d).addEventListener('click', lukArk);
   }
   // Læser Claudes svar: { "navn": "Kategori" } eller en liste af { navn, kategori }
@@ -117,7 +117,7 @@ ${andre.map(i => '- ' + i.navn + (i.kategori_id ? ` (${(kat.find(c => c.id === i
       await hent();
       const d = ark(`<h2>Ingredienser i databasen</h2><small>${ing.length} ${ing.length === 1 ? 'ingrediens' : 'ingredienser'} i alt.</small>
         ${oversigtHtml()}
-        <div class="rakke"><button type="button" class="knap" data-h="lukArk">Luk</button></div>`);
+        <div class="rakke"><button type="button" class="knap" data-tpid="luk" data-h="lukArk">Luk</button></div>`);
       $('.ark-bag', d).addEventListener('click', lukArk);
     },
     async katKopier() {

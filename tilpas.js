@@ -12,7 +12,7 @@ const Tilpas = (() => {
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
   const standardFast = el => el.matches('.vaerktoej .knap');
-  const erFast = (el, k) => !el.closest('.top') && (data[k] && data[k].l !== undefined ? !!data[k].l : standardFast(el));
+  const erFast = (el, k) => !el.closest('.top') && (get(k) && get(k).l !== undefined ? !!get(k).l : standardFast(el));
   // Fastlåst felt: position: fixed (browseren ruller det selv, så det hakker ikke). En usynlig kopi holder pladsen på siden.
   const fjernFast = el => {
     if (!el._ph) return;
@@ -45,6 +45,14 @@ const Tilpas = (() => {
   // Tekster, der står på forsiden, kan aldrig skjules (heller ikke på andre sider, hvor den samme tekst står)
   const beskyttet = new Set(['Kogebog', 'Hvad skal vi lave?', 'Opskrifter', 'Tips', 'Hvad kan jeg lave?', 'Favoritter', ...lager.hent('tpForside', [])]);
   let til = lager.hent('tilpasTil', false), timer, aktiv = lager.hent('tilpasAktiv', true), server = false, data = lager.hent('tilpas', {});
+  // Hvert felt har et id (data-tpid). Har feltet ikke selv et, laves det af siden og teksten. Felter, der hænger sammen, får samme data-tpid i koden.
+  // Tilpasninger, der før var gemt på teksten, gælder stadig, til feltet ændres første gang (arv).
+  const arv = {};
+  const get = k => data[k] !== undefined ? data[k] : (arv[k] !== undefined ? data[arv[k]] : undefined);
+  const tomb = k => arv[k] !== undefined && data[arv[k]] !== undefined; // en nulstillet tilpasning huskes, så den gamle ikke dukker op igen
+  const slug = s => String(s).toLowerCase().replace(/[^a-zæøå]+/g, '-').replace(/^-|-$/g, '');
+  const sideNavn = () => (location.hash || '#/').replace(/^#\/?/, '').split('/').filter(Boolean).map(s => /\d/.test(s) ? ':id' : s).join('/') || 'forside';
+  const idAf = (el, tekst) => el.dataset.tpid || (el.matches('.tilbage') ? 'tilbage' + (el.classList.contains('fortryd') ? '-fortryd' : '') : sideNavn() + '|' + slug(tekst));
   const noder = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim());
   const tekstAf = el => noder(el).map(n => n.nodeValue.trim()).join(' ');
   // Kun faste tekster kan ændres: ikke opskrifternes navne, tal og ure
@@ -56,33 +64,33 @@ const Tilpas = (() => {
     const ryd = []; // beskyttede tekster, der står som skjulte: flaget fjernes
     document.querySelectorAll(VALG).forEach(el => {
       if (el.classList.contains('plads')) return;
-      // Felter med data-tpid har deres egen tilpasning, selv om en anden knap har samme tekst
-      if (el.dataset.tpid && el.dataset.orgtekst === undefined) el.dataset.orgtekst = tekstAf(el);
-      const k = el.dataset.org ?? el.dataset.tpid ?? tekstAf(el);
-      if (!egnet(el, k)) return;
-      el.dataset.org = k;
-      if (document.body.dataset.side === 'forside' && !beskyttet.has(k)) { beskyttet.add(k); lager.gem('tpForside', [...beskyttet]); }
-      const o = data[k] || {}, ny = o.t || el.dataset.orgtekst || k, n = noder(el);
+      if (el.dataset.orgtekst === undefined && tekstAf(el)) el.dataset.orgtekst = tekstAf(el);
+      const leg = el.dataset.orgtekst || tekstAf(el);
+      const k = el.dataset.org ?? idAf(el, leg);
+      if (!egnet(el, el.dataset.tpid ? k : leg)) return;
+      el.dataset.org = k; if (k !== leg) arv[k] = leg;
+      if (document.body.dataset.side === 'forside' && !(beskyttet.has(k) && beskyttet.has(leg))) { beskyttet.add(k); beskyttet.add(leg); lager.gem('tpForside', [...beskyttet]); }
+      const o = get(k) || {}, ny = o.t || leg, n = noder(el);
       if (n.length && tekstAf(el) !== ny) { n[0].nodeValue = ny; n.slice(1).forEach(x => { x.nodeValue = ''; }); }
       if (!el.dataset.fs) el.dataset.fs = parseFloat(getComputedStyle(el).fontSize);
       el.style.fontSize = o.s ? pxAf(o.s) + 'px' : ''; el.classList.toggle('tp-staerst', !!o.s && pxAf(o.s) === 34); // de fire størrelser er faste skriftstørrelser i hele appen
       const ret = til && aktiv; // under tilpasning vises skjulte felter svagt, så de kan hentes tilbage
-      const skj = !!o.x && !beskyttet.has(k);
+      const skj = !!o.x && !(beskyttet.has(k) || beskyttet.has(leg));
       if (o.x && !skj && !ryd.includes(k)) ryd.push(k);
       el.style.display = skj && !ret ? 'none' : '';
       el.style.opacity = skj && ret ? '.35' : '';
       el.style.color = o.f || '';
       el.style.background = o.b === 'glas' ? 'var(--glas)' : (o.b || '');
     });
-    if (ryd.length) setTimeout(() => ryd.forEach(k => { if (data[k] && data[k].x) { const ny = { ...data[k] }; delete ny.x; gem(k, ny, true); } }), 0);
+    if (ryd.length) setTimeout(() => ryd.forEach(k => { if (get(k) && get(k).x) { const ny = { ...get(k) }; delete ny.x; gem(k, ny, true); } }), 0);
     document.querySelectorAll(FLYT).forEach(el => { // felternes plads
       if (el.classList.contains('plads')) return;
       if (drag && drag.laast && drag.el === el) return;
       let k = el.dataset.org;
       if (el.matches('.kort')) k = el.closest('#ark') ? null : 'kort:' + (el.getAttribute('href') || el.textContent.trim().slice(0, 40));
-      const p = !el.matches(FAST) && k && data[k] && data[k].p;
+      const p = !el.matches(FAST) && k && get(k) && get(k).p;
       if (k) el.dataset.flyt = k; else delete el.dataset.flyt;
-      const fast = !el.matches(FAST) && !!k && erFast(el, k), o = (k && data[k]) || {};
+      const fast = !el.matches(FAST) && !!k && erFast(el, k), o = (k && get(k)) || {};
       if (el.matches('.knap, .tilbage, .fane') && o.z) el.dataset.fs = o.z; else delete el.dataset.fs;
       plac(el, p, fast);
       el.toggleAttribute('data-laast', fast);
@@ -122,7 +130,7 @@ const Tilpas = (() => {
   function husk() { hist.push(kopi(data)); if (hist.length > 50) hist.shift(); frem = []; knapper(); }
   async function skriv(k, ny, stille) {
     try {
-      if (Object.keys(ny).length) {
+      if (Object.keys(ny).length || data[k] !== undefined) {
         const rad = { noegle: k, tekst: ny.t || null, stoerrelse: ny.s || null, farve: ny.f || null, baggrund: ny.b || null };
         const url = 'tilpasning?on_conflict=noegle', pos = ny.p ? ny.p.join(',') : null, lst = ny.l === undefined ? null : !!ny.l;
         const trin = [{ skjult: !!ny.x, pos, felt: ny.z || null, laast: lst, ikkeflyt: !!ny.m }, { skjult: !!ny.x, pos, felt: ny.z || null, laast: lst }, { skjult: !!ny.x, pos }, { skjult: !!ny.x }, {}];
@@ -135,7 +143,7 @@ const Tilpas = (() => {
   }
   async function gem(k, ny, stille) {
     if (!stille) husk();
-    if (Object.keys(ny).length) data[k] = ny; else delete data[k];
+    if (Object.keys(ny).length) data[k] = ny; else if (tomb(k)) data[k] = {}; else delete data[k];
     lager.gem('tilpas', data); anvend();
     await skriv(k, ny, stille);
   }
@@ -174,20 +182,20 @@ const Tilpas = (() => {
   }
   const flytTekst = v => v ? 'Feltet kan ikke flyttes. Du kan stadig ændre tekst og farve.' : 'Du flytter feltet ved at holde fingeren på det og trække.';
   function aabn(el) {
-    const k = el.dataset.org, o = data[k] || {}, felt = el.matches('.knap, .tilbage, .fane'), nat = naturligZ(el), std = standardFarver(el);
+    const k = el.dataset.org, o = get(k) || {}, felt = el.matches('.knap, .tilbage, .fane'), nat = naturligZ(el), std = standardFarver(el);
     const opsk = el.matches(FAST);
-    const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !beskyttet.has(k), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
+    const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !(beskyttet.has(k) || beskyttet.has(el.dataset.orgtekst)), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
     const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
       <label for="tp-tekst">Tekst</label>
-      <input type="text" id="tp-tekst" value="${esc(o.t || el.dataset.orgtekst || k)}" maxlength="200" autocomplete="off">
+      <input type="text" id="tp-tekst" value="${esc(o.t || el.dataset.orgtekst || '')}" maxlength="200" autocomplete="off">
       <label>Tekststørrelse</label>
       <div class="rakke venstre">${STR.map(([v, n]) => `<button class="chip${v === st ? ' valgt' : ''}" type="button" data-st="${v}">${n}</button>`).join('')}</div>
       ${felt ? `<label>Feltets størrelse</label><div class="rakke venstre">${FELTSTR.map(([v, n]) => `<button class="chip${v === z ? ' valgt' : ''}" type="button" data-fz="${v}">${n}</button>`).join('')}</div>` : ''}
       <label>Tekstfarve</label>${sw(TEKSTFARVER, f, 'f')}
       ${felt ? `<label>Feltets farve</label>${sw(FELTFARVER, b, 'b', true)}` : ''}
-      <p class="lille">${el.dataset.tpid ? 'Ændringen gælder kun dette felt.' : `Ændringen gælder alle steder, hvor «${esc(k)}» står.`}</p>
+      <p class="lille">Ændringen gælder dette felt og de felter, der hænger sammen med det.</p>
       ${opsk ? '<p class="lille">Teksten i opskriften kan ændres, men ikke flyttes.</p>' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
       <p class="lille" id="tp-flyttekst">${flytTekst(m)}</p>`}
       ${el.closest('.top') || opsk ? '' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button></div>
@@ -208,7 +216,7 @@ const Tilpas = (() => {
         if (a.dataset.tp === 'skjul') x = !x;
         if (x) ny.x = true;
         const t = $('#tp-tekst', d).value.trim();
-        if (t && t !== (el.dataset.orgtekst || k)) ny.t = t;
+        if (t && t !== el.dataset.orgtekst) ny.t = t;
         if (o.s || st !== st0) ny.s = st;
         if (f !== std.f) ny.f = f; // en farve, der er appens egen, gemmes ikke
         if (felt && b !== std.b) ny.b = b;
@@ -225,7 +233,7 @@ const Tilpas = (() => {
     setTimeout(() => $('#tp-tekst', d).select(), 50);
   }
   function aabnKort(el) {
-    const k = el.dataset.flyt, l = erFast(el, k), m = !!(data[k] || {}).m;
+    const k = el.dataset.flyt, l = erFast(el, k), m = !!(get(k) || {}).m;
     const d = ark(`<h2>Flyt felt</h2><p class="lille">${flytTekst(m)} Det falder på notesbogens net.</p>
       <p class="lille">${l ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.'}</p>
       <div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
@@ -233,7 +241,7 @@ const Tilpas = (() => {
     d.addEventListener('click', e => {
       if (e.target.closest('.ark-bag')) return lukArk();
       const a = e.target.closest('[data-tp]'); if (!a) return;
-      lukArk(); const o = data[k] || {};
+      lukArk(); const o = get(k) || {};
       if (a.dataset.tp === 'flyt') { const { m: _m, ...rest } = o; if (!m) rest.m = true; gem(k, rest); }
       else if (a.dataset.tp === 'nulstil') { const { p, ...rest } = o; gem(k, rest); }
       else if (a.dataset.tp === 'laas') {
@@ -245,9 +253,9 @@ const Tilpas = (() => {
     });
   }
   function genplacer(k) {
-    const el = document.querySelector(`[data-flyt="${CSS.escape(k)}"]`), p = data[k] && data[k].p; if (!el || !p) return;
+    const el = document.querySelector(`[data-flyt="${CSS.escape(k)}"]`), p = get(k) && get(k).p; if (!el || !p) return;
     const r = el.getBoundingClientRect(), rast = raster(), f = fase(el), T = r.top + (el.hasAttribute('data-laast') ? 0 : scrollY), Y = rast + f + Math.round((T - rast - f) / 32) * 32, dy = Y - T;
-    if (Math.abs(dy) > .5) gem(k, { ...data[k], p: [p[0], Math.round((p[1] + dy) * 100) / 100] }, true);
+    if (Math.abs(dy) > .5) gem(k, { ...get(k), p: [p[0], Math.round((p[1] + dy) * 100) / 100] }, true);
   }
   // Træk: hold fingeren stille et øjeblik, så løfter feltet sig, og det følger fingeren og falder på gitteret
   let drag = null, sidstTrukket = 0;
@@ -294,7 +302,7 @@ const Tilpas = (() => {
     sidstTrukket = Date.now(); d.el.classList.remove('traekker'); if (d.stat) d.el.style.position = '';
     const g = document.getElementById('gitter'); if (g) g.remove();
     if (d.ulovlig) { d.el.classList.remove('ulovlig'); anvend(); toast('Her ligger tekst, der ikke kan tilpasses. Prøv et andet sted.'); return; }
-    const k = d.el.dataset.flyt, { p, ...rest } = data[k] || {};
+    const k = d.el.dataset.flyt, { p, ...rest } = get(k) || {};
     if (d.p && (d.p[0] || d.p[1])) rest.p = d.p;
     gem(k, rest);
   }
