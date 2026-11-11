@@ -47,7 +47,7 @@ const Hjemme = (() => {
   function raekke(h) {
     const i = ingAf(h.ingrediens_id);
     return `<div class="hj-rk felt felt-m" data-id="${h.id}">
-      <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal" value="${h.maengde != null ? esc(visTal(Number(h.maengde))) : ''}">
+      <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal" value="${Number(h.maengde) > 0 ? esc(visTal(Number(h.maengde))) : ''}">
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
       <button type="button" class="rund hj-ikon" data-h="hjKat" aria-label="Skift kategori">${ik('tag')}</button>
@@ -77,8 +77,9 @@ const Hjemme = (() => {
     const n = norm(navn), d = dublet(n);
     if (d) { felt.value = ''; return nej(n, d.id); }
     const mgd = $('#hj-ny .hj-mgd'), enh = $('#hj-ny .hj-enh');
-    const m = mgd.value.trim() ? tal(mgd.value) : null;
+    let m = mgd.value.trim() ? tal(mgd.value) : null;
     if (mgd.value.trim() && m == null) { toast('Skriv et tal i mængden, fx 2 eller 1,5.'); mgd.focus(); return; }
+    if (m <= 0) m = null; // 0 = ingen angivelse: så regnes der med, at man har nok
     laaser = true;
     try {
       const ing = await findEllerOpret(navn);
@@ -190,8 +191,10 @@ const Hjemme = (() => {
       if (e.target.classList.contains('hj-navn')) { if (ny) await tilfoej(); else await gemNavn(rk); }
       else if (h && e.target.classList.contains('hj-enh')) { await api(`hjemme?id=eq.${enc(h.id)}`, { method: 'PATCH', body: { enhed: e.target.value } }); h.enhed = e.target.value; }
       else if (h && e.target.classList.contains('hj-mgd')) {
-        const t = e.target.value.trim(), m = t ? tal(t) : null;
+        const t = e.target.value.trim();
+        let m = t ? tal(t) : null;
         if (t && m == null) { toast('Skriv et tal i mængden, fx 2 eller 1,5.'); e.target.value = h.maengde != null ? visTal(Number(h.maengde)) : ''; return; }
+        if (m <= 0) m = null; // 0 = ingen angivelse: feltet bliver tomt, og man har nok
         await api(`hjemme?id=eq.${enc(h.id)}`, { method: 'PATCH', body: { maengde: m } });
         h.maengde = m; e.target.value = m != null ? visTal(m) : '';
       }

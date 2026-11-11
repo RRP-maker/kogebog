@@ -124,7 +124,7 @@ main > .knap.stor { align-self: stretch; }
 .kort .rakke { margin: var(--m) 0 var(--pt); }
 .kort .chips { display: flex; top: 0; }
 .guld { color: var(--guld); }
-#liste, #favoritter { display: flex; flex-direction: column; }
+#liste, #favoritter, #forslag-nu, #hj-boks, #hj-liste, #forslag-resten { display: flex; flex-direction: column; } /* flex: så margener ikke smelter sammen og rækkerne holder 32 px */
 /* Små mærker: tekst på linjen, med en pille bag, hvis bund hviler på linjen */
 .chips, .filter { position: relative; top: calc(var(--l0) - 32px); } /* rækkens midte = midt mellem to linjer */
 .kort .chips { top: 0; } /* inde i et kort ligger rækkerne allerede mellem linjerne */
@@ -484,7 +484,7 @@ body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none
    Felt (knap, skrivefelt, række): .felt + felt-s / felt-m / felt-l = 32 / 64 / 96 px høj. M og L: margen foroven --m, forneden --pt. S: kanterne på linjerne.
    Tekst: .tekst + tekst-s / tekst-m / tekst-l / tekst-xl = 17 / 20 / 24 / 29 px, altid 32 px linjehøjde. Skrivefelter og opskrifter kan ikke tilpasses. */
 .felt { height: 64px; margin: var(--m) 0 var(--pt); font-size: 20px; line-height: 32px; }
-.felt-s { height: 32px; margin: 0; font-size: 18px; }
+.felt-s { height: 32px; margin: 0; font-size: 18px; position: relative; top: calc(var(--l0) - 32px); } /* kanterne på to linjer */
 .felt-l { height: 96px; font-size: 28px; }
 input.felt, select.felt { padding: 0 12px; }
 .tekst, .tekst-m { font-size: 20px; line-height: 32px; }
@@ -507,3 +507,10 @@ input.felt, select.felt { padding: 0 12px; }
 body.tilpas [data-ikkeflyt] { outline-style: solid; outline-color: var(--blyant); cursor: pointer; }
 body.tilpas [data-ikkeflyt][data-laast] { outline-color: var(--tomat); }
 .traekker.ulovlig { outline: 3px solid var(--tomat) !important; outline-offset: 3px; opacity: .75; }
+
+/* Hvad kan jeg lave: «højst så mange ingredienser må mangle» ved siden af overskriften */
+.mangler-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 32px 0 0; }
+.mangler-top h2 { margin: 0; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper .rund { width: 32px; font-size: 20px; border-radius: 50%; }
+.stepper input { width: 48px; text-align: center; padding: 0 4px; border-radius: 8px; }

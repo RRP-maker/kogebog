@@ -259,12 +259,14 @@ setInterval(() => {
 }, 500);
 
 // ---------- Router ----------
+let opskriftFra = null; // kom man til opskriften fra Hvad kan jeg lave?, fører tilbage-knappen dertil
 async function route() {
   const id = ++visning;
   lukArk(); lukForklaring(); slipSkaerm(); sidsteValg = '';
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
   dybde = dele.length;
+  if (a === 'forslag' || a === 'hjemme') opskriftFra = '#/forslag'; else if (a !== 'opskrifter' || !b) opskriftFra = null;
   if (!foerste && app.firstChild) {
     app.classList.remove('sideind'); app.classList.add('sideud');
     await new Promise(r => setTimeout(r, 120));
@@ -402,7 +404,7 @@ async function opskriftSide(rid) {
   S = { r, tips, metoder, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips, metoder);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
-  app.innerHTML = `<a class="tilbage skaerm" href="#/opskrifter">‹ Opskrifter</a>
+  app.innerHTML = `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ ${opskriftFra ? 'Hvad kan jeg lave?' : 'Opskrifter'}</a>
     ${vaerktoej(`<a class="knap" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
     <div class="titelrakke"><h1>${esc(r.titel)}</h1>
       <button id="favknap" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
@@ -739,17 +741,25 @@ async function forslagSide() {
   Hjaelper.side('Skriv det, du har derhjemme, ét ord i hvert felt. Så finder jeg retter, du kan lave, og siger, hvad du kan købe for at lave flere.');
   await Hjemme.vis($('#hj-boks'), tegnForslag);
 }
+const maksMangler = () => Math.max(0, Math.min(20, Math.round(Number(lager.hent('maxMangler', 3))) || 0));
 function tegnForslag() {
   const nu = $('#forslag-nu'), rest = $('#forslag-resten'), tekst = Hjemme.navne().join(',');
   if (!nu) return;
   if (!tekst.trim()) { nu.innerHTML = '<h2>Det kan du lave nu</h2><p class="tomt">Skriv mindst én ting herunder, så finder jeg retter.</p>'; rest.innerHTML = ''; return; }
-  const f = beregnForslag(F, tekst);
+  const f = beregnForslag(F, tekst), maks = maksMangler(), naesten = f.naesten.filter(x => x.mangler.length <= maks);
   nu.innerHTML = `<h2>Det kan du lave nu</h2>
     ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe længere nede.</p>'}`;
   rest.innerHTML = `${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.join(' og '))}</strong>
       <span>Så kan du også lave: ${k.retter.map(r => `<a href="#/opskrifter/${r.id}">${esc(r.titel)}</a>`).join(', ')}</span></div>`).join('')}` : ''}
-    ${f.naesten.length ? `<h2>Du mangler lidt</h2>${f.naesten.slice(0, 8).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.join(', '))}</span></a>`).join('')}` : ''}`;
+    <div class="mangler-top"><h2>Du mangler lidt</h2>
+      <div class="stepper" role="group" aria-label="Højst så mange ingredienser må mangle">
+        <button type="button" class="rund felt felt-s" data-h="maksNed" aria-label="Færre">−</button>
+        <input id="maks" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="${maks}" aria-label="Højst så mange ingredienser må mangle">
+        <button type="button" class="rund felt felt-s" data-h="maksOp" aria-label="Flere">+</button></div></div>
+    <small>Højst ${maks} ${maks === 1 ? 'ingrediens' : 'ingredienser'} må mangle.</small>
+    ${naesten.length ? naesten.slice(0, 20).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.join(', '))}</span></a>`).join('') : '<p class="lille">Ingen retter mangler så få. Skriv et højere tal.</p>'}`;
 }
+function saetMaks(n) { lager.gem('maxMangler', Math.max(0, Math.min(20, Math.round(Number(n)) || 0))); tegnForslag(); }
 
 // ---------- Tilføj med Claude ----------
 const CLAUDE_BESKED = `Omskriv opskriften nederst til min kogebog-app. Den skal kunne laves af en 10-årig, men uden at være mere detaljeret end nødvendigt.
@@ -891,6 +901,8 @@ document.addEventListener('select', e => {
 }, true);
 const H = {
   igen: () => route(),
+  maksNed: () => saetMaks(maksMangler() - 1),
+  maksOp: () => saetMaks(maksMangler() + 1),
   async slet(el) {
     const [type, id] = el.dataset.v.split(':');
     if (!await bekraeft(TYPER[type].bekraeft)) return;
@@ -1051,6 +1063,7 @@ const H = {
     toast('Sikkerhedskopien er hentet');
   }
 };
+document.addEventListener('change', e => { if (e.target.id === 'maks') saetMaks(e.target.value); });
 document.addEventListener('click', async e => {
   const el = e.target.closest('[data-h]');
   if (!el) { if (!e.target.closest('.forklaring')) lukForklaring(); return; }
