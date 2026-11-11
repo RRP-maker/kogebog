@@ -6,7 +6,7 @@ const Katalog = (() => {
   const rens = n => norm(String(n).replace(/\([^)]*\)/g, ' ').replace(/[.,;:]+$/, ''));
   const katId = navn => { const k = kat.find(x => x.navn_norm === norm(navn)); return k ? k.id : null; };
   const sorteret = () => [...kat].sort((a, b) => a.raekkefolge - b.raekkefolge || a.navn.localeCompare(b.navn, 'da'));
-  const unik = navne => [...new Set(navne.map(rens).filter(Boolean))];
+  const unik = navne => [...new Set(navne.map(n => rens(simpel(n))).filter(Boolean))]; // i databasen står ingredienserne i simpel form
   async function hent() {
     [kat, ing] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*')]);
     if (!kat.some(k => k.navn_norm === 'andet')) { // «Andet» er en rigtig kategori, som altid skal findes (står sidst)
