@@ -802,15 +802,17 @@ function importSide() {
     <ol class="trin vejledning">
       <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
         <textarea id="egen" rows="5" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
+        <button type="button" class="knap" data-h="saetInd">Sæt ind</button>
         <button class="knap primaer stor" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
         <p class="lille" id="kopinote" role="status"></p></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
-        <a class="knap stor" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></li>
+        <div class="rakke venstre"><a class="knap stor" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
       <li>Kopiér Claudes svar, og sæt det ind her:
         <textarea id="claudesvar" rows="7" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea></li>
     </ol>
     <div id="formfejl"></div>
     <button class="knap primaer stor" data-h="gemImport">Gem opskriften</button>`;
+  $('#egen').value = lager.hent('importEgen', ''); $('#claudesvar').value = lager.hent('importSvar', ''); // teksten huskes, til opskriften er gemt
   Hjaelper.side('Her kan Claude skrive en opskrift om for dig. Kopiér først din opskrift, eller flere links. Tryk så på den første knap, åbn Claude, og sæt beskeden ind. Sæt til sidst Claudes svar ind i feltet her.');
 }
 // Læser Claudes svar. Giver { data } eller { fejl } med en besked på dansk.
@@ -1049,6 +1051,16 @@ const H = {
   async figur(el) { await Laerred.ny('figur', 'ikon:' + el.dataset.v); },
   async fjernValgt() { if (await Laerred.fjernValgt()) toast('Fjernet'); },
   print() { window.print(); },
+  // Sæt ind: lægger det kopierede i feltet med en retur efter, så næste link kan stå på en ny linje
+  async saetInd() {
+    const felt = $('#egen'), t = await laesUdklip();
+    if (t === null) { toast('Appen må ikke læse udklipsholderen. Hold fingeren i feltet, og vælg «Sæt ind».'); return; }
+    if (!t) { toast('Der er ikke noget kopieret.'); return; }
+    const foer = felt.value, mellem = foer && !foer.endsWith('\n') ? '\n' : '';
+    felt.value = foer + mellem + t + '\n';
+    felt.dispatchEvent(new Event('input', { bubbles: true }));
+    felt.focus(); felt.scrollTop = felt.scrollHeight;
+  },
   async kopierBesked() {
     await Katalog.hent().catch(() => {});
     const grund = lavBesked(), egen = ($('#egen') || {}).value ? $('#egen').value.trim() : '';
@@ -1083,6 +1095,7 @@ const H = {
         [sidste] = await api('opskrifter', { method: 'POST', body: r.data });
         try { await Katalog.laeg(ingAf(r.data).map(i => i.n), {}, r.kat); } catch (e) { console.error(e); } // ingredienserne med Claudes kategorier
       }
+      lager.gem('importEgen', ''); lager.gem('importSvar', ''); // opskriften er gemt, så felterne tømmes
       const flere = alle.length > 1;
       toast(flere ? `${alle.length} opskrifter er gemt` : 'Opskriften er gemt'); Hjaelper.glad(flere ? 'Opskrifterne er gemt!' : 'Opskriften er gemt!');
       location.hash = flere ? '#/opskrifter' : '#/opskrifter/' + sidste.id;
@@ -1099,6 +1112,10 @@ const H = {
     toast('Sikkerhedskopien er hentet');
   }
 };
+document.addEventListener('input', e => { // teksten på «Tilføj med Claude» huskes, også hvis appen lukkes eller opdateres
+  if (e.target.id === 'egen') lager.gem('importEgen', e.target.value);
+  if (e.target.id === 'claudesvar') lager.gem('importSvar', e.target.value);
+});
 document.addEventListener('change', e => {
   if (e.target.id === 'maks') saetMaks(e.target.value);
   if (e.target.id === 'portinp') { S.port = Math.max(1, Math.min(50, Math.round(Number(e.target.value)) || S.r.portioner || 4)); portValg[S.r.id] = S.port; tegnIng(); }
