@@ -1079,5 +1079,14 @@ new MutationObserver(rasterIgen).observe(app, { childList: true, subtree: true }
 addEventListener('resize', rasterIgen);
 if (window.ResizeObserver) { const ro = new ResizeObserver(rasterIgen); ['main', '.top', '#ure'].forEach(q => ro.observe(document.querySelector(q))); }
 if (document.fonts) document.fonts.ready.then(rasterIgen);
+// Tryk-animation: glansen starter, hvor fingeren rammer
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('.knap, .rund, .rk-knap, .kort, .fane');
+  if (!el || el.disabled) return;
+  const r = el.getBoundingClientRect();
+  el.style.setProperty('--rx', (e.clientX - r.left) + 'px'); el.style.setProperty('--ry', (e.clientY - r.top) + 'px');
+  el.classList.remove('tryk'); void el.offsetWidth; el.classList.add('tryk');
+  el.addEventListener('animationend', ev => { if (ev.animationName === 'glans') el.classList.remove('tryk'); }, { once: true });
+}, { passive: true });
 document.addEventListener('DOMContentLoaded', () => { Hjaelper.start(); route(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
