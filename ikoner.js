@@ -5,7 +5,7 @@ const Ikoner = (() => {
   // viewBox 24 x 24. Hver ikon er indmaden af en SVG.
   const D = {
     gryde: `<path d="M5 10h14v4.5a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z" fill="var(--i1,#4a9fb5)"/><path d="M3.5 10h17"/><path d="M5 8.5q7-5 14 0"/><circle cx="12" cy="5.2" r="1.1" fill="var(--i2,#ffd95a)"/><path d="M9.5 14.2v.8M14.5 14.2v.8"/><path d="M11 16.4q1 .9 2 0"/>`,
-    ske: `<ellipse cx="8.2" cy="8" rx="3.6" ry="4.8" transform="rotate(-35 8.2 8)" fill="var(--i1,#a0e2b2)"/><path d="M10.8 11.2 19.5 19.8"/>`,
+    ske: `<path d="M10.5 10.5 19.6 19.6" stroke-width="3.8"/><ellipse cx="7.6" cy="7.6" rx="3.5" ry="5.6" transform="rotate(-45 7.6 7.6)" fill="var(--i1,#a0e2b2)"/><path d="M12.6 12.6 19.6 19.6" stroke="var(--i1,#a0e2b2)" stroke-width="1.3"/><path d="M5 6.2a3.3 3.3 0 0 1 1.6-1.6" stroke="#fff" stroke-width="1.2"/>`,
     paere: `<path d="M12 3.5a5.5 5.5 0 0 0-3.2 10c.5.4.8 1 .8 1.6v.4h4.8v-.4c0-.6.3-1.2.8-1.6A5.5 5.5 0 0 0 12 3.5z" fill="var(--i1,#ffd95a)"/><path d="M9.8 18.2h4.4M10.6 20.5h2.8"/><path d="M12 7.5v3"/>`,
     kurv: `<path d="M3.5 10h17l-1.6 8.6a1.5 1.5 0 0 1-1.5 1.2H6.6a1.5 1.5 0 0 1-1.5-1.2z" fill="var(--i1,#ffcdc6)"/><path d="M8 10l3-5.5M16 10l-3-5.5"/><path d="M9 13.5v3.5M12 13.5v3.5M15 13.5v3.5"/>`,
     gnist: `<path d="M10 3.5l1.6 5 5 1.6-5 1.6-1.6 5-1.6-5-5-1.6 5-1.6z" fill="var(--i1,#ffd95a)"/><path d="M18 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="var(--i2,#ffcdc6)"/>`,
@@ -15,7 +15,7 @@ const Ikoner = (() => {
     stjerne0: `<path d="M12 3.6l2.5 5.3 5.8.7-4.3 4 1.1 5.8L12 16.5l-5.1 2.9L8 13.6l-4.3-4 5.8-.7z" fill="none"/>`,
     kamera: `<path d="M3.5 8.5a1.5 1.5 0 0 1 1.5-1.5h2.2l1.3-2h7l1.3 2H19a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z" fill="var(--i1,#a9d6e6)"/><circle cx="12" cy="13" r="3.4" fill="var(--i2,#fffdf5)"/>`,
     gulerod: `<path d="M16.5 8.5 6.2 19.4a1.2 1.2 0 0 1-2-1.2L8.5 7.5a5 5 0 0 1 8 1z" fill="var(--i1,#f08a3c)"/><path d="M9.5 11l1.8.6M7.8 14.5l1.8.6"/><path d="M15 9.2l3-4.7M16.6 8.6l4.2-2.2M14.2 7.4l1.6-4"/>`,
-    tandhjul: `<circle cx="12" cy="12" r="3" fill="var(--i1,#a9d6e6)"/><path d="M12 3.2v2.3M12 18.5v2.3M3.2 12h2.3M18.5 12h2.3M5.8 5.8l1.6 1.6M16.6 16.6l1.6 1.6M18.2 5.8l-1.6 1.6M7.4 16.6l-1.6 1.6"/><circle cx="12" cy="12" r="6.2"/>`,
+    tandhjul: `<path d="M9.87 5.12L10.41 2.74L13.59 2.74L14.13 5.12L15.36 5.63L17.43 4.32L19.68 6.57L18.37 8.64L18.88 9.87L21.26 10.41L21.26 13.59L18.88 14.13L18.37 15.36L19.68 17.43L17.43 19.68L15.36 18.37L14.13 18.88L13.59 21.26L10.41 21.26L9.87 18.88L8.64 18.37L6.57 19.68L4.32 17.43L5.63 15.36L5.12 14.13L2.74 13.59L2.74 10.41L5.12 9.87L5.63 8.64L4.32 6.57L6.57 4.32L8.64 5.63z" fill="var(--i1,#a9d6e6)"/><circle cx="12" cy="12" r="3" fill="var(--i2,#fffdf5)"/>`,
     tjek: `<path d="M5 12.8l4.2 4.2L19 7.2" stroke-width="2.4"/>`,
     pause: `<rect x="6.2" y="5" width="3.8" height="14" rx="1.4" fill="var(--i1,#ffd95a)"/><rect x="14" y="5" width="3.8" height="14" rx="1.4" fill="var(--i1,#ffd95a)"/>`,
     hent: `<path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 19.5h14"/>`,
