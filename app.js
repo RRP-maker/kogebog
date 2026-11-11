@@ -802,7 +802,7 @@ function importSide() {
     <ol class="trin vejledning">
       <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
         <textarea id="egen" rows="5" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
-        <button type="button" class="knap" data-h="saetInd">Sæt ind</button>
+        <div class="rakke venstre"><button type="button" class="knap" data-h="saetInd">Sæt ind</button><button type="button" class="knap fare" data-h="rydEgen">Ryd</button></div>
         <button class="knap primaer stor" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
         <p class="lille" id="kopinote" role="status"></p></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
@@ -1052,6 +1052,10 @@ const H = {
   async fjernValgt() { if (await Laerred.fjernValgt()) toast('Fjernet'); },
   print() { window.print(); },
   // Sæt ind: lægger det kopierede i feltet med en retur efter, så næste link kan stå på en ny linje
+  rydEgen() {
+    const felt = $('#egen');
+    felt.value = ''; lager.gem('importEgen', ''); felt.focus();
+  },
   async saetInd() {
     const felt = $('#egen'), t = await laesUdklip();
     if (t === null) { toast('Appen må ikke læse udklipsholderen. Hold fingeren i feltet, og vælg «Sæt ind».'); return; }
