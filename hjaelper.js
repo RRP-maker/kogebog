@@ -1,4 +1,4 @@
-// Hjælperen Grydelil: en lille emaljegryde med grydeske. Tegnet til Kogebog.
+// Hjælperen Grydelil: en goofy emaljegryde, hvor låget er munden. Har en grydeske. Tegnet til Kogebog.
 // Lyd: små toner lavet i browseren, ingen lydfiler.
 const Lyd = (() => {
   let ctx;
@@ -40,13 +40,23 @@ const Hjaelper = (() => {
       <ellipse class="h-fod" cx="76" cy="118" rx="10" ry="5"/>
       <path class="h-potte" d="M22 62h76v30a24 24 0 0 1-24 24H46a24 24 0 0 1-24-24z"/>
       <g class="h-prikker"><circle cx="31" cy="74" r="1.5"/><circle cx="90" cy="72" r="1.8"/><circle cx="36" cy="104" r="1.6"/><circle cx="83" cy="106" r="1.4"/><circle cx="60" cy="110" r="1.5"/><circle cx="92" cy="92" r="1.2"/><circle cx="27" cy="90" r="1.2"/></g>
+      <ellipse class="h-kind" cx="32" cy="82" rx="6" ry="3.8"/><ellipse class="h-kind" cx="88" cy="82" rx="6" ry="3.8"/>
+      <path class="h-hjerte" d="M60 103c-8-5-9-10.5-5-12.5 2.5-1.2 4.5.2 5 2 .5-1.8 2.5-3.2 5-2 4 2 3 7.5-5 12.5z"/>
       <rect class="h-rand" x="16" y="56" width="88" height="11" rx="5.5"/>
-      <g class="h-ojne"><ellipse cx="46" cy="83" rx="4.5" ry="5.5"/><ellipse cx="74" cy="83" rx="4.5" ry="5.5"/></g>
-      <circle class="h-blink" cx="47.5" cy="81" r="1.5"/><circle class="h-blink" cx="75.5" cy="81" r="1.5"/>
-      <ellipse class="h-kind" cx="35" cy="94" rx="5.5" ry="3.5"/><ellipse class="h-kind" cx="85" cy="94" rx="5.5" ry="3.5"/>
-      <path class="h-mund" d="M52 93q8 8 16 0"/>
-      <ellipse class="h-mund-aaben" cx="60" cy="96" rx="5" ry="4.5"/>
-      <g class="h-laag"><path d="M23 57q37-34 74 0z"/><circle class="h-knop" cx="60" cy="36" r="6.5"/></g>
+      <path class="h-indre" d="M18 57H103L102.5 50L21.5 36z"/>
+      <path class="h-tunge" d="M56 53a8 8 0 0 1 16 0v11a8 8 0 0 1-16 0z"/>
+      <path class="h-tungestreg" d="M64 60v7"/>
+      <g class="h-laag">
+        <path class="h-kuppel" d="M20 59C20 28 100 28 100 59z"/>
+        <path class="h-glans" d="M27 52C28 42 34 36 41 34"/>
+        <circle class="h-knop" cx="60" cy="33" r="5.5"/>
+        <g class="h-ojne">
+          <g class="h-oje"><circle class="h-hvid" cx="44" cy="43" r="10.5"/><g class="h-pupil" style="transform-origin:44px 43px"><circle class="h-sort" cx="44" cy="47.5" r="5"/><circle class="h-blink" cx="45.8" cy="45.8" r="1.6"/></g></g>
+          <g class="h-oje"><circle class="h-hvid" cx="76" cy="43" r="10.5"/><g class="h-pupil h-pupil2" style="transform-origin:76px 43px"><circle class="h-sort" cx="76" cy="47.5" r="5"/><circle class="h-blink" cx="77.8" cy="45.8" r="1.6"/></g></g>
+        </g>
+        <rect class="h-laaglaebe" x="18" y="56" width="84" height="6" rx="3"/>
+        <rect class="h-tand" x="41" y="59" width="8" height="8" rx="2.5"/>
+      </g>
       <g class="h-glimt"><path d="M14 40l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M104 30l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M60 6l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6z"/></g>
     </g>
   </svg>`;
