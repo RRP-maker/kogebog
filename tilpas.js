@@ -36,7 +36,8 @@ const Tilpas = (() => {
   }
   const raster = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--raster')) || 0;
   const fase = el => el.matches('.kort, .knap, .tilbage, .fane') ? (Math.round(el.offsetHeight / 32) === 1 ? 28 : 12) : 0;
-  const STR = [[0.85, 'Lille'], [1, 'Normal'], [1.2, 'Stor'], [1.45, 'Størst']];
+  const STOERST = 1.45, STOERST_PX = 34; // 34 px er skriften på forsidens faner
+  const STR = [[0.85, 'Lille'], [1, 'Normal'], [1.2, 'Stor'], [STOERST, 'Størst']];
   const TEKSTFARVER = ['#22386b', '#56638a', '#b5301f', '#d9432f', '#2f8f4e', '#2f7f95', '#e8a400', '#d0507a', '#ffffff', '#222222']; // de to første er appens egne standardfarver
   const FELTFARVER = ['#ffd95a', '#a0e2b2', '#ffbeb6', '#cfe6f5', '#ffffff', '#de4832', '#4a9fb5', '#22386b']; // plus «glas» (gennemsigtigt Liquid Glass)
   let til = lager.hent('tilpasTil', false), timer, aktiv = lager.hent('tilpasAktiv', true), server = false, data = lager.hent('tilpas', {});
@@ -56,7 +57,7 @@ const Tilpas = (() => {
       const o = data[k] || {}, ny = o.t || k, n = noder(el);
       if (n.length && tekstAf(el) !== ny) { n[0].nodeValue = ny; n.slice(1).forEach(x => { x.nodeValue = ''; }); }
       if (!el.dataset.fs) el.dataset.fs = parseFloat(getComputedStyle(el).fontSize);
-      el.style.fontSize = o.s ? (el.dataset.fs * o.s) + 'px' : '';
+      el.style.fontSize = o.s ? (o.s === STOERST ? STOERST_PX : el.dataset.fs * o.s) + 'px' : ''; // «Størst» er altid lige så stor som teksten på forsidens Opskrifter og Tips
       const ret = til && aktiv; // under tilpasning vises skjulte felter svagt, så de kan hentes tilbage
       el.style.display = o.x && !ret ? 'none' : '';
       el.style.opacity = o.x && ret ? '.35' : '';
