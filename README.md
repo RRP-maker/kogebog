@@ -29,4 +29,5 @@ Tabellen `tilpasning` gemmer rettede tekster, størrelser og farver. Opret den i
 create table tilpasning (noegle text primary key, tekst text, stoerrelse numeric, farve text, baggrund text);
 alter table tilpasning enable row level security;
 create policy "aaben" on tilpasning for all using (true) with check (true);
+alter table tilpasning add column skjult boolean;
 ```
