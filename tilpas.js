@@ -12,7 +12,27 @@ const Tilpas = (() => {
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
   const standardFast = el => el.matches('.vaerktoej .knap');
   const erFast = (el, k) => !el.closest('.top') && (data[k] && data[k].l !== undefined ? !!data[k].l : standardFast(el));
-  const flytTil = (el, p, fast) => { el.style.translate = (p || fast) ? `${p ? p[0] : 0}px ${(p ? p[1] : 0) + (fast ? scrollY : 0)}px` : ''; };
+  // Fastlåst felt: position: fixed (browseren ruller det selv, så det hakker ikke). En usynlig kopi holder pladsen på siden.
+  const fjernFast = el => {
+    if (!el._ph) return;
+    el._ph.remove(); el._ph = null;
+    ['position', 'margin', 'left', 'top', 'width', 'zIndex'].forEach(k => { el.style[k] = ''; });
+  };
+  function plac(el, p, fast) {
+    if (!fast) { fjernFast(el); el.style.translate = p ? `${p[0]}px ${p[1]}px` : ''; return; }
+    let ph = el._ph;
+    if (!ph || !ph.isConnected) {
+      ph = el._ph = el.cloneNode(true); ph.classList.add('plads'); ph.setAttribute('aria-hidden', 'true');
+      ['data-flyt', 'data-laast', 'data-org', 'data-h', 'id', 'href'].forEach(a => ph.removeAttribute(a));
+      ph.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+      Object.assign(ph.style, { visibility: 'hidden', pointerEvents: 'none', translate: 'none', position: '', left: '', top: '', width: '', zIndex: '' });
+      el.before(ph);
+    } else if (ph.innerHTML !== el.innerHTML) ph.innerHTML = el.innerHTML;
+    if (el.dataset.fs) ph.dataset.fs = el.dataset.fs; else delete ph.dataset.fs;
+    ph.style.fontSize = el.style.fontSize; ph.style.display = el.style.display;
+    const r = ph.getBoundingClientRect(); if (!r.width) return;
+    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (p ? p[0] : 0)) + 'px', top: (r.top + scrollY + (p ? p[1] : 0)) + 'px', width: r.width + 'px', zIndex: '19' });
+  }
   const raster = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--raster')) || 0;
   const fase = el => el.matches('.kort, .knap, .tilbage, .fane') ? (Math.round(el.offsetHeight / 32) === 1 ? 28 : 12) : 0;
   const STR = [[0.85, 'Lille'], [1, 'Normal'], [1.2, 'Stor'], [1.45, 'Størst']];
@@ -28,6 +48,7 @@ const Tilpas = (() => {
     document.body.classList.toggle('tilpas', til && aktiv);
     document.body.classList.toggle('tilpas-menu', til);
     document.querySelectorAll(VALG).forEach(el => {
+      if (el.classList.contains('plads')) return;
       const k = el.dataset.org ?? tekstAf(el);
       if (!egnet(el, k)) return;
       el.dataset.org = k;
@@ -42,15 +63,15 @@ const Tilpas = (() => {
       el.style.background = o.b || '';
     });
     document.querySelectorAll(FLYT).forEach(el => { // felternes plads
+      if (el.classList.contains('plads')) return;
       if (drag && drag.laast && drag.el === el) return;
       let k = el.dataset.org;
       if (el.matches('.kort')) k = el.closest('#ark') ? null : 'kort:' + (el.getAttribute('href') || el.textContent.trim().slice(0, 40));
       const p = k && data[k] && data[k].p;
       if (k) el.dataset.flyt = k; else delete el.dataset.flyt;
-      const fast = !!k && erFast(el, k);
-      flytTil(el, p, fast);
-      const o = (k && data[k]) || {};
+      const fast = !!k && erFast(el, k), o = (k && data[k]) || {};
       if (el.matches('.knap, .tilbage, .fane') && o.z) el.dataset.fs = o.z; else delete el.dataset.fs;
+      plac(el, p, fast);
       el.toggleAttribute('data-laast', fast);
     });
     document.querySelectorAll('.rakke, .vaerktoej, .genveje, .faner').forEach(c => { // tomme rækker skjules med
@@ -175,8 +196,9 @@ const Tilpas = (() => {
     d.laast = true; const m = document.querySelector('main'), tf = d.el.style.transform, ov = d.el.style.transition;
     d.el.style.transition = 'none'; d.el.style.transform = 'none'; // målt uden «trykket ned»-effekten
     const r = d.el.getBoundingClientRect(); d.el.style.transform = tf; void d.el.offsetWidth; d.el.style.transition = ov;
-    d.fast = d.el.hasAttribute('data-laast'); d.top0 = r.top; d.nx = r.left - d.p0[0];
-    d.natDoc = r.top - d.p0[1] + (d.fast ? 0 : scrollY); // feltets plads på siden uden forskydning (fastlåst: målt øverst på siden)
+    d.fast = d.el.hasAttribute('data-laast') && !!d.el._ph; d.top0 = r.top;
+    if (d.fast) { const q = d.el._ph.getBoundingClientRect(); d.nx = q.left; d.natDoc = q.top + scrollY; } // fastlåst: pladsholderen viser, hvor feltet ville stå
+    else { d.nx = r.left - d.p0[0]; d.natDoc = r.top - d.p0[1] + scrollY; }
     d.rast = raster(); d.fase = fase(d.el); d.xo = m.getBoundingClientRect().left + parseFloat(getComputedStyle(m).paddingLeft) + scrollX;
     d.stat = getComputedStyle(d.el).position === 'static'; if (d.stat) d.el.style.position = 'relative';
     d.el.classList.add('traekker');
@@ -187,7 +209,8 @@ const Tilpas = (() => {
     const tx = d.nx + d.p0[0] + e.clientX - d.x0 + scrollX, ty = d.top0 + e.clientY - d.y0 + (d.fast ? 0 : scrollY);
     const X = d.xo + Math.round((tx - d.xo) / G) * G, Y = d.rast + d.fase + Math.round((ty - d.rast - d.fase) / 32) * 32;
     d.p = [Math.round((X - scrollX - d.nx) * 100) / 100, Math.round((Y - d.natDoc) * 100) / 100];
-    d.el.style.translate = `${d.p[0]}px ${d.p[1] + (d.fast ? scrollY : 0)}px`;
+    if (d.fast) { d.el.style.left = (d.nx + d.p[0]) + 'px'; d.el.style.top = (d.natDoc + d.p[1]) + 'px'; }
+    else d.el.style.translate = `${d.p[0]}px ${d.p[1]}px`;
   }
   function slutTraek() {
     const d = drag; drag = null; if (!d) return; clearTimeout(d.t);
@@ -212,14 +235,6 @@ const Tilpas = (() => {
   document.addEventListener('pointerup', slutTraek, true);
   document.addEventListener('pointercancel', slutTraek, true);
   document.addEventListener('touchmove', e => { if (drag && drag.laast) e.preventDefault(); }, { passive: false });
-  let rulRaf = 0; // fastlåste felter følger med, når man ruller
-  addEventListener('scroll', () => {
-    if (rulRaf) return;
-    rulRaf = requestAnimationFrame(() => {
-      rulRaf = 0;
-      document.querySelectorAll('[data-laast]').forEach(el => { if (!(drag && drag.laast && drag.el === el)) flytTil(el, (data[el.dataset.flyt] || {}).p, true); });
-    });
-  }, { passive: true });
   document.addEventListener('dragstart', e => { if (til && aktiv) e.preventDefault(); }, true);
   // I tilpas-tilstand åbner et tryk på en tekst i stedet for at gøre det, knappen plejer
   document.addEventListener('click', e => {

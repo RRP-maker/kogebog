@@ -403,7 +403,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 /* Tilpas tekster */
 body.tilpas [data-org], body.tilpas [data-flyt] { outline: 2px dashed var(--gryde-mork); outline-offset: 3px; cursor: pointer; }
 body.tilpas [data-laast] { outline: 2px solid var(--tomat); }
-[data-laast] { position: relative; z-index: 19; will-change: translate; } /* fastlåst: følger med på skærmen */
+.plads { opacity: 0; } /* usynlig kopi, der holder pladsen, når et felt er fastlåst på skærmen */
 #tilpas-knap {
   position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 18px; border-radius: 24px;
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
