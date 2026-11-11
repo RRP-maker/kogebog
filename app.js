@@ -12,6 +12,23 @@ const lager = {
   hent(k, standard) { try { const v = localStorage.getItem('kogebog_' + k); return v == null ? standard : JSON.parse(v); } catch (e) { return standard; } },
   gem(k, v) { try { localStorage.setItem('kogebog_' + k, JSON.stringify(v)); } catch (e) { /* privat tilstand */ } }
 };
+// Udseende: «auto» følger telefonen, «lys» og «moerk» er dit eget valg
+const Tema = (() => {
+  const mq = matchMedia('(prefers-color-scheme: dark)');
+  const valg = () => { const v = lager.hent('tema', 'auto'); return v === 'lys' || v === 'moerk' ? v : 'auto'; };
+  const anvend = () => {
+    const v = valg(), moerk = v === 'moerk' || (v === 'auto' && mq.matches);
+    document.documentElement.dataset.tema = moerk ? 'moerk' : 'lys';
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = moerk ? '#1a1f2e' : '#fffdf5';
+  };
+  mq.addEventListener('change', anvend);
+  // Udskrift er altid på lyst papir
+  let foer = null;
+  addEventListener('beforeprint', () => { foer = document.documentElement.dataset.tema; document.documentElement.dataset.tema = 'lys'; });
+  addEventListener('afterprint', () => { if (foer) document.documentElement.dataset.tema = foer; foer = null; });
+  return { valg, saet(v) { lager.gem('tema', v); anvend(); }, anvend };
+})();
+Tema.anvend();
 const ENHED = (() => {
   let id = lager.hent('enhed');
   if (!id) { id = 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); lager.gem('enhed', id); }
@@ -951,6 +968,12 @@ const tilpasHoejde = () => Math.max(20, Math.min(90, Math.round(Number(lager.hen
 function mereSide() {
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Mere</h1>
     <h2>Indstillinger</h2>
+    <p class="lille">Udseende</p>
+    <div role="radiogroup" aria-label="Udseende">
+      <label class="skift"><input type="radio" name="tema" value="auto" ${Tema.valg() === 'auto' ? 'checked' : ''}> <span>Automatisk (som din telefon)</span></label>
+      <label class="skift"><input type="radio" name="tema" value="lys" ${Tema.valg() === 'lys' ? 'checked' : ''}> <span>Lyst</span></label>
+      <label class="skift"><input type="radio" name="tema" value="moerk" ${Tema.valg() === 'moerk' ? 'checked' : ''}> <span>Mørkt</span></label>
+    </div>
     <label class="skift"><input type="checkbox" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
     <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Tilpas siden</span></label>
@@ -966,6 +989,7 @@ function mereSide() {
     <button class="knap" data-h="eksport">${ik('hent')} Hent sikkerhedskopi</button>
     <h2>Læg appen på hjemmeskærmen</h2>
     <p class="lille">På iPhone og iPad: Tryk på Del-knappen i Safari, og vælg «Føj til hjemmeskærm».</p>`;
+  document.querySelectorAll('input[name=tema]').forEach(r => r.addEventListener('change', e => Tema.saet(e.target.value)));
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
   $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));
   const saetHoejde = n => { const v = Math.max(20, Math.min(90, Math.round(Number(n)) || 33)); lager.gem('tilpasHoejde', v); $('#tphoejde').value = v; };

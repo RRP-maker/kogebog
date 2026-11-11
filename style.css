@@ -1,21 +1,36 @@
 /* Kogebog: et kladdehæfte med blæk, linjer og glasknapper */
 :root {
-  --papir: #fffdf5; --linje: #cfe0f2; --margen: #f0a3a3;
-  --blaek: #22386b; --blyant: #56638a;
+  color-scheme: light;
+  /* Farveroller: lyst tema. Mørkt tema overskriver dem i [data-tema="moerk"] nederst i filen. */
+  --papir: #fffdf5; --papir-rgb: 255, 253, 245; --linje: #cfe0f2; --margen: #f0a3a3;
+  --blaek: #22386b; --blaek-rgb: 34, 56, 107; --blyant: #56638a; --skyg-rgb: 34, 56, 107;
+  --paa-lys: #22386b; /* blæk på de bløde gule, grønne og lyserøde flader: samme i begge temaer */
   --tomat: #d9432f; --tomat-mork: #b5301f; --smor: #ffd95a; --mynte: #c4ebcd; --rosa: #ffcdc6;
-  --gryde: #4a9fb5; --gryde-mork: #2f7f95; --guld: #e8a400;
+  --gryde: #4a9fb5; --gryde-mork: #2a768b; --guld: #e8a400;
+  --link: #0b5c9c; --stjerne-fra: #8089aa;
+  --fejl-bg: #fff0ee; --fejl-tekst: #7a1f16;
   --glas: linear-gradient(135deg, rgba(255, 255, 255, .66), rgba(255, 255, 255, .3));
   --glaskant: rgba(255, 255, 255, .85);
   --skygge: 0 1px 2px rgba(34, 56, 107, .1), 0 8px 24px rgba(34, 56, 107, .12);
   /* lyskant foroven, svag kant forneden: det, der får fladen til at ligne glas */
   --glans: inset 0 1.5px 1px rgba(255, 255, 255, .95), inset 0 -1.5px 1px rgba(255, 255, 255, .35), inset 0 0 12px rgba(255, 255, 255, .25);
+  --sheen: .5; --plet: 1;
+  --flade: rgba(255, 255, 255, .94); --flade-hover: rgba(255, 255, 255, .8); --hvid: #fff; --felt-bg: rgba(255, 255, 255, .4);
+  --boble: linear-gradient(135deg, rgba(255, 255, 255, .88), rgba(255, 255, 255, .66));
+  --gron-chip: rgba(160, 226, 178, .55);
+  --f1: linear-gradient(135deg, rgba(255, 217, 90, .82), rgba(255, 200, 60, .5));
+  --f3: linear-gradient(135deg, rgba(255, 190, 182, .85), rgba(255, 157, 148, .5));
+  --valgt: linear-gradient(135deg, rgba(34, 56, 107, .92), rgba(34, 56, 107, .8)); --valgt-fast: #22386b; --sek: #56638a;
+  --primaer: linear-gradient(135deg, #cf3a24, #b02a17); --primaer-hover: linear-gradient(135deg, #b8301c, #98230f); --primaer-skygge: rgba(190, 45, 28, .32);
+  --gron: linear-gradient(135deg, #2a8049, #236f3f); --gron-hover: linear-gradient(135deg, #247040, #1b5f35);
+  --skjold: rgba(34, 56, 107, .35);
   --ud: cubic-bezier(.23, 1, .32, 1);
   --hoved: "Caveat Brush", "Bradley Hand", "Chalkboard SE", "Comic Sans MS", cursive;
   --skrift: "Patrick Hand", "Chalkboard SE", "Bradley Hand", "Comic Sans MS", cursive;
   /* Notesbogens net: alt står på rækker à 32 px. Linjen ligger --l0 under rækkens top, lige under teksten.
      Felter (knapper, kort, inputs) har top og bund midt mellem to linjer: margen foroven = --m, polstring foroven = --pt, forneden = --pb. */
   --l0: 28px; --m: calc(var(--l0) - 16px); --pt: calc(48px - var(--l0)); --pb: var(--m);
-  --streg: rgba(34, 56, 107, .3); --dæk: rgba(255, 253, 245, .9);
+  --streg: rgba(var(--blaek-rgb), .3); --dæk: rgba(var(--papir-rgb), .9);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
@@ -33,10 +48,10 @@ body {
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(42vmax 42vmax at 8% 6%, rgba(255, 217, 90, .42), transparent 70%),
-    radial-gradient(38vmax 38vmax at 100% 28%, rgba(111, 183, 217, .34), transparent 70%),
-    radial-gradient(44vmax 44vmax at 12% 82%, rgba(255, 157, 148, .32), transparent 70%),
-    radial-gradient(36vmax 36vmax at 92% 98%, rgba(126, 211, 150, .34), transparent 70%);
+    radial-gradient(42vmax 42vmax at 8% 6%, rgba(255, 217, 90, calc(.42 * var(--plet))), transparent 70%),
+    radial-gradient(38vmax 38vmax at 100% 28%, rgba(111, 183, 217, calc(.34 * var(--plet))), transparent 70%),
+    radial-gradient(44vmax 44vmax at 12% 82%, rgba(255, 157, 148, calc(.32 * var(--plet))), transparent 70%),
+    radial-gradient(36vmax 36vmax at 92% 98%, rgba(126, 211, 150, calc(.34 * var(--plet))), transparent 70%);
 }
 a { color: var(--tomat-mork); text-underline-offset: 3px; }
 h1, h2 { font-family: var(--hoved); font-weight: 400; margin: 0; position: relative; }
@@ -54,7 +69,7 @@ p + p { margin-top: 32px; }
   box-shadow: var(--skygge), var(--glans);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: rgba(255, 255, 255, .94); }
+  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: var(--flade); }
 }
 
 .top {
@@ -87,12 +102,12 @@ main > .knap.stor { align-self: stretch; }
 }
 .knap:active, .rund:active, .chip:active, .fane:active, .kort:active, .favknap:active { transform: scale(.97); }
 .knap:disabled, .rund:disabled { opacity: .45; cursor: default; }
-.knap.primaer { background: linear-gradient(135deg, rgba(222, 72, 50, .94), rgba(184, 44, 27, .9)); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(120, 30, 18, .3), 0 8px 22px rgba(190, 45, 28, .32), inset 0 1.5px 1px rgba(255, 255, 255, .55), inset 0 -1.5px 1px rgba(255, 255, 255, .18); }
+.knap.primaer { background: var(--primaer); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(120, 30, 18, .3), 0 8px 22px var(--primaer-skygge), inset 0 1.5px 1px rgba(255, 255, 255, .55), inset 0 -1.5px 1px rgba(255, 255, 255, .18); }
 .knap.fare { color: var(--tomat-mork); }
 .knap.stor { font-size: 24px; padding: 0 24px; border-radius: 32px; }
 .rund { width: 64px; height: 64px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 24px; padding: 0; flex: none; }
 .rakke { display: flex; flex-wrap: wrap; gap: 32px 10px; margin: var(--m) 0 var(--pt); align-items: flex-start; }
-@media (hover: hover) { .knap:hover:not(:disabled):not(.primaer), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: rgba(255, 255, 255, .8); } .knap.primaer:hover:not(:disabled) { background: var(--tomat-mork); } }
+@media (hover: hover) { .knap:hover:not(:disabled):not(.primaer), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: var(--flade-hover); } .knap.primaer:hover:not(:disabled) { background: var(--primaer-hover); } }
 
 /* Forside: tre faneblade som sedler */
 .forsidetitel { font-size: 46px; line-height: 64px; margin: 0 0 32px; top: 8px; }
@@ -103,10 +118,10 @@ main > .knap.stor { align-self: stretch; }
   transition: transform .16s var(--ud);
 }
 /* genskin hen over den øverste halvdel */
-.fane::before { content: ""; position: absolute; inset: 0 0 50% 0; border-radius: 30px 30px 60% 60% / 30px 30px 24px 24px; background: linear-gradient(rgba(255, 255, 255, .55), rgba(255, 255, 255, .06)); pointer-events: none; }
+.fane::before { content: ""; position: absolute; inset: 0 0 50% 0; border-radius: 30px 30px 60% 60% / 30px 30px 24px 24px; background: linear-gradient(rgba(255, 255, 255, calc(var(--sheen) * 1.1)), rgba(255, 255, 255, .06)); pointer-events: none; }
 .fane span { font-size: 44px; line-height: 1; position: relative; display: grid; }
-.f1 { background: linear-gradient(135deg, rgba(255, 217, 90, .82), rgba(255, 200, 60, .5)); }
-.f3 { background: linear-gradient(135deg, rgba(255, 190, 182, .85), rgba(255, 157, 148, .5)); }
+.f1 { background: var(--f1); }
+.f3 { background: var(--f3); }
 .genveje { display: grid; gap: 32px; margin: var(--m) 0 var(--pt); }
 .genveje .knap { justify-content: flex-start; }
 @media (min-width: 600px) { .faner { grid-template-columns: repeat(2, 1fr); } .fane { flex-direction: column; text-align: center; min-height: 160px; justify-content: center; } .genveje { grid-template-columns: 1fr 1fr; } }
@@ -129,7 +144,7 @@ main > .knap.stor { align-self: stretch; }
 .chips { display: flex; flex-wrap: wrap; gap: 0 8px; margin: 0; padding: 0; }
 .chips > span, .chip { position: relative; z-index: 0; height: 32px; font-size: 17px; line-height: 32px; color: var(--blaek); }
 .chips > span { padding: 0 12px; }
-.chips > span::before { content: ""; position: absolute; z-index: -1; inset: 3px 0 3px; border-radius: 13px; background: rgba(160, 226, 178, .55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
+.chips > span::before { content: ""; position: absolute; z-index: -1; inset: 3px 0 3px; border-radius: 13px; background: var(--gron-chip); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
 .lille { color: var(--blyant); font-size: 17px; }
 .tomt { text-align: center; color: var(--blyant); padding: 32px 8px; }
 .tekst { white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -140,9 +155,9 @@ main > .knap.stor { align-self: stretch; }
 .filter::-webkit-scrollbar { display: none; }
 .filter { margin-bottom: -12px; margin-top: -12px; }
 .chip { flex: none; padding: 0 16px; font-size: 20px; line-height: 32px; border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; white-space: nowrap; }
-.chip::before { content: ""; position: absolute; z-index: -1; inset: 2px 0; border-radius: 16px; background: var(--glas); border: 1px solid var(--glaskant); box-shadow: 0 1px 3px rgba(34, 56, 107, .14), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8); }
+.chip::before { content: ""; position: absolute; z-index: -1; inset: 2px 0; border-radius: 16px; background: var(--glas); border: 1px solid var(--glaskant); box-shadow: 0 1px 3px rgba(var(--skyg-rgb), .14), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8); }
 .chip.valgt { color: #fff; }
-.chip.valgt::before { background: linear-gradient(135deg, rgba(34, 56, 107, .92), rgba(34, 56, 107, .8)); border-color: rgba(255, 255, 255, .35); }
+.chip.valgt::before { background: var(--valgt); border-color: rgba(255, 255, 255, .35); }
 
 /* Formularer */
 label { display: block; margin: 0; }
@@ -150,7 +165,7 @@ label span { color: var(--blyant); font-size: 17px; line-height: 0; }
 small { display: block; color: var(--blyant); font-size: 17px; line-height: 32px; margin: 0; }
 input[type=text], input[type=number], input[type=search], textarea, select {
   display: block; width: 100%; font: inherit; font-size: 20px; line-height: 32px; color: var(--blaek);
-  margin: var(--m) 0 var(--pt); padding: 14px 12px; border: 2px solid var(--blaek); border-radius: 10px; background: #fff;
+  margin: var(--m) 0 var(--pt); padding: 14px 12px; border: 2px solid var(--blaek); border-radius: 10px; background: var(--hvid);
   -webkit-appearance: none; appearance: none;
 }
 input[type=text], input[type=number], input[type=search], select { height: 64px; }
@@ -163,7 +178,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .linjeform { display: flex; flex-direction: row; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); }
 .linjeform input, .linjeform .knap { margin: 0; }
 .linjeform input { flex: 1; min-width: 0; }
-.fejlboks { background: #fff0ee; border-left: 6px solid var(--tomat); color: #7a1f16; border-radius: 6px; padding: 16px 14px; margin: var(--m) 0 var(--pt); }
+.fejlboks { background: var(--fejl-bg); border-left: 6px solid var(--tomat); color: var(--fejl-tekst); border-radius: 6px; padding: 16px 14px; margin: var(--m) 0 var(--pt); }
 .skift, .valgrakke label { display: flex; align-items: center; min-height: 32px; margin: 0; }
 .skift span { color: inherit; font-size: inherit; }
 .valgrakke { display: flex; gap: 24px; margin: var(--m) 0 var(--pt); }
@@ -189,23 +204,23 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .ing.tjek input:checked + span { text-decoration: line-through; color: var(--blyant); }
 .trin { padding-left: 0; margin: 0; list-style: none; counter-reset: trin; }
 .trin > li { counter-increment: trin; position: relative; padding: 0 0 32px 44px; overflow-wrap: anywhere; }
-.trin > li::before { content: counter(trin); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--smor); display: grid; place-items: center; font: 22px/1 var(--hoved); }
+.trin > li::before { content: counter(trin); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--smor); color: var(--paa-lys); display: grid; place-items: center; font: 22px/1 var(--hoved); }
 .vejledning .lille { margin: 0; }
 .begreb {
-  font: inherit; color: #0b5c9c; background: rgba(111, 183, 217, .22); border: 0; border-bottom: 2px solid #0b5c9c;
+  font: inherit; color: var(--link); background: rgba(111, 183, 217, .22); border: 0; border-bottom: 2px solid var(--link);
   border-radius: 6px 6px 0 0; padding: 0 4px; margin: 0; cursor: pointer; transition: background-color .2s;
 }
-.begreb.udpeget { background: var(--smor); }
+.begreb.udpeget { background: var(--smor); color: var(--paa-lys); }
 .forklaring {
   display: block; border-radius: 20px; margin: var(--m) 0 var(--pt); padding: 15px 16px;
   animation: ind .22s var(--ud);
 }
 .forklaring b { font: 24px/32px var(--hoved); font-weight: 400; }
-.forklaring i { font-style: normal; font-size: 16px; background: var(--mynte); border-radius: 12px; padding: 2px 10px; margin-left: 4px; }
+.forklaring i { font-style: normal; font-size: 16px; background: var(--mynte); color: var(--paa-lys); border-radius: 12px; padding: 2px 10px; margin-left: 4px; }
 .forklaring span { display: block; white-space: pre-wrap; }
 @keyframes ind { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
 .stjernevalg { display: flex; gap: 2px; height: 64px; margin: var(--m) 0 var(--pt); align-items: flex-start; }
-.stjernevalg button { font: 40px/48px sans-serif; width: 52px; height: 52px; border: 0; background: none; color: #b9c1d6; cursor: pointer; padding: 0; transition: transform .16s var(--ud); }
+.stjernevalg button { font: 40px/48px sans-serif; width: 52px; height: 52px; border: 0; background: none; color: var(--stjerne-fra); cursor: pointer; padding: 0; transition: transform .16s var(--ud); }
 .stjernevalg button.til { color: var(--guld); }
 .stjernevalg button:active { transform: scale(1.25); }
 
@@ -238,7 +253,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .rk-tekst { resize: none; overflow: hidden; min-height: 64px; margin: 0; padding-right: 40px; }
 .rk[data-niv="1"] .rk-tekst { font-size: 19px; }
 .rk.over .rk-tekst { font: 26px/32px var(--hoved); background: rgba(255, 217, 90, .4); }
-.rk-fjern { position: absolute; right: 6px; top: 17px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: rgba(34, 56, 107, .1); color: var(--blyant); font: 20px/1 sans-serif; cursor: pointer; }
+.rk-fjern { position: absolute; right: 6px; top: 17px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: rgba(var(--blaek-rgb), .1); color: var(--blyant); font: 20px/1 sans-serif; cursor: pointer; }
 .rk-knap {
   flex: none; width: 56px; height: 64px; padding: 2px 0; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   font: inherit; color: var(--blaek); cursor: pointer; touch-action: manipulation; transition: transform .16s var(--ud), background-color .16s;
@@ -250,14 +265,14 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .ed-trin { counter-reset: t; }
 .ed-trin .rk[data-niv="0"] { counter-increment: t; counter-reset: d; }
 .ed-trin .rk[data-niv="1"] { counter-increment: d; }
-.rk-mark { position: absolute; left: -12px; top: -10px; z-index: 1; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; display: grid; place-items: center; background: var(--smor); box-shadow: 0 1px 2px rgba(34, 56, 107, .25); font: 17px/1 var(--hoved); pointer-events: none; }
+.rk-mark { position: absolute; left: -12px; top: -10px; z-index: 1; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; display: grid; place-items: center; background: var(--smor); color: var(--paa-lys); box-shadow: 0 1px 2px rgba(var(--skyg-rgb), .25); font: 17px/1 var(--hoved); pointer-events: none; }
 .rk[data-niv="0"] .rk-mark::before { content: counter(t); }
-.rk[data-niv="1"] .rk-mark { background: var(--mynte); font-size: 14px; }
+.rk[data-niv="1"] .rk-mark { background: var(--mynte); color: var(--paa-lys); font-size: 14px; }
 .rk[data-niv="1"] .rk-mark::before { content: counter(t) "." counter(d); }
 @media (hover: hover) { .rk-knap:hover { background: rgba(255, 255, 255, .8); } }
 
 .laerred-ramme { border-radius: 22px; padding: 8px; margin: var(--m) 0 var(--pt); display: grid; align-content: center; } /* højden rundes op til hele rækker af app.js */
-.laerred { background-image: radial-gradient(rgba(34, 56, 107, .16) 1px, transparent 1px); background-size: 16px 16px; border-radius: 14px; }
+.laerred { background-image: radial-gradient(rgba(var(--blaek-rgb), .16) 1px, transparent 1px); background-size: 16px 16px; border-radius: 14px; }
 .laerred { width: 100%; aspect-ratio: 340 / 300; overflow: hidden; pointer-events: none; }
 .laerred.rediger { pointer-events: auto; touch-action: none; outline: 3px dashed var(--tomat); outline-offset: 2px; }
 
@@ -267,8 +282,8 @@ body[data-side=lav] main { padding-top: max(16px, env(safe-area-inset-top)); pad
 .lav-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; color: var(--blyant); }
 .lav-top .knap { margin: var(--m) 0 var(--pt); }
 .lav-top > span { margin-top: 32px; }
-.lav progress { display: block; width: 100%; height: 12px; margin: calc(var(--l0) - 6px) 0 calc(64px - var(--l0) - 6px); appearance: none; -webkit-appearance: none; border: 0; border-radius: 6px; overflow: hidden; background: rgba(34, 56, 107, .12); }
-.lav progress::-webkit-progress-bar { background: rgba(34, 56, 107, .12); }
+.lav progress { display: block; width: 100%; height: 12px; margin: calc(var(--l0) - 6px) 0 calc(64px - var(--l0) - 6px); appearance: none; -webkit-appearance: none; border: 0; border-radius: 6px; overflow: hidden; background: rgba(var(--blaek-rgb), .12); }
+.lav progress::-webkit-progress-bar { background: rgba(var(--blaek-rgb), .12); }
 .lav progress::-webkit-progress-value { background: var(--tomat); border-radius: 6px; transition: width .3s var(--ud); }
 .lav progress::-moz-progress-bar { background: var(--tomat); }
 .lav-trin { font-size: 28px; line-height: 32px; overflow-wrap: anywhere; position: relative; top: -3px; }
@@ -287,15 +302,15 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 .ur { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 24px; padding: 4px 6px 4px 16px; margin-top: 6px; animation: ind .22s var(--ud); }
 .ur span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .ur b { font-variant-numeric: tabular-nums; }
-.ur.faerdig { background: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); }
+.ur.faerdig { background: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); color: var(--paa-lys); }
 .ur button { font: 26px/1 sans-serif; width: 40px; height: 40px; border: 0; background: none; color: var(--blaek); cursor: pointer; flex: none; }
 
 
 /* Ark */
 #ark { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
-.ark-bag { position: absolute; inset: 0; background: rgba(34, 56, 107, .35); animation: toning .3s ease-out; }
+.ark-bag { position: absolute; inset: 0; background: var(--skjold); animation: toning .3s ease-out; }
 .ark-kort {
-  position: relative; width: min(100%, 560px); max-height: 88dvh; overflow: auto; background: linear-gradient(rgba(255, 253, 245, .9), rgba(255, 253, 245, .78));
+  position: relative; width: min(100%, 560px); max-height: 88dvh; overflow: auto; background: linear-gradient(rgba(var(--papir-rgb), .9), rgba(var(--papir-rgb), .78));
   border-radius: 32px 32px 0 0; padding: 20px max(16px, env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   animation: arkind .42s cubic-bezier(.16, 1, .3, 1);
 }
@@ -313,7 +328,7 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 /* Beskeder vises kun inde i headeren, til venstre for ikonerne */
 #toast {
   position: absolute; left: 8px; right: 104px; top: 4px; bottom: 4px; z-index: 1; display: flex; align-items: center; padding: 0 16px; border-radius: 22px;
-  background: linear-gradient(135deg, rgba(34, 56, 107, .92), rgba(34, 56, 107, .8)); color: #fff; font: 17px/20px var(--skrift); overflow: hidden;
+  background: var(--valgt); color: #fff; font: 17px/20px var(--skrift); overflow: hidden;
   opacity: 0; transform: translateY(-8px) scale(.97); pointer-events: none; transition: opacity .2s, transform .25s var(--ud);
 }
 #toast.vis { opacity: 1; transform: none; }
@@ -324,13 +339,13 @@ body[data-side=lav] #hjaelper { bottom: calc(100px + env(safe-area-inset-bottom)
 #hjaelper > * { pointer-events: auto; }
 .h-figur { display: block; width: 80px; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
 .h-figur svg { display: block; width: 100%; overflow: visible; }
-.h-skjul { position: absolute; right: 0; top: -6px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--blaek); color: #fff; font: 20px/1 sans-serif; cursor: pointer; opacity: .75; }
+.h-skjul { position: absolute; right: 0; top: -6px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--valgt-fast); color: #fff; font: 20px/1 sans-serif; cursor: pointer; opacity: .75; }
 .h-skjul::after { content: ""; position: absolute; inset: -8px; }
 #hjaelper-vis { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 40; font: 18px/1 var(--skrift); color: var(--blaek); border-radius: 20px; padding: 10px 14px; cursor: pointer; }
 body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bottom)); }
 .h-boble {
   position: absolute; right: 4px; bottom: 90px; width: max-content; max-width: min(300px, calc(100vw - 24px)); max-height: 46vh; overflow: auto;
-  background: linear-gradient(135deg, rgba(255, 255, 255, .88), rgba(255, 255, 255, .66)); border-radius: 22px 22px 6px 22px; padding: 10px 16px; cursor: pointer;
+  background: var(--boble); border-radius: 22px 22px 6px 22px; padding: 10px 16px; cursor: pointer;
   font-size: 19px; line-height: 26px; transform-origin: 100% 100%; animation: bobleind .25s var(--ud);
 }
 .h-boble p { margin: 0; overflow-wrap: anywhere; }
@@ -341,18 +356,18 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-boble.flere .h-videre { display: block; }
 @keyframes bobleind { from { opacity: 0; transform: scale(.85); } }
 
-.h-skygge { fill: rgba(34, 56, 107, .18); }
+.h-skygge { fill: rgba(var(--skyg-rgb), .18); }
 .h-potte, .h-laag path { fill: var(--gryde); }
 .h-rand { fill: var(--gryde-mork); }
 .h-prikker { fill: rgba(255, 255, 255, .75); }
 .h-arm { fill: none; stroke: var(--gryde-mork); stroke-width: 6; stroke-linecap: round; }
 .h-haand { fill: var(--gryde-mork); }
 .h-skaft, .h-skeblad { fill: #d9a066; }
-.h-fod, .h-ojne { fill: var(--blaek); }
+.h-fod, .h-ojne { fill: var(--paa-lys); }
 .h-blink { fill: #fff; }
 .h-kind { fill: #ff9d94; }
-.h-mund { fill: none; stroke: var(--blaek); stroke-width: 3; stroke-linecap: round; }
-.h-mund-aaben { fill: var(--blaek); display: none; }
+.h-mund { fill: none; stroke: var(--paa-lys); stroke-width: 3; stroke-linecap: round; }
+.h-mund-aaben { fill: var(--paa-lys); display: none; }
 .h-knop { fill: var(--smor); }
 .h-glimt { fill: var(--guld); opacity: 0; }
 .h-krop, .h-laag, .h-pegearm, .h-ojne, .h-mund-aaben { transform-box: view-box; }
@@ -413,12 +428,12 @@ body.tilpas [data-laast] { outline: 2px solid var(--tomat); }
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
   background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
 }
-body.tilpas #tilpas-knap { background: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); }
+body.tilpas #tilpas-knap { background: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); color: var(--paa-lys); }
 body.tilpas-menu #hjaelper, body.tilpas-menu #hjaelper-vis { bottom: calc(70px + env(safe-area-inset-bottom)); } /* plads til knappen */
 body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjaelper-vis { bottom: calc(160px + env(safe-area-inset-bottom)); }
 .ark-kort .rakke.venstre { justify-content: flex-start; }
 .farver { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-.sw { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--glaskant); box-shadow: 0 1px 3px rgba(34, 56, 107, .3); font: 16px/1 var(--skrift); color: var(--blyant); background: #fff; cursor: pointer; padding: 0; }
+.sw { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--glaskant); box-shadow: 0 1px 3px rgba(var(--skyg-rgb), .3); font: 16px/1 var(--skrift); color: var(--blyant); background: var(--hvid); cursor: pointer; padding: 0; }
 .sw.valgt { outline: 3px solid var(--blaek); outline-offset: 2px; }
 
 /* Tryk-animationer: knappen trykkes ned, fjedrer tilbage, og en glasglans løber ud fra fingeren */
@@ -441,7 +456,7 @@ input[type=checkbox]:active, input[type=radio]:active { transform: scale(.8); }
 .ikon { width: 1.15em; height: 1.15em; vertical-align: -.22em; flex: none; overflow: visible; }
 .chips .ikon { width: 16px; height: 16px; vertical-align: -3px; margin-right: -1px; }
 .top nav a .ikon { width: 26px; height: 26px; vertical-align: 0; }
-.fane .ikon { width: 48px; height: 48px; vertical-align: 0; filter: drop-shadow(0 2px 2px rgba(34, 56, 107, .18)); }
+.fane .ikon { width: 48px; height: 48px; vertical-align: 0; filter: drop-shadow(0 2px 2px rgba(var(--skyg-rgb), .18)); }
 .rund .ikon { width: 38px; height: 38px; vertical-align: 0; }
 .favknap, .stjernevalg button.til { color: var(--blaek); }
 .favknap .ikon, .stjernevalg .ikon { width: 40px; height: 40px; vertical-align: 0; }
@@ -452,8 +467,8 @@ input[type=checkbox]:active, input[type=radio]:active { transform: scale(.8); }
 
 /* Tilpas siden: felter kan flyttes på et gitter */
 body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; cursor: grab; }
-.traekker { z-index: 40; cursor: grabbing !important; transform: scale(1.04); box-shadow: 0 16px 34px rgba(34, 56, 107, .38), var(--glans) !important; }
-#gitter { position: fixed; inset: 0; z-index: 30; pointer-events: none; background-image: radial-gradient(circle, rgba(34, 56, 107, .38) 1.2px, transparent 1.7px); background-size: 16px 32px; }
+.traekker { z-index: 40; cursor: grabbing !important; transform: scale(1.04); box-shadow: 0 16px 34px rgba(var(--skyg-rgb), .38), var(--glans) !important; }
+#gitter { position: fixed; inset: 0; z-index: 30; pointer-events: none; background-image: radial-gradient(circle, rgba(var(--blaek-rgb), .38) 1.2px, transparent 1.7px); background-size: 16px 32px; }
 
 /* Feltstørrelser: 32 / 64 / 96 px som mærker, knapper og faner. Små felter har kanterne på linjerne, store top og bund midt mellem to linjer. */
 .vaerktoej .knap:not([data-fs]), .knap[data-fs=s], .fane[data-fs=s] { height: 32px; min-height: 0; padding: 0 14px; font-size: 18px; line-height: 32px; border-radius: 16px; gap: 4px; }
@@ -467,7 +482,7 @@ body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none
 
 /* Liquid Glass: blank glans over den øverste halvdel af knapper, som på fanerne */
 .knap, .tilbage { isolation: isolate; }
-.knap::before, .tilbage::before { content: ""; position: absolute; z-index: -1; inset: 0 0 45% 0; border-radius: inherit; background: linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .03)); pointer-events: none; }
+.knap::before, .tilbage::before { content: ""; position: absolute; z-index: -1; inset: 0 0 45% 0; border-radius: inherit; background: linear-gradient(rgba(255, 255, 255, var(--sheen)), rgba(255, 255, 255, .03)); pointer-events: none; }
 .knap.primaer::before { background: linear-gradient(rgba(255, 255, 255, .28), rgba(255, 255, 255, 0)); }
 .chip:disabled { opacity: .45; cursor: default; }
 
@@ -538,11 +553,11 @@ input.felt-l, select.felt-l { height: 96px; }
 .tp-staerst .ikon { width: 48px; height: 48px; }
 
 /* Tilpas felt: Gem, Nulstil og Skjul sidder øverst til højre og følger med, når man ruller */
-.tp-top { position: sticky; top: -20px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: -20px -16px 8px; padding: 12px 16px 8px; background: rgba(255, 253, 245, .97); }
+.tp-top { position: sticky; top: -20px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: -20px -16px 8px; padding: 12px 16px 8px; background: rgba(var(--papir-rgb), .97); }
 .tp-top h2 { margin: 0; }
 .ark-kort .tp-top .rakke { margin: 0 0 0 auto; gap: 6px; flex-wrap: nowrap; }
 .tp-top .knap { height: 32px; min-height: 0; padding: 0 12px; font-size: 16px; line-height: 32px; border-radius: 16px; }
-.knap.gron { background: linear-gradient(135deg, rgba(64, 168, 98, .96), rgba(38, 134, 72, .92)); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(20, 80, 40, .3), 0 8px 22px rgba(38, 134, 72, .28), var(--glans); }
+.knap.gron { background: var(--gron); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(20, 80, 40, .3), 0 8px 22px rgba(38, 134, 72, .28), var(--glans); }
 .knap.gron::before { background: linear-gradient(rgba(255, 255, 255, .28), rgba(255, 255, 255, 0)); }
 
 /* Hvad har du derhjemme?: små rækker à 32 px */
@@ -555,7 +570,7 @@ input.felt-l, select.felt-l { height: 96px; }
 
 /* Skema over ingredienser og kategorier */
 .ing-tabel { width: 100%; border-collapse: collapse; margin: var(--m) 0 var(--pt); text-align: left; }
-.ing-tabel th, .ing-tabel td { vertical-align: top; padding: 0 8px 0 0; border-bottom: 1px solid rgba(34, 56, 107, .15); }
+.ing-tabel th, .ing-tabel td { vertical-align: top; padding: 0 8px 0 0; border-bottom: 1px solid rgba(var(--blaek-rgb), .15); }
 .ing-tabel thead th { font-family: var(--hoved); font-weight: 400; color: var(--gryde-mork); }
 .ing-tabel tbody th { font-weight: 600; white-space: nowrap; }
 .ing-tabel tbody th span { margin-left: 6px; color: var(--blyant); font-weight: 400; }
@@ -567,18 +582,18 @@ input.felt-l, select.felt-l { height: 96px; }
 
 /* Rigtig Liquid Glass alle steder: også skrivefelter, vinduer og farvede knapper er gennemsigtige med sløring og lyskant */
 input[type=text], input[type=number], input[type=search], textarea, select {
-  background-color: rgba(255, 255, 255, .4);
+  background-color: var(--felt-bg);
   -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
   border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans);
 }
-.ark-kort { background: linear-gradient(rgba(255, 253, 245, .72), rgba(255, 253, 245, .55)); }
-.knap.primaer { background: linear-gradient(135deg, rgba(222, 72, 50, .78), rgba(184, 44, 27, .66)); box-shadow: var(--skygge), inset 0 1.5px 1px rgba(255, 255, 255, .6), inset 0 -1.5px 1px rgba(255, 255, 255, .2); }
-.knap.gron { background: linear-gradient(135deg, rgba(64, 168, 98, .78), rgba(38, 134, 72, .66)); box-shadow: var(--skygge), inset 0 1.5px 1px rgba(255, 255, 255, .6), inset 0 -1.5px 1px rgba(255, 255, 255, .2); }
-@media (hover: hover) { .knap.primaer:hover:not(:disabled) { background: linear-gradient(135deg, rgba(200, 55, 35, .88), rgba(160, 36, 20, .78)); } .knap.gron:hover:not(:disabled) { background: linear-gradient(135deg, rgba(48, 148, 82, .88), rgba(28, 116, 60, .78)); } }
+.ark-kort { background: linear-gradient(rgba(var(--papir-rgb), .72), rgba(var(--papir-rgb), .55)); }
+.knap.primaer { background: var(--primaer); box-shadow: var(--skygge), inset 0 1.5px 1px rgba(255, 255, 255, .6), inset 0 -1.5px 1px rgba(255, 255, 255, .2); }
+.knap.gron { background: var(--gron); box-shadow: var(--skygge), inset 0 1.5px 1px rgba(255, 255, 255, .6), inset 0 -1.5px 1px rgba(255, 255, 255, .2); }
+@media (hover: hover) { .knap.primaer:hover:not(:disabled) { background: var(--primaer-hover); } .knap.gron:hover:not(:disabled) { background: var(--gron-hover); } }
 
 /* Ingen glød omkring felter */
 input:focus, textarea:focus, select:focus, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; border-color: var(--gryde-mork); }
-@keyframes hjblink { 0%, 100% { background-color: rgba(255, 255, 255, .4); } 30% { background-color: rgba(255, 217, 90, .7); } }
+@keyframes hjblink { 0%, 100% { background-color: var(--felt-bg); } 30% { background-color: rgba(255, 217, 90, .7); } }
 
 /* «Størst»: skriften er 34 px, men linjehøjden er stadig 32 px, så teksten står på linjerne og ikke får luft mellem linjerne */
 .tp-staerst { line-height: 32px; } /* som al anden tekst: 32 px, så rækkerne holder sig på linjerne */
@@ -597,6 +612,36 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 .hj-gruppe.ulige { padding-bottom: 16px; }
 
 
-.h-knap { display: block; margin: 8px 0 2px; padding: 6px 14px; font: inherit; font-size: 17px; line-height: 24px; color: #fff; background: var(--blyant); border: 0; border-radius: 14px; cursor: pointer; }
+.h-knap { display: block; margin: 8px 0 2px; padding: 6px 14px; font: inherit; font-size: 17px; line-height: 24px; color: #fff; background: var(--sek); border: 0; border-radius: 14px; cursor: pointer; }
 .h-knap[hidden] { display: none; }
 .knap.hel { width: 100%; }
+
+/* ---------- Mørkt tema ----------
+   Samme roller som oven for, kun med nye værdier. data-tema sættes af index.html og app.js (Automatisk følger telefonen). */
+[data-tema="moerk"] {
+  color-scheme: dark;
+  --papir: #1a1f2e; --papir-rgb: 26, 31, 46; --linje: #2b3450; --margen: #7a4350;
+  --blaek: #e9edf9; --blaek-rgb: 233, 237, 249; --blyant: #aab3d0; --skyg-rgb: 0, 0, 0;
+  --tomat: #ff7561; --tomat-mork: #ff9d8c; --smor: #ffd95a; --mynte: #bfe8c9; --rosa: #ffcdc6;
+  --gryde: #5bb0c6; --gryde-mork: #86cde0; --guld: #ffc933;
+  --link: #8fc6f7; --stjerne-fra: #5f6a8c;
+  --fejl-bg: #3b2028; --fejl-tekst: #ffb9ac;
+  --glas: linear-gradient(135deg, rgba(64, 72, 104, .62), rgba(40, 46, 72, .5));
+  --glaskant: rgba(255, 255, 255, .16);
+  --skygge: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
+  --glans: inset 0 1px 1px rgba(255, 255, 255, .22), inset 0 -1px 1px rgba(255, 255, 255, .04);
+  --sheen: .12; --plet: .3;
+  --flade: rgba(36, 42, 64, .96); --flade-hover: rgba(58, 66, 98, .9); --hvid: #262d45; --felt-bg: rgba(255, 255, 255, .07);
+  --boble: linear-gradient(135deg, rgba(52, 60, 90, .95), rgba(40, 46, 72, .9));
+  --gron-chip: rgba(80, 170, 110, .38);
+  --f1: linear-gradient(135deg, rgba(255, 217, 90, .3), rgba(255, 200, 60, .14));
+  --f3: linear-gradient(135deg, rgba(255, 157, 148, .32), rgba(255, 157, 148, .14));
+  --valgt: linear-gradient(135deg, #4666c8, #3a58b4); --valgt-fast: #3a58b4; --sek: #4a5788;
+  --primaer: linear-gradient(135deg, #cf3a24, #b02a17); --primaer-hover: linear-gradient(135deg, #e04a33, #c43520); --primaer-skygge: rgba(0, 0, 0, .4);
+  --gron: linear-gradient(135deg, #2a8049, #236f3f); --gron-hover: linear-gradient(135deg, #339455, #2b8049);
+  --skjold: rgba(0, 0, 0, .6);
+}
+/* Ikoner: mørk streg som en klistermærke-kant, så de står tydeligt på den mørke flade */
+[data-tema="moerk"] .ikon { color: #22386b; filter: drop-shadow(0 0 .7px #fff) drop-shadow(0 0 .7px #fff); }
+[data-tema="moerk"] .fane .ikon { filter: drop-shadow(0 0 .7px #fff) drop-shadow(0 0 .7px #fff) drop-shadow(0 2px 2px rgba(0, 0, 0, .35)); }
+[data-tema="moerk"] .h-prikker { fill: rgba(255, 255, 255, .5); }
