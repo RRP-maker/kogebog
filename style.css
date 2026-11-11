@@ -580,8 +580,8 @@ input[type=text], input[type=number], input[type=search], textarea, select {
 input:focus, textarea:focus, select:focus, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; border-color: var(--gryde-mork); }
 @keyframes hjblink { 0%, 100% { background-color: rgba(255, 255, 255, .4); } 30% { background-color: rgba(255, 217, 90, .7); } }
 
-/* «Størst», der skifter linje: tæt linjeafstand */
-.tp-staerst { line-height: 1.1; }
+/* «Størst»: skriften er 34 px, men linjehøjden er stadig 32 px, så teksten står på linjerne og ikke får luft mellem linjerne */
+.tp-staerst { line-height: 32px; } /* som al anden tekst: 32 px, så rækkerne holder sig på linjerne */
 
 /* Sortér og ret med Claude: små felter, fast knapbredde */
 .ark-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
