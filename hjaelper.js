@@ -39,6 +39,7 @@ const Hjaelper = (() => {
       </g>
       <path class="h-arm" d="M95 82 Q109 86 106 99"/>
       <circle class="h-haand" cx="106" cy="100" r="4.5"/>
+      <path class="h-ben h-ben1" d=""/><path class="h-ben h-ben2" d=""/>
       <ellipse class="h-fod h-fod1" cx="44" cy="118" rx="11" ry="5.5"/>
       <ellipse class="h-fod h-fod2" cx="76" cy="118" rx="11" ry="5.5"/>
       <path class="h-potte" d="M22 62h76v30a24 24 0 0 1-24 24H46a24 24 0 0 1-24-24z"/>
@@ -189,7 +190,8 @@ const Hjaelper = (() => {
     return null;
   }
   function anim(el, kf, opt) { const a = el.animate(kf, { fill: 'forwards', ...opt }); anims.push(a); return a.finished.catch(() => {}); }
-  function stopAnim() { anims.forEach(a => { try { a.cancel(); } catch (e) { /* ok */ } }); anims = []; if (rod) rod.classList.remove('skridt'); }
+  function stopAnim() { anims.forEach(a => { try { a.cancel(); } catch (e) { /* ok */ } }); anims = []; if (rod) { rod.classList.remove('skridt'); nulBen(); } }
+  function nulBen() { rod.querySelectorAll('.h-fod, .h-ben').forEach(e => e.removeAttribute('transform')); rod.querySelectorAll('.h-ben').forEach(e => e.setAttribute('d', '')); }
   function markerFjern() { document.querySelectorAll('.h-maal').forEach(e => e.classList.remove('h-maal')); }
 
   // Bevægelserne: sats (sammenklemt) → flyvetur → landing (mast flad) med støv. Alt er overdrevet med vilje.
@@ -217,6 +219,7 @@ const Hjaelper = (() => {
     const sat = () => { stopAnim(); offX = nx; offY = ny; rod.style.transform = nx || ny ? `translate(${nx}px, ${ny}px)` : ''; };
     if (rolig() || dist < 6) { sat(); return; }
     const svg = figur.querySelector('svg'), top0 = figur.getBoundingClientRect().top - fy;
+    if (navn === 'skridt') return skridt(mit, fx, fy, dx, dy, dist, ret, sat);
     const D = { salto: 1500, dans: 2000, skridt: 1500, rul: 1700, hop: 1300 }[navn] || 1300;
     const d = Math.round(D + Math.min(400, dist * .5));
     // én funktion pr. bevægelse: t (0-1) → position (bevægelse frem, løft) og kropsform (drej, bred, høj)
@@ -258,8 +261,53 @@ const Hjaelper = (() => {
     sat(); Lyd.spil('bump');
     const [lx, ly] = fodpunkt(); partikler(lx, ly, 'stoev');
     // ta-da: vrikker og står stolt
-    await anim(svg, [{ transform: 'rotate(0)' }, { transform: `rotate(${-14 * ret}deg) scale(1.08)` }, { transform: `rotate(${10 * ret}deg)` }, { transform: 'rotate(-4deg)' }, { transform: 'none' }], { duration: 480, easing: 'ease-out' });
+    saetTilstand('lander');
+    await anim(svg, [{ transform: 'rotate(0)' }, { transform: `rotate(${-12 * ret}deg) scale(1.06)` }, { transform: `rotate(${7 * ret}deg)` }, { transform: 'rotate(-2deg)' }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.3,.7,.4,1)' });
     if (mit === bevNr) { stopAnim(); saetTilstand('hvile'); }
+  }
+
+  // Langt skridt: forreste ben strækker sig hen til det nye sted, så kommer kroppen, og til sidst trækkes bagerste ben med
+  function skridt(mit, fx, fy, dx, dy, dist, ret, sat) {
+    const K = 1.5, SX = dx * K, SY = dy * K; // px → tegningens enheder
+    const forr = rod.querySelector(ret > 0 ? '.h-fod2' : '.h-fod1'), bag = rod.querySelector(ret > 0 ? '.h-fod1' : '.h-fod2');
+    const fb = rod.querySelector(ret > 0 ? '.h-ben2' : '.h-ben1'), bb = rod.querySelector(ret > 0 ? '.h-ben1' : '.h-ben2');
+    const hofte = el => [Number(el.getAttribute('cx')), 106], fod = el => [Number(el.getAttribute('cx')), 118];
+    const loft = Math.min(46, 18 + dist * .1);
+    const ben = (b, f, ox, oy) => { // ben fra hoften til foden, med et lille knæk
+      const [hx, hy] = hofte(f), [px, py] = fod(f), tx = px + ox, ty = py + oy, mx = (hx + tx) / 2, my = (hy + ty) / 2;
+      const l = Math.hypot(tx - hx, ty - hy), bue = Math.min(14, l * .12);
+      b.setAttribute('d', l < 14 ? '' : `M${hx} ${hy}Q${mx} ${my - bue} ${tx} ${ty}`);
+      f.setAttribute('transform', `translate(${ox} ${oy})`);
+    };
+    const d = Math.round(Math.max(1500, Math.min(2400, 1200 + dist * 1.2)));
+    saetTilstand('flyv'); Lyd.spil('hop');
+    return new Promise(slut => {
+      const t0 = performance.now();
+      const ramme = nu => {
+        if (mit !== bevNr) return slut();
+        const t = Math.min(1, (nu - t0) / d);
+        const a = io(seg(t, 0, .38)), b = io(seg(t, .38, .7)), c = io(seg(t, .7, .96));
+        // kroppen: står stille, glider så frem med et lille løft, og læner sig mod det nye sted
+        const kx = fx + dx * b, ky = fy + dy * b - Math.sin(Math.PI * b) * 12 + Math.sin(Math.PI * a) * 4;
+        rod.style.transform = `translate(${kx}px, ${ky}px)`;
+        figur.querySelector('svg').style.transform = `rotate(${ret * (8 * Math.sin(Math.PI * Math.min(1, t / .7)) - 6 * Math.sin(Math.PI * c))}deg)`;
+        // forreste fod: rejser sig og lander på det nye sted, bliver der, mens kroppen kommer
+        const fOx = SX * a - SX * b, fOy = SY * a - SY * b - Math.sin(Math.PI * a) * loft * K;
+        // bagerste fod: står fast, mens kroppen går, og hives så med
+        const bOx = -SX * b + SX * c, bOy = -SY * b + SY * c - Math.sin(Math.PI * c) * loft * .7 * K;
+        ben(fb, forr, fOx, fOy); ben(bb, bag, bOx, bOy);
+        if (t >= .38 && !ramme.a) { ramme.a = 1; Lyd.spil('bump'); const r = forr.getBoundingClientRect(); partikler(r.left + r.width / 2, r.bottom, 'stoev'); }
+        if (t >= .96 && !ramme.c) { ramme.c = 1; Lyd.spil('bump'); const r = bag.getBoundingClientRect(); partikler(r.left + r.width / 2, r.bottom, 'stoev'); }
+        if (t < 1) return requestAnimationFrame(ramme);
+        figur.querySelector('svg').style.transform = ''; nulBen(); sat(); lander(mit).then(slut);
+      };
+      requestAnimationFrame(ramme);
+    });
+  }
+  // blød overgang tilbage til hvile: låget lukker roligt, i stedet for at klappe i
+  async function lander(mit) {
+    saetTilstand('lander'); await vent(300);
+    if (mit === bevNr) saetTilstand('hvile');
   }
 
   async function startTur() {
@@ -285,7 +333,7 @@ const Hjaelper = (() => {
     const p = el ? plan(el) : null, f = figur.getBoundingClientRect();
     await flyt(p ? p.x - (f.left - offX) : (el ? 0 : offX), p ? p.y - (f.top - offY) : (el ? 0 : offY), s.bev || 'hop');
     if (!tur || tur.id !== id) return;
-    if (s.bev === 'dans') { saetTilstand('dans'); await vent(1400); if (!tur || tur.id !== id) return; }
+    if (s.bev === 'dans') { saetTilstand('dans'); await vent(1440); if (!tur || tur.id !== id) return; }
     if (el) el.classList.add('h-maal');
     flytter = false;
     sig(s.tekst, { peg: el, nu: true, tur: true, under: !!(p && p.under), nr: i + 1, af: t.trin.length });
