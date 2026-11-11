@@ -544,3 +544,18 @@ input.felt-l, select.felt-l { height: 96px; }
 .tp-top .knap { height: 32px; min-height: 0; padding: 0 12px; font-size: 16px; line-height: 32px; border-radius: 16px; }
 .knap.gron { background: linear-gradient(135deg, rgba(64, 168, 98, .96), rgba(38, 134, 72, .92)); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(20, 80, 40, .3), 0 8px 22px rgba(38, 134, 72, .28), var(--glans); }
 .knap.gron::before { background: linear-gradient(rgba(255, 255, 255, .28), rgba(255, 255, 255, 0)); }
+
+/* Hvad har du derhjemme?: små rækker à 32 px */
+.hj-rk.felt-s { grid-template-columns: 48px 60px minmax(0, 1fr) 32px 32px; font-size: 18px; }
+.hj-rk.felt-s input, .hj-rk.felt-s select { height: 32px; padding: 0 8px; font-size: 18px; border-radius: 10px; }
+.hj-rk.felt-s .hj-mgd { padding: 0 2px; }
+.hj-rk.felt-s select { padding: 0 14px 0 6px; }
+.hj-rk.felt-s .hj-ikon { width: 32px; height: 32px; font-size: 20px; }
+.hj-rk.felt-s .hj-ikon .ikon { width: 18px; height: 18px; }
+
+/* Skema over ingredienser og kategorier */
+.ing-tabel { width: 100%; border-collapse: collapse; margin: var(--m) 0 var(--pt); text-align: left; }
+.ing-tabel th, .ing-tabel td { vertical-align: top; padding: 0 8px 0 0; border-bottom: 1px solid rgba(34, 56, 107, .15); }
+.ing-tabel thead th { font-family: var(--hoved); font-weight: 400; color: var(--gryde-mork); }
+.ing-tabel tbody th { font-weight: 600; white-space: nowrap; }
+.ing-tabel tbody th span { margin-left: 6px; color: var(--blyant); font-weight: 400; }

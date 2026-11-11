@@ -96,7 +96,25 @@ ${andre.map(i => '- ' + i.navn).join('\n')}
     else Object.entries(j).forEach(([k, v]) => { if (typeof v === 'string') ud[rens(k)] = v; });
     return ud;
   }
+  // Skema over alle ingredienser i databasen: kategori og ingredienserne under den
+  function oversigtHtml() {
+    const grupper = new Map();
+    for (const c of sorteret()) grupper.set(c.id, { navn: c.navn, liste: [] });
+    const andet = { navn: 'Andet', liste: [] };
+    for (const i of ing) (grupper.get(i.kategori_id) || andet).liste.push(i.navn);
+    const alle = [...grupper.values(), andet].filter(g => g.liste.length);
+    return alle.length ? `<table class="ing-tabel tekst-s"><thead><tr><th>Kategori</th><th>Ingredienser</th></tr></thead><tbody>${alle.map(g =>
+      `<tr><th scope="row">${esc(g.navn)}<span>${g.liste.length}</span></th><td>${g.liste.sort((x, y) => x.localeCompare(y, 'da')).map(esc).join(', ')}</td></tr>`).join('')}</tbody></table>`
+      : '<p class="tomt">Der er ingen ingredienser i databasen endnu.</p>';
+  }
   Object.assign(H, {
+    async ingOversigt() {
+      await hent();
+      const d = ark(`<h2>Ingredienser i databasen</h2><small>${ing.length} ${ing.length === 1 ? 'ingrediens' : 'ingredienser'} i alt.</small>
+        ${oversigtHtml()}
+        <div class="rakke"><button type="button" class="knap" data-h="lukArk">Luk</button></div>`);
+      $('.ark-bag', d).addEventListener('click', lukArk);
+    },
     async katKopier() {
       let ok = false;
       try { await navigator.clipboard.writeText(besked); ok = true; } catch (e) { ok = await kopier(besked); }

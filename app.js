@@ -724,7 +724,8 @@ async function forslagSide() {
     <div id="forslag-nu"></div>
     <div id="hj-boks"></div>
     <button type="button" class="knap" data-h="sorterAndet">${ik('gnist')} Sortér «Andet» med Claude</button>
-    <div id="forslag-resten"></div>`;
+    <div id="forslag-resten"></div>
+    <button type="button" class="knap" data-h="ingOversigt">${ik('tag')} Se alle ingredienser</button>`;
   Hjaelper.side('Skriv det, du har derhjemme, ét ord i hvert felt. Så finder jeg retter, du kan lave, og siger, hvad du kan købe for at lave flere.');
   await Hjemme.vis($('#hj-boks'), tegnForslag);
 }

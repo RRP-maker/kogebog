@@ -46,7 +46,7 @@ const Hjemme = (() => {
 
   function raekke(h) {
     const i = ingAf(h.ingrediens_id);
-    return `<div class="hj-rk felt felt-m" data-id="${h.id}">
+    return `<div class="hj-rk felt felt-s" data-id="${h.id}">
       <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal" value="${Number(h.maengde) > 0 ? esc(visTal(Number(h.maengde))) : ''}">
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
