@@ -880,6 +880,7 @@ async function laesUdklip() {
 }
 
 // ---------- Mere: backup, indstillinger ----------
+const tilpasHoejde = () => Math.max(20, Math.min(90, Math.round(Number(lager.hent('tilpasHoejde', 33))) || 33));
 function mereSide() {
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Mere</h1>
     <h2>Indstillinger</h2>
@@ -888,6 +889,11 @@ function mereSide() {
     <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Tilpas siden</span></label>
     <p class="lille">Slå til, og tryk så på en knap eller overskrift for at ændre teksten og skriftstørrelsen. Hold fingeren på et felt og træk, for at flytte det. Ændringen gælder alle steder.</p>
     <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
+    <p class="lille">Hvor højt vinduet til at tilpasse et felt må blive, i procent af skærmen.</p>
+    <div class="stepper" role="group" aria-label="Højde på tilpas-vinduet">
+      <button type="button" class="rund felt felt-s" id="tphned" aria-label="Lavere">−</button>
+      <input id="tphoejde" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="${tilpasHoejde()}" aria-label="Højde i procent">
+      <button type="button" class="rund felt felt-s" id="tpop" aria-label="Højere">+</button> <span>%</span></div>
     <h2>Sikkerhedskopi</h2>
     <p class="lille">Hent alt indhold som en fil. Gem den et sikkert sted.</p>
     <button class="knap" data-h="eksport">${ik('hent')} Hent sikkerhedskopi</button>
@@ -895,6 +901,10 @@ function mereSide() {
     <p class="lille">På iPhone og iPad: Tryk på Del-knappen i Safari, og vælg «Føj til hjemmeskærm».</p>`;
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
   $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));
+  const saetHoejde = n => { const v = Math.max(20, Math.min(90, Math.round(Number(n)) || 33)); lager.gem('tilpasHoejde', v); $('#tphoejde').value = v; };
+  $('#tphned').addEventListener('click', () => saetHoejde(tilpasHoejde() - 5));
+  $('#tpop').addEventListener('click', () => saetHoejde(tilpasHoejde() + 5));
+  $('#tphoejde').addEventListener('change', e => saetHoejde(e.target.value));
   $('#tilpasnul').addEventListener('click', async () => { if (await bekraeft('Vil du sætte alle tekster og størrelser tilbage?', 'Nulstil')) { Tilpas.nulstil(); toast('Teksterne er nulstillet'); } });
   $('#lydtil').addEventListener('change', e => { Lyd.saet(e.target.checked); Lyd.spil('klik'); });
   Hjaelper.side('Her kan du slå mig og lydene til og fra, og hente en sikkerhedskopi.');
