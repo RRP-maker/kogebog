@@ -1128,20 +1128,23 @@ document.addEventListener('click', async e => {
   catch (err) { console.error(err); toast('Det virkede ikke. Tjek internettet, og prøv igen.'); }
 });
 
-// Notesbogens linjer: find et stykke tekst, og læg linjerne, så teksten står på dem.
-function ypos(el) { let y = 0; for (; el; el = el.offsetParent) y += el.offsetTop; return y; }
+// Notesbogens linjer: et net à 32 px, der starter, hvor indholdet i <main> starter. Så står alle rækker, felter og knapper på linjerne.
 let rasterTimer;
 function rasterIgen() {
   cancelAnimationFrame(rasterTimer);
   rasterTimer = requestAnimationFrame(() => {
-    const ref = app.querySelector('.trin > li, .tekst, .lav-trin, h2, p');
-    if (!ref) return;
-    const y = (((ypos(ref) - 7) % 32) + 32) % 32;
-    document.documentElement.style.setProperty('--raster', y + 'px');
+    const main = document.querySelector('main');
+    app.querySelectorAll('.laerred-ramme').forEach(el => { // rammen runder op til hele rækker, så resten af siden bliver på linjerne
+      el.style.height = '';
+      el.style.height = Math.ceil(el.getBoundingClientRect().height / 32 - 0.02) * 32 + 'px';
+    });
+    const y = main.getBoundingClientRect().top + scrollY + parseFloat(getComputedStyle(main).paddingTop);
+    document.documentElement.style.setProperty('--raster', (((Math.round(y) % 32) + 32) % 32) + 'px');
   });
 }
 new MutationObserver(rasterIgen).observe(app, { childList: true, subtree: true });
 addEventListener('resize', rasterIgen);
+if (window.ResizeObserver) { const ro = new ResizeObserver(rasterIgen); ['main', '.top', '#ure'].forEach(q => ro.observe(document.querySelector(q))); }
 if (document.fonts) document.fonts.ready.then(rasterIgen);
 document.addEventListener('DOMContentLoaded', () => { Hjaelper.start(); route(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
