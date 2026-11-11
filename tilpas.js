@@ -7,6 +7,7 @@
 // Mangler tabellen, gemmes den kun på denne enhed.
 const Tilpas = (() => {
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small';
+  const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
   const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, FLYT = VALG + ', ' + KORT; // opskrifter kan ikke tilpasses
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
@@ -67,13 +68,13 @@ const Tilpas = (() => {
       if (drag && drag.laast && drag.el === el) return;
       let k = el.dataset.org;
       if (el.matches('.kort')) k = el.closest('#ark') ? null : 'kort:' + (el.getAttribute('href') || el.textContent.trim().slice(0, 40));
-      const p = k && data[k] && data[k].p;
+      const p = !el.matches(FAST) && k && data[k] && data[k].p;
       if (k) el.dataset.flyt = k; else delete el.dataset.flyt;
-      const fast = !!k && erFast(el, k), o = (k && data[k]) || {};
+      const fast = !el.matches(FAST) && !!k && erFast(el, k), o = (k && data[k]) || {};
       if (el.matches('.knap, .tilbage, .fane') && o.z) el.dataset.fs = o.z; else delete el.dataset.fs;
       plac(el, p, fast);
       el.toggleAttribute('data-laast', fast);
-      el.toggleAttribute('data-ikkeflyt', !!o.m);
+      el.toggleAttribute('data-ikkeflyt', !!o.m || el.matches(FAST));
     });
     document.querySelectorAll('.rakke, .vaerktoej, .genveje, .faner').forEach(c => { // tomme rækker skjules med
       const tom = c.children.length > 0 && [...c.children].every(k => k.style.display === 'none');
@@ -159,6 +160,7 @@ const Tilpas = (() => {
   const flytTekst = v => v ? 'Feltet kan ikke flyttes. Du kan stadig ændre tekst og farve.' : 'Du flytter feltet ved at holde fingeren på det og trække.';
   function aabn(el) {
     const k = el.dataset.org, o = data[k] || {}, felt = el.matches('.knap, .tilbage, .fane'), nat = naturligZ(el), std = standardFarver(el);
+    const opsk = el.matches(FAST);
     let st = o.s || 1, f = o.f || std.f, b = o.b || std.b, x = !!o.x, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
@@ -171,9 +173,9 @@ const Tilpas = (() => {
       <label>Tekstfarve</label>${sw(TEKSTFARVER, f, 'f')}
       ${felt ? `<label>Feltets farve</label>${sw(FELTFARVER, b, 'b', true)}` : ''}
       <p class="lille">Ændringen gælder alle steder, hvor «${esc(k)}» står.</p>
-      <div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
-      <p class="lille" id="tp-flyttekst">${flytTekst(m)}</p>
-      ${el.closest('.top') ? '' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button></div>
+      ${opsk ? '<p class="lille">Teksten i opskriften kan ændres, men ikke flyttes.</p>' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
+      <p class="lille" id="tp-flyttekst">${flytTekst(m)}</p>`}
+      ${el.closest('.top') || opsk ? '' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button></div>
       <p class="lille" id="tp-laastekst">${laasTekst(l)}</p>`}
       <div class="rakke"><button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul her'}</button><button class="knap" type="button" data-tp="nulstil">Nulstil</button><button class="knap primaer" type="button" data-tp="gem">Gem</button></div>`);
     d.addEventListener('click', e => {
@@ -197,7 +199,7 @@ const Tilpas = (() => {
         if (m) ny.m = true;
         let p = o.p;
         if (l !== foer) { const g = p || [0, 0]; p = [g[0], Math.round((g[1] + (l ? -scrollY : scrollY)) * 100) / 100]; if (!p[0] && !p[1]) p = null; } // feltet bliver, hvor det står på skærmen nu
-        if (p) ny.p = p;
+        if (p && !opsk) ny.p = p;
         if (felt && z !== nat) ny.z = z;
         if (l !== standardFast(el)) ny.l = l;
       }
@@ -252,7 +254,7 @@ const Tilpas = (() => {
   function paaTekst(el) {
     const r = el.getBoundingClientRect(), ph = el._ph, snit = q => q.right > r.left + 4 && q.left < r.right - 4 && q.bottom > r.top + 4 && q.top < r.bottom - 4;
     for (const e of document.querySelectorAll('main *')) {
-      if (e.contains(el) || el.contains(e) || (ph && (ph === e || ph.contains(e))) || e.closest(BLOKSKIP)) continue;
+      if (e.contains(el) || el.contains(e) || (ph && (ph === e || ph.contains(e))) || (e.closest(BLOKSKIP) && !e.closest(FAST))) continue; // tekst i opskriften flytter aldrig, så den tæller med
       if (e.matches('input, textarea, select')) { if (e.offsetHeight && snit(e.getBoundingClientRect())) return true; continue; }
       for (const n of e.childNodes) {
         if (n.nodeType !== 3 || !n.nodeValue.trim()) continue;
@@ -282,7 +284,7 @@ const Tilpas = (() => {
   }
   document.addEventListener('pointerdown', e => {
     if (!til || !aktiv || e.button > 0) return;
-    const el = e.target.closest('[data-flyt]'); if (!el || el.closest('#ark') || (data[el.dataset.flyt] || {}).m) return;
+    const el = e.target.closest('[data-flyt]'); if (!el || el.closest('#ark') || (data[el.dataset.flyt] || {}).m || el.matches(FAST)) return;
     const d = drag = { el, x0: e.clientX, y0: e.clientY, p0: (data[el.dataset.flyt] || {}).p || [0, 0], laast: false };
     d.t = setTimeout(() => startTraek(d), 300);
   }, true);

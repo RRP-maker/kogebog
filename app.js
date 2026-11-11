@@ -379,7 +379,7 @@ async function metodeSide(rid) {
   const trin = linjer(r.trin);
   app.innerHTML = `<a class="tilbage" href="#/metoder">‹ Metode</a><h1>${esc(r.titel)}</h1>
     ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
-    <h2>Sådan gør du</h2>
+    <h2 class="opsk">Sådan gør du</h2>
     ${trin.length ? `<ol class="trin">${trin.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '<p class="lille">Der er ingen trin endnu. Tryk på «Rediger» for at skrive dem.</p>'}
     ${knapper('metoder', r.id)}`;
   Hjaelper.side('Her er en metode. Læs trinene, og prøv selv. Du kan rette teksten med «Rediger».');
@@ -409,20 +409,20 @@ async function opskriftSide(rid) {
     ${c.length ? `<p class="chips">${c.map(x => `<span>${x}</span>`).join('')}</p>` : ''}
     ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
     <button class="knap primaer stor skaerm" data-h="lav">▶ Lav retten trin for trin</button>
-    <h2>Ingredienser</h2>
+    <h2 class="opsk">Ingredienser</h2>
     <div class="portioner skaerm"><button class="rund" data-h="port" data-v="-1" aria-label="Færre portioner">−</button>
       <span id="portvis"></span><button class="rund" data-h="port" data-v="1" aria-label="Flere portioner">+</button></div>
     <ul class="ing" id="ing"></ul>
     <h2>Sådan gør du</h2>
     <div id="trin"></div>
-    <h2 class="skaerm">Vores side</h2>
-    <p class="lille skaerm">Sæt billeder og figurer på siden, og flyt dem rundt.</p>
+    <h2 class="skaerm opsk">Vores side</h2>
+    <p class="lille skaerm opsk">Sæt billeder og figurer på siden, og flyt dem rundt.</p>
     <div class="laerred-ramme skaerm"><div id="laerred" class="laerred"></div></div>
     <div id="laerred-knapper" class="rakke skaerm"></div>
     <input id="billedfil" type="file" accept="image/*" hidden>
-    <h2 class="skaerm">Hvordan smagte det?</h2>
+    <h2 class="skaerm opsk">Hvordan smagte det?</h2>
     <div id="stjerner" class="skaerm"></div>
-    ${egne.length ? `<h2>Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}` : ''}
+    ${egne.length ? `<h2 class="opsk">Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}` : ''}
     <div class="rakke skaerm"><button class="knap" data-h="print">Print</button>
       <button class="knap fare" data-h="slet" data-v="opskrifter:${r.id}">Slet</button></div>`;
   tegnIng(); tegnTrin(); tegnStjerner(); tegnLaerredKnapper(false);
