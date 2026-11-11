@@ -442,7 +442,10 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 [data-tilstand=flyv] .h-krop { animation: none; }
 [data-tilstand=flyv] .h-laag { transform: translateY(-9px) rotate(10deg); }
 [data-tilstand=flyv] .h-indre { transform: none; }
-[data-tilstand=flyv] .h-pupil { animation: snurr .5s linear infinite; }
+[data-tilstand=flyv] .h-pupil { animation: snurr .4s linear infinite; }
+[data-tilstand=flyv] .h-pegearm { animation: vild .18s ease-in-out infinite alternate; }
+[data-tilstand=flyv] .h-tunge { animation: vrikke .12s ease-in-out infinite alternate; }
+@keyframes vild { from { transform: rotate(-50deg); } to { transform: rotate(25deg); } }
 /* Dans: svinger i hofterne, hopper fra fod til fod, skeen vifter, låget klapper */
 [data-tilstand=dans] .h-krop { animation: dans .34s ease-in-out infinite alternate; }
 [data-tilstand=dans] .h-pegearm { animation: vift .22s ease-in-out infinite alternate; }
@@ -451,13 +454,13 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 [data-tilstand=dans] .h-pupil { animation: rasl .22s linear infinite alternate; }
 [data-tilstand=dans] .h-fod1 { animation: fodop .34s ease-in-out infinite alternate; }
 [data-tilstand=dans] .h-fod2 { animation: fodop .34s ease-in-out infinite alternate-reverse; }
-@keyframes dans { from { transform: rotate(-11deg) translateY(0); } to { transform: rotate(9deg) translateY(-9px); } }
-@keyframes fodop { to { transform: translateY(-7px); } }
+@keyframes dans { from { transform: rotate(-20deg) translateY(0) scale(1.1, .9); } to { transform: rotate(18deg) translateY(-22px) scale(.92, 1.1); } }
+@keyframes fodop { to { transform: translateY(-14px) rotate(-25deg); } }
 /* Langt skridt: benene strækkes helt ud til hver side */
-.skridt .h-fod1 { animation: skridt1 var(--d, 800ms) ease-in-out both; }
-.skridt .h-fod2 { animation: skridt2 var(--d, 800ms) ease-in-out both; }
-@keyframes skridt1 { 0%, 100% { transform: none; } 45% { transform: translateX(-20px) scaleX(1.9); } }
-@keyframes skridt2 { 0%, 100% { transform: none; } 45% { transform: translateX(20px) scaleX(1.9); } }
+.skridt .h-fod1 { animation: skridt1 var(--d, 600ms) ease-in-out .2s 2 both; }
+.skridt .h-fod2 { animation: skridt2 var(--d, 600ms) ease-in-out .2s 2 both; }
+@keyframes skridt1 { 0%, 100% { transform: none; } 50% { transform: translate(-30px, -6px) scaleX(2.6) rotate(-12deg); } }
+@keyframes skridt2 { 0%, 100% { transform: none; } 50% { transform: translate(30px, -6px) scaleX(2.6) rotate(12deg); } }
 /* Bobler og markering under rundvisning */
 .h-boble.tur { width: min(270px, calc(100vw - 24px)); max-width: none; }
 .h-boble.under { bottom: auto; top: 94px; transform-origin: 100% 0; border-radius: 6px 22px 22px 22px; }
@@ -468,6 +471,9 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-stop, .h-naeste { font: inherit; font-size: 17px; line-height: 24px; padding: 6px 14px; border: 0; border-radius: 14px; cursor: pointer; }
 .h-naeste { color: #fff; background: var(--sek); }
 .h-stop { color: var(--blaek); background: rgba(var(--blaek-rgb), .1); }
+.h-partikel { position: fixed; z-index: 39; pointer-events: none; }
+.h-partikel.stoev { width: 12px; height: 12px; border-radius: 50%; background: rgba(var(--blaek-rgb), .22); }
+.h-partikel.stjerne { color: var(--guld); font-size: 18px; line-height: 1; }
 .h-maal { outline: 3px dashed var(--gryde-mork); outline-offset: 4px; border-radius: 12px; animation: maalpuls 1.2s ease-in-out infinite; }
 @keyframes maalpuls { 50% { outline-offset: 8px; } }
 

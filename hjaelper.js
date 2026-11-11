@@ -192,41 +192,73 @@ const Hjaelper = (() => {
   function stopAnim() { anims.forEach(a => { try { a.cancel(); } catch (e) { /* ok */ } }); anims = []; if (rod) rod.classList.remove('skridt'); }
   function markerFjern() { document.querySelectorAll('.h-maal').forEach(e => e.classList.remove('h-maal')); }
 
-  // Bevægelserne: salto (hop og drej rundt), dans (små hop og vrid), skridt (ét langt skridt, benene strækkes), rul (ligger ned og ruller), hop (to hop)
+  // Bevægelserne: sats (sammenklemt) → flyvetur → landing (mast flad) med støv. Alt er overdrevet med vilje.
+  const seg = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));
+  const io = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+  function partikler(x, y, slags) {
+    if (rolig()) return;
+    const n = slags === 'stjerne' ? 6 : 7;
+    for (let i = 0; i < n; i++) {
+      const p = document.createElement('span');
+      p.className = 'h-partikel ' + slags;
+      if (slags === 'stjerne') p.textContent = '✦';
+      p.style.left = x + 'px'; p.style.top = y + 'px';
+      document.body.append(p);
+      const v = slags === 'stjerne' ? Math.random() * Math.PI * 2 : Math.PI + (i / (n - 1)) * Math.PI, l = 30 + Math.random() * 30;
+      p.animate([{ transform: 'translate(-50%,-50%) scale(.4)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${Math.cos(v) * l}px), calc(-50% + ${Math.sin(v) * l * (slags === 'stjerne' ? 1 : .45) - 8}px)) scale(${slags === 'stjerne' ? 1.3 : 1.6})`, opacity: 0 }],
+        { duration: 520 + Math.random() * 200, easing: 'cubic-bezier(.2,.8,.3,1)' }).finished.then(() => p.remove(), () => p.remove());
+    }
+  }
+  function fodpunkt() { const r = figur.getBoundingClientRect(); return [r.left + r.width / 2, r.bottom - 6]; }
+
   async function flyt(nx, ny, navn) {
-    const mit = ++bevNr, fx = offX, fy = offY, dx = nx - fx, dy = ny - fy, dist = Math.hypot(dx, dy);
+    const mit = ++bevNr, fx = offX, fy = offY, dx = nx - fx, dy = ny - fy, dist = Math.hypot(dx, dy), ret = dx < 0 ? -1 : 1;
     const sat = () => { stopAnim(); offX = nx; offY = ny; rod.style.transform = nx || ny ? `translate(${nx}px, ${ny}px)` : ''; };
     if (rolig() || dist < 6) { sat(); return; }
-    const d = Math.round(Math.max(700, Math.min(1250, 520 + dist * 0.7)));
-    const pos = (t, loft = 0) => `translate(${fx + dx * t}px, ${fy + dy * t - loft}px)`;
-    const kf = (fn, n = 16) => Array.from({ length: n + 1 }, (_, i) => ({ transform: fn(i / n) }));
-    const svg = figur.querySelector('svg'), job = [];
-    saetTilstand('flyv');
-    if (navn === 'salto') {
-      Lyd.spil('salto');
-      job.push(anim(rod, kf(t => pos(ease(t), Math.sin(Math.PI * t) * (60 + dist * 0.12))), { duration: d, easing: 'linear' }));
-      job.push(anim(svg, [{ transform: 'rotate(0deg)' }, { transform: 'rotate(-360deg)' }], { duration: d * 0.85, delay: d * 0.08, easing: 'ease-in-out' }));
-    } else if (navn === 'dans') {
-      Lyd.spil('hop');
-      job.push(anim(rod, kf(t => pos(ease(t), Math.abs(Math.sin(Math.PI * t * 3)) * 22), 24), { duration: d * 1.2, easing: 'linear' }));
-      job.push(anim(svg, kf(t => `rotate(${Math.sin(Math.PI * t * 6) * 13}deg)`, 24), { duration: d * 1.2, easing: 'linear' }));
-    } else if (navn === 'skridt') {
-      rod.classList.add('skridt'); rod.style.setProperty('--d', d + 'ms');
-      job.push(anim(rod, kf(t => pos(ease(t), Math.sin(Math.PI * t) * 8)), { duration: d, easing: 'linear' }));
-      job.push(anim(svg, [{ transform: 'none' }, { transform: 'skewX(-14deg) scale(1.08, .88)', offset: .45 }, { transform: 'skewX(6deg)', offset: .8 }, { transform: 'none' }], { duration: d }));
-    } else if (navn === 'rul') {
-      Lyd.spil('hop');
-      job.push(anim(rod, kf(t => pos(ease(t), Math.sin(Math.PI * t) * 10)), { duration: d * 1.1, easing: 'linear' }));
-      job.push(anim(svg, [{ transform: 'rotate(0deg)' }, { transform: 'rotate(90deg)', offset: .14 }, { transform: 'rotate(450deg)', offset: .86 }, { transform: 'rotate(360deg)' }], { duration: d * 1.1, easing: 'ease-in-out' }));
-    } else { // hop
-      Lyd.spil('hop');
-      job.push(anim(rod, kf(t => pos(ease(t), Math.abs(Math.sin(Math.PI * t * 2)) * 30)), { duration: d, easing: 'linear' }));
-      job.push(anim(svg, [{ transform: 'none' }, { transform: 'scale(.9, 1.12)', offset: .2 }, { transform: 'scale(1.1, .88)', offset: .5 }, { transform: 'scale(.92, 1.1)', offset: .72 }, { transform: 'none' }], { duration: d }));
+    const svg = figur.querySelector('svg'), top0 = figur.getBoundingClientRect().top - fy;
+    const D = { salto: 1500, dans: 2000, skridt: 1500, rul: 1700, hop: 1300 }[navn] || 1300;
+    const d = Math.round(D + Math.min(400, dist * .5));
+    // én funktion pr. bevægelse: t (0-1) → position (bevægelse frem, løft) og kropsform (drej, bred, høj)
+    const F = {
+      salto: t => { const u = seg(t, .16, .84), k = seg(t, 0, .16), l = seg(t, .84, 1);
+        return { e: io(u), loft: Math.sin(Math.PI * u) * (150 + dist * .15), r: -ret * (dist > 220 ? 720 : 360) * io(u) + (k < 1 ? -ret * 8 * Math.sin(Math.PI * k) : 0),
+          sx: 1 + .3 * Math.sin(Math.PI * k) - .15 * Math.sin(Math.PI * seg(u, 0, .25)) + .35 * Math.sin(Math.PI * l), sy: 1 - .35 * Math.sin(Math.PI * k) + .3 * Math.sin(Math.PI * seg(u, 0, .25)) - .4 * Math.sin(Math.PI * l) }; },
+      hop: t => { const k = seg(t, 0, .12), u = seg(t, .12, 1), h = (u * 3) % 1, nr = Math.min(2, Math.floor(u * 3)), lan = h > .85 || h < .1;
+        return { e: io(u), loft: Math.sin(Math.PI * h) * [70, 50, 34][nr], r: ret * 10 * Math.sin(Math.PI * 2 * h),
+          sx: 1 + .3 * Math.sin(Math.PI * k) + (lan && u > .02 ? .25 : -.1 * Math.sin(Math.PI * h)), sy: 1 - .3 * Math.sin(Math.PI * k) + (lan && u > .02 ? -.3 : .18 * Math.sin(Math.PI * h)) }; },
+      skridt: t => { const k = seg(t, 0, .12), u = seg(t, .12, .92), l = seg(t, .92, 1), h = (u * 2) % 1;
+        return { e: io(u), loft: Math.sin(Math.PI * h) * 46, r: ret * (18 * Math.sin(Math.PI * u) - 10 * Math.sin(Math.PI * k)),
+          sx: 1 + .25 * Math.sin(Math.PI * k) + .3 * Math.sin(Math.PI * h) + .3 * Math.sin(Math.PI * l), sy: 1 - .25 * Math.sin(Math.PI * k) - .18 * Math.sin(Math.PI * h) - .3 * Math.sin(Math.PI * l) }; },
+      rul: t => { const k = seg(t, 0, .14), u = seg(t, .14, .8), op = seg(t, .8, 1);
+        const r = k < 1 ? ret * 90 * io(k) : u < 1 ? ret * (90 + 720 * io(u)) : ret * (810 - 90 * io(op));
+        return { e: io(seg(t, .08, .86)), loft: Math.abs(Math.sin(Math.PI * 4 * u)) * 14 + Math.sin(Math.PI * op) * 70, r,
+          sx: 1 + .2 * Math.sin(Math.PI * k) + .3 * Math.sin(Math.PI * seg(op, .7, 1)), sy: 1 - .25 * Math.sin(Math.PI * k) - .35 * Math.sin(Math.PI * seg(op, .7, 1)) }; },
+      dans: t => { const u = seg(t, .05, .95), spin = seg(u, .42, .62), h = (u * 6) % 1;
+        return { e: io(u), loft: Math.abs(Math.sin(Math.PI * h)) * 26 + Math.sin(Math.PI * spin) * 60,
+          r: 26 * Math.sin(Math.PI * 2 * u * 3) * (1 - Math.sin(Math.PI * spin)) + ret * 360 * io(spin),
+          sx: 1 + .14 * Math.sin(Math.PI * 2 * h), sy: 1 - .14 * Math.sin(Math.PI * 2 * h) }; }
+    }[navn] || (t => ({ e: t, loft: 0, r: 0, sx: 1, sy: 1 }));
+    const N = 60, rk = [], sk = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N, p = F(t), x = fx + dx * p.e, y = fy + dy * p.e;
+      const loft = Math.min(p.loft, Math.max(0, top0 + y - 12)); // aldrig ud over skærmens top
+      rk.push({ transform: `translate(${x}px, ${y - loft}px)` });
+      sk.push({ transform: `translateY(${(1 - p.sy) * 30}px) rotate(${p.r}deg) scale(${p.sx}, ${p.sy})` });
     }
-    await Promise.all(job);
+    saetTilstand('flyv');
+    if (navn === 'skridt') { rod.classList.add('skridt'); rod.style.setProperty('--d', Math.round(d * .4) + 'ms'); }
+    Lyd.spil(navn === 'salto' ? 'salto' : 'hop');
+    const [sx0, sy0] = fodpunkt();
+    setTimeout(() => { if (mit === bevNr) partikler(sx0, sy0, 'stoev'); }, d * .14);
+    if (navn === 'salto' || navn === 'dans') setTimeout(() => { if (mit === bevNr) { const r = figur.getBoundingClientRect(); partikler(r.left + r.width / 2, r.top + r.height / 2, 'stjerne'); } }, d * .5);
+    if (navn === 'hop' || navn === 'skridt') [.45, .7].forEach(f => setTimeout(() => { if (mit === bevNr) { const [a, b] = fodpunkt(); partikler(a, b, 'stoev'); } }, d * f));
+    await Promise.all([anim(rod, rk, { duration: d, easing: 'linear' }), anim(svg, sk, { duration: d, easing: 'linear' })]);
     if (mit !== bevNr) return; // afbrudt
     sat(); Lyd.spil('bump');
-    await anim(svg, [{ transform: 'scale(1.12, .86)' }, { transform: 'none' }], { duration: 180, easing: 'ease-out' });
+    const [lx, ly] = fodpunkt(); partikler(lx, ly, 'stoev');
+    // ta-da: vrikker og står stolt
+    await anim(svg, [{ transform: 'rotate(0)' }, { transform: `rotate(${-14 * ret}deg) scale(1.08)` }, { transform: `rotate(${10 * ret}deg)` }, { transform: 'rotate(-4deg)' }, { transform: 'none' }], { duration: 480, easing: 'ease-out' });
     if (mit === bevNr) { stopAnim(); saetTilstand('hvile'); }
   }
 
@@ -253,7 +285,7 @@ const Hjaelper = (() => {
     const p = el ? plan(el) : null, f = figur.getBoundingClientRect();
     await flyt(p ? p.x - (f.left - offX) : (el ? 0 : offX), p ? p.y - (f.top - offY) : (el ? 0 : offY), s.bev || 'hop');
     if (!tur || tur.id !== id) return;
-    if (s.bev === 'dans') { saetTilstand('dans'); await vent(1100); if (!tur || tur.id !== id) return; }
+    if (s.bev === 'dans') { saetTilstand('dans'); await vent(1400); if (!tur || tur.id !== id) return; }
     if (el) el.classList.add('h-maal');
     flytter = false;
     sig(s.tekst, { peg: el, nu: true, tur: true, under: !!(p && p.under), nr: i + 1, af: t.trin.length });
