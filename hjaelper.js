@@ -192,8 +192,20 @@ const Hjaelper = (() => {
     if (r.top >= 270) return { x: kl(ax + 30 - PX), y: r.top - 42 - PY, under: false };            // over emnet, skeen peger ned
     return null;
   }
+  // Skyggen bliver på jorden: den følger ruten uden løftet, og bliver mindre og svagere, jo højere Grydelil er oppe
+  let skyg = null;
+  function skyggeStart() {
+    skyggeSlut();
+    const r = rod.querySelector('.h-skygge').getBoundingClientRect();
+    skyg = document.createElement('div'); skyg.className = 'h-skyggeflyv';
+    Object.assign(skyg.style, { left: r.left - offX + 'px', top: r.top - offY + 'px', width: r.width + 'px', height: r.height + 'px' });
+    document.body.append(skyg); rod.classList.add('iluften');
+  }
+  const skyggeKf = (x, y, loft) => { const k = Math.max(.3, 1 - Math.max(0, loft) / 200); return { transform: `translate(${x}px, ${y}px) scale(${k})`, opacity: k }; };
+  function skygge(x, y, loft) { if (skyg) Object.assign(skyg.style, skyggeKf(x, y, loft)); }
+  function skyggeSlut() { if (skyg) skyg.remove(); skyg = null; if (rod) rod.classList.remove('iluften'); }
   function anim(el, kf, opt) { const a = el.animate(kf, { fill: 'forwards', ...opt }); anims.push(a); return a.finished.catch(() => {}); }
-  function stopAnim() { anims.forEach(a => { try { a.cancel(); } catch (e) { /* ok */ } }); anims = []; if (rod) { rod.classList.remove('skridt'); nulBen(); } }
+  function stopAnim() { anims.forEach(a => { try { a.cancel(); } catch (e) { /* ok */ } }); anims = []; if (rod) { rod.classList.remove('skridt'); nulBen(); skyggeSlut(); } }
   function nulBen() { rod.querySelectorAll('.h-fod, .h-ben').forEach(e => e.removeAttribute('transform')); rod.querySelectorAll('.h-ben').forEach(e => e.setAttribute('d', '')); }
   function markerFjern() { document.querySelectorAll('.h-maal').forEach(e => e.classList.remove('h-maal')); }
 
@@ -246,11 +258,12 @@ const Hjaelper = (() => {
           r: 26 * Math.sin(Math.PI * 2 * u * 3) * (1 - Math.sin(Math.PI * spin)) + ret * 360 * io(spin),
           sx: 1 + .14 * Math.sin(Math.PI * 2 * h), sy: 1 - .14 * Math.sin(Math.PI * 2 * h) }; }
     }[navn] || (t => ({ e: t, loft: 0, r: 0, sx: 1, sy: 1 }));
-    const N = 60, rk = [], sk = [];
+    const N = 60, rk = [], sk = [], gk = [];
+    skyggeStart();
     for (let i = 0; i <= N; i++) {
       const t = i / N, p = F(t), x = fx + dx * p.e, y = fy + dy * p.e;
       const loft = Math.min(p.loft, Math.max(0, top0 + y - 12)); // aldrig ud over skærmens top
-      rk.push({ transform: `translate(${x}px, ${y - loft}px)` });
+      rk.push({ transform: `translate(${x}px, ${y - loft}px)` }); gk.push(skyggeKf(x, y, loft));
       sk.push({ transform: `translateY(${(1 - p.sy) * 30}px) rotate(${p.r}deg) scale(${p.sx}, ${p.sy})` });
     }
     saetTilstand('flyv');
@@ -260,9 +273,9 @@ const Hjaelper = (() => {
     setTimeout(() => { if (mit === bevNr) partikler(sx0, sy0, 'stoev'); }, d * .14);
     if (navn === 'salto' || navn === 'dans') setTimeout(() => { if (mit === bevNr) { const r = figur.getBoundingClientRect(); partikler(r.left + r.width / 2, r.top + r.height / 2, 'stjerne'); } }, d * .5);
     if (navn === 'hop' || navn === 'skridt') [.45, .7].forEach(f => setTimeout(() => { if (mit === bevNr) { const [a, b] = fodpunkt(); partikler(a, b, 'stoev'); } }, d * f));
-    await Promise.all([anim(rod, rk, { duration: d, easing: 'linear' }), anim(svg, sk, { duration: d, easing: 'linear' })]);
+    await Promise.all([anim(rod, rk, { duration: d, easing: 'linear' }), anim(svg, sk, { duration: d, easing: 'linear' }), anim(skyg, gk, { duration: d, easing: 'linear' })]);
     if (mit !== bevNr) return; // afbrudt
-    sat(); Lyd.spil('bump');
+    sat(); skyggeSlut(); Lyd.spil('bump');
     const [lx, ly] = fodpunkt(); partikler(lx, ly, 'stoev');
     // ta-da: vrikker og står stolt
     saetTilstand('lander');
@@ -284,7 +297,7 @@ const Hjaelper = (() => {
       f.setAttribute('transform', `translate(${ox} ${oy})`);
     };
     const d = Math.round(Math.max(1500, Math.min(2400, 1200 + dist * 1.2)));
-    saetTilstand('flyv'); Lyd.spil('hop');
+    saetTilstand('flyv'); Lyd.spil('hop'); skyggeStart();
     return new Promise(slut => {
       const t0 = performance.now();
       const ramme = nu => {
@@ -293,7 +306,7 @@ const Hjaelper = (() => {
         const a = io(seg(t, 0, .38)), b = io(seg(t, .38, .7)), c = io(seg(t, .7, .96));
         // kroppen: står stille, glider så frem med et lille løft, og læner sig mod det nye sted
         const kx = fx + dx * b, ky = fy + dy * b - Math.sin(Math.PI * b) * 12 + Math.sin(Math.PI * a) * 4;
-        rod.style.transform = `translate(${kx}px, ${ky}px)`;
+        rod.style.transform = `translate(${kx}px, ${ky}px)`; skygge(fx + dx * b, fy + dy * b, fy + dy * b - ky);
         figur.querySelector('svg').style.transform = `rotate(${ret * (8 * Math.sin(Math.PI * Math.min(1, t / .7)) - 6 * Math.sin(Math.PI * c))}deg)`;
         // forreste fod: rejser sig og lander på det nye sted, bliver der, mens kroppen kommer
         const fOx = SX * a - SX * b, fOy = SY * a - SY * b - Math.sin(Math.PI * a) * loft * K;
@@ -303,38 +316,48 @@ const Hjaelper = (() => {
         if (t >= .38 && !ramme.a) { ramme.a = 1; Lyd.spil('bump'); const r = forr.getBoundingClientRect(); partikler(r.left + r.width / 2, r.bottom, 'stoev'); }
         if (t >= .96 && !ramme.c) { ramme.c = 1; Lyd.spil('bump'); const r = bag.getBoundingClientRect(); partikler(r.left + r.width / 2, r.bottom, 'stoev'); }
         if (t < 1) return requestAnimationFrame(ramme);
-        figur.querySelector('svg').style.transform = ''; nulBen(); sat(); lander(mit).then(slut);
+        figur.querySelector('svg').style.transform = ''; nulBen(); sat(); skyggeSlut(); lander(mit).then(slut);
       };
       requestAnimationFrame(ramme);
     });
   }
-  // Raket: drejer låget væk fra målet, ryster, og flyver af sted på røgen, der pruster ud af låget
+  // Raket: drejer låget væk fra målet, ryster og flyver af sted på røgen. Han flyver lidt for højt, vender sig om i luften
+  // og daler blødt ned på plads.
   function raket(mit, fx, fy, dx, dy, dist, ret, sat, svg) {
-    const vinkel = Math.atan2(-dx, dy) * 180 / Math.PI, d = Math.round(Math.max(1700, Math.min(2500, 1300 + dist * 1.5)));
-    const hul = rod.querySelector('.h-hul');
-    saetTilstand('raket'); Lyd.spil('raket');
+    const vinkel = Math.atan2(-dx, dy) * 180 / Math.PI, d = Math.round(Math.max(2300, Math.min(3000, 1900 + dist * 1.4)));
+    const hul = rod.querySelector('.h-hul'), top0 = figur.getBoundingClientRect().top - fy;
+    const H = Math.max(0, Math.min(80, top0 + fy + dy - 16)); // hvor meget for højt han flyver (aldrig ud af skærmen)
+    const ox = fx + dx, oy = fy + dy - H, slutVinkel = Math.round(vinkel / 360) * 360 + (vinkel >= 0 ? 360 : -360); // vender med en ekstra omgang
+    saetTilstand('raket'); Lyd.spil('raket'); skyggeStart();
     return new Promise(slut => {
-      const t0 = performance.now(); let sidstRoeg = 0;
+      const t0 = performance.now(); let sidstRoeg = 0, lukket = false, landet = false;
       const ramme = nu => {
         if (mit !== bevNr) return slut();
         const t = Math.min(1, (nu - t0) / d);
-        const drej = io(seg(t, 0, .2)), fart = seg(t, .2, .82), op = io(seg(t, .82, 1));
-        const e = fart < .5 ? 2 * fart * fart * fart * 2 : 1 - (-2 * fart + 2) ** 3 / 2; // speeder op og bremser
-        const ryst = t < .22 ? Math.sin(nu / 18) * 3 * seg(t, .05, .2) : Math.sin(nu / 40) * 1.5;
-        const bue = Math.sin(Math.PI * fart) * Math.min(80, dist * .2);
-        rod.style.transform = `translate(${fx + dx * e + ryst}px, ${fy + dy * e - bue + Math.sin(Math.PI * op) * -30}px)`;
-        const r = vinkel * drej * (1 - op) + (op > 0 ? ret * 360 * op : 0);
-        const kl = 1 - .2 * Math.sin(Math.PI * seg(t, .12, .2)) - .3 * Math.sin(Math.PI * seg(t, .94, 1));
+        const drej = io(seg(t, 0, .16)), fart = seg(t, .16, .6), vend = io(seg(t, .58, .76)), fald = seg(t, .74, .94), bump = seg(t, .94, 1);
+        const e = fart < .5 ? 4 * fart ** 3 : 1 - (-2 * fart + 2) ** 3 / 2; // speeder op og bremser
+        const ryst = t < .18 ? Math.sin(nu / 18) * 3 * seg(t, .04, .16) : t < .6 ? Math.sin(nu / 40) * 1.5 : 0;
+        const bue = Math.sin(Math.PI * fart) * Math.min(60, dist * .15);
+        const svaev = Math.sin(Math.PI * seg(t, .58, .76)) * 6; // svæver lidt op, mens han vender
+        const g = fald * fald; // falder blødt: langsomt i starten, hurtigere til sidst
+        const x = fx + (ox - fx) * e + ryst;
+        const y = t < .74 ? fy + (oy - fy) * e - bue - svaev : oy + H * g;
+        const hop = Math.sin(Math.PI * bump) * 7; // lille genhop efter landingen
+        rod.style.transform = `translate(${x}px, ${y - hop}px)`;
+        const jordY = t < .74 ? fy + dy * e : fy + dy;
+        skygge(fx + dx * e, jordY, jordY - (y - hop));
+        const r = vinkel * drej + (slutVinkel - vinkel) * vend;
+        const kl = 1 - .2 * Math.sin(Math.PI * seg(t, .1, .16)) - .22 * Math.sin(Math.PI * seg(t, .92, .97));
         svg.style.transform = `translateY(${(1 - kl) * 30}px) rotate(${r}deg) scale(${2 - kl}, ${kl})`;
-        if (t > .1 && t < .86 && nu - sidstRoeg > 28) { // røg op af gryden, ud gennem det åbne låg
+        if (t > .08 && t < .6 && nu - sidstRoeg > 28) { // røg op af gryden, ud gennem det åbne låg
           sidstRoeg = nu;
           const b = hul.getBoundingClientRect(), rad = r * Math.PI / 180;
-          roeg(b.left + b.width / 2, b.top + b.height / 2, Math.sin(rad), -Math.cos(rad), t < .2);
+          roeg(b.left + b.width / 2, b.top + b.height / 2, Math.sin(rad), -Math.cos(rad), t < .16);
         }
+        if (t >= .62 && !lukket) { lukket = true; saetTilstand('landerraket'); } // motoren slukker, låget lukker
+        if (t >= .94 && !landet) { landet = true; Lyd.spil('bump'); const rr = figur.getBoundingClientRect(); partikler(rr.left + rr.width / 2, rr.bottom - 6, 'stoev'); }
         if (t < 1) return requestAnimationFrame(ramme);
-        svg.style.transform = ''; sat(); Lyd.spil('bump');
-        const rr = figur.getBoundingClientRect(); partikler(rr.left + rr.width / 2, rr.bottom - 6, 'stoev');
-        lander(mit, 'landerraket').then(slut);
+        svg.style.transform = ''; sat(); skyggeSlut(); saetTilstand('hvile'); slut();
       };
       requestAnimationFrame(ramme);
     });
@@ -358,9 +381,10 @@ const Hjaelper = (() => {
 
   // Bevægelsen passer til turens længde: korte ture små hop, lange ture raket. Samme bevægelse to gange i træk undgås.
   let sidsteBev = '';
-  function vaelg(dx, dy) {
+  function vaelg(dx, dy, foerste) {
     const l = Math.hypot(dx, dy), vandret = Math.abs(dx) > Math.abs(dy);
-    const muligt = l < 70 ? ['hop'] : l < 150 ? ['skridt', 'hop'] : l < 240 ? (vandret ? ['rul', 'dans'] : ['dans', 'salto']) : l < 360 ? ['salto', 'raket'] : ['raket', 'salto'];
+    if (foerste && l >= 200 && -dy > Math.abs(dx)) { sidsteBev = 'raket'; return 'raket'; } // raket: kun første tur, og kun opad
+    const muligt = l < 70 ? ['hop'] : l < 150 ? ['skridt', 'hop'] : l < 240 ? (vandret ? ['rul', 'dans'] : ['dans', 'salto']) : ['salto', 'dans'];
     const b = muligt.find(x => x !== sidsteBev) || muligt[0];
     sidsteBev = b; return b;
   }
@@ -387,7 +411,7 @@ const Hjaelper = (() => {
     }
     const p = el ? plan(el) : null, f = figur.getBoundingClientRect();
     const nx = p ? p.x - (f.left - offX) : (el ? 0 : offX), ny = p ? p.y - (f.top - offY) : (el ? 0 : offY);
-    const bev = vaelg(nx - offX, ny - offY);
+    const bev = vaelg(nx - offX, ny - offY, i === 0 && !offX && !offY);
     await flyt(nx, ny, bev);
     if (!tur || tur.id !== id) return;
     if (bev === 'dans') { saetTilstand('dans'); await vent(1440); if (!tur || tur.id !== id) return; }

@@ -448,6 +448,8 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 [data-tilstand=lander] .h-krop { animation: none; }
 @keyframes laagop { from { transform: none; } to { transform: translateY(-9px) rotate(10deg); } }
 @keyframes indreop { from { transform: scaleY(.02); } to { transform: none; } }
+.h-skyggeflyv { position: fixed; z-index: 39; pointer-events: none; border-radius: 50%; background: rgba(var(--skyg-rgb), .18); }
+.iluften .h-skygge { opacity: 0; }
 .h-hul { fill: var(--h-indre); display: none; }
 /* Raket: låget står helt op (90 grader) og ryster, mens røgen pruster op af gryden */
 [data-tilstand=raket] .h-krop, [data-tilstand=landerraket] .h-krop { animation: none; }
