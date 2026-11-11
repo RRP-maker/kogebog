@@ -40,8 +40,14 @@ const Tilpas = (() => {
   const GAMLE = { 0.85: 17, 1: 20, 1.2: 24, 1.45: 34 }; // tidligere gemt som gange den originale størrelse
   const pxAf = s => s >= 5 ? s : (GAMLE[s] || 20);
   const naermestStr = px => STR.reduce((b, [v]) => Math.abs(v - px) < Math.abs(b - px) ? v : b, STR[0][0]);
-  const TEKSTFARVER = ['#22386b', '#56638a', '#b5301f', '#d9432f', '#2f8f4e', '#2f7f95', '#e8a400', '#d0507a', '#ffffff', '#222222']; // de to første er appens egne standardfarver
-  const FELTFARVER = ['#ffd95a', '#a0e2b2', '#ffbeb6', '#cfe6f5', '#ffffff', '#de4832', '#4a9fb5', '#22386b']; // plus «glas» (gennemsigtigt Liquid Glass)
+  // Farvevalg gemmes som navne, ikke hex-værdier, så de følger lyst/mørkt tema (rollerne --tp-* står i style.css)
+  const TEKSTFARVER = ['blaek', 'blyant', 'rod', 'tomat', 'groen', 'gryde', 'guld', 'rosa', 'hvid', 'sort']; // de to første er appens egne standardfarver
+  const FELTFARVER = ['smoer', 'mynte', 'rosa', 'himmel', 'hvid', 'rod', 'gryde', 'indigo']; // plus «glas» (gennemsigtigt Liquid Glass)
+  const TEKST_CSS = { blaek: 'var(--blaek)', blyant: 'var(--blyant)', rod: 'var(--tomat-mork)', tomat: 'var(--tomat)', groen: 'var(--tp-groen)', gryde: 'var(--gryde-mork)', guld: 'var(--tp-guld)', rosa: 'var(--tp-rosa)', hvid: '#fff', sort: '#222' };
+  const FELT_CSS = { smoer: '#ffd95a', mynte: '#a0e2b2', rosa: '#ffbeb6', himmel: '#cfe6f5', hvid: '#fff', rod: '#c2321f', gryde: '#2a768b', indigo: 'var(--valgt-fast)' };
+  const FELT_TEKST = { smoer: 'var(--paa-lys)', mynte: 'var(--paa-lys)', rosa: 'var(--paa-lys)', himmel: 'var(--paa-lys)', hvid: 'var(--paa-lys)', rod: '#fff', gryde: '#fff', indigo: '#fff' }; // tekst, der altid kan læses på feltets farve
+  const NAVN = { blaek: 'Blæk', blyant: 'Blyant', rod: 'Mørkerød', tomat: 'Tomat', groen: 'Grøn', gryde: 'Turkis', guld: 'Guld', rosa: 'Rosa', hvid: 'Hvid', sort: 'Sort', smoer: 'Smørgul', mynte: 'Mynte', himmel: 'Lyseblå', indigo: 'Mørkeblå' };
+  const tCss = n => TEKST_CSS[n] || n, fCss = n => FELT_CSS[n] || n; // ukendte værdier (gamle hex) bruges, som de er
   // Tekster, der står på forsiden, kan aldrig skjules (heller ikke på andre sider, hvor den samme tekst står)
   const beskyttet = new Set(['Kogebog', 'Hvad skal vi lave?', 'Opskrifter', 'Tips', 'Hvad kan jeg lave?', 'Favoritter', ...lager.hent('tpForside', [])]);
   let til = lager.hent('tilpasTil', false), timer, aktiv = lager.hent('tilpasAktiv', true), server = false, data = lager.hent('tilpas', {});
@@ -88,8 +94,8 @@ const Tilpas = (() => {
       if (o.x && !skj && !ryd.includes(k)) ryd.push(k);
       el.style.display = skj && !ret ? 'none' : '';
       el.style.opacity = skj && ret ? '.35' : '';
-      el.style.color = o.f || '';
-      el.style.background = o.b === 'glas' ? 'var(--glas)' : (o.b || '');
+      el.style.color = o.f ? tCss(o.f) : (o.b && FELT_TEKST[o.b]) || '';
+      el.style.background = o.b === 'glas' ? 'var(--glas)' : (o.b ? fCss(o.b) : '');
     });
     if (ryd.length) setTimeout(() => ryd.forEach(k => { if (get(k) && get(k).x) { const ny = { ...get(k) }; delete ny.x; gem(k, ny, true); } }), 0);
     document.querySelectorAll(FLYT).forEach(el => { // felternes plads
@@ -162,6 +168,16 @@ const Tilpas = (() => {
   }
   function fortryd() { if (!hist.length) return; frem.push(kopi(data)); skift(hist.pop()); toast('Fortrudt'); }
   function gentag() { if (!frem.length) return; hist.push(kopi(data)); skift(frem.pop()); toast('Gentaget'); }
+  // Én gang: de gamle, gemte farver ryddes, så alle felter får den nye palette forfra (tekster, størrelser og placeringer bliver)
+  async function nyeFarver() {
+    if (lager.hent('tpFarver', 0) >= 2) return;
+    for (const k of Object.keys(data)) {
+      if (!data[k].f && !data[k].b) continue;
+      const ny = { ...data[k] }; delete ny.f; delete ny.b;
+      await gem(k, ny, true);
+    }
+    lager.gem('tpFarver', 2);
+  }
   async function hent() {
     try {
       const rader = await api('tilpasning?select=*');
@@ -172,6 +188,7 @@ const Tilpas = (() => {
         data[r.noegle] = o;
       }
       server = true; lager.gem('tilpas', data); anvend();
+      await nyeFarver();
     } catch (err) { /* tabellen findes ikke endnu: brug det, der er gemt på enheden */ }
   }
   function saet(v) {
@@ -180,14 +197,15 @@ const Tilpas = (() => {
   }
   const rgbAf = t => (String(t).match(/[\d.]+/g) || []).slice(0, 3).map(Number);
   const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-  const naermest = (liste, rgb) => liste.reduce((bst, c) => { const d = hexRgb(c).reduce((sum, v, i) => sum + (v - rgb[i]) ** 2, 0); return d < bst[0] ? [d, c] : bst; }, [Infinity, ''])[1];
+  const probe = css => { const e = document.createElement('span'); e.style.color = css; document.body.appendChild(e); const r = rgbAf(getComputedStyle(e).color); e.remove(); return r; };
+  const naermest = (liste, rgb, css) => liste.reduce((bst, c) => { const d = probe(css(c)).reduce((sum, v, i) => sum + (v - rgb[i]) ** 2, 0); return d < bst[0] ? [d, c] : bst; }, [Infinity, ''])[1];
   // Elementets egne farver (uden ændringer), som den farveknap der svarer til dem. Gennemsigtigt eller hvidt glas er knappen «glas».
   function standardFarver(el) {
     const f0 = el.style.color, b0 = el.style.background; el.style.color = ''; el.style.background = '';
     const cs = getComputedStyle(el), tekst = rgbAf(cs.color);
     const bg = cs.backgroundImage !== 'none' ? (cs.backgroundImage.match(/rgba?\([^)]*\)/) || [''])[0] : cs.backgroundColor, brgb = rgbAf(bg);
     el.style.color = f0; el.style.background = b0;
-    return { f: naermest(TEKSTFARVER, tekst), b: !brgb.length || brgb.every(v => v >= 250) || /,\s*0\)$/.test(bg) ? 'glas' : naermest(FELTFARVER, brgb) };
+    return { f: naermest(TEKSTFARVER, tekst, tCss), b: !brgb.length || brgb.every(v => v >= 250) || /,\s*0\)$/.test(bg) ? 'glas' : naermest(FELTFARVER, brgb, fCss) };
   }
   const flytTekst = v => v ? 'Feltet kan ikke flyttes. Du kan stadig ændre tekst og farve.' : 'Du flytter feltet ved at holde fingeren på det og trække.';
   function aabn(el) {
@@ -195,15 +213,15 @@ const Tilpas = (() => {
     const opsk = el.matches(FAST);
     const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !(beskyttet.has(k) || beskyttet.has(el.dataset.orgtekst)), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
-    const sw = (liste, v, nøgle, glas) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
+    const sw = (liste, v, nøgle, glas, css) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${css(c)}" aria-label="${NAVN[c] || c}"></button>`).join('')}</div>`;
     const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
       <label for="tp-tekst">Tekst</label>
       <input type="text" id="tp-tekst" value="${esc(o.t || el.dataset.orgtekst || '')}" maxlength="200" autocomplete="off">
       <label>Tekststørrelse</label>
       <div class="rakke venstre">${STR.map(([v, n]) => `<button class="chip${v === st ? ' valgt' : ''}" type="button" data-st="${v}">${n}</button>`).join('')}</div>
       ${felt ? `<label>Feltets størrelse</label><div class="rakke venstre">${FELTSTR.map(([v, n]) => `<button class="chip${v === z ? ' valgt' : ''}" type="button" data-fz="${v}">${n}</button>`).join('')}</div>` : ''}
-      <label>Tekstfarve</label>${sw(TEKSTFARVER, f, 'f')}
-      ${felt ? `<label>Feltets farve</label>${sw(FELTFARVER, b, 'b', true)}` : ''}
+      <label>Tekstfarve</label>${sw(TEKSTFARVER, f, 'f', false, tCss)}
+      ${felt ? `<label>Feltets farve</label>${sw(FELTFARVER, b, 'b', true, fCss)}` : ''}
       <p class="lille">Ændringen gælder dette felt og de felter, der hænger sammen med det.</p>
       ${opsk ? '<p class="lille">Teksten i opskriften kan ændres, men ikke flyttes.</p>' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
       <p class="lille" id="tp-flyttekst">${flytTekst(m)}</p>`}
