@@ -319,7 +319,7 @@ async function route() {
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
   dybde = dele.length;
-  if (a === 'forslag' || a === 'hjemme') opskriftFra = '#/forslag'; else if (a !== 'opskrifter' || !b) opskriftFra = null;
+  if (a === 'forslag' || a === 'hjemme') opskriftFra = a === 'forslag' && b === 'madplan' ? '#/forslag/madplan' : '#/forslag'; else if (a !== 'opskrifter' || !b) opskriftFra = null;
   if (!foerste && app.firstChild) {
     app.classList.remove('sideind'); app.classList.add('sideud');
     await new Promise(r => setTimeout(r, 120));
@@ -329,6 +329,7 @@ async function route() {
   window.scrollTo(0, 0);
   document.body.dataset.side = c === 'lav' ? 'lav' : (a || 'forside');
   try {
+    if (a === 'forslag' && b === 'madplan') return await Madplan.side();
     if (a === 'forslag') return await forslagSide();
     if (a === 'import') return importSide();
     if (a === 'opdater' && b) return await ClaudeEkstra.opdaterSide(b);
@@ -826,6 +827,7 @@ async function forslagSide() {
   if (id !== visning) return;
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Hvad kan jeg lave?</h1>
     <div id="forslag-nu"></div>
+    <a class="knap felt felt-m" data-tpid="madplan" href="#/forslag/madplan">${ik('gryde')} Lav en madplan</a>
     <div id="hj-boks"></div>
     <button type="button" class="knap" data-h="sorterAndet">${ik('gnist')} Sortér og ret ingredienser med Claude</button>
     <div id="forslag-resten"></div>
