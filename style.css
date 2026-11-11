@@ -135,7 +135,7 @@ main > .knap.stor { align-self: stretch; }
 .lille { color: var(--blyant); font-size: 18px; }
 .tomt { text-align: center; color: var(--blyant); padding: 32px 8px; }
 .tekst { white-space: pre-wrap; overflow-wrap: anywhere; }
-.tilbage { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 48px; padding: 0 20px 0 14px; border-radius: 24px; color: var(--blaek); line-height: 32px; touch-action: manipulation; }
+.tilbage { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 32px; padding: 0 14px 0 10px; border-radius: 16px; font-size: 18px; color: var(--blaek); line-height: 32px; touch-action: manipulation; top: calc(var(--l0) - 32px); } /* lille felt: kanterne på to linjer */
 
 /* Søgning og filter */
 .filter { display: flex; gap: 8px; overflow-x: auto; padding: 12px 2px; margin: -12px -2px; height: 56px; scrollbar-width: none; }
@@ -212,8 +212,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .stjernevalg button:active { transform: scale(1.25); }
 
 /* Knapper øverst på opskriften: «Tilføj tip» sidder fast øverst til venstre, når man ruller */
-.vaerktoej { height: 64px; position: sticky; top: calc(66px + max(8px, env(safe-area-inset-top)) + var(--ure-h, 0px)); z-index: 18; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); }
-.vaerktoej .knap { background: linear-gradient(135deg, rgba(255, 253, 245, .94), rgba(255, 253, 245, .82)); }
+.vaerktoej { min-height: 32px; position: sticky; top: calc(66px + max(8px, env(safe-area-inset-top)) + var(--ure-h, 0px)); z-index: 18; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); }
 
 /* Ingredienser: overskrift (fx Sovs) og deltrin */
 .ing li.grp, .ing.tjek li.grp {
@@ -402,7 +401,8 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 }
 
 /* Tilpas tekster */
-body.tilpas [data-org] { outline: 2px dashed var(--gryde-mork); outline-offset: 3px; cursor: pointer; }
+body.tilpas [data-org], body.tilpas [data-flyt] { outline: 2px dashed var(--gryde-mork); outline-offset: 3px; cursor: pointer; }
+body.tilpas [data-laast] { outline: 2px solid var(--tomat); }
 #tilpas-knap {
   position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 18px; border-radius: 24px;
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
@@ -448,4 +448,20 @@ input[type=checkbox]:active, input[type=radio]:active { transform: scale(.8); }
 /* Tilpas siden: felter kan flyttes på et gitter */
 body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; cursor: grab; }
 .traekker { z-index: 40; cursor: grabbing !important; transform: scale(1.04); box-shadow: 0 16px 34px rgba(34, 56, 107, .38), var(--glans) !important; }
-#gitter { position: fixed; inset: 0; z-index: 30; pointer-events: none; background-image: radial-gradient(circle, rgba(34, 56, 107, .38) 1.2px, transparent 1.7px); background-size: 16px 16px; }
+#gitter { position: fixed; inset: 0; z-index: 30; pointer-events: none; background-image: radial-gradient(circle, rgba(34, 56, 107, .38) 1.2px, transparent 1.7px); background-size: 16px 32px; }
+
+/* Feltstørrelser: 32 / 64 / 96 px som mærker, knapper og faner. Små felter har kanterne på linjerne, store top og bund midt mellem to linjer. */
+.vaerktoej .knap:not([data-fs]), .knap[data-fs=s], .fane[data-fs=s] { height: 32px; min-height: 0; padding: 0 14px; font-size: 18px; line-height: 32px; border-radius: 16px; gap: 4px; }
+.vaerktoej .knap:not([data-fs]), .knap[data-fs=s], .fane[data-fs=s] { position: relative; top: calc(var(--l0) - 12px); } /* margenen foroven er --m: ind på linjen */
+.tilbage[data-fs=s] { height: 32px; padding: 0 14px 0 10px; font-size: 18px; border-radius: 16px; top: calc(var(--l0) - 32px); }
+.knap[data-fs=m], .fane[data-fs=m], .tilbage[data-fs=m] { height: 64px; min-height: 0; padding: 0 18px; font-size: 20px; line-height: 32px; border-radius: 24px; top: 0; }
+.knap[data-fs=l], .fane[data-fs=l], .tilbage[data-fs=l] { height: 96px; min-height: 0; padding: 0 22px; font-size: 28px; line-height: 32px; border-radius: 30px; top: 0; }
+.tilbage[data-fs=m], .tilbage[data-fs=l] { margin: var(--m) 0 var(--pt); }
+.fane[data-fs=s] .ikon { width: 20px; height: 20px; } .fane[data-fs=m] .ikon { width: 30px; height: 30px; }
+.fane[data-fs=s] span, .fane[data-fs=m] span { font-size: inherit; }
+
+/* Liquid Glass: blank glans over den øverste halvdel af knapper, som på fanerne */
+.knap, .tilbage { isolation: isolate; }
+.knap::before, .tilbage::before { content: ""; position: absolute; z-index: -1; inset: 0 0 45% 0; border-radius: inherit; background: linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .03)); pointer-events: none; }
+.knap.primaer::before { background: linear-gradient(rgba(255, 255, 255, .28), rgba(255, 255, 255, 0)); }
+.chip:disabled { opacity: .45; cursor: default; }

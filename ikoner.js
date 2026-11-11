@@ -16,6 +16,8 @@ const Ikoner = (() => {
     kamera: `<path d="M3.5 8.5a1.5 1.5 0 0 1 1.5-1.5h2.2l1.3-2h7l1.3 2H19a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z" fill="var(--i1,#a9d6e6)"/><circle cx="12" cy="13" r="3.4" fill="var(--i2,#fffdf5)"/>`,
     gulerod: `<path d="M16.5 8.5 6.2 19.4a1.2 1.2 0 0 1-2-1.2L8.5 7.5a5 5 0 0 1 8 1z" fill="var(--i1,#f08a3c)"/><path d="M9.5 11l1.8.6M7.8 14.5l1.8.6"/><path d="M15 9.2l3-4.7M16.6 8.6l4.2-2.2M14.2 7.4l1.6-4"/>`,
     tandhjul: `<path d="M9.87 5.12L10.41 2.74L13.59 2.74L14.13 5.12L15.36 5.63L17.43 4.32L19.68 6.57L18.37 8.64L18.88 9.87L21.26 10.41L21.26 13.59L18.88 14.13L18.37 15.36L19.68 17.43L17.43 19.68L15.36 18.37L14.13 18.88L13.59 21.26L10.41 21.26L9.87 18.88L8.64 18.37L6.57 19.68L4.32 17.43L5.63 15.36L5.12 14.13L2.74 13.59L2.74 10.41L5.12 9.87L5.63 8.64L4.32 6.57L6.57 4.32L8.64 5.63z" fill="var(--i1,#a9d6e6)"/><circle cx="12" cy="12" r="3" fill="var(--i2,#fffdf5)"/>`,
+    laas: `<rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="var(--i1,#ffd95a)"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/><path d="M12 14.6v2" stroke-width="2"/>`,
+    laasop: `<rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="var(--i1,#c4ebcd)"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 6.7-1.5"/><path d="M12 14.6v2" stroke-width="2"/>`,
     tjek: `<path d="M5 12.8l4.2 4.2L19 7.2" stroke-width="2.4"/>`,
     pause: `<rect x="6.2" y="5" width="3.8" height="14" rx="1.4" fill="var(--i1,#ffd95a)"/><rect x="14" y="5" width="3.8" height="14" rx="1.4" fill="var(--i1,#ffd95a)"/>`,
     hent: `<path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 19.5h14"/>`,
