@@ -12,7 +12,7 @@ En delt kogebog som statisk web app: opskrifter, metode og tips i et kladdehæft
 | `style.css` | Notesbog-design |
 | `app.js` | Sider, database, begreber, ure, forslag, import |
 | `hjaelper.js` | Hjælperen og lyde |
-| `hjemme.js` | Hvad har du derhjemme? (SQL i `hjemme.sql`) |
+| `hjemme.js` | Listen «Hvad har du derhjemme?» på siden Hvad kan jeg lave? (SQL i `hjemme.sql`) |
 | `laerred.js` | Lærred med billeder og figurer (Konva) |
 | `sw.js`, `manifest.webmanifest` | Installér på hjemmeskærm, læs uden internet |
 

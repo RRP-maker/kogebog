@@ -2,7 +2,7 @@
 // «ingredienser» er kataloget (navn -> kategori). Det lærer appen af, hver gang du skifter kategori.
 const Hjemme = (() => {
   const ENH = ['stk', 'g', 'kg', 'ml', 'dl', 'l', 'pk', 'dåse', 'bundt', 'fed'];
-  let D = { kat: [], ing: [], hj: [] }, valgtIng = null, laaser = false;
+  let D = { kat: [], ing: [], hj: [] }, valgtIng = null, laaser = false, ved = null;
   const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
   const ingAf = id => D.ing.find(i => i.id === id);
   const katAf = id => D.kat.find(k => k.id === id);
@@ -68,6 +68,7 @@ const Hjemme = (() => {
     }).join('');
     el.innerHTML = html || '<p class="tomt">Der står ikke noget endnu. Skriv den første ting i feltet herunder.</p>';
     if (fokus) { const x = el.querySelector(`.hj-rk[data-id="${fokus.id}"] .${fokus.k}`); if (x) x.focus(); }
+    if (ved) ved();
   }
 
   async function tilfoej() {
@@ -112,14 +113,14 @@ const Hjemme = (() => {
     toast(`${ingAf(ingId).navn} står nu under ${katId ? katAf(katId).navn : 'Andet'}`);
   }
 
-  async function side() {
+  const navne = () => D.hj.map(h => (ingAf(h.ingrediens_id) || {}).navn).filter(Boolean);
+  // Lægger listen ind i en boks på siden. «aendret» kaldes, hver gang listen ændrer sig.
+  async function vis(boks, aendret) {
     const id = visning;
-    henter();
     const [kat, ing, hj] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('hjemme?select=*&order=oprettet')]);
     if (id !== visning) return;
-    D = { kat, ing, hj };
-    app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Hvad har du derhjemme?</h1>
-      <small>Skriv én ting i hvert felt. Tryk retur for at gemme og skrive næste.</small>
+    D = { kat, ing, hj }; ved = aendret;
+    boks.innerHTML = `<small>Skriv én ting i hvert felt. Tryk retur for at gemme og skrive næste.</small>
       <div id="hj-liste"></div>
       <h3 class="hj-grp">Ny ting</h3>
       <div class="hj-rk hj-ny" id="hj-ny">
@@ -128,7 +129,6 @@ const Hjemme = (() => {
         <input id="hj-ny-navn" class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ny ingrediens" placeholder="fx gulerødder">
       </div>`;
     tegn();
-    Hjaelper.side('Skriv det, du har derhjemme, ét ord i hvert felt. Jeg sorterer det selv. Hvis jeg gætter forkert, så tryk på mærket til højre og vælg en anden kategori. Så husker jeg det næste gang.');
   }
 
   Object.assign(H, {
@@ -196,5 +196,5 @@ const Hjemme = (() => {
       }
     } catch (err) { console.error(err); toast('Det blev ikke gemt. Tjek internettet, og prøv igen.'); }
   });
-  return { side };
+  return { vis, navne };
 })();

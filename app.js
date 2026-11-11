@@ -277,7 +277,7 @@ async function route() {
     if (a === 'forslag') return await forslagSide();
     if (a === 'import') return importSide();
     if (a === 'mere') return mereSide();
-    if (a === 'hjemme') return await Hjemme.side();
+    if (a === 'hjemme') return await forslagSide();
     if (!TYPER[a]) { document.body.dataset.side = 'forside'; return await forside(); }
     if (b === 'ny') return await formular(a);
     if (c === 'rediger') return await formular(a, b);
@@ -301,7 +301,6 @@ async function forside() {
     <h2>Favoritter</h2>
     <div id="favoritter"><p class="lille">Henter…</p></div>
     <nav class="genveje">
-      <a class="knap" href="#/hjemme">${ik('tag')} Hvad har du derhjemme?</a>
       <a class="knap" href="#/forslag">${ik('kurv')} Hvad kan jeg lave?</a>
     </nav>`;
   Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Metode og Tips kan du lære, hvordan man gør. Favoritter er dem med stjerne.');
@@ -734,18 +733,16 @@ async function forslagSide() {
   F = await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser&order=titel');
   if (id !== visning) return;
   app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Hvad kan jeg lave?</h1>
-    <label for="har">Hvad har du hjemme?</label>
-    <small>Skriv med komma imellem, fx «æg, mel, mælk». Salt, peber, olie og vand tæller ikke med.</small>
-    <textarea id="har" rows="3">${esc(lager.hent('har', ''))}</textarea>
-    <button class="knap primaer stor" data-h="forslag">Find retter</button>
+    <h2>Hvad har du derhjemme?</h2>
+    <div id="hj-boks"></div>
     <div id="forslag"></div>`;
-  Hjaelper.side('Skriv det, du har hjemme, med komma imellem. Så finder jeg retter, du kan lave, og siger, hvad du kan købe for at lave flere.');
-  if (lager.hent('har', '')) tegnForslag();
+  Hjaelper.side('Skriv det, du har derhjemme, ét ord i hvert felt. Så finder jeg retter, du kan lave, og siger, hvad du kan købe for at lave flere.');
+  await Hjemme.vis($('#hj-boks'), tegnForslag);
 }
 function tegnForslag() {
-  const tekst = $('#har').value;
-  lager.gem('har', tekst);
-  if (!tekst.trim()) { $('#forslag').innerHTML = '<p class="tomt">Skriv mindst én ting i feltet.</p>'; return; }
+  const el = $('#forslag'), tekst = Hjemme.navne().join(',');
+  if (!el) return;
+  if (!tekst.trim()) { el.innerHTML = '<p class="tomt">Skriv mindst én ting i listen, så finder jeg retter.</p>'; return; }
   const f = beregnForslag(F, tekst);
   $('#forslag').innerHTML = `<h2>Det kan du lave nu</h2>
     ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe herunder.</p>'}
@@ -1014,7 +1011,6 @@ const H = {
   async figur(el) { await Laerred.ny('figur', 'ikon:' + el.dataset.v); },
   async fjernValgt() { if (await Laerred.fjernValgt()) toast('Fjernet'); },
   print() { window.print(); },
-  forslag: tegnForslag,
   async kopierBesked() {
     const udklip = await laesUdklip(); // null = browseren måtte ikke læse udklipsholderen
     // Ligger beskeden selv i udklipsholderen (man trykker to gange), så beholder vi den, vi allerede har bygget.
