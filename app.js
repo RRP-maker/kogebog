@@ -324,11 +324,21 @@ async function forside() {
       <a class="knap" href="#/indkob">🛒 Indkøbsliste</a>
     </nav>`;
   Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Metode og Tips kan du lære, hvordan man gør. Favoritter er dem med stjerne.');
+  tilfoejTilHjem();
   const [fav, ops] = await Promise.all([api('favoritter?select=opskrift_id'), api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter&order=titel')]);
   if (id !== visning) return;
   const ids = new Set(fav.map(f => f.opskrift_id)), liste = ops.filter(o => ids.has(o.id));
   $('#favoritter').innerHTML = liste.length ? liste.map(r => opskriftKort(r, true)).join('')
     : '<p class="lille">Ingen favoritter endnu. Tryk på stjernen på en opskrift, så står den her.</p>';
+}
+// iPhone/iPad i en browser (ikke som app på hjemmeskærmen): Hjælperen viser, hvordan man lægger Kogebog på hjemmeskærmen. Én gang pr. gang siden åbnes.
+let hjemVist = false;
+function tilfoejTilHjem() {
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const app = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  if (!ios || app || hjemVist) return;
+  hjemVist = true;
+  Hjaelper.sig('Læg Kogebog på hjemmeskærmen, så åbner den som en rigtig app:\n1. Tryk på Del-knappen i Safari (firkanten med en pil op).\n2. Rul ned, og tryk på «Føj til hjemmeskærm».\n3. Tryk på «Tilføj» øverst til højre.', { stor: true });
 }
 const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><strong>${fav ? '<span class="guld">★</span> ' : ''}${esc(r.titel)}</strong>
   ${chips(r).length ? `<span class="chips">${chips(r).map(c => `<span>${c}</span>`).join('')}</span>` : ''}</a>`;

@@ -92,6 +92,7 @@ const Hjaelper = (() => {
     aktiv = n; aktiv.faerdig = false;
     boble.hidden = false; tekst.textContent = '';
     boble.classList.toggle('flere', koe.length > 0);
+    boble.classList.toggle('stor', !!n.stor);
     if (n.peg && document.contains(n.peg)) {
       const m = n.peg.getBoundingClientRect(), f = figur.getBoundingClientRect();
       const dx = (m.left + m.width / 2) - (f.left + f.width * 0.22), dy = (m.top + m.height / 2) - (f.top + f.height * 0.63);
@@ -120,11 +121,11 @@ const Hjaelper = (() => {
   }
   function videre() { if (!aktiv) return; if (!aktiv.faerdig) faerdigSkrevet(); else naeste(); }
 
-  // sig('tekst', { peg: element, glad: true, nu: true })
+  // sig('tekst', { peg: element, glad: true, nu: true, stor: true })
   function sig(t, valg = {}) {
     if (!rod || skjult() || !t) return;
     if (valg.nu) koe = [];
-    koe.push({ tekst: String(t), peg: valg.peg || null, glad: !!valg.glad });
+    koe.push({ tekst: String(t), peg: valg.peg || null, glad: !!valg.glad, stor: !!valg.stor });
     if (!aktiv || valg.nu) naeste();
   }
   function glad(t) { if (t) sig(t, { glad: true, nu: true }); else if (rod && !skjult()) { saetTilstand('glad'); Lyd.spil('glad'); setTimeout(() => { if (!aktiv) saetTilstand('hvile'); }, 1100); } }
