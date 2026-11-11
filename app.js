@@ -260,8 +260,12 @@ setInterval(() => {
 
 // ---------- Router ----------
 let opskriftFra = null; // kom man til opskriften fra Hvad kan jeg lave?, fører tilbage-knappen dertil
+const spor = []; // de sider, man har været på, så «Tilbage» kan gå til den forrige
+const formSide = h => /\/(rediger|ny)$/.test(h) || h === '#/import';
 async function route() {
   const id = ++visning;
+  const nuHash = location.hash || '#/';
+  if (spor[spor.length - 2] === nuHash) spor.pop(); else if (spor[spor.length - 1] !== nuHash) spor.push(nuHash);
   lukArk(); lukForklaring(); slipSkaerm(); sidsteValg = '';
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
@@ -339,7 +343,7 @@ async function liste(type) {
   if (type === 'tips') L.navne = Object.fromEntries(ekstra.map(o => [o.id, o.titel]));
   if (type === 'opskrifter') L.fav = new Set(ekstra.map(f => f.opskrift_id));
   const kat = [...new Set(rader.map(r => r.kategori).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da'));
-  app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a>
+  app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a>
     <h1>${T.navn}</h1>
     <div class="rakke">
       <a class="knap primaer" href="#/${type}/ny">+ ${T.ny}</a>
@@ -379,7 +383,7 @@ async function metodeSide(rid) {
   if (id !== visning) return;
   if (!r) return info('Metoden findes ikke længere.<br><a href="#/metoder">Tilbage til Metode</a>');
   const trin = linjer(r.trin);
-  app.innerHTML = `<a class="tilbage" href="#/metoder">‹ Metode</a><h1>${esc(r.titel)}</h1>
+  app.innerHTML = `<a class="tilbage" href="#/metoder">‹ Tilbage</a><h1>${esc(r.titel)}</h1>
     ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
     <h2>Sådan gør du</h2>
     ${trin.length ? `<ol class="trin">${trin.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '<p class="lille">Der er ingen trin endnu. Tryk på «Rediger» for at skrive dem.</p>'}
@@ -404,7 +408,7 @@ async function opskriftSide(rid) {
   S = { r, tips, metoder, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips, metoder);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
-  app.innerHTML = `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ ${opskriftFra ? 'Hvad kan jeg lave?' : 'Opskrifter'}</a>
+  app.innerHTML = `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>
     ${vaerktoej(`<a class="knap" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
     <div class="titelrakke"><h1>${esc(r.titel)}</h1>
       <button id="favknap" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
@@ -663,7 +667,7 @@ async function formular(type, rid) {
   if (rid && !r[0]) return info(`Den findes ikke længere.<br><a href="#/${type}">Tilbage</a>`);
   const rad = r[0] || {};
   const tilbage = rid && type !== 'tips' ? `#/${type}/${rid}` : `#/${type}`;
-  app.innerHTML = `<a class="tilbage" href="${tilbage}">‹ Fortryd</a>
+  app.innerHTML = `<a class="tilbage fortryd" href="${tilbage}">‹ Fortryd</a>
     ${type === 'opskrifter' ? vaerktoej() : ''}
     <h1>${rid ? T.rediger : T.ny}</h1>
     <form id="form" novalidate>
@@ -740,7 +744,7 @@ async function forslagSide() {
   henter();
   F = await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser&order=titel');
   if (id !== visning) return;
-  app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Hvad kan jeg lave?</h1>
+  app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Hvad kan jeg lave?</h1>
     <div id="forslag-nu"></div>
     <div id="hj-boks"></div>
     <button type="button" class="knap" data-h="sorterAndet">${ik('gnist')} Sortér «Andet» med Claude</button>
@@ -817,7 +821,7 @@ const lavBesked = () => CLAUDE_BESKED.replace('§KAT§', Katalog.kategorier().jo
 function importSide() {
   claudeBesked = lavBesked();
   Katalog.hent().catch(() => {}); // kategorierne kommer med i beskeden
-  app.innerHTML = `<a class="tilbage" href="#/opskrifter">‹ Opskrifter</a><h1>Tilføj med Claude</h1>
+  app.innerHTML = `<a class="tilbage" href="#/opskrifter">‹ Tilbage</a><h1>Tilføj med Claude</h1>
     <ol class="trin vejledning">
       <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
         <textarea id="egen" rows="5" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
@@ -908,7 +912,7 @@ async function laesUdklip() {
 
 // ---------- Mere: backup, indstillinger ----------
 function mereSide() {
-  app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Mere</h1>
+  app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Mere</h1>
     <h2>Indstillinger</h2>
     <label class="skift"><input type="checkbox" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
@@ -1115,6 +1119,12 @@ document.addEventListener('change', e => {
   if (e.target.id === 'portinp') { S.port = Math.max(1, Math.min(50, Math.round(Number(e.target.value)) || S.r.portioner || 4)); portValg[S.r.id] = S.port; tegnIng(); }
 });
 document.addEventListener('click', async e => {
+  const tb = e.target.closest('a.tilbage:not(.fortryd)');
+  if (tb) { // gå til den side, man kom fra. Rediger- og ny-sider springes over.
+    let i = spor.length - 2;
+    while (i >= 0 && (formSide(spor[i]) || spor[i] === spor[spor.length - 1])) i--;
+    if (i >= 0) { e.preventDefault(); const mål = spor[i]; spor.length = i + 1; if (location.hash === mål) route(); else location.hash = mål; return; }
+  }
   const el = e.target.closest('[data-h]');
   if (!el) { if (!e.target.closest('.forklaring')) lukForklaring(); return; }
   const f = H[el.dataset.h];
