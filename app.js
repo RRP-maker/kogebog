@@ -379,7 +379,7 @@ async function metodeSide(rid) {
   const trin = linjer(r.trin);
   app.innerHTML = `<a class="tilbage" href="#/metoder">‹ Metode</a><h1>${esc(r.titel)}</h1>
     ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
-    <h2 class="opsk">Sådan gør du</h2>
+    <h2>Sådan gør du</h2>
     ${trin.length ? `<ol class="trin">${trin.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '<p class="lille">Der er ingen trin endnu. Tryk på «Rediger» for at skrive dem.</p>'}
     ${knapper('metoder', r.id)}`;
   Hjaelper.side('Her er en metode. Læs trinene, og prøv selv. Du kan rette teksten med «Rediger».');
@@ -413,7 +413,7 @@ async function opskriftSide(rid) {
     <div class="portioner skaerm"><button class="rund" data-h="port" data-v="-1" aria-label="Færre portioner">−</button>
       <span id="portvis"></span><button class="rund" data-h="port" data-v="1" aria-label="Flere portioner">+</button></div>
     <ul class="ing" id="ing"></ul>
-    <h2>Sådan gør du</h2>
+    <h2 class="opsk">Sådan gør du</h2>
     <div id="trin"></div>
     <h2 class="skaerm opsk">Vores side</h2>
     <p class="lille skaerm opsk">Sæt billeder og figurer på siden, og flyt dem rundt.</p>
