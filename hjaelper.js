@@ -1,4 +1,4 @@
-// Hjælperen Grydelil: en goofy emaljegryde, hvor låget er munden. Har en grydeske. Tegnet til Kogebog.
+// Hjælperen Grydelil: en frisk lille gryde med skæve bryn, hvor låget er munden. Har en grydeske. Tegnet til Kogebog.
 // Lyd: små toner lavet i browseren, ingen lydfiler.
 const Lyd = (() => {
   let ctx;
@@ -36,28 +36,26 @@ const Hjaelper = (() => {
       </g>
       <path class="h-arm" d="M95 82 Q109 86 106 99"/>
       <circle class="h-haand" cx="106" cy="100" r="4.5"/>
-      <ellipse class="h-fod" cx="44" cy="118" rx="10" ry="5"/>
-      <ellipse class="h-fod" cx="76" cy="118" rx="10" ry="5"/>
+      <ellipse class="h-fod" cx="44" cy="118" rx="11" ry="5.5"/>
+      <ellipse class="h-fod" cx="76" cy="118" rx="11" ry="5.5"/>
       <path class="h-potte" d="M22 62h76v30a24 24 0 0 1-24 24H46a24 24 0 0 1-24-24z"/>
-      <g class="h-prikker"><circle cx="31" cy="74" r="1.5"/><circle cx="90" cy="72" r="1.8"/><circle cx="36" cy="104" r="1.6"/><circle cx="83" cy="106" r="1.4"/><circle cx="60" cy="110" r="1.5"/><circle cx="92" cy="92" r="1.2"/><circle cx="27" cy="90" r="1.2"/></g>
-      <ellipse class="h-kind" cx="32" cy="82" rx="6" ry="3.8"/><ellipse class="h-kind" cx="88" cy="82" rx="6" ry="3.8"/>
-      <path class="h-hjerte" d="M60 103c-8-5-9-10.5-5-12.5 2.5-1.2 4.5.2 5 2 .5-1.8 2.5-3.2 5-2 4 2 3 7.5-5 12.5z"/>
+      <g class="h-plaster" transform="rotate(-18 76 94)"><rect x="66" y="90" width="20" height="9" rx="4.5"/><circle cx="73" cy="94.5" r="1"/><circle cx="79" cy="94.5" r="1"/></g>
       <rect class="h-rand" x="16" y="56" width="88" height="11" rx="5.5"/>
       <path class="h-indre" d="M18 57H103L102.5 50L21.5 36z"/>
-      <path class="h-tunge" d="M56 53a8 8 0 0 1 16 0v11a8 8 0 0 1-16 0z"/>
-      <path class="h-tungestreg" d="M64 60v7"/>
+      <path class="h-tunge" d="M60 53a8 8 0 0 1 16 0v11a8 8 0 0 1-16 0z"/>
+      <path class="h-tungestreg" d="M68 60v7"/>
       <g class="h-laag">
         <path class="h-kuppel" d="M20 59C20 28 100 28 100 59z"/>
-        <path class="h-glans" d="M27 52C28 42 34 36 41 34"/>
-        <circle class="h-knop" cx="60" cy="33" r="5.5"/>
+        <path class="h-hanekam" d="M58 33c-5-5-3-11 3-11"/>
         <g class="h-ojne">
-          <g class="h-oje"><circle class="h-hvid" cx="44" cy="43" r="10.5"/><g class="h-pupil" style="transform-origin:44px 43px"><circle class="h-sort" cx="44" cy="47.5" r="5"/><circle class="h-blink" cx="45.8" cy="45.8" r="1.6"/></g></g>
-          <g class="h-oje"><circle class="h-hvid" cx="76" cy="43" r="10.5"/><g class="h-pupil h-pupil2" style="transform-origin:76px 43px"><circle class="h-sort" cx="76" cy="47.5" r="5"/><circle class="h-blink" cx="77.8" cy="45.8" r="1.6"/></g></g>
+          <g class="h-oje"><circle class="h-hvid" cx="45" cy="44" r="9.5"/><g class="h-pupil" style="transform-origin:45px 44px"><circle class="h-sort" cx="45" cy="48" r="4.5"/><circle class="h-blink" cx="46.6" cy="46.4" r="1.5"/></g></g>
+          <g class="h-oje"><circle class="h-hvid" cx="75" cy="44" r="9.5"/><g class="h-pupil h-pupil2" style="transform-origin:75px 44px"><circle class="h-sort" cx="75" cy="48" r="4.5"/><circle class="h-blink" cx="76.6" cy="46.4" r="1.5"/></g></g>
         </g>
+        <path class="h-bryn" d="M35 34.5L54 37M86 30L66 36"/>
         <rect class="h-laaglaebe" x="18" y="56" width="84" height="6" rx="3"/>
-        <rect class="h-tand" x="41" y="59" width="8" height="8" rx="2.5"/>
+        <path class="h-tand" d="M44 59h7v8h-5.5a1.5 1.5 0 0 1-1.5-1.5z"/>
       </g>
-      <g class="h-glimt"><path d="M14 40l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M104 30l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M60 6l1.6 4 4 1.6-4 1.6-1.6 4-1.6-4-4-1.6 4-1.6z"/></g>
+      <g class="h-glimt"><path d="M104 30l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></g>
     </g>
   </svg>`;
 

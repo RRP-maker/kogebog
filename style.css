@@ -367,17 +367,16 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-skygge { fill: rgba(var(--skyg-rgb), .18); }
 .h-potte, .h-kuppel { fill: var(--gryde); }
 .h-rand { fill: var(--gryde-mork); }
-.h-prikker { fill: rgba(255, 255, 255, .75); }
 .h-arm { fill: none; stroke: var(--gryde-mork); stroke-width: 6; stroke-linecap: round; }
 .h-haand { fill: var(--gryde-mork); }
 .h-skaft, .h-skeblad { fill: var(--h-skaft); }
 .h-fod { fill: var(--paa-lys); }
-.h-kind { fill: var(--h-kind); }
-.h-hjerte { fill: var(--h-kind); opacity: .9; }
-.h-glans { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: 3.5; stroke-linecap: round; }
-.h-knop { fill: var(--smor); stroke: var(--gryde-mork); stroke-width: 1.5; }
+.h-plaster { fill: var(--h-plaster, #f3d9ad); stroke: var(--gryde-mork); stroke-width: 1.2; }
+.h-plaster circle { fill: var(--gryde-mork); stroke: none; }
+.h-bryn { fill: none; stroke: var(--paa-lys); stroke-width: 3.5; stroke-linecap: round; }
+.h-hanekam { fill: none; stroke: var(--paa-lys); stroke-width: 3; stroke-linecap: round; }
 .h-laaglaebe { fill: var(--smor); stroke: var(--gryde-mork); stroke-width: 1.5; }
-.h-tand { fill: #fff; stroke: var(--gryde-mork); stroke-width: 1.2; }
+.h-tand { fill: #fff; stroke: var(--gryde-mork); stroke-width: 1.2; stroke-linejoin: round; }
 .h-indre { fill: var(--h-indre); display: none; }
 .h-tunge { fill: var(--h-tunge); stroke: var(--h-tungestreg); stroke-width: 1.2; }
 .h-tungestreg { fill: none; stroke: var(--h-tungestreg); stroke-width: 1.2; stroke-linecap: round; }
@@ -386,7 +385,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-blink { fill: #fff; }
 .h-glimt { fill: var(--guld); opacity: 0; }
 .h-krop, .h-laag, .h-pegearm, .h-ojne, .h-indre, .h-tunge, .h-pupil { transform-box: view-box; }
-.h-krop { transform-origin: 60px 120px; animation: hvile 3.4s ease-in-out infinite; }
+.h-krop { transform-origin: 60px 120px; transform: rotate(-3deg); animation: hvile 3.4s ease-in-out infinite; }
 .h-ojne { transform-origin: 60px 43px; animation: blink 4.6s infinite; }
 .h-pegearm { transform-origin: 26px 82px; transition: transform .4s var(--ud); }
 .h-laag, .h-indre { transform-origin: 98px 59px; }
@@ -394,7 +393,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-tungestreg { transition: none; }
 .h-pupil { animation: pendel 3.2s ease-in-out infinite alternate; }
 .h-pupil2 { animation-delay: -1.1s; }
-@keyframes hvile { 50% { transform: translateY(-2px) scaleY(1.015); } }
+@keyframes hvile { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(-3deg) translateY(-2px) scaleY(1.015); } }
 @keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
 @keyframes pendel { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
 @keyframes tungehvile { 50% { transform: translateY(1.5px) rotate(3deg); } }
@@ -420,7 +419,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 }
 @keyframes vrikke { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
 @keyframes rasl { from { transform: rotate(-35deg); } to { transform: rotate(35deg); } }
-@keyframes prat { 25% { transform: translateY(-1.5px) scaleY(1.02); } 50% { transform: scaleY(.985); } 75% { transform: translateY(-1px); } }
+@keyframes prat { 0%, 100% { transform: rotate(-3deg); } 25% { transform: rotate(-3deg) translateY(-1.5px) scaleY(1.02); } 50% { transform: rotate(-3deg) scaleY(.985); } 75% { transform: rotate(-3deg) translateY(-1px); } }
 [data-tilstand=tale] .h-pegearm { animation: vift 1.1s ease-in-out infinite alternate; }
 @keyframes vift { to { transform: rotate(-8deg); } }
 [data-tilstand=peg] .h-pegearm, [data-tilstand=pegstille] .h-pegearm { transform: rotate(var(--vinkel, -30deg)); }
@@ -431,7 +430,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 [data-tilstand=glad] .h-pupil { animation: snurr .5s linear 2; }
 [data-tilstand=glad] .h-glimt { animation: glimt 1.1s ease-out; }
 [data-tilstand=glad] .h-pegearm { transform: rotate(-25deg); }
-@keyframes hop { 40% { transform: translateY(-16px) scaleY(1.04); } 75% { transform: translateY(0) scaleY(.96); } }
+@keyframes hop { 0%, 100% { transform: rotate(-3deg); } 40% { transform: rotate(-3deg) translateY(-16px) scaleY(1.04); } 75% { transform: rotate(-3deg) scaleY(.96); } }
 @keyframes laaghop { 0%, 100% { transform: none; } 30%, 70% { transform: translateY(-10px) rotate(12deg); } }
 @keyframes indrehop { 0%, 100% { transform: scaleY(.02); } 30%, 70% { transform: scaleY(1.15); } }
 @keyframes snurr { to { transform: rotate(360deg); } }
@@ -693,4 +692,3 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 }
 /* udfyldt stjerne er klar gul i begge temaer: blæk-streg */
 [data-tema="moerk"] .ikon-stjerne { color: #22386b; }
-[data-tema="moerk"] .h-prikker { fill: rgba(255, 255, 255, .5); }
