@@ -208,7 +208,10 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 }
 .ing.tjek li { background: none; }
 .ing.tjek label { display: flex; align-items: center; margin: 0; width: 100%; min-height: 32px; }
-.ing.tjek label span { color: inherit; font-size: inherit; }
+.ing.tjek label span { color: inherit; font-size: inherit; line-height: 32px; }
+.ing.tjek input { flex: none; }
+.ing.tjek.lav-del label { align-items: flex-start; }
+.ing.tjek.lav-del input { margin-top: 3px; } /* ud for første linje */
 .ing.tjek input:checked + span { text-decoration: line-through; color: var(--blyant); }
 .trin { padding-left: 0; margin: 0; list-style: none; counter-reset: trin; }
 .trin > li { counter-increment: trin; position: relative; padding: 0 0 32px 44px; overflow-wrap: anywhere; }
