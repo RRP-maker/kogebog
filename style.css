@@ -83,14 +83,14 @@ main > .knap.stor { align-self: stretch; }
   transition: transform .16s var(--ud), box-shadow .16s var(--ud), background-color .16s;
 }
 .knap {
-  display: inline-flex; align-items: flex-start; justify-content: center; gap: 6px; height: 64px; padding: calc(var(--pt) - 1px) 18px calc(var(--pb) - 1px);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 64px; padding: 0 18px;
   border-radius: 24px; line-height: 32px;
 }
 .knap:active, .rund:active, .chip:active, .fane:active, .kort:active, .favknap:active { transform: scale(.97); }
 .knap:disabled, .rund:disabled { opacity: .45; cursor: default; }
 .knap.primaer { background: linear-gradient(135deg, rgba(222, 72, 50, .94), rgba(184, 44, 27, .9)); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(120, 30, 18, .3), 0 8px 22px rgba(190, 45, 28, .32), inset 0 1.5px 1px rgba(255, 255, 255, .55), inset 0 -1.5px 1px rgba(255, 255, 255, .18); }
 .knap.fare { color: var(--tomat-mork); }
-.knap.stor { font-size: 24px; padding-top: calc(var(--pt) - 3px); padding-left: 24px; padding-right: 24px; border-radius: 32px; }
+.knap.stor { font-size: 24px; padding: 0 24px; border-radius: 32px; }
 .rund { width: 64px; height: 64px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 24px; padding: 0; flex: none; }
 /* indkøbskurven ved en ingrediens: ingen cirkel, så rækkerne holder 32 px */
 .lille-rund { width: 48px; height: 32px; border-radius: 16px; font-size: 20px; line-height: 32px; background: none; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
@@ -118,19 +118,21 @@ main > .knap.stor { align-self: stretch; }
 
 /* Kort: små papirlapper */
 .kort {
-  display: block; border-radius: 22px; margin: var(--m) 0 var(--pt); padding: calc(var(--pt) - 1px) 18px calc(var(--pb) - 1px);
+  display: block; border-radius: 22px; margin: var(--m) 0 var(--pt); padding: 15px 18px;
   color: inherit; text-decoration: none; transition: transform .16s var(--ud);
 }
 .kort strong { display: block; font: 26px/32px var(--hoved); font-weight: 400; position: relative; top: -1px; }
 .kort > span { display: block; color: var(--blyant); }
 .kort p { margin: 0; }
 .kort .rakke { margin: var(--m) 0 var(--pt); }
-.kort .chips { display: flex; }
+.kort .chips { display: flex; top: 0; }
 .guld { color: var(--guld); }
 #liste, #favoritter { display: flex; flex-direction: column; }
 /* Små mærker: tekst på linjen, med en pille bag, hvis bund hviler på linjen */
+.chips, .filter { position: relative; top: calc(var(--l0) - 32px); } /* rækkens midte = midt mellem to linjer */
+.kort .chips { top: 0; } /* inde i et kort ligger rækkerne allerede mellem linjerne */
 .chips { display: flex; flex-wrap: wrap; gap: 0 8px; margin: 0; padding: 0; }
-.chips > span, .chip { position: relative; z-index: 0; height: 32px; font-size: 17px; line-height: 33px; color: var(--blaek); }
+.chips > span, .chip { position: relative; z-index: 0; height: 32px; font-size: 17px; line-height: 32px; color: var(--blaek); }
 .chips > span { padding: 0 12px; }
 .chips > span::before { content: ""; position: absolute; z-index: -1; inset: 3px 0 3px; border-radius: 13px; background: rgba(160, 226, 178, .55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
 .lille { color: var(--blyant); font-size: 18px; }
@@ -143,7 +145,7 @@ main > .knap.stor { align-self: stretch; }
 .filter::-webkit-scrollbar { display: none; }
 .filter { margin-bottom: -12px; margin-top: -12px; }
 .chip { flex: none; padding: 0 16px; font-size: 20px; line-height: 32px; border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; white-space: nowrap; }
-.chip::before { content: ""; position: absolute; z-index: -1; inset: 1px 0 3px; border-radius: 16px; background: var(--glas); border: 1px solid var(--glaskant); box-shadow: 0 1px 3px rgba(34, 56, 107, .14), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8); }
+.chip::before { content: ""; position: absolute; z-index: -1; inset: 2px 0; border-radius: 16px; background: var(--glas); border: 1px solid var(--glaskant); box-shadow: 0 1px 3px rgba(34, 56, 107, .14), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8); }
 .chip.valgt { color: #fff; }
 .chip.valgt::before { background: linear-gradient(135deg, rgba(34, 56, 107, .92), rgba(34, 56, 107, .8)); border-color: rgba(255, 255, 255, .35); }
 
@@ -153,7 +155,7 @@ label span { color: var(--blyant); font-size: 17px; line-height: 0; }
 small { display: block; color: var(--blyant); font-size: 17px; line-height: 32px; margin: 0; }
 input[type=text], input[type=number], input[type=search], textarea, select {
   display: block; width: 100%; font: inherit; font-size: 20px; line-height: 32px; color: var(--blaek);
-  margin: var(--m) 0 var(--pt); padding: calc(var(--pt) - 2px) 12px calc(var(--pb) - 2px); border: 2px solid var(--blaek); border-radius: 10px; background: #fff;
+  margin: var(--m) 0 var(--pt); padding: 14px 12px; border: 2px solid var(--blaek); border-radius: 10px; background: #fff;
   -webkit-appearance: none; appearance: none;
 }
 input[type=text], input[type=number], input[type=search], select { height: 64px; }
@@ -166,7 +168,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .linjeform { display: flex; flex-direction: row; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); }
 .linjeform input, .linjeform .knap { margin: 0; }
 .linjeform input { flex: 1; min-width: 0; }
-.fejlboks { background: #fff0ee; border-left: 6px solid var(--tomat); color: #7a1f16; border-radius: 6px; padding: var(--pt) 14px var(--pb); margin: var(--m) 0 var(--pt); }
+.fejlboks { background: #fff0ee; border-left: 6px solid var(--tomat); color: #7a1f16; border-radius: 6px; padding: 16px 14px; margin: var(--m) 0 var(--pt); }
 .skift, .valgrakke label { display: flex; align-items: center; min-height: 32px; margin: 0; }
 .skift span { color: inherit; font-size: inherit; }
 .valgrakke { display: flex; gap: 24px; margin: var(--m) 0 var(--pt); }
@@ -176,8 +178,8 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .favknap { font: 36px/64px sans-serif; width: 56px; height: 64px; flex: none; border: 0; background: none; color: var(--guld); cursor: pointer; padding: 0; transition: transform .16s var(--ud); }
 .favknap.hop { animation: stjernehop .5s var(--ud); }
 @keyframes stjernehop { 40% { transform: scale(1.5) rotate(18deg); } }
-.portioner { display: flex; align-items: flex-start; gap: 12px; margin: var(--m) 0 var(--pt); }
-.portioner span { min-width: 124px; text-align: center; font: 26px/32px var(--hoved); margin-top: calc(var(--pt) - 1px); }
+.portioner { display: flex; align-items: center; gap: 12px; margin: var(--m) 0 var(--pt); }
+.portioner span { min-width: 124px; text-align: center; font: 26px/32px var(--hoved); }
 .ing { list-style: none; padding: 0; margin: 0; }
 /* stiplet streg på linjen: dækker den blå linje, så den ikke skinner igennem */
 .ing li {
@@ -201,7 +203,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 }
 .begreb.udpeget { background: var(--smor); }
 .forklaring {
-  display: block; border-radius: 20px; margin: var(--m) 0 var(--pt); padding: calc(var(--pt) - 1px) 16px calc(var(--pb) - 1px);
+  display: block; border-radius: 20px; margin: var(--m) 0 var(--pt); padding: 15px 16px;
   animation: ind .22s var(--ud);
 }
 .forklaring b { font: 24px/32px var(--hoved); font-weight: 400; }
