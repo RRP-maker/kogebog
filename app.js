@@ -124,6 +124,28 @@ function bekraeft(tekst, ja = 'Slet') {
   });
 }
 
+// ---------- Dubletter: samme opskriftsnavn ----------
+const navnNoegle = t => String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
+const findNavn = (liste, titel, undtag) => { const n = navnNoegle(titel); return n ? liste.find(o => o.id !== undtag && navnNoegle(o.titel) === n) : null; };
+// Spørger, hvad der skal ske med opskrifter, der allerede findes. Svarer 'gem', 'spring' eller null (annuller).
+function spoergDublet(dubletter, antal) {
+  return new Promise(svar => {
+    const en = antal === 1, d0 = dubletter[0];
+    const tekst = en ? `«${d0.titel}» findes allerede.` : dubletter.length === 1 ? `«${d0.titel}» findes allerede.` : `${dubletter.length} af opskrifterne findes allerede.`;
+    const se = d0.id ? `<a class="knap hel" href="#/opskrifter/${d0.id}" data-svar="se">Se opskriften</a>` : '';
+    const d = ark(`<p class="ark-tekst">${esc(tekst)}</p><div class="rakke">${en || dubletter.length === 1 ? se : ''}
+      <button class="knap primaer" data-svar="gem">${en ? 'Gem alligevel' : 'Gem alle'}</button>
+      ${en ? '' : '<button class="knap" data-svar="spring">Spring over dem</button>'}
+      <button class="knap" data-svar="nej">Annuller</button></div>`);
+    d.addEventListener('click', e => {
+      const b = e.target.closest('[data-svar]');
+      if (!b && !e.target.closest('.ark-bag')) return;
+      const v = b ? b.dataset.svar : 'nej';
+      lukArk(); svar(v === 'gem' || v === 'spring' ? v : null);
+    });
+  });
+}
+
 // ---------- Ingredienser: mængde, enhed, navn ----------
 const ENHEDER = ['g', 'kg', 'ml', 'cl', 'dl', 'l', 'tsk', 'spsk', 'stk', 'knsp', 'nip', 'dåse', 'dåser', 'fed', 'bundt', 'pk', 'pakke', 'pakker', 'skive', 'skiver', 'håndfuld', 'glas', 'kop', 'kopper', 'pose', 'poser', 'bakke', 'bakker'];
 const BROEK = { '½': 0.5, '¼': 0.25, '¾': 0.75, '1/2': 0.5, '1/4': 0.25, '3/4': 0.75 };
@@ -650,7 +672,7 @@ async function formular(type, rid) {
   henter();
   const [r, ekstra] = await Promise.all([
     rid ? api(`${type}?id=eq.${enc(rid)}&select=*`) : [],
-    type === 'tips' ? api('opskrifter?select=id,titel&order=titel') : type === 'opskrifter' ? api('opskrifter?select=kategori') : []
+    type === 'tips' ? api('opskrifter?select=id,titel&order=titel') : type === 'opskrifter' ? api('opskrifter?select=id,titel,kategori') : []
   ]);
   if (id !== visning) return;
   if (rid && !r[0]) return info(`Den findes ikke længere.<br><a href="#/${type}">Tilbage</a>`);
@@ -674,11 +696,30 @@ async function formular(type, rid) {
   form.addEventListener('beforeinput', e => { // telefoner sender ikke altid Enter som tast
     if (e.target.classList.contains('rk-tekst') && (e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph')) { e.preventDefault(); rkEnter(e.target.closest('.rk')); }
   });
+  if (type === 'opskrifter') { // hjælperen siger til, hvis navnet allerede findes
+    let sidstNavn = '', dubTimer;
+    const titelEl = form.elements.titel;
+    titelEl.addEventListener('input', () => {
+      clearTimeout(dubTimer);
+      dubTimer = setTimeout(() => {
+        const o = findNavn(ekstra, titelEl.value, rid);
+        if (!o) { sidstNavn = ''; return; }
+        if (navnNoegle(o.titel) === sidstNavn) return;
+        sidstNavn = navnNoegle(o.titel);
+        Hjaelper.sig(`Hov, du har allerede en opskrift, der hedder «${o.titel}».`, { nu: true, knap: { tekst: 'Se opskriften', href: `#/opskrifter/${o.id}` } });
+      }, 700);
+    });
+  }
   const visFejl = tekst => { $('#formfejl').innerHTML = `<div class="fejlboks">${tekst}</div>`; };
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const data = laesFelter(form, T.felter, visFejl);
     if (!data) return;
+    if (type === 'opskrifter' && !rid) {
+      let nu = ekstra; try { nu = await api('opskrifter?select=id,titel'); } catch (err) { console.error(err); }
+      const o = findNavn(nu, data.titel);
+      if (o && !(await spoergDublet([o], 1))) return;
+    }
     let valg = {};
     if (type === 'opskrifter') { try { valg = await Katalog.spoerg(ingAf(data).map(i => i.n)); } catch (err) { console.error(err); } } // spørger om kategorier til nye ingredienser
     const knap = form.querySelector('button[type=submit]');
@@ -1108,7 +1149,21 @@ const H = {
     if (svar.fejl) { $('#formfejl').innerHTML = `<div class="fejlboks">${esc(svar.fejl)}</div>`; return; }
     el.disabled = true;
     try {
-      const alle = svar.liste || [svar];
+      let alle = svar.liste || [svar];
+      const antal = alle.length;
+      let nu = []; try { nu = await api('opskrifter?select=id,titel'); } catch (e) { console.error(e); }
+      const set = [], dubletter = [];
+      for (const r of alle) {
+        const o = findNavn(nu, r.data.titel) || findNavn(set, r.data.titel);
+        if (o) dubletter.push({ ...o, titel: r.data.titel }); r.dublet = !!o;
+        set.push({ id: null, titel: r.data.titel, ...(o && o.id ? { id: o.id } : {}) });
+      }
+      if (dubletter.length) {
+        const v = await spoergDublet(dubletter, antal);
+        if (!v) { el.disabled = false; return; }
+        if (v === 'spring') alle = alle.filter(r => !r.dublet);
+        if (!alle.length) { el.disabled = false; toast('Alle findes allerede'); return; }
+      }
       let sidste;
       for (const r of alle) {
         [sidste] = await api('opskrifter', { method: 'POST', body: r.data });

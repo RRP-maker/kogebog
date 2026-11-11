@@ -596,3 +596,7 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 .hj-gruppe .hj-rk.felt-s { margin-bottom: 16px; }
 .hj-gruppe.ulige { padding-bottom: 16px; }
 
+
+.h-knap { display: block; margin: 8px 0 2px; padding: 6px 14px; font: inherit; font-size: 17px; line-height: 24px; color: #fff; background: var(--blyant); border: 0; border-radius: 14px; cursor: pointer; }
+.h-knap[hidden] { display: none; }
+.knap.hel { width: 100%; }

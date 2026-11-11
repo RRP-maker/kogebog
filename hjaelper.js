@@ -51,21 +51,22 @@ const Hjaelper = (() => {
     </g>
   </svg>`;
 
-  let rod, figur, boble, tekst, visKnap;
+  let rod, figur, boble, tekst, knapEl, visKnap;
   let koe = [], aktiv = null, skrivTimer, ventTimer, sideTekst = '';
   const skjult = () => lager.hent('hjaelper_skjult', false);
 
   function byg() {
     rod = document.createElement('div');
     rod.id = 'hjaelper';
-    rod.innerHTML = `<div class="h-boble" hidden><p></p><span class="h-videre">Tryk for at fortsætte</span></div>
+    rod.innerHTML = `<div class="h-boble" hidden><p></p><button class="h-knap" type="button" hidden></button><span class="h-videre">Tryk for at fortsætte</span></div>
       <button class="h-figur" type="button" aria-label="Hjælperen. Tryk for hjælp.">${SVG}</button>
       <button class="h-skjul" type="button" aria-label="Skjul hjælperen">×</button>`;
     visKnap = document.createElement('button');
     visKnap.id = 'hjaelper-vis'; visKnap.type = 'button';
     visKnap.textContent = 'Vis hjælper';
     document.body.append(rod, visKnap);
-    figur = rod.querySelector('.h-figur'); boble = rod.querySelector('.h-boble'); tekst = boble.querySelector('p');
+    figur = rod.querySelector('.h-figur'); boble = rod.querySelector('.h-boble'); tekst = boble.querySelector('p'); knapEl = boble.querySelector('.h-knap');
+    knapEl.addEventListener('click', e => { e.stopPropagation(); const k = aktiv && aktiv.knap; if (!k) return; stop(); if (k.href) location.hash = k.href; });
     figur.addEventListener('click', () => { if (aktiv) videre(); else if (sideTekst) sig(sideTekst); });
     boble.addEventListener('click', videre);
     rod.querySelector('.h-skjul').addEventListener('click', () => vis(false));
@@ -91,6 +92,7 @@ const Hjaelper = (() => {
     if (!n) return;
     aktiv = n; aktiv.faerdig = false;
     boble.hidden = false; tekst.textContent = '';
+    knapEl.hidden = true;
     boble.classList.toggle('flere', koe.length > 0);
     boble.classList.toggle('stor', !!n.stor);
     if (n.peg && document.contains(n.peg)) {
@@ -117,15 +119,16 @@ const Hjaelper = (() => {
     tekst.textContent = aktiv.tekst; aktiv.faerdig = true;
     if (rod.dataset.tilstand !== 'glad') saetTilstand(aktiv.peg ? 'pegstille' : 'hvile');
     else setTimeout(() => { if (aktiv && aktiv.faerdig) saetTilstand(aktiv.peg ? 'pegstille' : 'hvile'); }, 1100);
+    if (aktiv.knap) { knapEl.textContent = aktiv.knap.tekst; knapEl.hidden = false; return; } // med knap bliver boblen stående
     ventTimer = setTimeout(naeste, 2600 + aktiv.tekst.length * 55);
   }
   function videre() { if (!aktiv) return; if (!aktiv.faerdig) faerdigSkrevet(); else naeste(); }
 
-  // sig('tekst', { peg: element, glad: true, nu: true, stor: true })
+  // sig('tekst', { peg: element, glad: true, nu: true, stor: true, knap: { tekst, href } })
   function sig(t, valg = {}) {
     if (!rod || skjult() || !t) return;
     if (valg.nu) koe = [];
-    koe.push({ tekst: String(t), peg: valg.peg || null, glad: !!valg.glad, stor: !!valg.stor });
+    koe.push({ tekst: String(t), peg: valg.peg || null, glad: !!valg.glad, stor: !!valg.stor, knap: valg.knap || null });
     if (!aktiv || valg.nu) naeste();
   }
   function glad(t) { if (t) sig(t, { glad: true, nu: true }); else if (rod && !skjult()) { saetTilstand('glad'); Lyd.spil('glad'); setTimeout(() => { if (!aktiv) saetTilstand('hvile'); }, 1100); } }
