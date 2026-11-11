@@ -590,3 +590,9 @@ input:focus, textarea:focus, select:focus, input:focus-visible, textarea:focus-v
 .felt-knapper .hoejre { display: flex; align-items: center; gap: 8px; }
 textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px; line-height: 32px; resize: none; }
 
+/* Hvad har du derhjemme?: en halv felthøjde (16 px) mellem de små felter. Listen er den eneste undtagelse fra placeringsreglen.
+   Rækkerne fylder 48 px hver; en ulige gruppe får 16 px ekstra forneden, så resten af siden igen står på linjerne. */
+.hj-gruppe { display: flex; flex-direction: column; }
+.hj-gruppe .hj-rk.felt-s { margin-bottom: 16px; }
+.hj-gruppe.ulige { padding-bottom: 16px; }
+
