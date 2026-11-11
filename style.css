@@ -8,6 +8,8 @@
   --tomat: #d9432f; --tomat-mork: #b5301f; --smor: #ffd95a; --mynte: #c4ebcd; --rosa: #ffcdc6;
   --gryde: #4a9fb5; --gryde-mork: #2a768b; --guld: #e8a400;
   --tp-groen: #2a7a46; --tp-guld: #8a5f00; --tp-rosa: #b8335f;
+  /* Symbolernes flader */
+  --ik-smoer: #ffd95a; --ik-rosa: #ffcdc6; --ik-tomat: #e5604d; --ik-himmel: #a9d6e6; --ik-mynte: #c4ebcd; --ik-gryde: #4a9fb5; --ik-orange: #f08a3c; --ik-brod: #e8b25c; --ik-guld: #e8a400; --ik-blad: #6fbf86; --ik-papir: #fffdf5; --ik-hvid: #ffffff;
   --link: #0b5c9c; --stjerne-fra: #8089aa;
   --fejl-bg: #fff0ee; --fejl-tekst: #7a1f16;
   --glas: linear-gradient(135deg, rgba(255, 255, 255, .66), rgba(255, 255, 255, .3));
@@ -626,6 +628,8 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --tomat: #ff7561; --tomat-mork: #ff9d8c; --smor: #ffd95a; --mynte: #bfe8c9; --rosa: #ffcdc6;
   --gryde: #5bb0c6; --gryde-mork: #86cde0; --guld: #ffc933;
   --tp-groen: #7fd49a; --tp-guld: #ffc933; --tp-rosa: #ff8fb3;
+  /* Symbolernes flader: dybere toner, så blækstregen (lys i mørkt tema) står tydeligt */
+  --ik-smoer: #9a7612; --ik-rosa: #a8505a; --ik-tomat: #c0402f; --ik-himmel: #3f7d99; --ik-mynte: #3f8058; --ik-gryde: #2f8298; --ik-orange: #b8621f; --ik-brod: #9a732b; --ik-guld: #a87800; --ik-blad: #3d8a58; --ik-papir: #3b4363; --ik-hvid: #3b4363;
   --link: #8fc6f7; --stjerne-fra: #5f6a8c;
   --fejl-bg: #3b2028; --fejl-tekst: #ffb9ac;
   --glas: linear-gradient(135deg, rgba(64, 72, 104, .62), rgba(40, 46, 72, .5));
@@ -643,7 +647,6 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --gron: linear-gradient(135deg, #2a8049, #236f3f); --gron-hover: linear-gradient(135deg, #339455, #2b8049);
   --skjold: rgba(0, 0, 0, .6);
 }
-/* Ikoner: mørk streg som en klistermærke-kant, så de står tydeligt på den mørke flade */
-[data-tema="moerk"] .ikon { color: #22386b; filter: drop-shadow(0 0 .7px #fff) drop-shadow(0 0 .7px #fff); }
-[data-tema="moerk"] .fane .ikon { filter: drop-shadow(0 0 .7px #fff) drop-shadow(0 0 .7px #fff) drop-shadow(0 2px 2px rgba(0, 0, 0, .35)); }
+/* udfyldt stjerne er klar gul i begge temaer: blæk-streg */
+[data-tema="moerk"] .ikon-stjerne { color: #22386b; }
 [data-tema="moerk"] .h-prikker { fill: rgba(255, 255, 255, .5); }
