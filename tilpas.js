@@ -48,12 +48,13 @@ const Tilpas = (() => {
   // Hvert felt har et id (data-tpid). Har feltet ikke selv et, laves det af siden og teksten. Felter, der hænger sammen, får samme data-tpid i koden.
   // Tilpasninger, der før var gemt på teksten, gælder stadig, til feltet ændres første gang (arv).
   const arv = {}, arvFelt = {};
+  // Tekster på knapper og faner. En overskrift med samme tekst som en knap, der fører til siden, arver intet fra knappen.
+  const feltTekster = new Set(['Hvad kan jeg lave?', 'Opskrifter', 'Tips', 'Tilføj med Claude', 'Mere', 'Ny opskrift', 'Nyt tip', ...lager.hent('tpFeltTekster', [])]);
   const get = k => {
     if (data[k] !== undefined) return data[k];
     if (arv[k] === undefined || data[arv[k]] === undefined) return undefined;
-    if (arvFelt[k] !== false) return data[arv[k]];
-    const { b, z, l, m, p, ...rest } = data[arv[k]]; // overskrifter og tekster arver ikke feltets farve, størrelse eller placering fra en knap med samme tekst
-    return rest;
+    if (arvFelt[k] === false && feltTekster.has(arv[k])) return undefined; // gamle tilpasninger på teksten tilhører knappen
+    return data[arv[k]];
   };
   const tomb = k => arv[k] !== undefined && data[arv[k]] !== undefined; // en nulstillet tilpasning huskes, så den gamle ikke dukker op igen
   const slug = s => String(s).toLowerCase().replace(/[^a-zæøå]+/g, '-').replace(/^-|-$/g, '');
@@ -74,7 +75,9 @@ const Tilpas = (() => {
       const leg = el.dataset.orgtekst || tekstAf(el);
       const k = el.dataset.org ?? idAf(el, leg);
       if (!egnet(el, el.dataset.tpid ? k : leg)) return;
-      el.dataset.org = k; if (k !== leg) { arv[k] = leg; arvFelt[k] = el.matches('.knap, .tilbage, .fane'); }
+      el.dataset.org = k;
+      if (k !== leg) { arv[k] = leg; arvFelt[k] = el.matches('.knap, .tilbage, .fane'); }
+      if (el.matches('.knap, .tilbage, .fane') && leg && !feltTekster.has(leg)) { feltTekster.add(leg); lager.gem('tpFeltTekster', [...feltTekster]); }
       if (document.body.dataset.side === 'forside' && !(beskyttet.has(k) && beskyttet.has(leg))) { beskyttet.add(k); beskyttet.add(leg); lager.gem('tpForside', [...beskyttet]); }
       const o = get(k) || {}, ny = o.t || leg, n = noder(el);
       if (n.length && tekstAf(el) !== ny) { n[0].nodeValue = ny; n.slice(1).forEach(x => { x.nodeValue = ''; }); }
