@@ -806,14 +806,18 @@ Her er opskriften:
 const CLAUDE_FOERSTE = CLAUDE_BESKED.slice(0, 30); // bruges til at se, om udklipsholderen allerede indeholder beskeden
 let claudeBesked = '';
 const FALDBACK_KAT = 'Grøntsager, Frugt, Kød, Fisk og skaldyr, Mejeri og æg, Bønner og linser, Pasta, ris og korn, Krydderier, Konserves';
+const FLERE_LINKS = `
+
+Der er flere links nedenfor. Lav én opskrift for hvert link. Svar med en liste i stedet: [ { …opskrift 1… }, { …opskrift 2… } ], stadig kun i én kodeblok.`;
+const antalLinks = t => (String(t).match(/https?:\/\/\S+/g) || []).length;
 const lavBesked = () => CLAUDE_BESKED.replace('§KAT§', Katalog.kategorier().join(', ') || FALDBACK_KAT);
 function importSide() {
   claudeBesked = lavBesked();
   Katalog.hent().catch(() => {}); // kategorierne kommer med i beskeden
   app.innerHTML = `<a class="tilbage" href="#/opskrifter">‹ Opskrifter</a><h1>Tilføj med Claude</h1>
     <ol class="trin vejledning">
-      <li>Skriv din opskrift her, eller sæt et link ind. Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
-        <textarea id="egen" rows="5" placeholder="Din opskrift eller et link" aria-label="Din opskrift"></textarea>
+      <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
+        <textarea id="egen" rows="5" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
         <button class="knap primaer stor" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
         <p class="lille" id="kopinote" role="status"></p></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
@@ -823,18 +827,37 @@ function importSide() {
     </ol>
     <div id="formfejl"></div>
     <button class="knap primaer stor" data-h="gemImport">Gem opskriften</button>`;
-  Hjaelper.side('Her kan Claude skrive en opskrift om for dig. Kopiér først din opskrift. Tryk så på den første knap, åbn Claude, og sæt beskeden ind. Sæt til sidst Claudes svar ind i feltet her.');
+  Hjaelper.side('Her kan Claude skrive en opskrift om for dig. Kopiér først din opskrift, eller flere links. Tryk så på den første knap, åbn Claude, og sæt beskeden ind. Sæt til sidst Claudes svar ind i feltet her.');
 }
 // Læser Claudes svar. Giver { data } eller { fejl } med en besked på dansk.
 const tekstAf = x => typeof x === 'string' ? x : (x && (x.tekst ?? x.trin ?? x.beskrivelse)) || '';
 const enLinje = t => String(t).replace(/\s*\n\s*/g, ' ').trim();
 function laesImport(tekst) {
-  const s = String(tekst).replace(/[“”]/g, '"'), a = s.indexOf('{'), b = s.lastIndexOf('}');
+  const s = String(tekst).replace(/[“”]/g, '"');
   if (!s.trim()) return { fejl: 'Feltet er tomt. Sæt Claudes svar ind først.' };
+  const a1 = s.indexOf('['), a2 = s.indexOf('{');
+  if (a1 !== -1 && (a2 === -1 || a1 < a2)) { // en liste med flere opskrifter
+    const b = s.lastIndexOf(']');
+    let l;
+    try { l = JSON.parse(s.slice(a1, b + 1)); } catch (e) { return { fejl: 'Svaret kan ikke læses. Der mangler nok noget af teksten. Kopiér hele Claudes svar, og prøv igen.' }; }
+    if (!Array.isArray(l) || !l.length) return { fejl: 'Listen er tom. Kopiér hele Claudes svar, og prøv igen.' };
+    const liste = [];
+    for (let i = 0; i < l.length; i++) {
+      const r = laesEn(l[i]);
+      if (r.fejl) return { fejl: `Opskrift ${i + 1}: ${r.fejl}` };
+      liste.push(r);
+    }
+    return { liste };
+  }
+  const a = a2, b = s.lastIndexOf('}');
   if (a === -1 || b <= a) return { fejl: 'Det ligner ikke Claudes svar. Det skal begynde med { og slutte med }. Kopiér hele svaret, og prøv igen.' };
   let j;
   try { j = JSON.parse(s.slice(a, b + 1)); }
   catch (e) { return { fejl: 'Svaret kan ikke læses. Der mangler nok noget af teksten. Kopiér hele Claudes svar, og prøv igen.' }; }
+  return laesEn(j);
+}
+function laesEn(j) {
+  if (!j || typeof j !== 'object') return { fejl: 'Svaret har ikke det rigtige format.' };
   const mangler = [];
   const navn = typeof j.navn === 'string' ? j.navn.trim() : '';
   if (!navn) mangler.push('navn');
@@ -1040,7 +1063,7 @@ const H = {
     const udklip = egen ? '' : await laesUdklip(); // null = browseren måtte ikke læse udklipsholderen
     // Ligger beskeden selv i udklipsholderen (man trykker to gange), så beholder vi den, vi allerede har bygget.
     let status;
-    if (egen) { claudeBesked = grund + egen + '\n'; status = 'egen'; }
+    if (egen) { claudeBesked = grund.replace('\n\nHer er opskriften:\n', (antalLinks(egen) > 1 ? FLERE_LINKS : '') + '\n\nHer er opskriften:\n') + egen + '\n'; status = 'egen'; }
     else if (udklip && udklip.startsWith(CLAUDE_FOERSTE)) status = 'igen';
     else if (udklip) { claudeBesked = grund + udklip + '\n'; status = 'med'; }
     else { claudeBesked = grund; status = udklip === null ? 'naegtet' : 'tom'; }
@@ -1062,10 +1085,15 @@ const H = {
     if (svar.fejl) { $('#formfejl').innerHTML = `<div class="fejlboks">${esc(svar.fejl)}</div>`; return; }
     el.disabled = true;
     try {
-      const [ny] = await api('opskrifter', { method: 'POST', body: svar.data });
-      try { await Katalog.laeg(ingAf(svar.data).map(i => i.n), {}, svar.kat); } catch (e) { console.error(e); } // ingredienserne med Claudes kategorier
-      toast('Opskriften er gemt'); Hjaelper.glad('Opskriften er gemt!');
-      location.hash = '#/opskrifter/' + ny.id;
+      const alle = svar.liste || [svar];
+      let sidste;
+      for (const r of alle) {
+        [sidste] = await api('opskrifter', { method: 'POST', body: r.data });
+        try { await Katalog.laeg(ingAf(r.data).map(i => i.n), {}, r.kat); } catch (e) { console.error(e); } // ingredienserne med Claudes kategorier
+      }
+      const flere = alle.length > 1;
+      toast(flere ? `${alle.length} opskrifter er gemt` : 'Opskriften er gemt'); Hjaelper.glad(flere ? 'Opskrifterne er gemt!' : 'Opskriften er gemt!');
+      location.hash = flere ? '#/opskrifter' : '#/opskrifter/' + sidste.id;
     } catch (err) { el.disabled = false; throw err; }
   },
   async eksport() {
