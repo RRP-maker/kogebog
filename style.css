@@ -444,3 +444,8 @@ input[type=checkbox]:active, input[type=radio]:active { transform: scale(.8); }
 .rk-knap b .ikon { width: 24px; height: 24px; vertical-align: -5px; }
 .guld .ikon { width: 1em; height: 1em; vertical-align: -.15em; }
 .knap .ikon, #tilpas-knap .ikon, .ur .ikon { vertical-align: -.2em; }
+
+/* Tilpas siden: felter kan flyttes på et gitter */
+body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; cursor: grab; }
+.traekker { z-index: 40; cursor: grabbing !important; transform: scale(1.04); box-shadow: 0 16px 34px rgba(34, 56, 107, .38), var(--glans) !important; }
+#gitter { position: fixed; inset: 0; z-index: 30; pointer-events: none; background-image: radial-gradient(circle, rgba(34, 56, 107, .38) 1.2px, transparent 1.7px); background-size: 16px 16px; }

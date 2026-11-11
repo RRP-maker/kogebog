@@ -868,7 +868,7 @@ function mereSide() {
     <label class="skift"><input type="checkbox" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
     <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Tilpas siden</span></label>
-    <p class="lille">Slå til, og tryk så på en knap eller overskrift for at ændre teksten og skriftstørrelsen. Ændringen gælder alle steder.</p>
+    <p class="lille">Slå til, og tryk så på en knap eller overskrift for at ændre teksten og skriftstørrelsen. Hold fingeren på et felt og træk, for at flytte det. Ændringen gælder alle steder.</p>
     <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
     <h2>Sikkerhedskopi</h2>
     <p class="lille">Hent alt indhold som en fil. Gem den et sikkert sted.</p>

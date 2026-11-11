@@ -30,4 +30,5 @@ create table tilpasning (noegle text primary key, tekst text, stoerrelse numeric
 alter table tilpasning enable row level security;
 create policy "aaben" on tilpasning for all using (true) with check (true);
 alter table tilpasning add column skjult boolean;
+alter table tilpasning add column pos text; -- feltets plads, «dx,dy»
 ```
