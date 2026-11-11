@@ -201,5 +201,41 @@ const Hjemme = (() => {
       }
     } catch (err) { console.error(err); toast('Det blev ikke gemt. Tjek internettet, og prøv igen.'); }
   });
-  return { vis, navne };
+
+  // Når en ret er lavet: træk de brugte ingredienser fra det, du har derhjemme. Bliver mængden 0 eller mindre, fjernes varen.
+  // Springer over, hvis der ikke står en mængde, eller enhederne ikke kan regnes om (fx dl og stk).
+  const FAM = { g: ['m', 1], kg: ['m', 1000], ml: ['v', 1], cl: ['v', 10], dl: ['v', 100], l: ['v', 1000] };
+  const ALIAS = { 'dåser': 'dåse', pakke: 'pk', pakker: 'pk' };
+  const enhNorm = e => { e = String(e || 'stk').toLowerCase().replace(/\.$/, '').trim() || 'stk'; return ALIAS[e] || e; };
+  function omregn(q, fra, til) {
+    if (fra === til) return q;
+    const a = FAM[fra], b = FAM[til];
+    return a && b && a[0] === b[0] ? q * a[1] / b[1] : null;
+  }
+  async function traek(liste, faktor = 1) {
+    const [ing, hj] = await Promise.all([api('ingredienser?select=*'), api('hjemme?select=*')]);
+    const ingId = new Map(ing.map(i => [i.id, i])), brugt = new Map();
+    for (const x of liste) {
+      if (!(x.m > 0)) continue;
+      const s = stamme(simpel(x.n).toLowerCase());
+      let bedst = null, point = 0;
+      for (const h of hj) {
+        const i = ingId.get(h.ingrediens_id);
+        if (!i || h.maengde == null) continue;
+        const hs = stamme(i.navn_norm), p = hs === s ? 1000 : passer(s, hs) ? Math.min(s.length, hs.length) : 0;
+        if (p > point) { point = p; bedst = h; }
+      }
+      const q = bedst && omregn(x.m * faktor, enhNorm(x.e), enhNorm(bedst.enhed));
+      if (q != null && q !== false && bedst) brugt.set(bedst.id, (brugt.get(bedst.id) || 0) + q);
+    }
+    let rettet = 0, fjernet = 0;
+    for (const [id, q] of brugt) {
+      const h = hj.find(x => x.id === id), rest = Math.round((Number(h.maengde) - q) * 1000) / 1000;
+      if (rest <= 0) { await api(`hjemme?id=eq.${enc(id)}`, { method: 'DELETE' }); fjernet++; }
+      else await api(`hjemme?id=eq.${enc(id)}`, { method: 'PATCH', body: { maengde: rest } });
+      rettet++;
+    }
+    return { rettet, fjernet };
+  }
+  return { vis, navne, traek };
 })();

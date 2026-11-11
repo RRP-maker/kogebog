@@ -587,6 +587,9 @@ function tegnLav() {
   if (i === n && !K.talt) {
     K.talt = true;
     Hjaelper.glad('Flot klaret! Du har lavet hele retten.');
+    Hjemme.traek(ingAf(r), K.port / (r.portioner || K.port)).then(t => {
+      if (t.rettet) toast(`Ingredienserne er trukket fra i «Hvad har du derhjemme?»${t.fjernet ? ` (${t.fjernet} er brugt op og fjernet)` : ''}`);
+    }).catch(err => console.error(err));
   }
 }
 
