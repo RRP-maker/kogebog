@@ -46,6 +46,7 @@ const Hjaelper = (() => {
       <path class="h-potte" d="M22 62h76v30a24 24 0 0 1-24 24H46a24 24 0 0 1-24-24z"/>
       <g class="h-plaster" transform="rotate(-18 76 94)"><rect x="66" y="90" width="20" height="9" rx="4.5"/><circle cx="73" cy="94.5" r="1"/><circle cx="79" cy="94.5" r="1"/></g>
       <rect class="h-rand" x="16" y="56" width="88" height="11" rx="5.5"/>
+      <ellipse class="h-hul" cx="60" cy="59" rx="40" ry="7"/>
       <path class="h-indre" d="M18 57H103L102.5 50L21.5 36z"/>
       <path class="h-tunge" d="M60 53a8 8 0 0 1 16 0v11a8 8 0 0 1-16 0z"/>
       <path class="h-tungestreg" d="M68 60v7"/>
@@ -310,8 +311,8 @@ const Hjaelper = (() => {
   // Raket: drejer låget væk fra målet, ryster, og flyver af sted på røgen, der pruster ud af låget
   function raket(mit, fx, fy, dx, dy, dist, ret, sat, svg) {
     const vinkel = Math.atan2(-dx, dy) * 180 / Math.PI, d = Math.round(Math.max(1700, Math.min(2500, 1300 + dist * 1.5)));
-    const laag = rod.querySelector('.h-laag');
-    saetTilstand('flyv'); Lyd.spil('raket');
+    const hul = rod.querySelector('.h-hul');
+    saetTilstand('raket'); Lyd.spil('raket');
     return new Promise(slut => {
       const t0 = performance.now(); let sidstRoeg = 0;
       const ramme = nu => {
@@ -325,15 +326,15 @@ const Hjaelper = (() => {
         const r = vinkel * drej * (1 - op) + (op > 0 ? ret * 360 * op : 0);
         const kl = 1 - .2 * Math.sin(Math.PI * seg(t, .12, .2)) - .3 * Math.sin(Math.PI * seg(t, .94, 1));
         svg.style.transform = `translateY(${(1 - kl) * 30}px) rotate(${r}deg) scale(${2 - kl}, ${kl})`;
-        if (t > .1 && t < .86 && nu - sidstRoeg > 45) { // røg ud af låget
+        if (t > .1 && t < .86 && nu - sidstRoeg > 28) { // røg op af gryden, ud gennem det åbne låg
           sidstRoeg = nu;
-          const b = laag.getBoundingClientRect(), rad = (r - 0) * Math.PI / 180;
-          roeg(b.left + b.width / 2, b.top + b.height / 2, -Math.sin(rad), Math.cos(rad) * -1, t < .2);
+          const b = hul.getBoundingClientRect(), rad = r * Math.PI / 180;
+          roeg(b.left + b.width / 2, b.top + b.height / 2, Math.sin(rad), -Math.cos(rad), t < .2);
         }
         if (t < 1) return requestAnimationFrame(ramme);
         svg.style.transform = ''; sat(); Lyd.spil('bump');
         const rr = figur.getBoundingClientRect(); partikler(rr.left + rr.width / 2, rr.bottom - 6, 'stoev');
-        lander(mit).then(slut);
+        lander(mit, 'landerraket').then(slut);
       };
       requestAnimationFrame(ramme);
     });
@@ -343,14 +344,15 @@ const Hjaelper = (() => {
     const p = document.createElement('span');
     p.className = 'h-partikel roeg'; p.style.left = x + 'px'; p.style.top = y + 'px';
     document.body.append(p);
-    const l = (lille ? 25 : 55) + Math.random() * 30, sp = (Math.random() - .5) * 30;
-    p.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: .9 },
+    const l = (lille ? 35 : 75) + Math.random() * 35, sp = (Math.random() - .5) * 34;
+    if (Math.random() < .35) p.classList.add('moerk');
+    p.animate([{ transform: 'translate(-50%,-50%) scale(.3)', opacity: 1 }, { transform: `translate(calc(-50% + ${ux * 12}px), calc(-50% + ${uy * 12}px)) scale(1)`, opacity: 1, offset: .12 },
       { transform: `translate(calc(-50% + ${ux * l - uy * sp}px), calc(-50% + ${uy * l + ux * sp - 10}px)) scale(${2.4 + Math.random()})`, opacity: 0 }],
       { duration: 700 + Math.random() * 300, easing: 'cubic-bezier(.1,.7,.3,1)' }).finished.then(() => p.remove(), () => p.remove());
   }
   // blød overgang tilbage til hvile: låget lukker roligt, i stedet for at klappe i
-  async function lander(mit) {
-    saetTilstand('lander'); await vent(300);
+  async function lander(mit, tilstand = 'lander') {
+    saetTilstand(tilstand); await vent(300);
     if (mit === bevNr) saetTilstand('hvile');
   }
 

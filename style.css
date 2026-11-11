@@ -389,6 +389,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-ojne { transform-origin: 60px 43px; animation: blink 4.6s infinite; }
 .h-pegearm { transform-origin: 26px 82px; transition: transform .45s var(--ud); }
 .h-laag, .h-indre { transform-origin: 98px 59px; }
+.h-hul { transform-box: view-box; }
 .h-tunge { transform-origin: 64px 56px; animation: tungehvile 2.8s ease-in-out infinite; }
 .h-tungestreg { transition: none; }
 .h-pupil { animation: pendel 3.2s ease-in-out infinite alternate; }
@@ -447,6 +448,18 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 [data-tilstand=lander] .h-krop { animation: none; }
 @keyframes laagop { from { transform: none; } to { transform: translateY(-9px) rotate(10deg); } }
 @keyframes indreop { from { transform: scaleY(.02); } to { transform: none; } }
+.h-hul { fill: var(--h-indre); display: none; }
+/* Raket: låget står helt op (90 grader) og ryster, mens røgen pruster op af gryden */
+[data-tilstand=raket] .h-krop, [data-tilstand=landerraket] .h-krop { animation: none; }
+[data-tilstand=raket] .h-hul, [data-tilstand=raket] .h-indre { display: block; }
+[data-tilstand=raket] .h-laag { animation: laagraket .22s ease-out forwards, laagryst .06s linear .22s infinite alternate; }
+[data-tilstand=raket] .h-pupil { animation: snurr .3s linear infinite; }
+[data-tilstand=raket] .h-pegearm { animation: vild .15s ease-in-out infinite alternate; }
+[data-tilstand=raket] .h-tunge { animation: vrikke .08s linear infinite alternate; }
+[data-tilstand=landerraket] .h-hul { display: block; animation: toning .35s reverse forwards; }
+[data-tilstand=landerraket] .h-laag { animation: laagraket .35s ease-in reverse forwards; }
+@keyframes laagraket { from { transform: none; } to { transform: rotate(90deg); } }
+@keyframes laagryst { from { transform: rotate(82deg) translateY(-1px); } to { transform: rotate(98deg) translateY(1px); } }
 .h-ben { fill: none; stroke: var(--paa-lys); stroke-width: 10; stroke-linecap: round; }
 [data-tilstand=flyv] .h-pupil { animation: snurr .4s linear infinite; }
 [data-tilstand=flyv] .h-pegearm { animation: vild .18s ease-in-out infinite alternate; }
@@ -475,6 +488,8 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-tilbage:disabled { opacity: .35; cursor: default; }
 .h-partikel { position: fixed; z-index: 39; pointer-events: none; }
 .h-partikel.stoev { width: 12px; height: 12px; border-radius: 50%; background: rgba(var(--blaek-rgb), .22); }
+.h-partikel.roeg { z-index: 41; }
+.h-partikel.roeg.moerk { background: radial-gradient(circle, rgba(170, 176, 188, .95) 30%, rgba(105, 112, 128, .8)); }
 .h-partikel.roeg { width: 14px; height: 14px; border-radius: 50%; width: 18px; height: 18px; background: radial-gradient(circle, rgba(225, 229, 236, .95) 30%, rgba(150, 160, 178, .75)); box-shadow: 0 0 6px rgba(120, 130, 150, .35); }
 .h-partikel.stjerne { color: var(--guld); font-size: 18px; line-height: 1; }
 .h-maal { outline: 3px dashed var(--gryde-mork); outline-offset: 4px; border-radius: 12px; animation: maalpuls 1.2s ease-in-out infinite; }
