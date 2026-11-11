@@ -95,12 +95,13 @@ function fejl(e) {
   app.innerHTML = `<div class="fejlboks">Siden kunne ikke hentes. Tjek internettet, og prøv igen.</div>
     <button class="knap" data-h="igen">Prøv igen</button>`;
 }
-const stjernetekst = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+const ik = Ikoner.svg;
+const stjernetekst = n => Ikoner.stjerner(n);
 function chips(r) {
   return [
     r.kategori && esc(r.kategori),
     r.svaerhed && `<span aria-label="Sværhed ${r.svaerhed} af 5">Sværhed ${stjernetekst(r.svaerhed)}</span>`,
-    r.tid_minutter && `⏱ ${r.tid_minutter} min`
+    r.tid_minutter && `${ik('ur')} ${r.tid_minutter} min`
   ].filter(Boolean);
 }
 const linjer = t => String(t || '').split('\n').map(s => s.trim().replace(/^(\d+[.)]|[-•*])\s+/, '')).filter(Boolean);
@@ -234,7 +235,7 @@ function startUr(navn, sek) {
 }
 function tegnUre() {
   $('#ure').innerHTML = ure.map(u => `<div class="ur${u.faerdig ? ' faerdig' : ''}" data-ur="${u.id}">
-    <span>⏱ <b>${u.faerdig ? 'Færdig!' : visTid((u.slut - Date.now()) / 1000)}</b> ${esc(u.navn)}</span>
+    <span>${ik('ur')} <b>${u.faerdig ? 'Færdig!' : visTid((u.slut - Date.now()) / 1000)}</b> ${esc(u.navn)}</span>
     <button type="button" data-h="stopUr" data-v="${u.id}" aria-label="Stop uret">×</button></div>`).join('');
   document.documentElement.style.setProperty('--ure-h', $('#ure').offsetHeight + 'px'); // så «Tilføj tip» ikke skjuler sig bag urene
   document.querySelectorAll('[data-urvis]').forEach(el => {
@@ -292,14 +293,14 @@ async function forside() {
   const id = visning;
   app.innerHTML = `<h1 class="forsidetitel">Hvad skal vi lave?</h1>
     <nav class="faner">
-      <a class="fane f1" href="#/opskrifter"><span aria-hidden="true">🍲</span>Opskrifter</a>
-      <a class="fane f2" href="#/metoder"><span aria-hidden="true">🥄</span>Metode</a>
-      <a class="fane f3" href="#/tips"><span aria-hidden="true">💡</span>Tips</a>
+      <a class="fane f1" href="#/opskrifter"><span aria-hidden="true">${ik('gryde')}</span>Opskrifter</a>
+      <a class="fane f2" href="#/metoder"><span aria-hidden="true">${ik('ske')}</span>Metode</a>
+      <a class="fane f3" href="#/tips"><span aria-hidden="true">${ik('paere')}</span>Tips</a>
     </nav>
     <h2>Favoritter</h2>
     <div id="favoritter"><p class="lille">Henter…</p></div>
     <nav class="genveje">
-      <a class="knap" href="#/forslag">🧺 Hvad kan jeg lave?</a>
+      <a class="knap" href="#/forslag">${ik('kurv')} Hvad kan jeg lave?</a>
     </nav>`;
   Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Metode og Tips kan du lære, hvordan man gør. Favoritter er dem med stjerne.');
   tilfoejTilHjem();
@@ -318,7 +319,7 @@ function tilfoejTilHjem() {
   hjemVist = true;
   Hjaelper.sig('Læg Kogebog på hjemmeskærmen, så åbner den som en rigtig app:\n1. Tryk på Del-knappen i Safari (firkanten med en pil op).\n2. Rul ned, og tryk på «Føj til hjemmeskærm».\n3. Tryk på «Tilføj» øverst til højre.', { stor: true });
 }
-const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><strong>${fav ? '<span class="guld">★</span> ' : ''}${esc(r.titel)}</strong>
+const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
   ${chips(r).length ? `<span class="chips">${chips(r).map(c => `<span>${c}</span>`).join('')}</span>` : ''}</a>`;
 
 // ---------- Lister ----------
@@ -339,7 +340,7 @@ async function liste(type) {
     <h1>${T.navn}</h1>
     <div class="rakke">
       <a class="knap primaer" href="#/${type}/ny">+ ${T.ny}</a>
-      ${type === 'opskrifter' ? '<a class="knap" href="#/import">✨ Tilføj med Claude</a>' : ''}
+      ${type === 'opskrifter' ? `<a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `<input id="soeg" type="search" placeholder="Søg i navne og ingredienser" aria-label="Søg i opskrifter" autocomplete="off">
       ${kat.length ? `<div class="filter"><button class="chip valgt" data-h="kat" data-v="">Alle</button>${kat.map(k => `<button class="chip" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}
@@ -401,9 +402,9 @@ async function opskriftSide(rid) {
   kendteBegreber = begreberAf(tips, metoder);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
   app.innerHTML = `<a class="tilbage skaerm" href="#/opskrifter">‹ Opskrifter</a>
-    ${vaerktoej(`<a class="knap" href="#/opskrifter/${r.id}/rediger">✏️ Rediger</a>`)}
+    ${vaerktoej(`<a class="knap" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
     <div class="titelrakke"><h1>${esc(r.titel)}</h1>
-      <button id="favknap" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${S.fav ? '★' : '☆'}</button></div>
+      <button id="favknap" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
     ${c.length ? `<p class="chips">${c.map(x => `<span>${x}</span>`).join('')}</p>` : ''}
     ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
     <button class="knap primaer stor skaerm" data-h="lav">▶ Lav retten trin for trin</button>
@@ -431,7 +432,7 @@ async function opskriftSide(rid) {
   await Laerred.start(lel, lr, r.id);
 }
 // Knapperne øverst. «Tilføj tip» sidder fast øverst til venstre, mens man ruller. Ekstra knapper kommer til højre.
-const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="button" class="knap" data-h="nytBegreb">💡 Tilføj tip</button>${hoejre}</div>`;
+const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="button" class="knap" data-h="nytBegreb">${ik('paere')} Tilføj tip</button>${hoejre}</div>`;
 // Overskrift (fx «Sovs») i en liste af ingredienser
 const ingOverskrift = navn => `<li class="grp">${esc(navn)}</li>`;
 function tegnIng() {
@@ -450,17 +451,17 @@ function stjerneHtml(stj) {
   const min = (stj.find(s => s.bruger_id === ENHED) || {}).antal || 0;
   const snit = stj.length ? stj.reduce((a, s) => a + s.antal, 0) / stj.length : 0;
   return `<div class="stjernevalg" role="group" aria-label="Giv stjerner">${[1, 2, 3, 4, 5].map(n =>
-    `<button class="${n <= min ? 'til' : ''}" data-h="stjerne" data-v="${n}" aria-label="${n} stjerne${n > 1 ? 'r' : ''}">${n <= min ? '★' : '☆'}</button>`).join('')}</div>
+    `<button class="${n <= min ? 'til' : ''}" data-h="stjerne" data-v="${n}" aria-label="${n} stjerne${n > 1 ? 'r' : ''}">${ik(n <= min ? 'stjerne' : 'stjerne0')}</button>`).join('')}</div>
     <p class="lille">${stj.length ? `Snit: ${visTal(snit)} af 5 (${stj.length} ${stj.length === 1 ? 'vurdering' : 'vurderinger'})` : 'Giv stjerner, når du har lavet retten.'}</p>`;
 }
 function tegnStjerner() { const el = $('#stjerner'); if (el) el.innerHTML = stjerneHtml(S.stj); }
 function tegnLaerredKnapper(rediger) {
   $('#laerred-knapper').innerHTML = rediger
-    ? `<button class="knap" data-h="vaelgBillede">📷 Billede</button>
-       ${Laerred.FIGURER.map(f => `<button class="rund" data-h="figur" data-v="${f}" aria-label="Sæt ${f} på siden">${f}</button>`).join('')}
+    ? `<button class="knap" data-h="vaelgBillede">${ik('kamera')} Billede</button>
+       ${Laerred.FIGURER.map(f => `<button class="rund" data-h="figur" data-v="${f.n}" aria-label="Sæt ${f.t} på siden">${ik(f.n)}</button>`).join('')}
        <button class="knap fare" id="fjernvalgt" data-h="fjernValgt" disabled>Fjern den valgte</button>
        <button class="knap primaer" data-h="laerredRediger" data-v="0">Færdig</button>`
-    : '<button class="knap" data-h="laerredRediger" data-v="1">✏️ Flyt og tilføj</button>';
+    : `<button class="knap" data-h="laerredRediger" data-v="1">${ik('blyant')} Flyt og tilføj</button>`;
 }
 async function nytBillede(e) {
   const fil = e.target.files[0]; e.target.value = '';
@@ -492,7 +493,7 @@ const urKnap = (tekst, navn, stor) => {
   const sek = tidISek(tekst);
   if (!sek) return '';
   const igang = ure.some(u => u.navn === navn);
-  return `<div class="lav-ur"><button class="knap${stor ? ' stor' : ''}" data-h="ur" data-v="${sek}" data-navn="${esc(navn)}">⏱ ${igang ? 'Start uret igen' : 'Start ur'}: ${visVarighed(sek)}</button>
+  return `<div class="lav-ur"><button class="knap${stor ? ' stor' : ''}" data-h="ur" data-v="${sek}" data-navn="${esc(navn)}">${ik('ur')} ${igang ? 'Start uret igen' : 'Start ur'}: ${visVarighed(sek)}</button>
     <b class="urvis" data-urvis="${esc(navn)}"></b></div>`;
 };
 function tegnLav() {
@@ -510,7 +511,7 @@ function tegnLav() {
     // Trinnet og dets deltrin står på samme side. Deltrin kan man sætte flueben ved, og de kan have eget ur.
     midte = `<p class="lav-trin">${medBegreber(t.t, kendteBegreber)}</p>${urKnap(t.t, navn, true)}
       ${t.del.length ? `<ul class="ing tjek lav-del">${t.del.map((d, j) => `<li><label><input type="checkbox" data-del="${i}:${j}" ${K.afkr[i + ':' + j] ? 'checked' : ''}> <span>${medBegreber(d, kendteBegreber)}</span></label>${urKnap(d, `${navn}.${j + 1}`)}</li>`).join('')}</ul>` : ''}`;
-    if (i === n - 1) naeste = 'Færdig ✓';
+    if (i === n - 1) naeste = `Færdig ${ik('tjek')}`;
   } else {
     midte = `<h1>Velbekomme!</h1><p class="tekst">Du har lavet ${esc(r.titel)}. Hvordan smagte det?</p><div id="stjerner">${stjerneHtml(S.stj)}</div>`;
     naeste = '';
@@ -541,14 +542,14 @@ function rkHtml(ed, { art = 'ing', niv = 0, tekst = '' } = {}) {
     return `<div class="rk${o ? ' over' : ''}" data-art="${o ? 'over' : 'ing'}">
       <div class="rk-felt"><textarea class="rk-tekst" rows="1" enterkeyhint="next" autocomplete="off" aria-label="${o ? 'Overskrift' : 'Ingrediens'}"
         placeholder="${o ? 'Overskrift, fx Sovs' : 'fx 2 dl mælk'}">${esc(tekst)}</textarea>${fjern}</div>
-      <button type="button" class="rk-knap" data-h="rkSkift" aria-label="Skift til ${o ? 'ingrediens' : ORD_OVERSKRIFT}"><b>${o ? '🥕' : 'Aa'}</b><small>${o ? 'ingrediens' : ORD_OVERSKRIFT}</small></button>
+      <button type="button" class="rk-knap" data-h="rkSkift" aria-label="Skift til ${o ? 'ingrediens' : ORD_OVERSKRIFT}"><b>${o ? ik('gulerod') : 'Aa'}</b><small>${o ? 'ingrediens' : ORD_OVERSKRIFT}</small></button>
       <button type="button" class="rk-knap" data-h="rkNy" aria-label="Tilføj ingrediens"><b>＋</b><small>ingrediens</small></button></div>`;
   }
   return `<div class="rk" data-niv="${niv}">
     <div class="rk-felt"><span class="rk-mark" aria-hidden="true"></span><textarea class="rk-tekst" rows="1" enterkeyhint="next" autocomplete="off"
       aria-label="${niv ? 'Deltrin' : 'Trin'}" placeholder="${niv ? 'Deltrin, fx Hak løget' : 'Skriv et trin'}">${esc(tekst)}</textarea>${fjern}</div>
     <button type="button" class="rk-knap" data-h="rkNy" data-v="trin" aria-label="Tilføj trin"><b>＋</b><small>trin</small></button>
-    <button type="button" class="rk-knap" data-h="rkNy" data-v="del" aria-label="Tilføj deltrin"><b>↳</b><small>deltrin</small></button></div>`;
+    <button type="button" class="rk-knap" data-h="rkNy" data-v="del" aria-label="Tilføj deltrin"><b>${ik('deltrin')}</b><small>deltrin</small></button></div>`;
 }
 function edFelt(f, rad) {
   const ed = f.t === 'trin' ? 'trin' : 'ing';
@@ -795,7 +796,7 @@ function importSide() {
   app.innerHTML = `<a class="tilbage" href="#/opskrifter">‹ Opskrifter</a><h1>Tilføj med Claude</h1>
     <ol class="trin vejledning">
       <li>Kopiér din opskrift (et link eller en tekst). Tryk så her. Din opskrift bliver sat sammen med beskeden til Claude.
-        <button class="knap primaer stor" data-h="kopierBesked">✨ Kopiér besked</button>
+        <button class="knap primaer stor" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
         <p class="lille" id="kopinote" role="status"></p></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
         <a class="knap stor" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></li>
@@ -871,7 +872,7 @@ function mereSide() {
     <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
     <h2>Sikkerhedskopi</h2>
     <p class="lille">Hent alt indhold som en fil. Gem den et sikkert sted.</p>
-    <button class="knap" data-h="eksport">⬇ Hent sikkerhedskopi</button>
+    <button class="knap" data-h="eksport">${ik('hent')} Hent sikkerhedskopi</button>
     <h2>Læg appen på hjemmeskærmen</h2>
     <p class="lille">På iPhone og iPad: Tryk på Del-knappen i Safari, og vælg «Føj til hjemmeskærm».</p>`;
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
@@ -908,7 +909,7 @@ const H = {
     if (S.fav) await api(q, { method: 'DELETE' });
     else await api('favoritter?on_conflict=opskrift_id,bruger_id', { method: 'POST', flet: true, body: { opskrift_id: S.r.id, bruger_id: FAELLES } });
     S.fav = !S.fav;
-    const k = $('#favknap'); k.textContent = S.fav ? '★' : '☆'; k.setAttribute('aria-pressed', S.fav);
+    const k = $('#favknap'); k.innerHTML = ik(S.fav ? 'stjerne' : 'stjerne0'); k.setAttribute('aria-pressed', S.fav);
     if (S.fav) { k.classList.add('hop'); setTimeout(() => k.classList.remove('hop'), 500); Hjaelper.glad('Den er nu en favorit. Du finder den på forsiden.'); }
     else toast('Ikke længere favorit');
   },
@@ -936,7 +937,7 @@ const H = {
   ur(el) {
     ure = ure.filter(u => u.navn !== el.dataset.navn);
     startUr(el.dataset.navn, Number(el.dataset.v));
-    el.textContent = '⏱ Start uret igen: ' + visVarighed(Number(el.dataset.v)); // siden bliver stående, hvor den er
+    el.innerHTML = ik('ur') + ' Start uret igen: ' + visVarighed(Number(el.dataset.v)); // siden bliver stående, hvor den er
   },
   stopUr(el) { ure = ure.filter(u => u.id !== Number(el.dataset.v)); tegnUre(); },
   begreb(el) {
@@ -1008,7 +1009,7 @@ const H = {
   },
   laerredRediger(el) { const ja = el.dataset.v === '1'; Laerred.saetRediger(ja); tegnLaerredKnapper(ja); if (ja) Hjaelper.sig('Træk i en ting for at flytte den. Tryk på den for at gøre den større eller dreje den.', { nu: true }); },
   vaelgBillede() { $('#billedfil').click(); },
-  async figur(el) { await Laerred.ny('figur', el.dataset.v); },
+  async figur(el) { await Laerred.ny('figur', 'ikon:' + el.dataset.v); },
   async fjernValgt() { if (await Laerred.fjernValgt()) toast('Fjernet'); },
   print() { window.print(); },
   forslag: tegnForslag,

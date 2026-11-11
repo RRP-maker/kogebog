@@ -105,7 +105,7 @@ main > .knap.stor { align-self: stretch; }
 }
 /* genskin hen over den øverste halvdel */
 .fane::before { content: ""; position: absolute; inset: 0 0 50% 0; border-radius: 30px 30px 60% 60% / 30px 30px 24px 24px; background: linear-gradient(rgba(255, 255, 255, .55), rgba(255, 255, 255, .06)); pointer-events: none; }
-.fane span { font-size: 44px; line-height: 1; position: relative; }
+.fane span { font-size: 44px; line-height: 1; position: relative; display: grid; }
 .f1 { background: linear-gradient(135deg, rgba(255, 217, 90, .82), rgba(255, 200, 60, .5)); }
 .f2 { background: linear-gradient(135deg, rgba(160, 226, 178, .82), rgba(126, 211, 150, .5)); }
 .f3 { background: linear-gradient(135deg, rgba(255, 190, 182, .85), rgba(255, 157, 148, .5)); }
@@ -432,3 +432,16 @@ body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjae
 .tilbage:active { transform: translateX(-4px); opacity: .6; transition-duration: .06s; }
 input[type=checkbox], input[type=radio] { transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
 input[type=checkbox]:active, input[type=radio]:active { transform: scale(.8); }
+
+/* Egne ikoner (ikoner.js): blækstreg med farveflade, følger tekstens størrelse */
+.ikon { width: 1.15em; height: 1.15em; vertical-align: -.22em; flex: none; overflow: visible; }
+.chips .ikon { width: 16px; height: 16px; vertical-align: -3px; margin-right: -1px; }
+.top nav a .ikon { width: 26px; height: 26px; vertical-align: 0; }
+.fane .ikon { width: 48px; height: 48px; vertical-align: 0; filter: drop-shadow(0 2px 2px rgba(34, 56, 107, .18)); }
+.rund .ikon { width: 38px; height: 38px; vertical-align: 0; }
+.favknap, .stjernevalg button.til { color: var(--blaek); }
+.favknap .ikon, .stjernevalg .ikon { width: 40px; height: 40px; vertical-align: 0; }
+.stjernevalg button .ikon-stjerne { --i1: var(--guld); }
+.rk-knap b .ikon { width: 24px; height: 24px; vertical-align: -5px; }
+.guld .ikon { width: 1em; height: 1em; vertical-align: -.15em; }
+.knap .ikon, #tilpas-knap .ikon, .ur .ikon { vertical-align: -.2em; }

@@ -43,7 +43,7 @@ const Tilpas = (() => {
       b.addEventListener('click', () => { aktiv = !aktiv; lager.gem('tilpasAktiv', aktiv); if (aktiv) toast('Tryk på en tekst for at ændre den.'); anvend(); });
       document.body.append(b);
     } else if (!til && b) b.remove();
-    if (b) b.textContent = aktiv ? '⏸ Pause tilpas' : '✏️ Tilpas igen';
+    if (b) b.innerHTML = Ikoner.svg(aktiv ? 'pause' : 'blyant') + (aktiv ? ' Pause tilpas' : ' Tilpas igen');
   }
   async function gem(k, ny) {
     if (Object.keys(ny).length) data[k] = ny; else delete data[k];

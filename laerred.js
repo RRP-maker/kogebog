@@ -1,13 +1,15 @@
 // Lærredet på opskriftssiden: billeder og figurer, der kan flyttes. Bygget med Konva.
 const Laerred = (() => {
   const B = 340, H = 300; // fast målestok, så ting står samme sted på alle skærme
-  const FIGURER = ['⭐', '❤️', '🥕', '🍅', '🧀', '🥖', '🍳', '🧁', '👍'];
+  const FIGURER = [{ n: 'stjerne', t: 'stjerne' }, { n: 'hjerte', t: 'hjerte' }, { n: 'gulerod', t: 'gulerod' }, { n: 'tomat', t: 'tomat' }, { n: 'ost', t: 'ost' },
+    { n: 'baguette', t: 'baguette' }, { n: 'aeg', t: 'spejlæg' }, { n: 'cupcake', t: 'cupcake' }, { n: 'tommel', t: 'tommelfinger' }];
+  const ikonNavn = el => el.slags === 'figur' && String(el.indhold).startsWith('ikon:') ? el.indhold.slice(5) : null; // ældre figurer er emojis og vises som tekst
   let stage, lag, tr, boks, opskriftId, redigerer = false;
 
   function knude(el, billede) {
     const faelles = { x: el.x, y: el.y, rotation: el.rotation, scaleX: el.skala, scaleY: el.skala, draggable: redigerer, id: el.id };
     const k = billede
-      ? new Konva.Image({ ...faelles, image: billede, width: 150, height: 150 * billede.height / billede.width, cornerRadius: 6, shadowColor: '#22386b', shadowOpacity: 0.25, shadowBlur: 6, shadowOffsetY: 2 })
+      ? new Konva.Image({ ...faelles, image: billede, ...(ikonNavn(el) ? { width: 64, height: 64 } : { width: 150, height: 150 * billede.height / billede.width, cornerRadius: 6, shadowColor: '#22386b', shadowOpacity: 0.25, shadowBlur: 6, shadowOffsetY: 2 }) })
       : new Konva.Text({ ...faelles, text: el.indhold, fontSize: 52 });
     k.offsetX(k.width() / 2); k.offsetY(k.height() / 2);
     k.on('dragend transformend', () => gem(k));
@@ -16,12 +18,13 @@ const Laerred = (() => {
     return k;
   }
   function tilfoej(el) {
-    if (el.slags !== 'billede') return Promise.resolve(knude(el));
+    const ikon = ikonNavn(el);
+    if (el.slags !== 'billede' && !ikon) return Promise.resolve(knude(el));
     return new Promise(res => {
       const b = new Image();
       b.onload = () => res(knude(el, b));
       b.onerror = () => res(null);
-      b.src = el.indhold;
+      b.src = ikon ? Ikoner.billede(ikon) : el.indhold;
     });
   }
   function vaelg(k) { tr.nodes(k ? [k] : []); tr.moveToTop(); boks.dispatchEvent(new CustomEvent('valgt', { detail: !!k })); }
