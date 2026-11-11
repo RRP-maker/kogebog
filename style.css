@@ -403,12 +403,14 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 
 /* Tilpas tekster */
 body.tilpas [data-org] { outline: 2px dashed var(--gryde-mork); outline-offset: 3px; cursor: pointer; }
-#tilpas-bar {
-  position: fixed; left: max(10px, env(safe-area-inset-left)); right: 112px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50;
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 4px 4px 16px; border-radius: 32px; font-size: 17px; line-height: 22px;
+#tilpas-knap {
+  position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 18px; border-radius: 24px;
+  font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
   background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
 }
-#tilpas-bar .knap { height: 48px; flex: none; }
+body.tilpas #tilpas-knap { background: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); }
+body.tilpas-menu #hjaelper, body.tilpas-menu #hjaelper-vis { bottom: calc(70px + env(safe-area-inset-bottom)); } /* plads til knappen */
+body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjaelper-vis { bottom: calc(160px + env(safe-area-inset-bottom)); }
 .ark-kort .rakke.venstre { justify-content: flex-start; }
 .farver { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .sw { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--glaskant); box-shadow: 0 1px 3px rgba(34, 56, 107, .3); font: 16px/1 var(--skrift); color: var(--blyant); background: #fff; cursor: pointer; padding: 0; }

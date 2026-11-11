@@ -6,14 +6,15 @@ const Tilpas = (() => {
   const STR = [[0.85, 'Lille'], [1, 'Normal'], [1.2, 'Stor'], [1.45, 'Størst']];
   const TEKSTFARVER = ['#22386b', '#d9432f', '#2f8f4e', '#2f7f95', '#e8a400', '#d0507a', '#ffffff', '#222222'];
   const FELTFARVER = ['#ffd95a', '#c4ebcd', '#ffcdc6', '#cfe6f5', '#ffffff', '#d9432f', '#4a9fb5', '#22386b'];
-  let til = lager.hent('tilpasTil', false), timer, server = false, data = lager.hent('tilpas', {});
+  let til = lager.hent('tilpasTil', false), timer, aktiv = lager.hent('tilpasAktiv', true), server = false, data = lager.hent('tilpas', {});
   const noder = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim());
   const tekstAf = el => noder(el).map(n => n.nodeValue.trim()).join(' ');
   // Kun faste tekster kan ændres: ikke opskrifternes navne, tal og ure
   const egnet = (el, k) => k && !/\d/.test(k) && !el.closest('#ark, #tilpas-bar, .titelrakke, .h-boble');
 
   function anvend() {
-    document.body.classList.toggle('tilpas', til);
+    document.body.classList.toggle('tilpas', til && aktiv);
+    document.body.classList.toggle('tilpas-menu', til);
     document.querySelectorAll(VALG).forEach(el => {
       const k = el.dataset.org ?? tekstAf(el);
       if (!egnet(el, k)) return;
@@ -27,14 +28,15 @@ const Tilpas = (() => {
     });
     bjaelke();
   }
+  // Knap nederst til højre: sætter tilpasningen på pause, så man kan bladre i appen, og tænder den igen
   function bjaelke() {
-    let b = document.getElementById('tilpas-bar');
+    let b = document.getElementById('tilpas-knap');
     if (til && !b) {
-      b = document.createElement('div'); b.id = 'tilpas-bar';
-      b.innerHTML = '<span>Tryk på en tekst for at ændre den.</span><button class="knap" type="button">Færdig</button>';
-      b.querySelector('button').addEventListener('click', () => saet(false));
+      b = document.createElement('button'); b.id = 'tilpas-knap'; b.type = 'button';
+      b.addEventListener('click', () => { aktiv = !aktiv; lager.gem('tilpasAktiv', aktiv); if (aktiv) toast('Tryk på en tekst for at ændre den.'); anvend(); });
       document.body.append(b);
     } else if (!til && b) b.remove();
+    if (b) b.textContent = aktiv ? '⏸ Pause tilpas' : '✏️ Tilpas igen';
   }
   async function gem(k, ny) {
     if (Object.keys(ny).length) data[k] = ny; else delete data[k];
@@ -54,7 +56,7 @@ const Tilpas = (() => {
     } catch (err) { /* tabellen findes ikke endnu: brug det, der er gemt på enheden */ }
   }
   function saet(v) {
-    til = !!v; lager.gem('tilpasTil', til); anvend();
+    til = !!v; if (til) { aktiv = true; lager.gem('tilpasAktiv', true); toast('Tryk på en tekst for at ændre den.'); } lager.gem('tilpasTil', til); anvend();
     const c = document.getElementById('tilpastil'); if (c) c.checked = til;
   }
   function aabn(el) {
@@ -90,7 +92,7 @@ const Tilpas = (() => {
   }
   // I tilpas-tilstand åbner et tryk på en tekst i stedet for at gøre det, knappen plejer
   document.addEventListener('click', e => {
-    if (!til) return;
+    if (!til || !aktiv) return;
     const el = e.target.closest('[data-org]');
     if (!el) return;
     e.preventDefault(); e.stopPropagation(); aabn(el);
