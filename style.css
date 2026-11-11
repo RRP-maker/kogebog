@@ -62,8 +62,7 @@ p + p { margin-top: 32px; }
   margin: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
   border-radius: 30px; padding: 4px 8px 4px 22px;
 }
-.logo { font: 30px/40px var(--hoved); color: var(--blaek); text-decoration: none; }
-.top nav { display: flex; gap: 4px; }
+.top nav { display: flex; gap: 4px; margin-left: auto; }
 .top nav a { font-size: 22px; text-decoration: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; }
 
 html { overflow-x: hidden; overflow-x: clip; }
@@ -311,12 +310,13 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 .ark-ud .ark-bag { animation: toningud .24s ease-in forwards; }
 @keyframes toning { from { opacity: 0; } }
 
+/* Beskeder vises kun inde i headeren, til venstre for ikonerne */
 #toast {
-  position: fixed; left: 50%; top: calc(72px + env(safe-area-inset-top)); z-index: 70; max-width: calc(100vw - 32px);
-  transform: translate(-50%, -12px) scale(.96); background: linear-gradient(135deg, rgba(34, 56, 107, .9), rgba(34, 56, 107, .78)); border-color: rgba(255, 255, 255, .3); color: #fff; padding: 6px 18px; border-radius: 24px;
-  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s var(--ud); text-align: center;
+  position: absolute; left: 8px; right: 104px; top: 4px; bottom: 4px; z-index: 1; display: flex; align-items: center; padding: 0 16px; border-radius: 22px;
+  background: linear-gradient(135deg, rgba(34, 56, 107, .92), rgba(34, 56, 107, .8)); color: #fff; font: 17px/20px var(--skrift); overflow: hidden;
+  opacity: 0; transform: translateY(-8px) scale(.97); pointer-events: none; transition: opacity .2s, transform .25s var(--ud);
 }
-#toast.vis { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#toast.vis { opacity: 1; transform: none; }
 
 /* Hjælperen */
 #hjaelper { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 40; width: 80px; pointer-events: none; }
@@ -559,3 +559,4 @@ input.felt-l, select.felt-l { height: 96px; }
 .ing-tabel thead th { font-family: var(--hoved); font-weight: 400; color: var(--gryde-mork); }
 .ing-tabel tbody th { font-weight: 600; white-space: nowrap; }
 .ing-tabel tbody th span { margin-left: 6px; color: var(--blyant); font-weight: 400; }
+.top:has(#toast.vis) { z-index: 70; } /* beskeden kan ses oven på vinduer */
