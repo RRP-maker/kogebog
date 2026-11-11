@@ -560,3 +560,7 @@ input.felt-l, select.felt-l { height: 96px; }
 .ing-tabel tbody th { font-weight: 600; white-space: nowrap; }
 .ing-tabel tbody th span { margin-left: 6px; color: var(--blyant); font-weight: 400; }
 .top:has(#toast.vis) { z-index: 70; } /* beskeden kan ses oven på vinduer */
+
+/* Knapper lige under et skrivefelt: Sæt ind til venstre, Ryd (lille) til højre */
+.felt-knapper { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: var(--m) 0 var(--pt); }
+.knap.mini { height: 32px; min-height: 0; padding: 0 14px; font-size: 18px; line-height: 32px; border-radius: 16px; }
