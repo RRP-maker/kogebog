@@ -20,3 +20,13 @@ Tabeller: `opskrifter`, `tips`, `metoder`, `favoritter`, `stjerner`, `laerred`. 
 **Format i databasen (ingen ekstra kolonner):**
 - `opskrifter.ingredienser` er en liste. `{ "g": "Sovs" }` er en overskrift, resten er `{ m, e, n }`.
 - `opskrifter.fremgangsmaade` er tekst: ét trin pr. linje. En linje, der starter med mellemrum, er et deltrin under trinnet over.
+
+## Tilpas tekster
+
+Tabellen `tilpasning` gemmer rettede tekster, størrelser og farver. Opret den i Supabase (SQL Editor):
+
+```sql
+create table tilpasning (noegle text primary key, tekst text, stoerrelse numeric, farve text, baggrund text);
+alter table tilpasning enable row level security;
+create policy "aaben" on tilpasning for all using (true) with check (true);
+```

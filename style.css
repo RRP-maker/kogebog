@@ -410,3 +410,6 @@ body.tilpas [data-org] { outline: 2px dashed var(--gryde-mork); outline-offset: 
 }
 #tilpas-bar .knap { height: 48px; flex: none; }
 .ark-kort .rakke.venstre { justify-content: flex-start; }
+.farver { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.sw { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--glaskant); box-shadow: 0 1px 3px rgba(34, 56, 107, .3); font: 16px/1 var(--skrift); color: var(--blyant); background: #fff; cursor: pointer; padding: 0; }
+.sw.valgt { outline: 3px solid var(--blaek); outline-offset: 2px; }
