@@ -36,8 +36,10 @@ const Tilpas = (() => {
   }
   const raster = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--raster')) || 0;
   const fase = el => el.matches('.kort, .knap, .tilbage, .fane') ? (Math.round(el.offsetHeight / 32) === 1 ? 28 : 12) : 0;
-  const STOERST = 1.45, STOERST_PX = 34; // 34 px er skriften på forsidens faner
-  const STR = [[0.85, 'Lille'], [1, 'Normal'], [1.2, 'Stor'], [STOERST, 'Størst']];
+  const STR = [[17, 'Lille'], [20, 'Normal'], [24, 'Stor'], [34, 'Størst']]; // faste skriftstørrelser i px. 34 er skriften på forsidens faner.
+  const GAMLE = { 0.85: 17, 1: 20, 1.2: 24, 1.45: 34 }; // tidligere gemt som gange den originale størrelse
+  const pxAf = s => s >= 5 ? s : (GAMLE[s] || 20);
+  const naermestStr = px => STR.reduce((b, [v]) => Math.abs(v - px) < Math.abs(b - px) ? v : b, STR[0][0]);
   const TEKSTFARVER = ['#22386b', '#56638a', '#b5301f', '#d9432f', '#2f8f4e', '#2f7f95', '#e8a400', '#d0507a', '#ffffff', '#222222']; // de to første er appens egne standardfarver
   const FELTFARVER = ['#ffd95a', '#a0e2b2', '#ffbeb6', '#cfe6f5', '#ffffff', '#de4832', '#4a9fb5', '#22386b']; // plus «glas» (gennemsigtigt Liquid Glass)
   let til = lager.hent('tilpasTil', false), timer, aktiv = lager.hent('tilpasAktiv', true), server = false, data = lager.hent('tilpas', {});
@@ -57,7 +59,7 @@ const Tilpas = (() => {
       const o = data[k] || {}, ny = o.t || k, n = noder(el);
       if (n.length && tekstAf(el) !== ny) { n[0].nodeValue = ny; n.slice(1).forEach(x => { x.nodeValue = ''; }); }
       if (!el.dataset.fs) el.dataset.fs = parseFloat(getComputedStyle(el).fontSize);
-      el.style.fontSize = o.s ? (o.s === STOERST ? STOERST_PX : el.dataset.fs * o.s) + 'px' : ''; // «Størst» er altid lige så stor som teksten på forsidens Opskrifter og Tips
+      el.style.fontSize = o.s ? pxAf(o.s) + 'px' : ''; // de fire størrelser er faste skriftstørrelser i hele appen
       const ret = til && aktiv; // under tilpasning vises skjulte felter svagt, så de kan hentes tilbage
       el.style.display = o.x && !ret ? 'none' : '';
       el.style.opacity = o.x && ret ? '.35' : '';
@@ -162,7 +164,7 @@ const Tilpas = (() => {
   function aabn(el) {
     const k = el.dataset.org, o = data[k] || {}, felt = el.matches('.knap, .tilbage, .fane'), nat = naturligZ(el), std = standardFarver(el);
     const opsk = el.matches(FAST);
-    let st = o.s || 1, f = o.f || std.f, b = o.b || std.b, x = !!o.x, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
+    const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, x = !!o.x, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
     const d = ark(`<h2>Ret tekst</h2>
@@ -194,7 +196,7 @@ const Tilpas = (() => {
         if (x) ny.x = true;
         const t = $('#tp-tekst', d).value.trim();
         if (t && t !== k) ny.t = t;
-        if (st !== 1) ny.s = st;
+        if (o.s || st !== st0) ny.s = st;
         if (f !== std.f) ny.f = f; // en farve, der er appens egen, gemmes ikke
         if (felt && b !== std.b) ny.b = b;
         if (m) ny.m = true;
