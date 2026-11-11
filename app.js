@@ -1082,7 +1082,7 @@ if (window.ResizeObserver) { const ro = new ResizeObserver(rasterIgen); ['main',
 if (document.fonts) document.fonts.ready.then(rasterIgen);
 // Tryk-animation: glansen starter, hvor fingeren rammer
 document.addEventListener('pointerdown', e => {
-  const el = e.target.closest('.knap, .rund, .rk-knap, .kort, .fane');
+  const el = e.target.closest('.knap, .tilbage, .rund, .rk-knap, .kort, .fane');
   if (!el || el.disabled) return;
   const r = el.getBoundingClientRect();
   el.style.setProperty('--rx', (e.clientX - r.left) + 'px'); el.style.setProperty('--ry', (e.clientY - r.top) + 'px');

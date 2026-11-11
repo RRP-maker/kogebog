@@ -47,14 +47,14 @@ p + p { margin-top: 32px; }
 :focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
 
 /* Liquid Glass: gennemsigtige flader med sløring, lyskant og blød skygge. Teksten er altid helt dækkende. */
-.top, .knap, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
+.top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
   background: var(--glas);
   -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
   border: 1px solid var(--glaskant);
   box-shadow: var(--skygge), var(--glans);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .top, .knap, .rund, .chip, .rk-knap, .kort, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: rgba(255, 255, 255, .94); }
+  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: rgba(255, 255, 255, .94); }
 }
 
 .top {
@@ -135,7 +135,7 @@ main > .knap.stor { align-self: stretch; }
 .lille { color: var(--blyant); font-size: 18px; }
 .tomt { text-align: center; color: var(--blyant); padding: 32px 8px; }
 .tekst { white-space: pre-wrap; overflow-wrap: anywhere; }
-.tilbage { display: inline-block; text-decoration: none; min-height: 32px; }
+.tilbage { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 48px; padding: 0 20px 0 14px; border-radius: 24px; color: var(--blaek); line-height: 32px; touch-action: manipulation; }
 
 /* Søgning og filter */
 .filter { display: flex; gap: 8px; overflow-x: auto; padding: 12px 2px; margin: -12px -2px; height: 56px; scrollbar-width: none; }
@@ -417,19 +417,18 @@ body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjae
 .sw.valgt { outline: 3px solid var(--blaek); outline-offset: 2px; }
 
 /* Tryk-animationer: knappen trykkes ned, fjedrer tilbage, og en glasglans løber ud fra fingeren */
-.knap, .rund, .rk-knap, .kort, .fane { position: relative; overflow: hidden; }
-.knap, .rund, .chip, .rk-knap, .favknap { transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s var(--ud), background-color .16s; }
+.knap, .tilbage, .rund, .rk-knap, .kort, .fane { position: relative; overflow: hidden; }
+.knap, .tilbage, .rund, .chip, .rk-knap, .favknap { transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s var(--ud), background-color .16s; }
 .kort, .fane { transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s var(--ud); }
 .knap:active, .rund:active, .chip:active, .rk-knap:active { transform: scale(.93); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
 .kort:active, .fane:active { transform: scale(.975); transition-duration: .09s, .2s; transition-timing-function: ease-out; }
-.knap::after, .rund::after, .rk-knap::after, .kort::after, .fane::after {
+.knap::after, .tilbage::after, .rund::after, .rk-knap::after, .kort::after, .fane::after {
   content: ""; position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; pointer-events: none;
   background: radial-gradient(circle, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0) 70%); transform: scale(0); opacity: 0;
 }
 .tryk::after { animation: glans .6s var(--ud); }
 @keyframes glans { from { transform: scale(0); opacity: 1; } to { transform: scale(16); opacity: 0; } }
-.tilbage { transition: transform .3s var(--ud), opacity .2s; }
-.tilbage:active { transform: translateX(-4px); opacity: .6; transition-duration: .06s; }
+.tilbage:active { transform: scale(.93); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
 input[type=checkbox], input[type=radio] { transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
 input[type=checkbox]:active, input[type=radio]:active { transform: scale(.8); }
 
