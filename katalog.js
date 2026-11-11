@@ -62,11 +62,12 @@ const Katalog = (() => {
 
 Brug præcis en af disse kategorier: ${kategorier().join(', ')}.
 Passer ingen, så skriv "Andet".
+Ret også stavefejl i navnet, fx "grønsagsbouillon" -> "grøntsagsbouillon". Skriv det rettede navn i "rettet". Er navnet rigtigt, så skriv det samme navn igen.
 
-Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingrediensen som nøgle, kategorien som værdi):
+Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingrediensen som nøgle):
 {
-  "gulerødder": "Grøntsager",
-  "kanel": "Krydderier"
+  "gulerødder": { "kategori": "Grøntsager", "rettet": "gulerødder" },
+  "grønsagsbouillon": { "kategori": "Olie, sauce og bouillon", "rettet": "grøntsagsbouillon" }
 }
 
 Ingredienser:
@@ -91,9 +92,10 @@ ${andre.map(i => '- ' + i.navn).join('\n')}
     const s = String(tekst).replace(/[“”]/g, '"'), a = s.search(/[{[]/), b = Math.max(s.lastIndexOf('}'), s.lastIndexOf(']'));
     if (a === -1 || b <= a) return null;
     let j; try { j = JSON.parse(s.slice(a, b + 1)); } catch (e) { return null; }
-    const ud = {};
-    if (Array.isArray(j)) j.forEach(x => { if (x && (x.navn || x.ingrediens) && x.kategori) ud[rens(x.navn || x.ingrediens)] = String(x.kategori); });
-    else Object.entries(j).forEach(([k, v]) => { if (typeof v === 'string') ud[rens(k)] = v; });
+    const ud = {}; // navn -> { kat, rettet }
+    const saet = (navn, kat, rettet) => { if (kat || rettet) ud[rens(navn)] = { kat: kat ? String(kat) : null, rettet: rettet ? rens(rettet) : null }; };
+    if (Array.isArray(j)) j.forEach(x => { if (x && (x.navn || x.ingrediens)) saet(x.navn || x.ingrediens, x.kategori, x.rettet); });
+    else Object.entries(j).forEach(([n, v]) => { if (typeof v === 'string') saet(n, v); else if (v && typeof v === 'object') saet(n, v.kategori, v.rettet); });
     return ud;
   }
   // Skema over alle ingredienser i databasen: kategori og ingredienserne under den
@@ -123,14 +125,32 @@ ${andre.map(i => '- ' + i.navn).join('\n')}
     async katGem() {
       const svar = laesKat($('#katsvar').value);
       if (!svar || !Object.keys(svar).length) { $('#arkfejl').innerHTML = '<div class="fejlboks">Svaret kan ikke læses. Kopiér hele Claudes svar, og prøv igen.</div>'; return; }
-      let sat = 0;
+      let sat = 0, rettet = 0;
       for (const i of andre) {
-        const k = svar[i.navn_norm] ? katId(svar[i.navn_norm]) : null;
-        if (!k) continue;
-        await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: k } }); sat++;
+        const r = svar[i.navn_norm];
+        if (!r) continue;
+        const kid = r.kat ? katId(r.kat) : null;
+        if (r.rettet && r.rettet !== i.navn_norm) {
+          const fund = ing.find(x => x.navn_norm === r.rettet && x.id !== i.id);
+          if (fund) { // det rettede navn findes: ingredienserne lægges sammen
+            const hos = await api(`hjemme?ingrediens_id=eq.${enc(i.id)}&select=id`);
+            if (hos.length) {
+              const har = await api(`hjemme?ingrediens_id=eq.${enc(fund.id)}&select=id`);
+              if (har.length) await api(`hjemme?ingrediens_id=eq.${enc(i.id)}`, { method: 'DELETE' });
+              else await api(`hjemme?ingrediens_id=eq.${enc(i.id)}`, { method: 'PATCH', body: { ingrediens_id: fund.id } });
+            }
+            if (!fund.kategori_id && kid) await api(`ingredienser?id=eq.${enc(fund.id)}`, { method: 'PATCH', body: { kategori_id: kid } });
+            await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'DELETE' });
+          } else await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: kid ? { navn: r.rettet, navn_norm: r.rettet, kategori_id: kid } : { navn: r.rettet, navn_norm: r.rettet } });
+          rettet++; if (kid) sat++;
+          continue;
+        }
+        if (!kid) continue;
+        await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: kid } }); sat++;
       }
       lukArk();
-      toast(sat ? `${sat} ${sat === 1 ? 'ingrediens' : 'ingredienser'} sorteret` : 'Ingen af svarene passede til en kategori');
+      const dele = [sat && `${sat} sorteret`, rettet && `${rettet} stavefejl rettet`].filter(Boolean);
+      toast(dele.length ? dele.join(', ') : 'Ingen af svarene passede');
       if (efterSortering) efterSortering();
     }
   });
