@@ -212,7 +212,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .stjernevalg button:active { transform: scale(1.25); }
 
 /* Knapper øverst på opskriften: «Tilføj tip» sidder fast øverst til venstre, når man ruller */
-.vaerktoej { min-height: 32px; position: sticky; top: calc(66px + max(8px, env(safe-area-inset-top)) + var(--ure-h, 0px)); z-index: 18; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); }
+.vaerktoej { min-height: 32px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); }
 
 /* Ingredienser: overskrift (fx Sovs) og deltrin */
 .ing li.grp, .ing.tjek li.grp {
@@ -403,6 +403,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 /* Tilpas tekster */
 body.tilpas [data-org], body.tilpas [data-flyt] { outline: 2px dashed var(--gryde-mork); outline-offset: 3px; cursor: pointer; }
 body.tilpas [data-laast] { outline: 2px solid var(--tomat); }
+[data-laast] { position: relative; z-index: 19; will-change: translate; } /* fastlåst: følger med på skærmen */
 #tilpas-knap {
   position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 18px; border-radius: 24px;
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
