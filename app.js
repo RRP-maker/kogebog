@@ -866,12 +866,17 @@ function mereSide() {
     <h2>Indstillinger</h2>
     <label class="skift"><input type="checkbox" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
+    <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Tilpas tekster</span></label>
+    <p class="lille">Slå til, og tryk så på en knap eller overskrift for at ændre teksten og skriftstørrelsen. Ændringen gælder alle steder.</p>
+    <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
     <h2>Sikkerhedskopi</h2>
     <p class="lille">Hent alt indhold som en fil. Gem den et sikkert sted.</p>
     <button class="knap" data-h="eksport">⬇ Hent sikkerhedskopi</button>
     <h2>Læg appen på hjemmeskærmen</h2>
     <p class="lille">På iPhone og iPad: Tryk på Del-knappen i Safari, og vælg «Føj til hjemmeskærm».</p>`;
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
+  $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));
+  $('#tilpasnul').addEventListener('click', async () => { if (await bekraeft('Vil du sætte alle tekster og størrelser tilbage?', 'Nulstil')) { Tilpas.nulstil(); toast('Teksterne er nulstillet'); } });
   $('#lydtil').addEventListener('change', e => { Lyd.saet(e.target.checked); Lyd.spil('klik'); });
   Hjaelper.side('Her kan du slå mig og lydene til og fra, og hente en sikkerhedskopi.');
 }

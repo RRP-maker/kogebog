@@ -400,3 +400,13 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
   .begreb { background: none; border: 0; color: inherit; padding: 0; }
   .kort { box-shadow: none; border: 1px solid #999; }
 }
+
+/* Tilpas tekster */
+body.tilpas [data-org] { outline: 2px dashed var(--gryde-mork); outline-offset: 3px; cursor: pointer; }
+#tilpas-bar {
+  position: fixed; left: max(10px, env(safe-area-inset-left)); right: 112px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 4px 4px 16px; border-radius: 32px; font-size: 17px; line-height: 22px;
+  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
+}
+#tilpas-bar .knap { height: 48px; flex: none; }
+.ark-kort .rakke.venstre { justify-content: flex-start; }
