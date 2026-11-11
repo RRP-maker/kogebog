@@ -1,4 +1,4 @@
-// Tilpas tekster: når det er slået til, kan man trykke på en knap eller overskrift og ændre teksten og skriftstørrelsen.
+// Tilpas siden: når det er slået til, kan man trykke på en knap eller overskrift og ændre teksten og skriftstørrelsen.
 // Ændringen gælder alle steder, hvor den samme tekst står. Den gemmes i Supabase (tabellen «tilpasning») og dermed på alle enheder.
 // Mangler tabellen, gemmes den kun på denne enhed.
 const Tilpas = (() => {

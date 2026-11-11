@@ -21,7 +21,7 @@ Tabeller: `opskrifter`, `tips`, `metoder`, `favoritter`, `stjerner`, `laerred`. 
 - `opskrifter.ingredienser` er en liste. `{ "g": "Sovs" }` er en overskrift, resten er `{ m, e, n }`.
 - `opskrifter.fremgangsmaade` er tekst: ét trin pr. linje. En linje, der starter med mellemrum, er et deltrin under trinnet over.
 
-## Tilpas tekster
+## Tilpas siden
 
 Tabellen `tilpasning` gemmer rettede tekster, størrelser og farver. Opret den i Supabase (SQL Editor):
 
