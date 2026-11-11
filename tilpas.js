@@ -47,7 +47,8 @@ const Tilpas = (() => {
   const FELT_CSS = { smoer: '#ffd95a', mynte: '#a0e2b2', rosa: '#ffbeb6', himmel: '#cfe6f5', hvid: '#fff', rod: '#c2321f', gryde: '#2a768b', indigo: 'var(--valgt-fast)' };
   const FELT_TEKST = { smoer: 'var(--paa-lys)', mynte: 'var(--paa-lys)', rosa: 'var(--paa-lys)', himmel: 'var(--paa-lys)', hvid: 'var(--paa-lys)', rod: '#fff', gryde: '#fff', indigo: '#fff' }; // tekst, der altid kan læses på feltets farve
   const NAVN = { blaek: 'Blæk', blyant: 'Blyant', rod: 'Mørkerød', tomat: 'Tomat', groen: 'Grøn', gryde: 'Turkis', guld: 'Guld', rosa: 'Rosa', hvid: 'Hvid', sort: 'Sort', smoer: 'Smørgul', mynte: 'Mynte', himmel: 'Lyseblå', indigo: 'Mørkeblå' };
-  const tCss = n => TEKST_CSS[n] || n, fCss = n => FELT_CSS[n] || n; // ukendte værdier (gamle hex) bruges, som de er
+  const tCss = n => TEKST_CSS[n], fCss = n => FELT_CSS[n];
+  const gyldigF = v => TEKST_CSS[v] ? v : '', gyldigB = v => v === 'glas' || FELT_CSS[v] ? v : ''; // gamle gemte hex-farver ignoreres, så alt står med den nye palette
   // Tekster, der står på forsiden, kan aldrig skjules (heller ikke på andre sider, hvor den samme tekst står)
   const beskyttet = new Set(['Kogebog', 'Hvad skal vi lave?', 'Opskrifter', 'Tips', 'Hvad kan jeg lave?', 'Favoritter', ...lager.hent('tpForside', [])]);
   let til = lager.hent('tilpasTil', false), timer, aktiv = lager.hent('tilpasAktiv', true), server = false, data = lager.hent('tilpas', {});
@@ -94,8 +95,9 @@ const Tilpas = (() => {
       if (o.x && !skj && !ryd.includes(k)) ryd.push(k);
       el.style.display = skj && !ret ? 'none' : '';
       el.style.opacity = skj && ret ? '.35' : '';
-      el.style.color = o.f ? tCss(o.f) : (o.b && FELT_TEKST[o.b]) || '';
-      el.style.background = o.b === 'glas' ? 'var(--glas)' : (o.b ? fCss(o.b) : '');
+      const fv = gyldigF(o.f), bv = gyldigB(o.b);
+      el.style.color = fv ? tCss(fv) : (bv && FELT_TEKST[bv]) || '';
+      el.style.background = bv === 'glas' ? 'var(--glas)' : (bv ? fCss(bv) : '');
     });
     if (ryd.length) setTimeout(() => ryd.forEach(k => { if (get(k) && get(k).x) { const ny = { ...get(k) }; delete ny.x; gem(k, ny, true); } }), 0);
     document.querySelectorAll(FLYT).forEach(el => { // felternes plads
@@ -168,15 +170,14 @@ const Tilpas = (() => {
   }
   function fortryd() { if (!hist.length) return; frem.push(kopi(data)); skift(hist.pop()); toast('Fortrudt'); }
   function gentag() { if (!frem.length) return; hist.push(kopi(data)); skift(frem.pop()); toast('Gentaget'); }
-  // Én gang: de gamle, gemte farver ryddes, så alle felter får den nye palette forfra (tekster, størrelser og placeringer bliver)
+  // De gamle, gemte hex-farver ryddes (også i databasen), så alle felter får den nye palette forfra. Tekster, størrelser og placeringer bliver.
   async function nyeFarver() {
-    if (lager.hent('tpFarver', 0) >= 2) return;
     for (const k of Object.keys(data)) {
-      if (!data[k].f && !data[k].b) continue;
-      const ny = { ...data[k] }; delete ny.f; delete ny.b;
+      const o = data[k];
+      if (!((o.f && !gyldigF(o.f)) || (o.b && !gyldigB(o.b)))) continue;
+      const ny = { ...o }; if (!gyldigF(o.f)) delete ny.f; if (!gyldigB(o.b)) delete ny.b;
       await gem(k, ny, true);
     }
-    lager.gem('tpFarver', 2);
   }
   async function hent() {
     try {
@@ -189,7 +190,7 @@ const Tilpas = (() => {
       }
       server = true; lager.gem('tilpas', data); anvend();
       await nyeFarver();
-    } catch (err) { /* tabellen findes ikke endnu: brug det, der er gemt på enheden */ }
+    } catch (err) { /* tabellen findes ikke endnu: brug det, der er gemt på enheden */ nyeFarver(); }
   }
   function saet(v) {
     til = !!v; if (til) { aktiv = false; lager.gem('tilpasAktiv', false); toast('Tilpasningen er på pause. Tryk på «Tilpas igen» for at ændre.'); } lager.gem('tilpasTil', til); anvend();
@@ -211,7 +212,7 @@ const Tilpas = (() => {
   function aabn(el) {
     const k = el.dataset.org, o = get(k) || {}, felt = el.matches('.knap, .tilbage, .fane'), nat = naturligZ(el), std = standardFarver(el);
     const opsk = el.matches(FAST);
-    const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !(beskyttet.has(k) || beskyttet.has(el.dataset.orgtekst)), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
+    const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = gyldigF(o.f) || std.f, b = gyldigB(o.b) || std.b, kanSkjule = !(beskyttet.has(k) || beskyttet.has(el.dataset.orgtekst)), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas, css) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${css(c)}" aria-label="${NAVN[c] || c}"></button>`).join('')}</div>`;
     const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
