@@ -47,14 +47,14 @@ p + p { margin-top: 32px; }
 :focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
 
 /* Liquid Glass: gennemsigtige flader med sløring, lyskant og blød skygge. Teksten er altid helt dækkende. */
-.top, .knap, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .maerke, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
+.top, .knap, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
   background: var(--glas);
   -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
   border: 1px solid var(--glaskant);
   box-shadow: var(--skygge), var(--glans);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .top, .knap, .rund, .chip, .rk-knap, .kort, .forklaring, .maerke, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: rgba(255, 255, 255, .94); }
+  .top, .knap, .rund, .chip, .rk-knap, .kort, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: rgba(255, 255, 255, .94); }
 }
 
 .top {
@@ -293,13 +293,6 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 .ur.faerdig { background: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); }
 .ur button { font: 26px/1 sans-serif; width: 40px; height: 40px; border: 0; background: none; color: var(--blaek); cursor: pointer; flex: none; }
 
-/* Mærker */
-.maerker { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-.maerke { border-radius: 22px; padding: 12px; text-align: center; opacity: .5; filter: grayscale(1); }
-.maerke.har { opacity: 1; filter: none; }
-.maerke span { font-size: 40px; line-height: 48px; display: block; }
-.maerke b { font: 22px/24px var(--hoved); font-weight: 400; display: block; }
-.maerke small { margin: 4px 0 0; }
 
 /* Ark */
 #ark { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }

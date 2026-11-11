@@ -7,7 +7,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const enc = encodeURIComponent;
 
-// Små ting, der kun gemmes på denne enhed (hjælper til/fra, mærker, dine egne stjerner)
+// Små ting, der kun gemmes på denne enhed (hjælper til/fra, dine egne stjerner)
 const lager = {
   hent(k, standard) { try { const v = localStorage.getItem('kogebog_' + k); return v == null ? standard : JSON.parse(v); } catch (e) { return standard; } },
   gem(k, v) { try { localStorage.setItem('kogebog_' + k, JSON.stringify(v)); } catch (e) { /* privat tilstand */ } }
@@ -229,7 +229,7 @@ const visVarighed = s => s >= 3600 ? `${visTal(s / 3600)} time${s === 3600 ? '' 
 let ure = [], urNr = 0;
 function startUr(navn, sek) {
   ure.push({ id: ++urNr, navn, slut: Date.now() + sek * 1000, sek, varslet: false, faerdig: false });
-  tael('ure'); Lyd.spil('klik'); tegnUre();
+  Lyd.spil('klik'); tegnUre();
   Hjaelper.sig(`Uret er startet: ${visVarighed(sek)}. Jeg siger til, når tiden er gået.`, { nu: true });
 }
 function tegnUre() {
@@ -256,26 +256,6 @@ setInterval(() => {
   }
   tegnUre();
 }, 500);
-
-// ---------- Mærker (gemmes på enheden) ----------
-const MAERKER = [
-  { id: 'foerste', ikon: '🍽️', navn: 'Første ret', tekst: 'Du har lavet din første ret.', test: s => s.lavet >= 1 },
-  { id: 'fem', ikon: '🏅', navn: 'Køkkenhelt', tekst: 'Du har lavet 5 retter.', test: s => s.lavet >= 5 },
-  { id: 'bager', ikon: '🥖', navn: 'Bager', tekst: 'Du har bagt for første gang.', test: s => s.bagt >= 1 },
-  { id: 'forfatter', ikon: '✏️', navn: 'Forfatter', tekst: 'Du har skrevet din første opskrift.', test: s => s.skrevet >= 1 },
-  { id: 'ur', ikon: '⏱️', navn: 'Tidtager', tekst: 'Du har brugt et ur.', test: s => s.ure >= 1 },
-  { id: 'dommer', ikon: '⭐', navn: 'Smagsdommer', tekst: 'Du har givet en ret stjerner.', test: s => s.vurderet >= 1 }
-];
-function tael(noegle) {
-  const s = lager.hent('stat', {}), har = lager.hent('maerker', []);
-  s[noegle] = (s[noegle] || 0) + 1; lager.gem('stat', s);
-  for (const m of MAERKER) if (!har.includes(m.id) && m.test(s)) {
-    har.push(m.id);
-    toast(`Nyt mærke: ${m.ikon} ${m.navn}`);
-    setTimeout(() => Hjaelper.sig(`Du har fået et mærke: ${m.navn}! ${m.tekst}`, { glad: true }), 400);
-  }
-  lager.gem('maerker', har);
-}
 
 // ---------- Router ----------
 async function route() {
@@ -547,8 +527,7 @@ function tegnLav() {
   tegnUre();
   window.scrollTo(0, 0);
   if (i === n && !K.talt) {
-    K.talt = true; tael('lavet');
-    if (/bag|brød|bolle|kage|kiks|dej/i.test((r.kategori || '') + ' ' + r.titel)) tael('bagt');
+    K.talt = true;
     Hjaelper.glad('Flot klaret! Du har lavet hele retten.');
   }
 }
@@ -707,7 +686,6 @@ async function formular(type, rid) {
         ? await api(`${type}?id=eq.${enc(rid)}`, { method: 'PATCH', body: data })
         : await api(type, { method: 'POST', body: data });
       toast('Gemt'); Hjaelper.glad('Gemt!');
-      if (!rid && type === 'opskrifter') tael('skrevet');
       location.hash = type === 'tips' ? '#/tips' : `#/${type}/${rid || res[0].id}`;
     } catch (err) {
       console.error(err);
@@ -882,12 +860,9 @@ async function laesUdklip() {
   try { return String(await navigator.clipboard.readText()).trim(); } catch (e) { return null; }
 }
 
-// ---------- Mere: backup, mærker, indstillinger ----------
+// ---------- Mere: backup, indstillinger ----------
 function mereSide() {
-  const har = lager.hent('maerker', []);
   app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Mere</h1>
-    <h2>Dine mærker</h2>
-    <div class="maerker">${MAERKER.map(m => `<div class="maerke${har.includes(m.id) ? ' har' : ''}"><span aria-hidden="true">${m.ikon}</span><b>${m.navn}</b><small>${har.includes(m.id) ? m.tekst : 'Ikke fået endnu'}</small></div>`).join('')}</div>
     <h2>Indstillinger</h2>
     <label class="skift"><input type="checkbox" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
@@ -898,7 +873,7 @@ function mereSide() {
     <p class="lille">På iPhone og iPad: Tryk på Del-knappen i Safari, og vælg «Føj til hjemmeskærm».</p>`;
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
   $('#lydtil').addEventListener('change', e => { Lyd.saet(e.target.checked); Lyd.spil('klik'); });
-  Hjaelper.side('Her ser du dine mærker. Du kan også slå mig og lydene til og fra, og hente en sikkerhedskopi.');
+  Hjaelper.side('Her kan du slå mig og lydene til og fra, og hente en sikkerhedskopi.');
 }
 
 // ---------- Klik ----------
@@ -940,7 +915,7 @@ const H = {
     const antal = Number(el.dataset.v);
     await api('stjerner?on_conflict=opskrift_id,bruger_id', { method: 'POST', flet: true, body: { opskrift_id: S.r.id, bruger_id: ENHED, antal } });
     const foer = S.stj.find(s => s.bruger_id === ENHED);
-    if (foer) foer.antal = antal; else { S.stj.push({ bruger_id: ENHED, antal }); tael('vurderet'); }
+    if (foer) foer.antal = antal; else { S.stj.push({ bruger_id: ENHED, antal }); }
     tegnStjerner(); toast('Tak! Dine stjerner er gemt.'); Hjaelper.glad();
   },
   lav() { location.hash = `#/opskrifter/${S.r.id}/lav`; },
@@ -1057,7 +1032,7 @@ const H = {
     el.disabled = true;
     try {
       const [ny] = await api('opskrifter', { method: 'POST', body: svar.data });
-      toast('Opskriften er gemt'); tael('skrevet'); Hjaelper.glad('Opskriften er gemt!');
+      toast('Opskriften er gemt'); Hjaelper.glad('Opskriften er gemt!');
       location.hash = '#/opskrifter/' + ny.id;
     } catch (err) { el.disabled = false; throw err; }
   },
