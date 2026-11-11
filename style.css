@@ -514,3 +514,7 @@ body.tilpas [data-ikkeflyt][data-laast] { outline-color: var(--tomat); }
 .stepper { display: flex; align-items: center; gap: 4px; }
 .stepper .rund { width: 32px; font-size: 20px; border-radius: 50%; }
 .stepper input { width: 48px; text-align: center; padding: 0 4px; border-radius: 8px; }
+/* Skrivefelter: skabelonens højde og margen vinder over de generelle regler for input */
+input.felt, select.felt { height: 64px; margin: var(--m) 0 var(--pt); }
+input.felt-s, select.felt-s { height: 32px; margin: 0; }
+input.felt-l, select.felt-l { height: 96px; }
