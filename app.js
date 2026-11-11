@@ -1128,5 +1128,20 @@ document.addEventListener('click', async e => {
   catch (err) { console.error(err); toast('Det virkede ikke. Tjek internettet, og prøv igen.'); }
 });
 
+// Notesbogens linjer: find et stykke tekst, og læg linjerne, så teksten står på dem.
+function ypos(el) { let y = 0; for (; el; el = el.offsetParent) y += el.offsetTop; return y; }
+let rasterTimer;
+function rasterIgen() {
+  cancelAnimationFrame(rasterTimer);
+  rasterTimer = requestAnimationFrame(() => {
+    const ref = app.querySelector('.trin > li, .tekst, .lav-trin, h2, p');
+    if (!ref) return;
+    const y = (((ypos(ref) - 7) % 32) + 32) % 32;
+    document.documentElement.style.setProperty('--raster', y + 'px');
+  });
+}
+new MutationObserver(rasterIgen).observe(app, { childList: true, subtree: true });
+addEventListener('resize', rasterIgen);
+if (document.fonts) document.fonts.ready.then(rasterIgen);
 document.addEventListener('DOMContentLoaded', () => { Hjaelper.start(); route(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});

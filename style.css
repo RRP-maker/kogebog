@@ -23,7 +23,7 @@ body {
   background-image:
     linear-gradient(90deg, transparent 21px, var(--margen) 21px, var(--margen) 23px, transparent 23px),
     repeating-linear-gradient(transparent 0 31px, var(--linje) 31px 32px);
-  background-position: 0 0, 0 8px;
+  background-position: 0 0, 0 var(--raster, 8px); /* --raster sættes af app.js, så linjerne ligger under teksten */
 }
 /* Farvede pletter bag papiret, så glasset har noget at bryde */
 body::before {
@@ -36,9 +36,9 @@ body::before {
 }
 a { color: var(--tomat-mork); text-underline-offset: 3px; }
 h1, h2 { font-family: var(--hoved); font-weight: 400; margin: 0; }
-h1 { font-size: 40px; line-height: 48px; margin-bottom: 16px; overflow-wrap: anywhere; }
-h2 { font-size: 28px; line-height: 32px; margin: 32px 0 8px; }
-p { margin: 0 0 16px; }
+h1 { font-size: 40px; line-height: 64px; margin-bottom: 0; overflow-wrap: anywhere; }
+h2 { font-size: 28px; line-height: 32px; margin: 32px 0 0; }
+p { margin: 0 0 32px; }
 :focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
 
 /* Liquid Glass: gennemsigtige flader med sløring, lyskant og blød skygge. Teksten er altid helt dækkende. */
@@ -80,11 +80,11 @@ main {
 .knap.stor { min-height: 64px; font-size: 24px; padding: 12px 24px; border-radius: 32px; }
 .rund { width: 48px; height: 48px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 24px; padding: 0; flex: none; }
 .lille-rund { width: 40px; height: 40px; font-size: 18px; }
-.rakke { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; align-items: center; }
+.rakke { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; align-items: center; }
 @media (hover: hover) { .knap:hover:not(:disabled):not(.primaer), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: rgba(255, 255, 255, .8); } .knap.primaer:hover:not(:disabled) { background: var(--tomat-mork); } }
 
 /* Forside: tre faneblade som sedler */
-.forsidetitel { font-size: 46px; line-height: 48px; margin: 8px 0 24px; }
+.forsidetitel { font-size: 46px; line-height: 64px; margin: 0 0 32px; }
 .faner { display: grid; gap: 16px; }
 .fane {
   position: relative; overflow: hidden; display: flex; align-items: center; gap: 16px; min-height: 88px; padding: 12px 22px;
@@ -111,7 +111,7 @@ main {
 .kort p { margin: 0; }
 .kort .rakke { margin: 8px 0 0; }
 .guld { color: var(--guld); }
-.chips { display: flex; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 16px; padding: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 36px; padding: 0; }
 .kort .chips { display: flex; margin: 4px 0 0; }
 .chips > span { background: rgba(160, 226, 178, .55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); border-radius: 16px; padding: 0 12px; font-size: 17px; line-height: 28px; color: var(--blaek); }
 .lille { color: var(--blyant); font-size: 18px; }
@@ -139,7 +139,7 @@ select { background-image: linear-gradient(45deg, transparent 50%, var(--blaek) 
 textarea { resize: vertical; display: block; }
 input:focus, textarea:focus, select:focus { outline: 3px solid var(--gryde); outline-offset: 1px; }
 input[type=checkbox], input[type=radio] { width: 26px; height: 26px; accent-color: var(--tomat); vertical-align: -5px; margin: 0 6px 0 0; }
-form .knap.stor, #app > .knap.stor { width: 100%; margin-top: 24px; }
+form .knap.stor, #app > .knap.stor { width: 100%; margin-top: 32px; }
 .linjeform { display: flex; gap: 8px; margin-bottom: 16px; }
 .linjeform input { flex: 1; min-width: 0; }
 .fejlboks { background: #fff0ee; border-left: 6px solid var(--tomat); color: #7a1f16; border-radius: 6px; padding: 8px 14px; margin: 16px 0; }
@@ -152,17 +152,18 @@ form .knap.stor, #app > .knap.stor { width: 100%; margin-top: 24px; }
 .favknap { font: 40px/48px sans-serif; width: 56px; height: 56px; flex: none; border: 0; background: none; color: var(--guld); cursor: pointer; padding: 0; transition: transform .16s var(--ud); }
 .favknap.hop { animation: stjernehop .5s var(--ud); }
 @keyframes stjernehop { 40% { transform: scale(1.5) rotate(18deg); } }
-.portioner { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.portioner { display: flex; align-items: center; gap: 12px; height: 64px; }
 .portioner span { min-width: 124px; text-align: center; font: 26px/32px var(--hoved); }
 .ing { list-style: none; padding: 0; margin: 0; }
-.ing li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; border-bottom: 1px dashed rgba(34, 56, 107, .25); overflow-wrap: anywhere; }
-.ing li:last-child { border: 0; padding-top: 8px; }
-.ing.tjek li { border-bottom: 0; }
-.ing.tjek label { display: flex; align-items: center; margin: 0; width: 100%; min-height: 48px; }
+.ing li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; box-shadow: inset 0 -1px 0 rgba(34, 56, 107, .18); overflow-wrap: anywhere; }
+.ing li:last-child { box-shadow: none; min-height: 64px; padding: 8px 0; }
+.ing li .lille-rund { margin: -4px 0; }
+.ing.tjek li { box-shadow: none; }
+.ing.tjek label { display: flex; align-items: center; margin: 0; width: 100%; min-height: 32px; }
 .ing.tjek label span { color: inherit; font-size: inherit; }
 .ing.tjek input:checked + span { text-decoration: line-through; color: var(--blyant); }
 .trin { padding-left: 0; margin: 0; list-style: none; counter-reset: trin; }
-.trin > li { counter-increment: trin; position: relative; padding: 0 0 16px 44px; overflow-wrap: anywhere; }
+.trin > li { counter-increment: trin; position: relative; padding: 0 0 32px 44px; overflow-wrap: anywhere; }
 .trin > li::before { content: counter(trin); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--smor); display: grid; place-items: center; font: 22px/1 var(--hoved); }
 .vejledning .knap, .vejledning textarea { margin-top: 8px; }
 .vejledning .knap.stor { width: 100%; }
@@ -180,20 +181,21 @@ form .knap.stor, #app > .knap.stor { width: 100%; margin-top: 24px; }
 .forklaring i { font-style: normal; font-size: 16px; background: var(--mynte); border-radius: 12px; padding: 2px 10px; margin-left: 4px; }
 .forklaring span { display: block; white-space: pre-wrap; }
 @keyframes ind { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
-.stjernevalg { display: flex; gap: 2px; }
+.stjernevalg { display: flex; gap: 2px; height: 64px; align-items: center; }
 .stjernevalg button { font: 40px/48px sans-serif; width: 52px; height: 52px; border: 0; background: none; color: #b9c1d6; cursor: pointer; padding: 0; transition: transform .16s var(--ud); }
 .stjernevalg button.til { color: var(--guld); }
 .stjernevalg button:active { transform: scale(1.25); }
 
 /* Knapper øverst på opskriften: «Tilføj tip» sidder fast øverst til venstre, når man ruller */
-.vaerktoej { position: sticky; top: calc(66px + max(8px, env(safe-area-inset-top)) + var(--ure-h, 0px)); z-index: 18; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 4px 0 12px; }
+.vaerktoej { height: 64px; position: sticky; top: calc(66px + max(8px, env(safe-area-inset-top)) + var(--ure-h, 0px)); z-index: 18; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0; }
 .vaerktoej .knap { min-height: 44px; padding: 4px 16px; background: linear-gradient(135deg, rgba(255, 253, 245, .94), rgba(255, 253, 245, .82)); }
 
 /* Ingredienser: overskrift (fx Sovs) og deltrin */
-.ing li.grp, .ing.tjek li.grp { display: block; min-height: 0; padding: 14px 0 2px; font: 26px/32px var(--hoved); border-bottom: 2px solid var(--smor); }
+.ing li.grp, .ing.tjek li.grp { display: block; min-height: 0; padding: 32px 0 0; font: 26px/32px var(--hoved); box-shadow: inset 0 -2px 0 var(--smor); }
 .ing li.grp:first-child { padding-top: 0; }
-.deltrin { list-style: none; margin: 8px 0 0; padding: 0; }
-.deltrin li { position: relative; padding: 0 0 6px 24px; }
+.ing.tjek li:last-child { min-height: 32px; padding: 0; }
+.deltrin { list-style: none; margin: 0; padding: 0; }
+.deltrin li { position: relative; padding: 0 0 0 24px; }
 .deltrin li::before { content: ""; position: absolute; left: 6px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--gryde); }
 .lav-del { margin-top: 16px; }
 .lav-del li { flex-wrap: wrap; font-size: 24px; line-height: 32px; }
@@ -243,7 +245,7 @@ body[data-side=lav] main { padding-top: max(16px, env(safe-area-inset-top)); pad
 .lav progress::-webkit-progress-bar { background: rgba(34, 56, 107, .12); }
 .lav progress::-webkit-progress-value { background: var(--tomat); border-radius: 6px; transition: width .3s var(--ud); }
 .lav progress::-moz-progress-bar { background: var(--tomat); }
-.lav-trin { font-size: 32px; line-height: 48px; overflow-wrap: anywhere; }
+.lav-trin { font-size: 28px; line-height: 32px; overflow-wrap: anywhere; }
 .lav-ur { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0 0 8px; }
 .urvis { font: 44px/48px var(--hoved); font-weight: 400; font-variant-numeric: tabular-nums; color: var(--tomat-mork); }
 .lav-bund {
