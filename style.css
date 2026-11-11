@@ -10,7 +10,9 @@
   --tp-groen: #2a7a46; --tp-guld: #8a5f00; --tp-rosa: #b8335f;
   /* Symbolernes flader */
   --ik-smoer: #ffd95a; --ik-rosa: #ffcdc6; --ik-tomat: #e5604d; --ik-himmel: #a9d6e6; --ik-mynte: #c4ebcd; --ik-gryde: #4a9fb5; --ik-orange: #f08a3c; --ik-brod: #e8b25c; --ik-guld: #e8a400; --ik-blad: #6fbf86; --ik-papir: #fffdf5; --ik-hvid: #ffffff;
-  --himmel: #9fd6e6; --rod-felt: #c2321f; --gryde-felt: #2a768b;
+  --himmel: #9fd6e6;
+  /* Feltfarver i Tilpas: tekst på dem (--paa-felt) kan altid læses */
+  --fl-smoer: #ffd95a; --fl-mynte: #a0e2b2; --fl-rosa: #ffbeb6; --fl-himmel: #cfe6f5; --fl-hvid: #fff; --fl-rod: #c2321f; --fl-gryde: #2a768b; --fl-indigo: #22386b; --paa-felt: #22386b;
   --gul: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); --gul-svag: rgba(255, 217, 90, .4); --gul-staerk: rgba(255, 217, 90, .7); --blaa-svag: rgba(111, 183, 217, .22);
   --h-skaft: #d9a066; --h-kind: #ff9d94; --h-indre: #17404f; --h-tunge: #ff8f9c; --h-tungestreg: #d9566b;
   --link: #0b5c9c; --stjerne-fra: #8089aa;
@@ -671,6 +673,7 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --tp-groen: #7fd49a; --tp-guld: #ffc933; --tp-rosa: #ff8fb3;
   /* Symbolernes flader: dybere toner, så blækstregen (lys i mørkt tema) står tydeligt */
   --ik-smoer: #9a7612; --ik-rosa: #a8505a; --ik-tomat: #c0402f; --ik-himmel: #3f7d99; --ik-mynte: #3f8058; --ik-gryde: #2f8298; --ik-orange: #b8621f; --ik-brod: #9a732b; --ik-guld: #a87800; --ik-blad: #3d8a58; --ik-papir: #3b4363; --ik-hvid: #3b4363;
+  --fl-smoer: #8a6a12; --fl-mynte: #2f7a52; --fl-rosa: #9a4a56; --fl-himmel: #2f6f90; --fl-hvid: #2a3250; --fl-indigo: #3a58b4; --paa-felt: #fff;
   --link: #8fc6f7; --stjerne-fra: #5f6a8c;
   --fejl-bg: #3b2028; --fejl-tekst: #ffb9ac;
   --glas: linear-gradient(135deg, rgba(64, 72, 104, .62), rgba(40, 46, 72, .5));

@@ -44,8 +44,8 @@ const Tilpas = (() => {
   const TEKSTFARVER = ['blaek', 'blyant', 'rod', 'tomat', 'groen', 'gryde', 'guld', 'rosa', 'hvid', 'sort']; // de to første er appens egne standardfarver
   const FELTFARVER = ['smoer', 'mynte', 'rosa', 'himmel', 'hvid', 'rod', 'gryde', 'indigo']; // plus «glas» (gennemsigtigt Liquid Glass)
   const TEKST_CSS = { blaek: 'var(--blaek)', blyant: 'var(--blyant)', rod: 'var(--tomat-mork)', tomat: 'var(--tomat)', groen: 'var(--tp-groen)', gryde: 'var(--gryde-mork)', guld: 'var(--tp-guld)', rosa: 'var(--tp-rosa)', hvid: '#fff', sort: '#222' };
-  const FELT_CSS = { smoer: 'var(--smor)', mynte: 'var(--mynte)', rosa: 'var(--rosa)', himmel: 'var(--himmel)', hvid: '#fff', rod: 'var(--rod-felt)', gryde: 'var(--gryde-felt)', indigo: 'var(--valgt-fast)' };
-  const FELT_TEKST = { smoer: 'var(--paa-lys)', mynte: 'var(--paa-lys)', rosa: 'var(--paa-lys)', himmel: 'var(--paa-lys)', hvid: 'var(--paa-lys)', rod: '#fff', gryde: '#fff', indigo: '#fff' }; // tekst, der altid kan læses på feltets farve
+  const FELT_CSS = { smoer: 'var(--fl-smoer)', mynte: 'var(--fl-mynte)', rosa: 'var(--fl-rosa)', himmel: 'var(--fl-himmel)', hvid: 'var(--fl-hvid)', rod: 'var(--fl-rod)', gryde: 'var(--fl-gryde)', indigo: 'var(--fl-indigo)' }; // skifter med lyst/mørkt tema
+  const FELT_TEKST = { smoer: 'var(--paa-felt)', mynte: 'var(--paa-felt)', rosa: 'var(--paa-felt)', himmel: 'var(--paa-felt)', hvid: 'var(--paa-felt)', rod: '#fff', gryde: '#fff', indigo: '#fff' }; // tekst, der altid kan læses på feltets farve
   const NAVN = { blaek: 'Blæk', blyant: 'Blyant', rod: 'Mørkerød', tomat: 'Tomat', groen: 'Grøn', gryde: 'Turkis', guld: 'Guld', rosa: 'Rosa', hvid: 'Hvid', sort: 'Sort', smoer: 'Smørgul', mynte: 'Mynte', himmel: 'Lyseblå', indigo: 'Mørkeblå' };
   const tCss = n => TEKST_CSS[n] || '', fCss = n => FELT_CSS[n] || '';
   // Tekster, der står på forsiden, kan aldrig skjules (heller ikke på andre sider, hvor den samme tekst står)
