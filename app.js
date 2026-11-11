@@ -82,11 +82,10 @@ const henter = () => { app.innerHTML = '<p class="tomt henter">Henter…</p>'; }
 // Det nye indhold glider ind, når det er klar (ikke mens der står «Henter…»).
 let indKlar = false, foerste = true, dybde = 0, indTimer;
 function spilInd() {
-  app.classList.remove('sideud', 'sideind', 'vendud', 'vendind');
+  app.classList.remove('sideud', 'sideind');
   void app.offsetWidth; // start animationen forfra
-  const vend = app.dataset.vend === '1';
-  app.classList.add(vend ? 'vendind' : 'sideind');
-  clearTimeout(indTimer); indTimer = setTimeout(() => app.classList.remove('sideind', 'vendind'), vend ? 900 : 700);
+  app.classList.add('sideind');
+  clearTimeout(indTimer); indTimer = setTimeout(() => app.classList.remove('sideind'), 700);
 }
 new MutationObserver(() => {
   if (indKlar && app.firstChild && !$('.henter', app)) { indKlar = false; spilInd(); }
@@ -266,11 +265,8 @@ async function route() {
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
   dybde = dele.length;
   if (!foerste && app.firstChild) {
-    // Bladre-effekt som i en notesbog. Trin-for-trin-siden har en fast bjælke og bruger det gamle glid.
-    const lav = document.body.dataset.side === 'lav' || c === 'lav';
-    app.dataset.vend = lav ? '' : '1';
-    app.classList.remove('sideind', 'vendind'); app.classList.add(lav ? 'sideud' : 'vendud');
-    await new Promise(r => setTimeout(r, lav ? 120 : app.dataset.retning === 'tilbage' ? 90 : 330));
+    app.classList.remove('sideind'); app.classList.add('sideud');
+    await new Promise(r => setTimeout(r, 120));
     if (id !== visning) return;
   }
   foerste = false; indKlar = true;
