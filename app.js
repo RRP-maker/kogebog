@@ -570,7 +570,10 @@ function tegnLav() {
       ${t.del.length ? `<ul class="ing tjek lav-del">${t.del.map((d, j) => `<li><label><input type="checkbox" data-del="${i}:${j}" ${K.afkr[i + ':' + j] ? 'checked' : ''}> <span>${medBegreber(d, kendteBegreber)}</span></label>${urKnap(d, `${navn}.${j + 1}`)}</li>`).join('')}</ul>` : ''}`;
     if (i === n - 1) naeste = `Færdig ${ik('tjek')}`;
   } else {
-    midte = `<h1>Velbekomme!</h1><p class="tekst">Du har lavet ${esc(r.titel)}. Hvordan smagte det?</p><div id="stjerner">${stjerneHtml(S.stj)}</div>`;
+    midte = `<h1>Velbekomme!</h1><p class="tekst">Du har lavet ${esc(r.titel)}. Hvordan smagte det?</p><div id="stjerner">${stjerneHtml(S.stj)}</div>
+      <div class="traek" id="traek">${K.traek ? `<p class="tekst">${esc(K.traek)}</p>` : `<p class="tekst">Skal ingredienserne trækkes fra i «Hvad har du derhjemme?»</p>
+        <button type="button" class="knap felt felt-m primaer" data-tpid="traek-ja" data-h="traekFra">Ja, træk fra</button>
+        <button type="button" class="knap felt felt-m" data-tpid="traek-nej" data-h="traekNej">Nej tak</button>`}</div>`;
     naeste = '';
   }
   app.innerHTML = `<div class="lav">
@@ -587,9 +590,6 @@ function tegnLav() {
   if (i === n && !K.talt) {
     K.talt = true;
     Hjaelper.glad('Flot klaret! Du har lavet hele retten.');
-    Hjemme.traek(ingAf(r), K.port / (r.portioner || K.port)).then(t => {
-      if (t.rettet) toast(`Ingredienserne er trukket fra i «Hvad har du derhjemme?»${t.fjernet ? ` (${t.fjernet} er brugt op og fjernet)` : ''}`);
-    }).catch(err => console.error(err));
   }
 }
 
@@ -1083,6 +1083,15 @@ const H = {
     if (foer) foer.antal = antal; else { S.stj.push({ bruger_id: ENHED, antal }); }
     tegnStjerner(); toast('Tak! Dine stjerner er gemt.'); Hjaelper.glad();
   },
+  async traekFra() {
+    K.traek = 'Gemmer…'; tegnLav();
+    try {
+      const t = await Hjemme.traek(ingAf(K.r), K.port / (K.r.portioner || K.port));
+      K.traek = t.rettet ? `Færdig. Ingredienserne er trukket fra${t.fjernet ? `, og ${t.fjernet} er brugt op og fjernet` : ''}.` : 'Der var ikke noget at trække fra.';
+    } catch (err) { console.error(err); K.traek = ''; toast('Det virkede ikke. Tjek internettet, og prøv igen.'); }
+    tegnLav();
+  },
+  traekNej() { K.traek = 'Okay, listen er ikke ændret.'; tegnLav(); },
   lav() { location.hash = `#/opskrifter/${S.r.id}/lav`; },
   lavTrin(el) {
     const foer = K.i;
