@@ -42,6 +42,8 @@ const Tilpas = (() => {
   const naermestStr = px => STR.reduce((b, [v]) => Math.abs(v - px) < Math.abs(b - px) ? v : b, STR[0][0]);
   const TEKSTFARVER = ['#22386b', '#56638a', '#b5301f', '#d9432f', '#2f8f4e', '#2f7f95', '#e8a400', '#d0507a', '#ffffff', '#222222']; // de to første er appens egne standardfarver
   const FELTFARVER = ['#ffd95a', '#a0e2b2', '#ffbeb6', '#cfe6f5', '#ffffff', '#de4832', '#4a9fb5', '#22386b']; // plus «glas» (gennemsigtigt Liquid Glass)
+  // Tekster, der står på forsiden, kan aldrig skjules (heller ikke på andre sider, hvor den samme tekst står)
+  const beskyttet = new Set(['Kogebog', 'Hvad skal vi lave?', 'Opskrifter', 'Tips', 'Hvad kan jeg lave?', 'Favoritter', ...lager.hent('tpForside', [])]);
   let til = lager.hent('tilpasTil', false), timer, aktiv = lager.hent('tilpasAktiv', true), server = false, data = lager.hent('tilpas', {});
   const noder = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim());
   const tekstAf = el => noder(el).map(n => n.nodeValue.trim()).join(' ');
@@ -51,21 +53,26 @@ const Tilpas = (() => {
   function anvend() {
     document.body.classList.toggle('tilpas', til && aktiv);
     document.body.classList.toggle('tilpas-menu', til);
+    const ryd = []; // beskyttede tekster, der står som skjulte: flaget fjernes
     document.querySelectorAll(VALG).forEach(el => {
       if (el.classList.contains('plads')) return;
       const k = el.dataset.org ?? tekstAf(el);
       if (!egnet(el, k)) return;
       el.dataset.org = k;
+      if (document.body.dataset.side === 'forside' && !beskyttet.has(k)) { beskyttet.add(k); lager.gem('tpForside', [...beskyttet]); }
       const o = data[k] || {}, ny = o.t || k, n = noder(el);
       if (n.length && tekstAf(el) !== ny) { n[0].nodeValue = ny; n.slice(1).forEach(x => { x.nodeValue = ''; }); }
       if (!el.dataset.fs) el.dataset.fs = parseFloat(getComputedStyle(el).fontSize);
       el.style.fontSize = o.s ? pxAf(o.s) + 'px' : ''; el.classList.toggle('tp-staerst', !!o.s && pxAf(o.s) === 34); // de fire størrelser er faste skriftstørrelser i hele appen
       const ret = til && aktiv; // under tilpasning vises skjulte felter svagt, så de kan hentes tilbage
-      el.style.display = o.x && !ret ? 'none' : '';
-      el.style.opacity = o.x && ret ? '.35' : '';
+      const skj = !!o.x && !beskyttet.has(k);
+      if (o.x && !skj && !ryd.includes(k)) ryd.push(k);
+      el.style.display = skj && !ret ? 'none' : '';
+      el.style.opacity = skj && ret ? '.35' : '';
       el.style.color = o.f || '';
       el.style.background = o.b === 'glas' ? 'var(--glas)' : (o.b || '');
     });
+    if (ryd.length) setTimeout(() => ryd.forEach(k => { if (data[k] && data[k].x) { const ny = { ...data[k] }; delete ny.x; gem(k, ny, true); } }), 0);
     document.querySelectorAll(FLYT).forEach(el => { // felternes plads
       if (el.classList.contains('plads')) return;
       if (drag && drag.laast && drag.el === el) return;
@@ -167,10 +174,10 @@ const Tilpas = (() => {
   function aabn(el) {
     const k = el.dataset.org, o = data[k] || {}, felt = el.matches('.knap, .tilbage, .fane'), nat = naturligZ(el), std = standardFarver(el);
     const opsk = el.matches(FAST);
-    const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, x = !!o.x, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
+    const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !beskyttet.has(k), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`;
-    const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button><button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button></div></div>
+    const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
       <label for="tp-tekst">Tekst</label>
       <input type="text" id="tp-tekst" value="${esc(o.t || k)}" maxlength="200" autocomplete="off">
       <label>Tekststørrelse</label>
