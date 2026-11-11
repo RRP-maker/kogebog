@@ -43,7 +43,7 @@ const Tilpas = (() => {
   const noder = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim());
   const tekstAf = el => noder(el).map(n => n.nodeValue.trim()).join(' ');
   // Kun faste tekster kan ændres: ikke opskrifternes navne, tal og ure
-  const egnet = (el, k) => k && !/\d/.test(k) && !el.closest('#ark, #tilpas-knap, #tilpas-fortryd, #tilpas-gentag, .titelrakke, .h-boble, .tekst, .kort[href^="#/opskrifter"], .koebsforslag') && !(el.matches('p, small') && el.firstElementChild);
+  const egnet = (el, k) => k && !/\d/.test(k) && !el.closest('#ark, #tilpas-knap, #tilpas-forlad, #tilpas-fortryd, #tilpas-gentag, .titelrakke, .h-boble, .tekst, .kort[href^="#/opskrifter"], .koebsforslag') && !(el.matches('p, small') && el.firstElementChild);
 
   function anvend() {
     document.body.classList.toggle('tilpas', til && aktiv);
@@ -89,10 +89,10 @@ const Tilpas = (() => {
       b = document.createElement('button'); b.id = 'tilpas-knap'; b.type = 'button';
       b.addEventListener('click', () => { aktiv = !aktiv; lager.gem('tilpasAktiv', aktiv); if (aktiv) toast('Tryk for at ændre. Hold og træk for at flytte.'); anvend(); });
       document.body.append(b);
-      for (const [id, tekst, fkt] of [['tilpas-fortryd', '↶ Fortryd', fortryd], ['tilpas-gentag', 'Gentag ↷', gentag]]) {
-        const x = document.createElement('button'); x.id = id; x.type = 'button'; x.textContent = tekst; x.addEventListener('click', fkt); document.body.append(x);
+      for (const [id, tekst, fkt] of [['tilpas-fortryd', '↶ Fortryd', fortryd], ['tilpas-gentag', 'Gentag ↷', gentag], ['tilpas-forlad', '✕ Forlad', () => { saet(false); toast('Tilpasningen er slået fra. Slå den til igen under «Mere».'); }]]) {
+        const x = document.createElement('button'); x.id = id; x.type = 'button'; x.textContent = tekst; if (id === 'tilpas-forlad') x.setAttribute('aria-label', 'Forlad tilpasseren'); x.addEventListener('click', fkt); document.body.append(x);
       }
-    } else if (!til && b) { b.remove(); ['tilpas-fortryd', 'tilpas-gentag'].forEach(id => { const x = document.getElementById(id); if (x) x.remove(); }); }
+    } else if (!til && b) { b.remove(); ['tilpas-fortryd', 'tilpas-gentag', 'tilpas-forlad'].forEach(id => { const x = document.getElementById(id); if (x) x.remove(); }); }
     knapper();
     if (b) b.innerHTML = Ikoner.svg(aktiv ? 'pause' : 'blyant') + (aktiv ? ' Pause tilpas' : ' Tilpas igen');
   }
@@ -250,7 +250,7 @@ const Tilpas = (() => {
     if (navigator.vibrate) navigator.vibrate(12);
   }
   // Et felt må ikke lande oven på tekst, der ikke kan tilpasses (opskrifter, trin, skrivefelter ...)
-  const BLOKSKIP = '[data-org], [data-flyt], #ark, #gitter, .plads, #tilpas-knap, #tilpas-fortryd, #tilpas-gentag, #toast, #hjaelper, #hjaelper-vis, .h-boble';
+  const BLOKSKIP = '[data-org], [data-flyt], #ark, #gitter, .plads, #tilpas-knap, #tilpas-forlad, #tilpas-fortryd, #tilpas-gentag, #toast, #hjaelper, #hjaelper-vis, .h-boble';
   function paaTekst(el) {
     const r = el.getBoundingClientRect(), ph = el._ph, snit = q => q.right > r.left + 4 && q.left < r.right - 4 && q.bottom > r.top + 4 && q.top < r.bottom - 4;
     for (const e of document.querySelectorAll('main *')) {
