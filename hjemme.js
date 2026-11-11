@@ -47,7 +47,7 @@ const Hjemme = (() => {
   function raekke(h) {
     const i = ingAf(h.ingrediens_id);
     return `<div class="hj-rk" data-id="${h.id}">
-      <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Mængde" value="${h.maengde != null ? esc(visTal(Number(h.maengde))) : ''}">
+      <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal" value="${h.maengde != null ? esc(visTal(Number(h.maengde))) : ''}">
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
       <button type="button" class="rund hj-ikon" data-h="hjKat" aria-label="Skift kategori">${ik('tag')}</button>
@@ -123,7 +123,7 @@ const Hjemme = (() => {
       <div id="hj-liste"></div>
       <h3 class="hj-grp">Ny ting</h3>
       <div class="hj-rk hj-ny" id="hj-ny">
-        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Mængde">
+        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal">
         <select class="hj-enh" aria-label="Enhed">${enhHtml('stk')}</select>
         <input id="hj-ny-navn" class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ny ingrediens" placeholder="fx gulerødder">
       </div>`;
