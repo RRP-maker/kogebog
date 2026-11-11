@@ -518,3 +518,6 @@ body.tilpas [data-ikkeflyt][data-laast] { outline-color: var(--tomat); }
 input.felt, select.felt { height: 64px; margin: var(--m) 0 var(--pt); }
 input.felt-s, select.felt-s { height: 32px; margin: 0; }
 input.felt-l, select.felt-l { height: 96px; }
+
+/* Låste felter står stille ved sideskift: ingen animation på dem eller på rækken, de sidder i (transform gør fixed relativt til rækken) */
+#app > [data-laast], #app > .plads, #app > .vaerktoej, #app > :has([data-laast]), #app .vaerktoej, .vaerktoej > * { animation: none !important; }

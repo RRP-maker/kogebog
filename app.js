@@ -23,7 +23,7 @@ const FAELLES = 'alle'; // favoritter er fælles for alle
 async function api(sti, { method = 'GET', body, flet } = {}) {
   const headers = { apikey: SUPABASE_ANON_KEY };
   if (body) headers['Content-Type'] = 'application/json';
-  if (method === 'POST' || method === 'PATCH') headers.Prefer = 'return=representation' + (flet ? ',resolution=merge-duplicates' : '');
+  if (method === 'POST' || method === 'PATCH') headers.Prefer = 'return=representation' + (flet === 'ignorer' ? ',resolution=ignore-duplicates' : flet ? ',resolution=merge-duplicates' : '');
   const res = await fetch(API + sti, { method, headers, cache: 'no-store', body: body && JSON.stringify(body) });
   if (!res.ok) throw new Error(res.status + ' ' + await res.text());
   return method === 'DELETE' ? null : res.json();
@@ -683,12 +683,15 @@ async function formular(type, rid) {
     e.preventDefault();
     const data = laesFelter(form, T.felter, visFejl);
     if (!data) return;
+    let valg = {};
+    if (type === 'opskrifter') { try { valg = await Katalog.spoerg(ingAf(data).map(i => i.n)); } catch (err) { console.error(err); } } // spørger om kategorier til nye ingredienser
     const knap = form.querySelector('button[type=submit]');
     knap.disabled = true; knap.textContent = 'Gemmer…';
     try {
       const res = rid
         ? await api(`${type}?id=eq.${enc(rid)}`, { method: 'PATCH', body: data })
         : await api(type, { method: 'POST', body: data });
+      if (type === 'opskrifter') { try { await Katalog.laeg(ingAf(data).map(i => i.n), valg); } catch (err) { console.error(err); } }
       toast('Gemt'); Hjaelper.glad('Gemt!');
       location.hash = type === 'tips' ? '#/tips' : `#/${type}/${rid || res[0].id}`;
     } catch (err) {
@@ -737,6 +740,7 @@ async function forslagSide() {
   app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Hvad kan jeg lave?</h1>
     <div id="forslag-nu"></div>
     <div id="hj-boks"></div>
+    <button type="button" class="knap" data-h="sorterAndet">${ik('gnist')} Sortér «Andet» med Claude</button>
     <div id="forslag-resten"></div>`;
   Hjaelper.side('Skriv det, du har derhjemme, ét ord i hvert felt. Så finder jeg retter, du kan lave, og siger, hvad du kan købe for at lave flere.');
   await Hjemme.vis($('#hj-boks'), tegnForslag);
@@ -772,6 +776,7 @@ Regler:
 - Skriv konkrete værdier: komfurets varme fra 1 til 9, om ovnen skal forvarmes (og til hvor mange grader), og hvor lang tid det tager. Skriv tiden i den sætning, den hører til, fx "Kog i 10 minutter".
 - Har retten flere dele, fx sovs og kødboller, så del ingredienserne op i grupper med en overskrift. Har den kun én del, så brug én gruppe med "overskrift": null.
 - Mængder skal være tal, fx 2,5 dl skrives som 2.5. Mangler der en mængde (fx "salt"), så udelad "mængde" og "enhed".
+- Giv hver ingrediens en "kategori". Brug præcis en af disse: §KAT§. Passer ingen, så skriv "Andet".
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
 {
@@ -782,11 +787,11 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
   "kategori": "Aftensmad",
   "ingredienser": [
     { "overskrift": "Kødboller", "varer": [
-      { "mængde": 500, "enhed": "g", "navn": "hakket svinekød" },
-      { "mængde": 1, "enhed": "stk", "navn": "løg" } ] },
+      { "mængde": 500, "enhed": "g", "navn": "hakket svinekød", "kategori": "Kød" },
+      { "mængde": 1, "enhed": "stk", "navn": "løg", "kategori": "Grøntsager" } ] },
     { "overskrift": "Sovs", "varer": [
-      { "mængde": 2.5, "enhed": "dl", "navn": "fløde" },
-      { "navn": "salt" } ] }
+      { "mængde": 2.5, "enhed": "dl", "navn": "fløde", "kategori": "Mejeri og æg" },
+      { "navn": "salt", "kategori": "Krydderier" } ] }
   ],
   "trin": [
     { "tekst": "Lav kødbollerne.", "deltrin": ["Skræl og hak løget.", "Bland kød, løg og æg i en skål."] },
@@ -800,11 +805,15 @@ Her er opskriften:
 `;
 const CLAUDE_FOERSTE = CLAUDE_BESKED.slice(0, 30); // bruges til at se, om udklipsholderen allerede indeholder beskeden
 let claudeBesked = '';
+const FALDBACK_KAT = 'Grøntsager, Frugt, Kød, Fisk og skaldyr, Mejeri og æg, Bønner og linser, Pasta, ris og korn, Krydderier, Konserves';
+const lavBesked = () => CLAUDE_BESKED.replace('§KAT§', Katalog.kategorier().join(', ') || FALDBACK_KAT);
 function importSide() {
-  claudeBesked = CLAUDE_BESKED;
+  claudeBesked = lavBesked();
+  Katalog.hent().catch(() => {}); // kategorierne kommer med i beskeden
   app.innerHTML = `<a class="tilbage" href="#/opskrifter">‹ Opskrifter</a><h1>Tilføj med Claude</h1>
     <ol class="trin vejledning">
-      <li>Kopiér din opskrift (et link eller en tekst). Tryk så her. Din opskrift bliver sat sammen med beskeden til Claude.
+      <li>Skriv din opskrift her, eller sæt et link ind. Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
+        <textarea id="egen" rows="5" placeholder="Din opskrift eller et link" aria-label="Din opskrift"></textarea>
         <button class="knap primaer stor" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
         <p class="lille" id="kopinote" role="status"></p></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
@@ -830,15 +839,16 @@ function laesImport(tekst) {
   const navn = typeof j.navn === 'string' ? j.navn.trim() : '';
   if (!navn) mangler.push('navn');
   // Ingredienser: enten en flad liste eller grupper med overskrift og varer. Gemmes som liste med { g: overskrift } imellem.
-  const ing = [];
+  const ing = [], kat = {}; // kat: ingrediens -> kategori fra Claude
+  const vare = v => { const i = normIng(v); if (!i) return null; const k = v && typeof v === 'object' ? (v.kategori ?? v.kat) : null; if (k) kat[Katalog.rens(i.n)] = String(k).trim(); return i; };
   for (const x of Array.isArray(j.ingredienser) ? j.ingredienser : []) {
     const varer = x && (Array.isArray(x.varer) ? x.varer : Array.isArray(x.ingredienser) ? x.ingredienser : null);
     const over = x && typeof x === 'object' ? String(x.overskrift ?? x.gruppe ?? '').trim() : '';
     if (varer) {
       if (over) ing.push({ g: over });
-      ing.push(...varer.map(normIng).filter(Boolean));
+      ing.push(...varer.map(vare).filter(Boolean));
     } else if (over && !(x.navn || x.n || x.name)) ing.push({ g: over });
-    else { const i = normIng(x); if (i) ing.push(i); }
+    else { const i = vare(x); if (i) ing.push(i); }
   }
   if (!ing.some(x => !('g' in x))) mangler.push('ingredienser');
   const trin = [];
@@ -854,7 +864,7 @@ function laesImport(tekst) {
     titel: navn, kategori: typeof j.kategori === 'string' && j.kategori.trim() ? j.kategori.trim() : null,
     svaerhed: helt(j['sværhed'] ?? j.svaerhed, 1, 5), tid_minutter: helt(j.tid, 0, 6000), portioner: helt(j.portioner, 1, 100),
     ingredienser: ing, fremgangsmaade: trinTilTekst(trin)
-  } };
+  }, kat };
 }
 async function kopier(tekst) {
   try { await navigator.clipboard.writeText(tekst); return true; }
@@ -901,6 +911,7 @@ document.addEventListener('select', e => {
 }, true);
 const H = {
   igen: () => route(),
+  sorterAndet: () => Katalog.sorterAndet(() => Hjemme.vis($('#hj-boks'), tegnForslag)),
   maksNed: () => saetMaks(maksMangler() - 1),
   maksOp: () => saetMaks(maksMangler() + 1),
   async slet(el) {
@@ -1024,17 +1035,21 @@ const H = {
   async fjernValgt() { if (await Laerred.fjernValgt()) toast('Fjernet'); },
   print() { window.print(); },
   async kopierBesked() {
-    const udklip = await laesUdklip(); // null = browseren måtte ikke læse udklipsholderen
+    await Katalog.hent().catch(() => {});
+    const grund = lavBesked(), egen = ($('#egen') || {}).value ? $('#egen').value.trim() : '';
+    const udklip = egen ? '' : await laesUdklip(); // null = browseren måtte ikke læse udklipsholderen
     // Ligger beskeden selv i udklipsholderen (man trykker to gange), så beholder vi den, vi allerede har bygget.
     let status;
-    if (udklip && udklip.startsWith(CLAUDE_FOERSTE)) status = 'igen';
-    else if (udklip) { claudeBesked = CLAUDE_BESKED + udklip + '\n'; status = 'med'; }
-    else { claudeBesked = CLAUDE_BESKED; status = udklip === null ? 'naegtet' : 'tom'; }
+    if (egen) { claudeBesked = grund + egen + '\n'; status = 'egen'; }
+    else if (udklip && udklip.startsWith(CLAUDE_FOERSTE)) status = 'igen';
+    else if (udklip) { claudeBesked = grund + udklip + '\n'; status = 'med'; }
+    else { claudeBesked = grund; status = udklip === null ? 'naegtet' : 'tom'; }
     const ok = await kopier(claudeBesked);
     // Hos Claude kan feltet udfyldes via adressen. Er beskeden for lang til det, åbner Claude tomt, og beskeden ligger i udklipsholderen.
     const kodet = encodeURIComponent(claudeBesked);
     $('#aabnClaude').href = 'https://claude.ai/new' + (kodet.length < 7000 ? '?q=' + kodet : '');
     $('#kopinote').textContent = !ok ? 'Beskeden kunne ikke kopieres. Prøv igen.' : {
+      egen: 'Kopieret. Det, du skrev, er sat med i beskeden.',
       med: 'Kopieret. Din opskrift er sat med i beskeden.',
       igen: 'Kopieret igen.',
       tom: 'Kopieret. Der lå ingen tekst i udklipsholderen, så beskeden er uden opskrift. Sæt opskriften ind hos Claude.',
@@ -1048,6 +1063,7 @@ const H = {
     el.disabled = true;
     try {
       const [ny] = await api('opskrifter', { method: 'POST', body: svar.data });
+      try { await Katalog.laeg(ingAf(svar.data).map(i => i.n), {}, svar.kat); } catch (e) { console.error(e); } // ingredienserne med Claudes kategorier
       toast('Opskriften er gemt'); Hjaelper.glad('Opskriften er gemt!');
       location.hash = '#/opskrifter/' + ny.id;
     } catch (err) { el.disabled = false; throw err; }

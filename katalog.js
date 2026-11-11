@@ -1,0 +1,120 @@
+// Kataloget over ingredienser (tabellerne «ingredienser» og «ingrediens_kategorier» i Supabase).
+// Opskrifter lægger deres ingredienser her. Kategorien kommer fra kataloget, fra Claude, fra dig, eller bliver «Andet» (tom).
+const Katalog = (() => {
+  let kat = [], ing = [];
+  const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const rens = n => norm(String(n).replace(/\([^)]*\)/g, ' ').replace(/[.,;:]+$/, ''));
+  const katId = navn => { const k = kat.find(x => x.navn_norm === norm(navn)); return k ? k.id : null; };
+  const sorteret = () => [...kat].sort((a, b) => a.raekkefolge - b.raekkefolge || a.navn.localeCompare(b.navn, 'da'));
+  const unik = navne => [...new Set(navne.map(rens).filter(Boolean))];
+  async function hent() { [kat, ing] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*')]); }
+  // Gæt ud fra kendte ingredienser: «rødløg» og «røde løg» ligner «løg». Længste match vinder.
+  function gaet(n) {
+    let bedst = null;
+    for (const i of ing) {
+      if (!i.kategori_id || i.navn_norm.length < 3) continue;
+      if ((n === i.navn_norm || (' ' + n + ' ').includes(' ' + i.navn_norm + ' ') || n.endsWith(i.navn_norm)) && (!bedst || i.navn_norm.length > bedst.navn_norm.length)) bedst = i;
+    }
+    return bedst ? bedst.kategori_id : null;
+  }
+  const ukendte = navne => unik(navne).filter(n => !ing.some(i => i.navn_norm === n) && !gaet(n));
+
+  // Ved «Gem» i en opskrift: spørg om kategorier til ingredienser, appen ikke kender. Springer man over, bliver de «Andet».
+  async function spoerg(navne) {
+    await hent();
+    const uk = ukendte(navne);
+    if (!uk.length) return {};
+    return new Promise(svar => {
+      const valg = sorteret().map(k => `<option value="${k.id}">${esc(k.navn)}</option>`).join('');
+      const d = ark(`<h2>Hvilken kategori?</h2><small>Vælg en kategori til hver ny ingrediens. Springer du over, står de under «Andet».</small>
+        ${uk.map((n, i) => `<label for="kn${i}">${esc(n)}</label><select id="kn${i}" class="felt felt-m" data-n="${i}"><option value="">Andet</option>${valg}</select>`).join('')}
+        <div class="rakke"><button type="button" class="knap" data-kat="spring">Spring over</button><button type="button" class="knap primaer" data-kat="gem">Gem</button></div>`);
+      d.addEventListener('click', e => {
+        const a = e.target.closest('[data-kat]');
+        if (!a && !e.target.closest('.ark-bag')) return;
+        const ud = {};
+        if (a && a.dataset.kat === 'gem') d.querySelectorAll('select[data-n]').forEach(s => { if (s.value) ud[uk[s.dataset.n]] = s.value; });
+        lukArk(); svar(ud);
+      });
+    });
+  }
+  // Lægger ingredienserne i kataloget. valg: dine valg (navn -> kategori-id). claude: Claudes forslag (navn -> kategorinavn).
+  async function laeg(navne, valg = {}, claude = {}) {
+    await hent();
+    const nye = [], opdat = [];
+    for (const n of unik(navne)) {
+      const fund = ing.find(i => i.navn_norm === n), ck = claude[n] ? katId(claude[n]) : null, k = valg[n] || ck;
+      if (fund) { if (!fund.kategori_id && k) opdat.push([fund.id, k]); continue; }
+      nye.push({ navn: n, navn_norm: n, kategori_id: k || gaet(n) || null });
+    }
+    if (nye.length) await api('ingredienser?on_conflict=navn_norm', { method: 'POST', flet: 'ignorer', body: nye });
+    for (const [id, k] of opdat) await api(`ingredienser?id=eq.${enc(id)}`, { method: 'PATCH', body: { kategori_id: k } });
+  }
+  const kategorier = () => sorteret().map(k => k.navn);
+
+  // Knappen i Hvad kan jeg lave?: bed Claude om at sortere alt under «Andet»
+  let andre = [], efterSortering = null, besked = '';
+  async function sorterAndet(efter) {
+    await hent();
+    andre = ing.filter(i => !i.kategori_id); efterSortering = efter;
+    if (!andre.length) { toast('Der står ikke noget under «Andet».'); return; }
+    besked = `Sorter disse ingredienser i kategorier til min kogebog-app.
+
+Brug præcis en af disse kategorier: ${kategorier().join(', ')}.
+Passer ingen, så skriv "Andet".
+
+Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingrediensen som nøgle, kategorien som værdi):
+{
+  "gulerødder": "Grøntsager",
+  "kanel": "Krydderier"
+}
+
+Ingredienser:
+${andre.map(i => '- ' + i.navn).join('\n')}
+`;
+    const kodet = encodeURIComponent(besked), n = andre.length;
+    const d = ark(`<h2>Sortér «Andet» med Claude</h2><small>${n} ${n === 1 ? 'ingrediens' : 'ingredienser'} står uden kategori.</small>
+      <ol class="trin vejledning">
+        <li>Tryk her, så kopieres beskeden til Claude.
+          <button type="button" class="knap primaer" data-h="katKopier">${ik('gnist')} Kopiér besked</button><p class="lille" id="katnote" role="status"></p></li>
+        <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt.
+          <a class="knap" id="katClaude" href="https://claude.ai/new${kodet.length < 7000 ? '?q=' + kodet : ''}" target="_blank" rel="noopener">Åbn Claude ›</a></li>
+        <li>Kopiér Claudes svar, og sæt det ind her:
+          <textarea id="katsvar" rows="5" placeholder='{ "gulerødder": "Grøntsager" }' aria-label="Claudes svar"></textarea></li>
+      </ol>
+      <div id="arkfejl"></div>
+      <div class="rakke"><button type="button" class="knap" data-h="lukArk">Luk</button><button type="button" class="knap primaer" data-h="katGem">Gem kategorier</button></div>`);
+    $('.ark-bag', d).addEventListener('click', lukArk);
+  }
+  // Læser Claudes svar: { "navn": "Kategori" } eller en liste af { navn, kategori }
+  function laesKat(tekst) {
+    const s = String(tekst).replace(/[“”]/g, '"'), a = s.search(/[{[]/), b = Math.max(s.lastIndexOf('}'), s.lastIndexOf(']'));
+    if (a === -1 || b <= a) return null;
+    let j; try { j = JSON.parse(s.slice(a, b + 1)); } catch (e) { return null; }
+    const ud = {};
+    if (Array.isArray(j)) j.forEach(x => { if (x && (x.navn || x.ingrediens) && x.kategori) ud[rens(x.navn || x.ingrediens)] = String(x.kategori); });
+    else Object.entries(j).forEach(([k, v]) => { if (typeof v === 'string') ud[rens(k)] = v; });
+    return ud;
+  }
+  Object.assign(H, {
+    async katKopier() {
+      let ok = false;
+      try { await navigator.clipboard.writeText(besked); ok = true; } catch (e) { ok = await kopier(besked); }
+      $('#katnote').textContent = ok ? 'Kopieret.' : 'Beskeden kunne ikke kopieres. Prøv igen.';
+    },
+    async katGem() {
+      const svar = laesKat($('#katsvar').value);
+      if (!svar || !Object.keys(svar).length) { $('#arkfejl').innerHTML = '<div class="fejlboks">Svaret kan ikke læses. Kopiér hele Claudes svar, og prøv igen.</div>'; return; }
+      let sat = 0;
+      for (const i of andre) {
+        const k = svar[i.navn_norm] ? katId(svar[i.navn_norm]) : null;
+        if (!k) continue;
+        await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: k } }); sat++;
+      }
+      lukArk();
+      toast(sat ? `${sat} ${sat === 1 ? 'ingrediens' : 'ingredienser'} sorteret` : 'Ingen af svarene passede til en kategori');
+      if (efterSortering) efterSortering();
+    }
+  });
+  return { hent, rens, spoerg, laeg, kategorier, sorterAndet, laesKat };
+})();
