@@ -361,7 +361,7 @@ async function forside() {
   if (id !== visning) return;
   const ids = new Set(fav.map(f => f.opskrift_id)), liste = ops.filter(o => ids.has(o.id));
   $('#favoritter').innerHTML = liste.length ? liste.map(r => opskriftKort(r, true)).join('')
-    : '<p class="lille">Ingen favoritter endnu. Tryk på stjernen på en opskrift, så står den her.</p>';
+    : '';
 }
 // iPhone/iPad i en browser (ikke som app på hjemmeskærmen): Hjælperen viser, hvordan man lægger Kogebog på hjemmeskærmen. Én gang pr. gang siden åbnes.
 let hjemVist = false;
@@ -966,7 +966,7 @@ async function laesUdklip() {
 // ---------- Mere: backup, indstillinger ----------
 const tilpasHoejde = () => Math.max(20, Math.min(90, Math.round(Number(lager.hent('tilpasHoejde', 33))) || 33));
 function mereSide() {
-  app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Mere</h1>
+  app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a>
     <h2>Indstillinger</h2>
     <p class="lille">Udseende</p>
     <div role="radiogroup" aria-label="Udseende">
@@ -977,7 +977,6 @@ function mereSide() {
     <label class="skift"><input type="checkbox" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
     <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Tilpas siden</span></label>
-    <p class="lille">Slå til, og tryk så på en knap eller overskrift for at ændre teksten og skriftstørrelsen. Hold fingeren på et felt og træk, for at flytte det. Ændringen gælder alle steder.</p>
     <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
     <p class="lille">Hvor højt vinduet til at tilpasse et felt må blive, i procent af skærmen.</p>
     <div class="stepper" role="group" aria-label="Højde på tilpas-vinduet">
@@ -987,8 +986,7 @@ function mereSide() {
     <h2>Sikkerhedskopi</h2>
     <p class="lille">Hent alt indhold som en fil. Gem den et sikkert sted.</p>
     <button class="knap" data-h="eksport">${ik('hent')} Hent sikkerhedskopi</button>
-    <h2>Læg appen på hjemmeskærmen</h2>
-    <p class="lille">På iPhone og iPad: Tryk på Del-knappen i Safari, og vælg «Føj til hjemmeskærm».</p>`;
+`;
   document.querySelectorAll('input[name=tema]').forEach(r => r.addEventListener('change', e => Tema.saet(e.target.value)));
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
   $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));

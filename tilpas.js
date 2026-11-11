@@ -56,12 +56,40 @@ const Tilpas = (() => {
   const arv = {}, arvFelt = {};
   // Tekster på knapper og faner. En overskrift med samme tekst som en knap, der fører til siden, arver intet fra knappen.
   const feltTekster = new Set(['Hvad kan jeg lave?', 'Opskrifter', 'Tips', 'Tilføj med Claude', 'Mere', 'Ny opskrift', 'Nyt tip', ...lager.hent('tpFeltTekster', [])]);
-  const get = k => {
-    if (data[k] !== undefined) return data[k];
-    if (arv[k] === undefined || data[arv[k]] === undefined) return undefined;
-    if (arvFelt[k] === false && feltTekster.has(arv[k])) return undefined; // gamle tilpasninger på teksten tilhører knappen
-    return data[arv[k]];
+  // Standardværdier: placeringer, størrelser, tekster og farver, som felterne har efter gennemgangen. «Nulstil» går tilbage til dem.
+  const STANDARD = {
+    "Kopiér besked": {"s": 20, "z": "s", "p": [196, -72]},
+    "Sæt ind": {"s": 20, "z": "s", "p": [100, -20]},
+    "Ryd": {"p": [-257.19, -4]},
+    "Tips": {"s": 34},
+    "Sæt svar ind": {"z": "s", "p": [228, -12.5]},
+    "Ryd svar": {"p": [-128.94, 3.5]},
+    "‹ Fortryd": {"l": true},
+    "import-svar-saet": {"s": 20, "z": "s", "p": [260, -12.5]},
+    "Hvad skal vi lave?": {"t": "Kogebogen", "s": 34},
+    "import-svar-ryd": {"p": [-97.19, 3.5]},
+    "forslag|hvad-har-du-derhjemme": {"p": [0, 34]},
+    "Favoritter": {"p": [0, 2]},
+    "Hvad kan jeg lave?": {"s": 34, "z": "l"},
+    "Åbn Claude ›": {"p": [4, -4.5]},
+    "Hvad har du derhjemme?": {"p": [0, -10]},
+    "‹ Forside": {"l": true},
+    "Du mangler lidt": {"t": "Der mangler"},
+    "Rediger": {"p": [-110.81, -64]},
+    "Tilføj tip": {"p": [288, -64]},
+    "▶ Lav retten trin for trin": {"t": "Lav retten trin for trin"},
+    "slet": {"z": "s", "p": [-106.74, 36.7]},
+    "tips|nyt-tip": {"z": "s"},
+    "forside|hvad-kan-jeg-lave": {"s": 34, "b": "himmel", "z": "l"}
   };
+  const D = k => data[k] !== undefined ? data[k] : STANDARD[k];
+  const get = k => {
+    if (D(k) !== undefined) return D(k);
+    if (arv[k] === undefined || D(arv[k]) === undefined) return undefined;
+    if (arvFelt[k] === false && feltTekster.has(arv[k])) return undefined; // gamle tilpasninger på teksten tilhører knappen
+    return D(arv[k]);
+  };
+
   const tomb = k => arv[k] !== undefined && data[arv[k]] !== undefined; // en nulstillet tilpasning huskes, så den gamle ikke dukker op igen
   const slug = s => String(s).toLowerCase().replace(/[^a-zæøå]+/g, '-').replace(/^-|-$/g, '');
   const sideNavn = () => (location.hash || '#/').replace(/^#\/?/, '').split('/').filter(Boolean).map(s => /\d/.test(s) ? ':id' : s).join('/') || 'forside';
@@ -324,8 +352,8 @@ const Tilpas = (() => {
   }
   document.addEventListener('pointerdown', e => {
     if (!til || !aktiv || e.button > 0) return;
-    const el = e.target.closest('[data-flyt]'); if (!el || el.closest('#ark') || (data[el.dataset.flyt] || {}).m || el.matches(FAST)) return;
-    const d = drag = { el, x0: e.clientX, y0: e.clientY, p0: (data[el.dataset.flyt] || {}).p || [0, 0], laast: false };
+    const el = e.target.closest('[data-flyt]'); if (!el || el.closest('#ark') || (get(el.dataset.flyt) || {}).m || el.matches(FAST)) return;
+    const d = drag = { el, x0: e.clientX, y0: e.clientY, p0: (get(el.dataset.flyt) || {}).p || [0, 0], laast: false };
     d.t = setTimeout(() => startTraek(d), 300);
   }, true);
   document.addEventListener('pointermove', e => {
