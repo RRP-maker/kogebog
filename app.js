@@ -331,6 +331,8 @@ async function route() {
   try {
     if (a === 'forslag') return await forslagSide();
     if (a === 'import') return importSide();
+    if (a === 'opdater' && b) return await ClaudeEkstra.opdaterSide(b);
+    if (a === 'tipsimport') return await ClaudeEkstra.tipsSide();
     if (a === 'mere') return mereSide();
     if (a === 'hjemme') return await forslagSide();
     if (!TYPER[a]) { document.body.dataset.side = 'forside'; return await forside(); }
@@ -399,6 +401,7 @@ async function liste(type) {
     <div class="rakke">
       <a class="knap primaer" href="#/${type}/ny">+ ${T.ny}</a>
       ${type === 'opskrifter' ? `<a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a>` : ''}
+      ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `<input id="soeg" type="search" placeholder="Søg i navne og ingredienser" aria-label="Søg i opskrifter" autocomplete="off">
       ${kat.length ? `<div class="filter"><button class="chip valgt" data-h="kat" data-v="">Alle</button>${kat.map(k => `<button class="chip" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}
@@ -471,7 +474,8 @@ async function opskriftSide(rid) {
     <h2 class="skaerm opsk">Hvordan smagte det?</h2>
     <div id="stjerner" class="skaerm"></div>
     ${egne.length ? `<h2 class="opsk">Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}` : ''}
-    <div class="rakke skaerm"><button class="knap" data-h="print">Print</button>
+    <div class="rakke skaerm"><a class="knap" data-tpid="opdater-claude" href="#/opdater/${r.id}">${ik('gnist')} Opdater med Claude</a>
+      <button class="knap" data-h="print">Print</button>
       <button class="knap fare" data-tpid="slet" data-h="slet" data-v="opskrifter:${r.id}">Slet</button></div>`;
   tegnIng(); tegnTrin(); tegnStjerner(); tegnLaerredKnapper(false);
   $('#billedfil').addEventListener('change', nytBillede);
