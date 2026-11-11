@@ -293,7 +293,6 @@ async function route() {
   window.scrollTo(0, 0);
   document.body.dataset.side = c === 'lav' ? 'lav' : (a || 'forside');
   try {
-    if (a === 'indkob') return await indkobSide();
     if (a === 'forslag') return await forslagSide();
     if (a === 'import') return importSide();
     if (a === 'mere') return mereSide();
@@ -321,7 +320,6 @@ async function forside() {
     <div id="favoritter"><p class="lille">Henter…</p></div>
     <nav class="genveje">
       <a class="knap" href="#/forslag">🧺 Hvad kan jeg lave?</a>
-      <a class="knap" href="#/indkob">🛒 Indkøbsliste</a>
     </nav>`;
   Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Metode og Tips kan du lære, hvordan man gør. Favoritter er dem med stjerne.');
   tilfoejTilHjem();
@@ -458,11 +456,8 @@ const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="
 const ingOverskrift = navn => `<li class="grp">${esc(navn)}</li>`;
 function tegnIng() {
   const grp = ingGrupper(S.r), f = S.port / (S.r.portioner || S.port);
-  let n = 0;
   $('#portvis').textContent = S.port + (S.port === 1 ? ' portion' : ' portioner');
-  $('#ing').innerHTML = grp.length ? grp.map(g => (g.navn ? ingOverskrift(g.navn) : '') + g.ing.map(i => `<li><span>${esc(visIng(i, f))}</span>
-      <button class="rund lille-rund skaerm" data-h="koeb" data-v="${n++}" aria-label="Læg ${esc(i.n)} på indkøbslisten">🛒</button></li>`).join('')).join('')
-    + '<li class="skaerm"><button class="knap" data-h="koebAlle">🛒 Læg alle på indkøbslisten</button></li>'
+  $('#ing').innerHTML = grp.length ? grp.map(g => (g.navn ? ingOverskrift(g.navn) : '') + g.ing.map(i => `<li><span>${esc(visIng(i, f))}</span></li>`).join('')).join('')
     : '<li class="lille">Ingen ingredienser endnu. Tryk på «Rediger» for at skrive dem.</li>';
 }
 function tegnTrin() {
@@ -722,42 +717,10 @@ async function formular(type, rid) {
   });
 }
 
-// ---------- Indkøbsliste ----------
-async function indkobSide() {
-  const id = visning;
-  henter();
-  const varer = await api('indkob?select=*&order=oprettet');
-  if (id !== visning) return;
-  app.innerHTML = `<a class="tilbage" href="#/">‹ Forside</a><h1>Indkøbsliste</h1>
-    <form id="nyvare" class="linjeform"><input name="tekst" type="text" placeholder="Skriv en vare, fx mælk" aria-label="Ny vare" autocomplete="off">
-      <button class="knap primaer" type="submit">Tilføj</button></form>
-    <ul class="ing tjek" id="varer">${varer.map(vareHtml).join('')}</ul>
-    <p class="tomt" id="ingenvarer" ${varer.length ? 'hidden' : ''}>Listen er tom. Skriv en vare herover, eller tryk på 🛒 i en opskrift.</p>
-    <button class="knap fare" data-h="rydKoebt">Fjern dem med flueben</button>`;
-  Hjaelper.side('Her er indkøbslisten. Den er fælles for alle. Sæt flueben, når varen ligger i kurven.');
-  $('#nyvare').addEventListener('submit', async e => {
-    e.preventDefault();
-    const felt = e.target.elements.tekst, tekst = felt.value.trim();
-    if (!tekst) return felt.focus();
-    try {
-      const [v] = await api('indkob', { method: 'POST', body: { tekst } });
-      $('#varer').insertAdjacentHTML('beforeend', vareHtml(v)); $('#ingenvarer').hidden = true; felt.value = '';
-    } catch (err) { console.error(err); toast('Varen blev ikke gemt. Tjek internettet.'); }
-  });
-}
-const vareHtml = v => `<li><label><input type="checkbox" data-vare="${v.id}" ${v.krydset ? 'checked' : ''}> <span>${esc(v.tekst)}</span></label></li>`;
 document.addEventListener('change', async e => {
   const d = e.target.closest('[data-del]');
   if (d && K) { K.afkr[d.dataset.del] = d.checked; return; } // husk flueben på deltrin
-  const el = e.target.closest('[data-vare]');
-  if (!el) return;
-  try { await api(`indkob?id=eq.${enc(el.dataset.vare)}`, { method: 'PATCH', body: { krydset: el.checked } }); }
-  catch (err) { console.error(err); el.checked = !el.checked; toast('Fluebenet blev ikke gemt. Tjek internettet.'); }
 });
-async function laegPaaListen(tekster) {
-  await api('indkob', { method: 'POST', body: tekster.map(tekst => ({ tekst })) });
-  toast(tekster.length === 1 ? `«${tekster[0]}» er på indkøbslisten` : `${tekster.length} varer er på indkøbslisten`);
-}
 
 // ---------- Hvad kan jeg lave? (ren logik, ingen AI) ----------
 const BASIS = ['salt', 'olie', 'vand', 'peber'];
@@ -806,8 +769,7 @@ function tegnForslag() {
   $('#forslag').innerHTML = `<h2>Det kan du lave nu</h2>
     ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe herunder.</p>'}
     ${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.join(' og '))}</strong>
-      <span>Så kan du også lave: ${k.retter.map(r => `<a href="#/opskrifter/${r.id}">${esc(r.titel)}</a>`).join(', ')}</span>
-      <button class="knap" data-h="koebForslag" data-v="${esc(k.koeb.join('|'))}">🛒 Læg på indkøbslisten</button></div>`).join('')}` : ''}
+      <span>Så kan du også lave: ${k.retter.map(r => `<a href="#/opskrifter/${r.id}">${esc(r.titel)}</a>`).join(', ')}</span></div>`).join('')}` : ''}
     ${f.naesten.length ? `<h2>Du mangler lidt</h2>${f.naesten.slice(0, 8).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.join(', '))}</span></a>`).join('')}` : ''}`;
 }
 
@@ -974,15 +936,6 @@ const H = {
     S.port = Math.max(1, Math.min(50, S.port + Number(el.dataset.v)));
     portValg[S.r.id] = S.port; tegnIng();
   },
-  async koeb(el) { const i = ingAf(S.r)[el.dataset.v]; await laegPaaListen([visIng(i, S.port / (S.r.portioner || S.port))]); },
-  async koebAlle() { const f = S.port / (S.r.portioner || S.port); await laegPaaListen(ingAf(S.r).map(i => visIng(i, f))); },
-  async koebForslag(el) { await laegPaaListen(el.dataset.v.split('|')); },
-  async rydKoebt() {
-    if (!document.querySelector('[data-vare]:checked')) return toast('Ingen varer har flueben.');
-    if (!await bekraeft('Vil du fjerne alle varer med flueben?', 'Fjern')) return;
-    await api('indkob?krydset=eq.true', { method: 'DELETE' });
-    route();
-  },
   async stjerne(el) {
     const antal = Number(el.dataset.v);
     await api('stjerner?on_conflict=opskrift_id,bruger_id', { method: 'POST', flet: true, body: { opskrift_id: S.r.id, bruger_id: ENHED, antal } });
@@ -1109,7 +1062,7 @@ const H = {
     } catch (err) { el.disabled = false; throw err; }
   },
   async eksport() {
-    const tabeller = ['opskrifter', 'tips', 'metoder', 'favoritter', 'stjerner', 'indkob', 'laerred'], data = { hentet: new Date().toISOString() };
+    const tabeller = ['opskrifter', 'tips', 'metoder', 'favoritter', 'stjerner', 'laerred'], data = { hentet: new Date().toISOString() };
     for (const t of tabeller) data[t] = await api(`${t}?select=*`);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));

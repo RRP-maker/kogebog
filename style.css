@@ -92,9 +92,6 @@ main > .knap.stor { align-self: stretch; }
 .knap.fare { color: var(--tomat-mork); }
 .knap.stor { font-size: 24px; padding: 0 24px; border-radius: 32px; }
 .rund { width: 64px; height: 64px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 24px; padding: 0; flex: none; }
-/* indkøbskurven ved en ingrediens: ingen cirkel, så rækkerne holder 32 px */
-.lille-rund { width: 48px; height: 32px; border-radius: 16px; font-size: 20px; line-height: 32px; background: none; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
-.lille-rund:active { background: rgba(255, 255, 255, .8); }
 .rakke { display: flex; flex-wrap: wrap; gap: 32px 10px; margin: var(--m) 0 var(--pt); align-items: flex-start; }
 @media (hover: hover) { .knap:hover:not(:disabled):not(.primaer), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: rgba(255, 255, 255, .8); } .knap.primaer:hover:not(:disabled) { background: var(--tomat-mork); } }
 
@@ -188,7 +185,6 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
     repeating-linear-gradient(90deg, var(--streg) 0 6px, transparent 6px 10px) left 0 bottom calc(32px - var(--l0)) / 100% 1px no-repeat,
     linear-gradient(var(--dæk), var(--dæk)) left 0 bottom calc(32px - var(--l0) - 1px) / 100% 2px no-repeat;
 }
-#ing li.skaerm { display: block; background: none; padding: var(--m) 0 var(--pt); }
 .ing.tjek li { background: none; }
 .ing.tjek label { display: flex; align-items: center; margin: 0; width: 100%; min-height: 32px; }
 .ing.tjek label span { color: inherit; font-size: inherit; }
@@ -304,7 +300,6 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 .maerke span { font-size: 40px; line-height: 48px; display: block; }
 .maerke b { font: 22px/24px var(--hoved); font-weight: 400; display: block; }
 .maerke small { margin: 4px 0 0; }
-.koebsforslag .knap { margin-top: 8px; }
 
 /* Ark */
 #ark { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
