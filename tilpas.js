@@ -58,6 +58,7 @@ const Tilpas = (() => {
   const feltTekster = new Set(['Hvad kan jeg lave?', 'Opskrifter', 'Tips', 'Tilføj med Claude', 'Mere', 'Ny opskrift', 'Nyt tip', ...lager.hent('tpFeltTekster', [])]);
   // Standardværdier: placeringer, størrelser, tekster og farver, som felterne har efter gennemgangen. «Nulstil» går tilbage til dem.
   const STANDARD = {
+    "forside|hvad-skal-vi-lave": {}, "forslag|hvad-kan-jeg-lave": {}, "Ingredienser": {}, // tomme: feltet arver ikke fra teksten
     "Kopiér besked": {"s": 20, "z": "s", "p": [196, -72]},
     "Sæt ind": {"s": 20, "z": "s", "p": [100, -20]},
     "Ryd": {"p": [-257.19, -4]},
