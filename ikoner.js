@@ -7,6 +7,7 @@ const Ikoner = (() => {
     gryde: `<path d="M5 10h14v4.5a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z" fill="var(--i1,#4a9fb5)"/><path d="M3.5 10h17"/><path d="M5 8.5q7-5 14 0"/><circle cx="12" cy="5.2" r="1.1" fill="var(--i2,#ffd95a)"/><path d="M9.5 14.2v.8M14.5 14.2v.8"/><path d="M11 16.4q1 .9 2 0"/>`,
     ske: `<path d="M10.5 10.5 19.6 19.6" stroke-width="3.8"/><ellipse cx="7.6" cy="7.6" rx="3.5" ry="5.6" transform="rotate(-45 7.6 7.6)" fill="var(--i1,#a0e2b2)"/><path d="M12.6 12.6 19.6 19.6" stroke="var(--i1,#a0e2b2)" stroke-width="1.3"/><path d="M5 6.2a3.3 3.3 0 0 1 1.6-1.6" stroke="#fff" stroke-width="1.2"/>`,
     paere: `<path d="M12 3.5a5.5 5.5 0 0 0-3.2 10c.5.4.8 1 .8 1.6v.4h4.8v-.4c0-.6.3-1.2.8-1.6A5.5 5.5 0 0 0 12 3.5z" fill="var(--i1,#ffd95a)"/><path d="M9.8 18.2h4.4M10.6 20.5h2.8"/><path d="M12 7.5v3"/>`,
+    tag: `<path d="M4 12.5V5a1 1 0 0 1 1-1h7.5l7.5 7.5-8.5 8.5z" fill="var(--i1,#ffd95a)"/><circle cx="8.5" cy="8.5" r="1.3"/>`,
     kurv: `<path d="M3.5 10h17l-1.6 8.6a1.5 1.5 0 0 1-1.5 1.2H6.6a1.5 1.5 0 0 1-1.5-1.2z" fill="var(--i1,#ffcdc6)"/><path d="M8 10l3-5.5M16 10l-3-5.5"/><path d="M9 13.5v3.5M12 13.5v3.5M15 13.5v3.5"/>`,
     gnist: `<path d="M10 3.5l1.6 5 5 1.6-5 1.6-1.6 5-1.6-5-5-1.6 5-1.6z" fill="var(--i1,#ffd95a)"/><path d="M18 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="var(--i2,#ffcdc6)"/>`,
     blyant: `<path d="M4 20l1-4.5L15.8 4.7a1.8 1.8 0 0 1 2.5 0l1 1a1.8 1.8 0 0 1 0 2.5L8.5 19z" fill="var(--i1,#ffd95a)"/><path d="M14.3 6.2l3.5 3.5M4 20l4.5-1-3.5-3.5z"/>`,

@@ -277,6 +277,7 @@ async function route() {
     if (a === 'forslag') return await forslagSide();
     if (a === 'import') return importSide();
     if (a === 'mere') return mereSide();
+    if (a === 'hjemme') return await Hjemme.side();
     if (!TYPER[a]) { document.body.dataset.side = 'forside'; return await forside(); }
     if (b === 'ny') return await formular(a);
     if (c === 'rediger') return await formular(a, b);
@@ -300,6 +301,7 @@ async function forside() {
     <h2>Favoritter</h2>
     <div id="favoritter"><p class="lille">Henter…</p></div>
     <nav class="genveje">
+      <a class="knap" href="#/hjemme">${ik('tag')} Hvad har du derhjemme?</a>
       <a class="knap" href="#/forslag">${ik('kurv')} Hvad kan jeg lave?</a>
     </nav>`;
   Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Metode og Tips kan du lære, hvordan man gør. Favoritter er dem med stjerne.');
