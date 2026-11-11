@@ -3,13 +3,16 @@
   color-scheme: light;
   /* Farveroller: lyst tema. Mørkt tema overskriver dem i [data-tema="moerk"] nederst i filen. */
   --papir: #fffdf5; --papir-rgb: 255, 253, 245; --linje: #cfe0f2; --margen: #f0a3a3;
-  --blaek: #22386b; --blaek-rgb: 34, 56, 107; --blyant: #56638a; --skyg-rgb: 34, 56, 107;
+  --blaek: #22386b; --blaek-rgb: 34, 56, 107; --blyant: #56638a; --skyg-rgb: 34, 56, 107; --skyg-hex: #22386b;
   --paa-lys: #22386b; /* blæk på de bløde gule, grønne og lyserøde flader: samme i begge temaer */
   --tomat: #d9432f; --tomat-mork: #b5301f; --smor: #ffd95a; --mynte: #c4ebcd; --rosa: #ffcdc6;
   --gryde: #4a9fb5; --gryde-mork: #2a768b; --guld: #e8a400;
   --tp-groen: #2a7a46; --tp-guld: #8a5f00; --tp-rosa: #b8335f;
   /* Symbolernes flader */
   --ik-smoer: #ffd95a; --ik-rosa: #ffcdc6; --ik-tomat: #e5604d; --ik-himmel: #a9d6e6; --ik-mynte: #c4ebcd; --ik-gryde: #4a9fb5; --ik-orange: #f08a3c; --ik-brod: #e8b25c; --ik-guld: #e8a400; --ik-blad: #6fbf86; --ik-papir: #fffdf5; --ik-hvid: #ffffff;
+  --himmel: #9fd6e6; --rod-felt: #c2321f; --gryde-felt: #2a768b;
+  --gul: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); --gul-svag: rgba(255, 217, 90, .4); --gul-staerk: rgba(255, 217, 90, .7); --blaa-svag: rgba(111, 183, 217, .22);
+  --h-skaft: #d9a066; --h-kind: #ff9d94; --h-indre: #17404f; --h-tunge: #ff8f9c; --h-tungestreg: #d9566b;
   --link: #0b5c9c; --stjerne-fra: #8089aa;
   --fejl-bg: #fff0ee; --fejl-tekst: #7a1f16;
   --glas: linear-gradient(135deg, rgba(255, 255, 255, .66), rgba(255, 255, 255, .3));
@@ -210,7 +213,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .trin > li::before { content: counter(trin); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--smor); color: var(--paa-lys); display: grid; place-items: center; font: 22px/1 var(--hoved); }
 .vejledning .lille { margin: 0; }
 .begreb {
-  font: inherit; color: var(--link); background: rgba(111, 183, 217, .22); border: 0; border-bottom: 2px solid var(--link);
+  font: inherit; color: var(--link); background: var(--blaa-svag); border: 0; border-bottom: 2px solid var(--link);
   border-radius: 6px 6px 0 0; padding: 0 4px; margin: 0; cursor: pointer; transition: background-color .2s;
 }
 .begreb.udpeget { background: var(--smor); color: var(--paa-lys); }
@@ -255,7 +258,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .rk-felt { position: relative; flex: 1; min-width: 0; }
 .rk-tekst { resize: none; overflow: hidden; min-height: 64px; margin: 0; padding-right: 40px; }
 .rk[data-niv="1"] .rk-tekst { font-size: 19px; }
-.rk.over .rk-tekst { font: 26px/32px var(--hoved); background: rgba(255, 217, 90, .4); }
+.rk.over .rk-tekst { font: 26px/32px var(--hoved); background: var(--gul-svag); }
 .rk-fjern { position: absolute; right: 6px; top: 17px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: rgba(var(--blaek-rgb), .1); color: var(--blyant); font: 20px/1 sans-serif; cursor: pointer; }
 .rk-knap {
   flex: none; width: 56px; height: 64px; padding: 2px 0; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -305,7 +308,7 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 .ur { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 24px; padding: 4px 6px 4px 16px; margin-top: 6px; animation: ind .22s var(--ud); }
 .ur span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .ur b { font-variant-numeric: tabular-nums; }
-.ur.faerdig { background: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); color: var(--paa-lys); }
+.ur.faerdig { background: var(--gul); color: var(--paa-lys); }
 .ur button { font: 26px/1 sans-serif; width: 40px; height: 40px; border: 0; background: none; color: var(--blaek); cursor: pointer; flex: none; }
 
 
@@ -365,17 +368,17 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bott
 .h-prikker { fill: rgba(255, 255, 255, .75); }
 .h-arm { fill: none; stroke: var(--gryde-mork); stroke-width: 6; stroke-linecap: round; }
 .h-haand { fill: var(--gryde-mork); }
-.h-skaft, .h-skeblad { fill: #d9a066; }
+.h-skaft, .h-skeblad { fill: var(--h-skaft); }
 .h-fod { fill: var(--paa-lys); }
-.h-kind { fill: #ff9d94; }
-.h-hjerte { fill: #ff9d94; opacity: .9; }
+.h-kind { fill: var(--h-kind); }
+.h-hjerte { fill: var(--h-kind); opacity: .9; }
 .h-glans { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: 3.5; stroke-linecap: round; }
 .h-knop { fill: var(--smor); stroke: var(--gryde-mork); stroke-width: 1.5; }
 .h-laaglaebe { fill: var(--smor); stroke: var(--gryde-mork); stroke-width: 1.5; }
 .h-tand { fill: #fff; stroke: var(--gryde-mork); stroke-width: 1.2; }
-.h-indre { fill: #17404f; display: none; }
-.h-tunge { fill: #ff8f9c; stroke: #d9566b; stroke-width: 1.2; }
-.h-tungestreg { fill: none; stroke: #d9566b; stroke-width: 1.2; stroke-linecap: round; }
+.h-indre { fill: var(--h-indre); display: none; }
+.h-tunge { fill: var(--h-tunge); stroke: var(--h-tungestreg); stroke-width: 1.2; }
+.h-tungestreg { fill: none; stroke: var(--h-tungestreg); stroke-width: 1.2; stroke-linecap: round; }
 .h-hvid { fill: #fff; stroke: var(--paa-lys); stroke-width: 1.6; }
 .h-sort { fill: var(--paa-lys); }
 .h-blink { fill: #fff; }
@@ -469,7 +472,7 @@ body.tilpas [data-laast] { outline: 2px solid var(--tomat); }
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
   background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
 }
-body.tilpas #tilpas-knap { background: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); color: var(--paa-lys); }
+body.tilpas #tilpas-knap { background: var(--gul); color: var(--paa-lys); }
 body.tilpas-menu #hjaelper, body.tilpas-menu #hjaelper-vis { bottom: calc(70px + env(safe-area-inset-bottom)); } /* plads til knappen */
 body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjaelper-vis { bottom: calc(160px + env(safe-area-inset-bottom)); }
 .ark-kort .rakke.venstre { justify-content: flex-start; }
@@ -567,7 +570,7 @@ input.felt, select.felt { padding: 0 12px; }
   background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
 }
 #tilpas-fortryd:disabled, #tilpas-gentag:disabled { opacity: .4; cursor: default; }
-.sw.glas { position: relative; overflow: hidden; border: 1px solid var(--glaskant); background: linear-gradient(135deg, #ffd95a 0 34%, #9fd6e6 34% 67%, #ffbeb6 67%); }
+.sw.glas { position: relative; overflow: hidden; border: 1px solid var(--glaskant); background: linear-gradient(135deg, var(--smor) 0 34%, var(--himmel) 34% 67%, var(--rosa) 67%); }
 .sw.glas::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--glas); -webkit-backdrop-filter: blur(3px) saturate(1.8); backdrop-filter: blur(3px) saturate(1.8); box-shadow: var(--glans); }
 .sw.glas::after { content: ""; position: absolute; left: 20%; top: 12%; width: 46%; height: 22%; border-radius: 50%; background: rgba(255, 255, 255, .85); transform: rotate(-30deg); }
 body.tilpas [data-ikkeflyt] { outline-style: solid; outline-color: var(--blyant); cursor: pointer; }
@@ -634,7 +637,7 @@ input[type=text], input[type=number], input[type=search], textarea, select {
 
 /* Ingen glød omkring felter */
 input:focus, textarea:focus, select:focus, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; border-color: var(--gryde-mork); }
-@keyframes hjblink { 0%, 100% { background-color: var(--felt-bg); } 30% { background-color: rgba(255, 217, 90, .7); } }
+@keyframes hjblink { 0%, 100% { background-color: var(--felt-bg); } 30% { background-color: var(--gul-staerk); } }
 
 /* «Størst»: skriften er 34 px, men linjehøjden er stadig 32 px, så teksten står på linjerne og ikke får luft mellem linjerne */
 .tp-staerst { line-height: 32px; } /* som al anden tekst: 32 px, så rækkerne holder sig på linjerne */
@@ -662,7 +665,7 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 [data-tema="moerk"] {
   color-scheme: dark;
   --papir: #1a1f2e; --papir-rgb: 26, 31, 46; --linje: #2b3450; --margen: #7a4350;
-  --blaek: #e9edf9; --blaek-rgb: 233, 237, 249; --blyant: #aab3d0; --skyg-rgb: 0, 0, 0;
+  --blaek: #e9edf9; --blaek-rgb: 233, 237, 249; --blyant: #aab3d0; --skyg-rgb: 0, 0, 0; --skyg-hex: #000000;
   --tomat: #ff7561; --tomat-mork: #ff9d8c; --smor: #ffd95a; --mynte: #bfe8c9; --rosa: #ffcdc6;
   --gryde: #5bb0c6; --gryde-mork: #86cde0; --guld: #ffc933;
   --tp-groen: #7fd49a; --tp-guld: #ffc933; --tp-rosa: #ff8fb3;

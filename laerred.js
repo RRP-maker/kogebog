@@ -3,13 +3,14 @@ const Laerred = (() => {
   const B = 340, H = 300; // fast målestok, så ting står samme sted på alle skærme
   const FIGURER = [{ n: 'stjerne', t: 'stjerne' }, { n: 'hjerte', t: 'hjerte' }, { n: 'gulerod', t: 'gulerod' }, { n: 'tomat', t: 'tomat' }, { n: 'ost', t: 'ost' },
     { n: 'baguette', t: 'baguette' }, { n: 'aeg', t: 'spejlæg' }, { n: 'cupcake', t: 'cupcake' }, { n: 'tommel', t: 'tommelfinger' }];
+  const rolle = x => getComputedStyle(document.documentElement).getPropertyValue(x).trim(); // farve fra temaet (style.css)
   const ikonNavn = el => el.slags === 'figur' && String(el.indhold).startsWith('ikon:') ? el.indhold.slice(5) : null; // ældre figurer er emojis og vises som tekst
   let stage, lag, tr, boks, opskriftId, redigerer = false;
 
   function knude(el, billede) {
     const faelles = { x: el.x, y: el.y, rotation: el.rotation, scaleX: el.skala, scaleY: el.skala, draggable: redigerer, id: el.id };
     const k = billede
-      ? new Konva.Image({ ...faelles, image: billede, ...(ikonNavn(el) ? { width: 64, height: 64 } : { width: 150, height: 150 * billede.height / billede.width, cornerRadius: 6, shadowColor: '#22386b', shadowOpacity: 0.25, shadowBlur: 6, shadowOffsetY: 2 }) })
+      ? new Konva.Image({ ...faelles, image: billede, ...(ikonNavn(el) ? { width: 64, height: 64 } : { width: 150, height: 150 * billede.height / billede.width, cornerRadius: 6, shadowColor: rolle('--skyg-hex'), shadowOpacity: 0.25, shadowBlur: 6, shadowOffsetY: 2 }) })
       : new Konva.Text({ ...faelles, text: el.indhold, fontSize: 52 });
     k.offsetX(k.width() / 2); k.offsetY(k.height() / 2);
     k.on('dragend transformend', () => gem(k));
@@ -46,7 +47,7 @@ const Laerred = (() => {
     if (!window.Konva) { boks.innerHTML = '<p class="lille">Lærredet kan ikke vises lige nu. Tjek internettet.</p>'; return false; }
     stage = new Konva.Stage({ container: boks, width: B, height: H });
     lag = new Konva.Layer(); stage.add(lag);
-    tr = new Konva.Transformer({ keepRatio: true, enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], anchorSize: 16, anchorCornerRadius: 8, borderStroke: '#d9432f', anchorStroke: '#d9432f', rotateAnchorOffset: 28 });
+    tr = new Konva.Transformer({ keepRatio: true, enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], anchorSize: 16, anchorCornerRadius: 8, borderStroke: rolle('--tomat'), anchorStroke: rolle('--tomat'), rotateAnchorOffset: 28 });
     lag.add(tr);
     stage.on('click tap', e => { if (e.target === stage) vaelg(null); });
     tilpas();

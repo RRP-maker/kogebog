@@ -19,7 +19,7 @@ const Tema = (() => {
   const anvend = () => {
     const v = valg(), moerk = v === 'moerk' || (v === 'auto' && mq.matches);
     document.documentElement.dataset.tema = moerk ? 'moerk' : 'lys';
-    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = moerk ? '#1a1f2e' : '#fffdf5';
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--papir').trim();
   };
   mq.addEventListener('change', anvend);
   // Udskrift er altid på lyst papir
