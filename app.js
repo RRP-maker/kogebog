@@ -723,7 +723,7 @@ async function forslagSide() {
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Hvad kan jeg lave?</h1>
     <div id="forslag-nu"></div>
     <div id="hj-boks"></div>
-    <button type="button" class="knap" data-h="sorterAndet">${ik('gnist')} Sortér «Andet» med Claude</button>
+    <button type="button" class="knap" data-h="sorterAndet">${ik('gnist')} Sortér og ret ingredienser med Claude</button>
     <div id="forslag-resten"></div>
     <button type="button" class="knap" data-h="ingOversigt">${ik('tag')} Se alle ingredienser</button>`;
   Hjaelper.side('Skriv det, du har derhjemme, ét ord i hvert felt. Så finder jeg retter, du kan lave, og siger, hvad du kan købe for at lave flere.');

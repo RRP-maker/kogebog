@@ -56,13 +56,16 @@ const Katalog = (() => {
   let andre = [], efterSortering = null, besked = '';
   async function sorterAndet(efter) {
     await hent();
-    andre = ing.filter(i => !i.kategori_id); efterSortering = efter;
-    if (!andre.length) { toast('Der står ikke noget under «Andet».'); return; }
-    besked = `Sorter disse ingredienser i kategorier til min kogebog-app.
+    andre = [...ing].sort((a, b) => a.navn.localeCompare(b.navn, 'da')); efterSortering = efter;
+    if (!andre.length) { toast('Der er ingen ingredienser endnu.'); return; }
+    const uden = andre.filter(i => !i.kategori_id).length;
+    besked = `Sorter og ret disse ingredienser til min kogebog-app.
 
 Brug præcis en af disse kategorier: ${kategorier().join(', ')}.
 Passer ingen, så skriv "Andet".
 Ret også stavefejl i navnet, fx "grønsagsbouillon" -> "grøntsagsbouillon". Skriv det rettede navn i "rettet". Er navnet rigtigt, så skriv det samme navn igen.
+
+Står en kategori i parentes, er den allerede sat. Behold den. Tag KUN ingredienser med, som mangler kategori, eller hvor navnet skal rettes.
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingrediensen som nøgle):
 {
@@ -71,10 +74,10 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingre
 }
 
 Ingredienser:
-${andre.map(i => '- ' + i.navn).join('\n')}
+${andre.map(i => '- ' + i.navn + (i.kategori_id ? ` (${(kat.find(c => c.id === i.kategori_id) || {}).navn || 'Andet'})` : '')).join('\n')}
 `;
     const kodet = encodeURIComponent(besked), n = andre.length;
-    const d = ark(`<h2>Sortér «Andet» med Claude</h2><small>${n} ${n === 1 ? 'ingrediens' : 'ingredienser'} står uden kategori.</small>
+    const d = ark(`<h2>Sortér og ret med Claude</h2><small>${n} ${n === 1 ? 'ingrediens' : 'ingredienser'}. ${uden} står uden kategori.</small>
       <ol class="trin vejledning">
         <li>Tryk her, så kopieres beskeden til Claude.
           <button type="button" class="knap primaer" data-h="katKopier">${ik('gnist')} Kopiér besked</button><p class="lille" id="katnote" role="status"></p></li>
@@ -129,7 +132,7 @@ ${andre.map(i => '- ' + i.navn).join('\n')}
       for (const i of andre) {
         const r = svar[i.navn_norm];
         if (!r) continue;
-        const kid = r.kat ? katId(r.kat) : null;
+        const kid = r.kat && !i.kategori_id ? katId(r.kat) : null; // en kategori, der allerede er sat, ændres ikke
         if (r.rettet && r.rettet !== i.navn_norm) {
           const fund = ing.find(x => x.navn_norm === r.rettet && x.id !== i.id);
           if (fund) { // det rettede navn findes: ingredienserne lægges sammen
