@@ -64,7 +64,7 @@ const Hjemme = (() => {
     const html = sorter.map(g => {
       const rader = D.hj.filter(h => ((ingAf(h.ingrediens_id) || {}).kategori_id || null) === g.id && (g.id || !katAf(((ingAf(h.ingrediens_id) || {}).kategori_id))))
         .sort((x, y) => navn(x).localeCompare(navn(y), 'da'));
-      return rader.length ? `<h3 class="hj-grp">${esc(g.navn)}</h3>${rader.map(raekke).join('')}` : '';
+      return rader.length ? `<h3 class="hj-grp tekst-l">${esc(g.navn)}</h3>${rader.map(raekke).join('')}` : '';
     }).join('');
     el.innerHTML = html || '<p class="tomt">Der står ikke noget endnu. Skriv den første ting i feltet ovenfor.</p>';
     if (fokus) { const x = el.querySelector(`.hj-rk[data-id="${fokus.id}"] .${fokus.k}`); if (x) x.focus(); }

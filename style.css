@@ -132,7 +132,7 @@ main > .knap.stor { align-self: stretch; }
 .chips > span, .chip { position: relative; z-index: 0; height: 32px; font-size: 17px; line-height: 32px; color: var(--blaek); }
 .chips > span { padding: 0 12px; }
 .chips > span::before { content: ""; position: absolute; z-index: -1; inset: 3px 0 3px; border-radius: 13px; background: rgba(160, 226, 178, .55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
-.lille { color: var(--blyant); font-size: 18px; }
+.lille { color: var(--blyant); font-size: 17px; }
 .tomt { text-align: center; color: var(--blyant); padding: 32px 8px; }
 .tekst { white-space: pre-wrap; overflow-wrap: anywhere; }
 .tilbage { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 32px; padding: 0 14px 0 10px; border-radius: 16px; font-size: 18px; color: var(--blaek); line-height: 32px; touch-action: manipulation; top: calc(var(--l0) - 32px); } /* lille felt: kanterne på to linjer */
@@ -468,7 +468,7 @@ body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none
 .chip:disabled { opacity: .45; cursor: default; }
 
 /* Hvad har du derhjemme? */
-.hj-grp { font: 26px/32px var(--hoved); font-weight: 400; margin: 32px 0 0; color: var(--gryde-mork); }
+.hj-grp { font-family: var(--hoved); font-weight: 400; margin: 32px 0 0; color: var(--gryde-mork); }
 .hj-rk { display: grid; grid-template-columns: 52px 64px minmax(0, 1fr) 40px 40px; gap: 4px; align-items: center; }
 .hj-rk input, .hj-rk select { margin: 0; padding: 14px 8px; }
 .hj-rk .hj-mgd { text-align: center; padding: 14px 2px; }
