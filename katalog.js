@@ -52,20 +52,21 @@ const Katalog = (() => {
   }
   const kategorier = () => sorteret().map(k => k.navn);
 
-  // Knappen i Hvad kan jeg lave?: bed Claude om at sortere alt under «Andet»
-  let andre = [], efterSortering = null, besked = '';
-  async function sorterAndet(efter) {
-    await hent();
-    andre = [...ing].sort((a, b) => a.navn.localeCompare(b.navn, 'da')); efterSortering = efter;
-    if (!andre.length) { toast('Der er ingen ingredienser endnu.'); return; }
-    const uden = andre.filter(i => !i.kategori_id).length;
+  // Knappen i Hvad kan jeg lave?: bed Claude om at sortere og rette ingredienserne
+  let andre = [], efterSortering = null, besked = '', modus = 'alle'; // modus: «alle» (ret alle kategorier) eller «andet» (kun dem uden kategori)
+  const MODUSNAVN = { alle: 'Ret alle kategorier', andet: 'Ret kun Andet' };
+  function bygBesked() {
+    const alle = [...ing].sort((a, b) => a.navn.localeCompare(b.navn, 'da'));
+    andre = modus === 'alle' ? alle : alle.filter(i => !i.kategori_id);
+    const regel = modus === 'alle'
+      ? 'Står en kategori i parentes, er det den nuværende. Tag KUN ingredienser med, hvor kategorien skal ændres, eller hvor navnet skal rettes.'
+      : 'Tag alle ingredienserne med.';
     besked = `Sorter og ret disse ingredienser til min kogebog-app.
 
 Brug præcis en af disse kategorier: ${kategorier().join(', ')}.
 Passer ingen, så skriv "Andet".
 Ret også stavefejl i navnet, fx "grønsagsbouillon" -> "grøntsagsbouillon". Skriv det rettede navn i "rettet". Er navnet rigtigt, så skriv det samme navn igen.
-
-Står en kategori i parentes, er den allerede sat. Behold den. Tag KUN ingredienser med, som mangler kategori, eller hvor navnet skal rettes.
+${regel}
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingrediensen som nøgle):
 {
@@ -74,20 +75,36 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingre
 }
 
 Ingredienser:
-${andre.map(i => '- ' + i.navn + (i.kategori_id ? ` (${(kat.find(c => c.id === i.kategori_id) || {}).navn || 'Andet'})` : '')).join('\n')}
+${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.find(c => c.id === i.kategori_id) || {}).navn || 'Andet'})` : '')).join('\n')}
 `;
-    const kodet = encodeURIComponent(besked), n = andre.length;
-    const d = ark(`<h2>Sortér og ret med Claude</h2><small>${n} ${n === 1 ? 'ingrediens' : 'ingredienser'}. ${uden} står uden kategori.</small>
+  }
+  function visBesked() {
+    bygBesked();
+    const kodet = encodeURIComponent(besked), n = andre.length, uden = ing.filter(i => !i.kategori_id).length;
+    $('#katClaude').href = 'https://claude.ai/new' + (kodet.length < 7000 ? '?q=' + kodet : '');
+    $('#katantal').textContent = `${n} ${n === 1 ? 'ingrediens' : 'ingredienser'} sendes. ${uden} står uden kategori.`;
+    $('#katModus').textContent = MODUSNAVN[modus];
+  }
+  async function sorterAndet(efter) {
+    await hent(); efterSortering = efter; modus = 'alle';
+    if (!ing.length) { toast('Der er ingen ingredienser endnu.'); return; }
+    const d = ark(`<div class="ark-top"><h2>Sortér og ret med Claude</h2>
+        <button type="button" class="knap mini modusknap" id="katModus" data-tpid="kat-modus" data-h="katModus"></button></div>
+      <small id="katantal"></small>
       <ol class="trin vejledning">
         <li>Tryk her, så kopieres beskeden til Claude.
-          <button type="button" class="knap primaer" data-tpid="kopier-besked" data-h="katKopier">${ik('gnist')} Kopiér besked</button><p class="lille" id="katnote" role="status"></p></li>
+          <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="kat-kopier" data-h="katKopier">${ik('gnist')} Kopiér besked</button></div></li>
         <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt.
-          <a class="knap" data-tpid="aabn-claude" id="katClaude" href="https://claude.ai/new${kodet.length < 7000 ? '?q=' + kodet : ''}" target="_blank" rel="noopener">Åbn Claude ›</a></li>
+          <div class="rakke venstre"><a class="knap mini" data-tpid="kat-aabn" id="katClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
         <li>Kopiér Claudes svar, og sæt det ind her:
-          <textarea id="katsvar" rows="5" placeholder='{ "gulerødder": "Grøntsager" }' aria-label="Claudes svar"></textarea></li>
+          <textarea id="katsvar" class="felt-s" rows="1" data-husk="katSvar" placeholder='{ "gulerødder": { "kategori": "Grøntsager" } }' aria-label="Claudes svar"></textarea>
+          <div class="felt-knapper"><button type="button" class="knap mini" data-tpid="kat-saet" data-h="saetInd" data-v="katsvar">Sæt ind</button>
+            <span class="hoejre"><button type="button" class="knap mini" data-tpid="kat-fortryd" data-h="fortrydRyd" data-v="katsvar" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="kat-ryd" data-h="rydFelt" data-v="katsvar">Ryd</button></span></div></li>
       </ol>
       <div id="arkfejl"></div>
-      <div class="rakke"><button type="button" class="knap" data-tpid="luk" data-h="lukArk">Luk</button><button type="button" class="knap primaer" data-h="katGem">Gem kategorier</button></div>`);
+      <div class="rakke"><button type="button" class="knap mini" data-tpid="luk" data-h="lukArk">Luk</button><button type="button" class="knap mini gron" data-tpid="gem" data-h="katGem">Gem kategorier</button></div>`);
+    $('#katsvar', d).value = lager.hent('katSvar', '');
+    visBesked();
     $('.ark-bag', d).addEventListener('click', lukArk);
   }
   // Læser Claudes svar: { "navn": "Kategori" } eller en liste af { navn, kategori }
@@ -120,10 +137,14 @@ ${andre.map(i => '- ' + i.navn + (i.kategori_id ? ` (${(kat.find(c => c.id === i
         <div class="rakke"><button type="button" class="knap" data-tpid="luk" data-h="lukArk">Luk</button></div>`);
       $('.ark-bag', d).addEventListener('click', lukArk);
     },
+    katModus() {
+      if (modus === 'alle' && !ing.some(i => !i.kategori_id)) { toast('Der står ikke noget under «Andet».'); return; }
+      modus = modus === 'alle' ? 'andet' : 'alle'; visBesked();
+    },
     async katKopier() {
       let ok = false;
       try { await navigator.clipboard.writeText(besked); ok = true; } catch (e) { ok = await kopier(besked); }
-      $('#katnote').textContent = ok ? 'Kopieret.' : 'Beskeden kunne ikke kopieres. Prøv igen.';
+      toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres. Prøv igen.');
     },
     async katGem() {
       const svar = laesKat($('#katsvar').value);
@@ -132,7 +153,7 @@ ${andre.map(i => '- ' + i.navn + (i.kategori_id ? ` (${(kat.find(c => c.id === i
       for (const i of andre) {
         const r = svar[i.navn_norm];
         if (!r) continue;
-        const kid = r.kat && !i.kategori_id ? katId(r.kat) : null; // en kategori, der allerede er sat, ændres ikke
+        const kid = r.kat && (modus === 'alle' || !i.kategori_id) ? katId(r.kat) : null; // «Ret alle kategorier» må også ændre en kategori, der er sat
         if (r.rettet && r.rettet !== i.navn_norm) {
           const fund = ing.find(x => x.navn_norm === r.rettet && x.id !== i.id);
           if (fund) { // det rettede navn findes: ingredienserne lægges sammen
@@ -148,9 +169,10 @@ ${andre.map(i => '- ' + i.navn + (i.kategori_id ? ` (${(kat.find(c => c.id === i
           rettet++; if (kid) sat++;
           continue;
         }
-        if (!kid) continue;
+        if (!kid || kid === i.kategori_id) continue;
         await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: kid } }); sat++;
       }
+      lager.gem('katSvar', '');
       lukArk();
       const dele = [sat && `${sat} sorteret`, rettet && `${rettet} stavefejl rettet`].filter(Boolean);
       toast(dele.length ? dele.join(', ') : 'Ingen af svarene passede');

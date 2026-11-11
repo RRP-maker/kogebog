@@ -47,8 +47,14 @@ const Tilpas = (() => {
   let til = lager.hent('tilpasTil', false), timer, aktiv = lager.hent('tilpasAktiv', true), server = false, data = lager.hent('tilpas', {});
   // Hvert felt har et id (data-tpid). Har feltet ikke selv et, laves det af siden og teksten. Felter, der hænger sammen, får samme data-tpid i koden.
   // Tilpasninger, der før var gemt på teksten, gælder stadig, til feltet ændres første gang (arv).
-  const arv = {};
-  const get = k => data[k] !== undefined ? data[k] : (arv[k] !== undefined ? data[arv[k]] : undefined);
+  const arv = {}, arvFelt = {};
+  const get = k => {
+    if (data[k] !== undefined) return data[k];
+    if (arv[k] === undefined || data[arv[k]] === undefined) return undefined;
+    if (arvFelt[k] !== false) return data[arv[k]];
+    const { b, z, l, m, p, ...rest } = data[arv[k]]; // overskrifter og tekster arver ikke feltets farve, størrelse eller placering fra en knap med samme tekst
+    return rest;
+  };
   const tomb = k => arv[k] !== undefined && data[arv[k]] !== undefined; // en nulstillet tilpasning huskes, så den gamle ikke dukker op igen
   const slug = s => String(s).toLowerCase().replace(/[^a-zæøå]+/g, '-').replace(/^-|-$/g, '');
   const sideNavn = () => (location.hash || '#/').replace(/^#\/?/, '').split('/').filter(Boolean).map(s => /\d/.test(s) ? ':id' : s).join('/') || 'forside';
@@ -68,7 +74,7 @@ const Tilpas = (() => {
       const leg = el.dataset.orgtekst || tekstAf(el);
       const k = el.dataset.org ?? idAf(el, leg);
       if (!egnet(el, el.dataset.tpid ? k : leg)) return;
-      el.dataset.org = k; if (k !== leg) arv[k] = leg;
+      el.dataset.org = k; if (k !== leg) { arv[k] = leg; arvFelt[k] = el.matches('.knap, .tilbage, .fane'); }
       if (document.body.dataset.side === 'forside' && !(beskyttet.has(k) && beskyttet.has(leg))) { beskyttet.add(k); beskyttet.add(leg); lager.gem('tpForside', [...beskyttet]); }
       const o = get(k) || {}, ny = o.t || leg, n = noder(el);
       if (n.length && tekstAf(el) !== ny) { n[0].nodeValue = ny; n.slice(1).forEach(x => { x.nodeValue = ''; }); }

@@ -794,6 +794,7 @@ const FLERE_LINKS = `
 
 Der er flere links nedenfor. Lav én opskrift for hvert link. Svar med en liste i stedet: [ { …opskrift 1… }, { …opskrift 2… } ], stadig kun i én kodeblok.`;
 const antalLinks = t => (String(t).match(/https?:\/\/\S+/g) || []).length;
+const rydFoer = {}; // teksten før «Ryd», så den kan sættes tilbage
 const lavBesked = () => CLAUDE_BESKED.replace('§KAT§', Katalog.kategorier().join(', ') || FALDBACK_KAT);
 function importSide() {
   claudeBesked = lavBesked();
@@ -801,19 +802,18 @@ function importSide() {
   app.innerHTML = `<a class="tilbage" href="#/opskrifter">‹ Tilbage</a><h1>Tilføj med Claude</h1>
     <ol class="trin vejledning">
       <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
-        <textarea id="egen" rows="5" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
-        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-egen-saet" data-h="saetInd" data-v="egen">Sæt ind</button><button type="button" class="knap mini fare" data-tpid="import-egen-ryd" data-h="rydFelt" data-v="egen">Ryd</button></div>
-        <button class="knap primaer stor" data-tpid="kopier-besked" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
-        <p class="lille" id="kopinote" role="status"></p></li>
+        <textarea id="egen" rows="5" data-husk="importEgen" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
+        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-egen-saet" data-h="saetInd" data-v="egen">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="import-egen-fortryd" data-h="fortrydRyd" data-v="egen" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="import-egen-ryd" data-h="rydFelt" data-v="egen">Ryd</button></span></div>
+        <button class="knap primaer stor" data-tpid="kopier-besked" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
         <div class="rakke venstre"><a class="knap stor" data-tpid="aabn-claude" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
       <li>Kopiér Claudes svar, og sæt det ind her:
-        <textarea id="claudesvar" rows="7" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea>
-        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-svar-saet" data-h="saetInd" data-v="claudesvar">Sæt ind</button><button type="button" class="knap mini fare" data-tpid="import-svar-ryd" data-h="rydFelt" data-v="claudesvar">Ryd</button></div></li>
+        <textarea id="claudesvar" rows="7" data-husk="importSvar" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea>
+        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-svar-saet" data-h="saetInd" data-v="claudesvar">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="import-svar-fortryd" data-h="fortrydRyd" data-v="claudesvar" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="import-svar-ryd" data-h="rydFelt" data-v="claudesvar">Ryd</button></span></div></li>
     </ol>
     <div id="formfejl"></div>
     <button class="knap primaer stor" data-h="gemImport">Gem opskriften</button>`;
-  $('#egen').value = lager.hent('importEgen', ''); $('#claudesvar').value = lager.hent('importSvar', ''); // teksten huskes, til opskriften er gemt
+  document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); }); // teksten huskes, til opskriften er gemt
   Hjaelper.side('Her kan Claude skrive en opskrift om for dig. Kopiér først din opskrift, eller flere links. Tryk så på den første knap, åbn Claude, og sæt beskeden ind. Sæt til sidst Claudes svar ind i feltet her.');
 }
 // Læser Claudes svar. Giver { data } eller { fejl } med en besked på dansk.
@@ -1055,7 +1055,13 @@ const H = {
   // Sæt ind: lægger det kopierede i feltet med en retur efter, så næste link kan stå på en ny linje
   rydFelt(el) {
     const felt = $('#' + el.dataset.v);
-    felt.value = ''; lager.gem(felt.id === 'egen' ? 'importEgen' : 'importSvar', ''); // ingen fokus, så tastaturet ikke kommer frem
+    if (felt.value) { rydFoer[felt.id] = felt.value; const f = document.querySelector(`[data-h="fortrydRyd"][data-v="${felt.id}"]`); if (f) f.hidden = false; }
+    felt.value = ''; lager.gem(felt.dataset.husk, ''); // ingen fokus, så tastaturet ikke kommer frem
+  },
+  fortrydRyd(el) { // sætter den ryddede tekst tilbage
+    const felt = $('#' + el.dataset.v);
+    if (rydFoer[felt.id] != null) { felt.value = rydFoer[felt.id]; lager.gem(felt.dataset.husk, felt.value); delete rydFoer[felt.id]; }
+    el.hidden = true;
   },
   async saetInd(el) {
     const felt = $('#' + el.dataset.v), t = await laesUdklip();
@@ -1080,13 +1086,6 @@ const H = {
     // Hos Claude kan feltet udfyldes via adressen. Er beskeden for lang til det, åbner Claude tomt, og beskeden ligger i udklipsholderen.
     const kodet = encodeURIComponent(claudeBesked);
     $('#aabnClaude').href = 'https://claude.ai/new' + (kodet.length < 7000 ? '?q=' + kodet : '');
-    $('#kopinote').textContent = !ok ? 'Beskeden kunne ikke kopieres. Prøv igen.' : {
-      egen: 'Kopieret. Det, du skrev, er sat med i beskeden.',
-      med: 'Kopieret. Din opskrift er sat med i beskeden.',
-      igen: 'Kopieret igen.',
-      tom: 'Kopieret. Der lå ingen tekst i udklipsholderen, så beskeden er uden opskrift. Sæt opskriften ind hos Claude.',
-      naegtet: 'Kopieret. Appen måtte ikke læse din udklipsholder, så beskeden er uden opskrift. Sæt opskriften ind hos Claude.'
-    }[status];
     toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres');
   },
   async gemImport(el) {
@@ -1118,8 +1117,7 @@ const H = {
   }
 };
 document.addEventListener('input', e => { // teksten på «Tilføj med Claude» huskes, også hvis appen lukkes eller opdateres
-  if (e.target.id === 'egen') lager.gem('importEgen', e.target.value);
-  if (e.target.id === 'claudesvar') lager.gem('importSvar', e.target.value);
+  if (e.target.dataset && e.target.dataset.husk) lager.gem(e.target.dataset.husk, e.target.value);
 });
 document.addEventListener('change', e => {
   if (e.target.id === 'maks') saetMaks(e.target.value);
