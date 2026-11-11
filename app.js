@@ -98,14 +98,21 @@ const linjer = t => String(t || '').split('\n').map(s => s.trim().replace(/^(\d+
 
 // Ark: lille vindue nedefra. Bruges til bekræftelse og til at oprette tip på stedet.
 function ark(html) {
-  lukArk();
+  lukArk(true);
   const d = document.createElement('div');
   d.id = 'ark';
   d.innerHTML = `<div class="ark-bag"></div><div class="ark-kort" role="dialog" aria-modal="true">${html}</div>`;
   document.body.append(d);
   return d;
 }
-function lukArk() { const a = $('#ark'); if (a) a.remove(); }
+// Vinduet glider ned og toner ud. «straks» fjerner det med det samme, fx når et nyt vindue afløser det.
+function lukArk(straks) {
+  const a = $('#ark');
+  if (!a) return;
+  if (straks === true || matchMedia('(prefers-reduced-motion: reduce)').matches) { a.remove(); return; }
+  a.removeAttribute('id'); a.classList.add('ark-ud');
+  setTimeout(() => a.remove(), 260);
+}
 function bekraeft(tekst, ja = 'Slet') {
   return new Promise(svar => {
     const d = ark(`<p class="ark-tekst">${esc(tekst)}</p><div class="rakke">

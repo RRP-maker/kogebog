@@ -294,16 +294,21 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 
 /* Ark */
 #ark { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
-.ark-bag { position: absolute; inset: 0; background: rgba(34, 56, 107, .35); animation: toning .2s ease-out; }
+.ark-bag { position: absolute; inset: 0; background: rgba(34, 56, 107, .35); animation: toning .3s ease-out; }
 .ark-kort {
   position: relative; width: min(100%, 560px); max-height: 88dvh; overflow: auto; background: linear-gradient(rgba(255, 253, 245, .9), rgba(255, 253, 245, .78));
   border-radius: 32px 32px 0 0; padding: 20px max(16px, env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  animation: arkind .28s var(--ud);
+  animation: arkind .42s cubic-bezier(.16, 1, .3, 1);
 }
 .ark-kort h2 { margin-top: 0; }
 .ark-tekst { font-size: 24px; }
 .ark-kort .rakke { justify-content: flex-end; margin-bottom: 0; }
-@keyframes arkind { from { transform: translateY(100%); } }
+@keyframes arkind { from { transform: translateY(100%); opacity: .4; } 40% { opacity: 1; } }
+@keyframes arkud { to { transform: translateY(100%); opacity: .3; } }
+@keyframes toningud { to { opacity: 0; } }
+.ark-ud { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
+.ark-ud .ark-kort { animation: arkud .24s cubic-bezier(.5, 0, .9, .4) forwards; }
+.ark-ud .ark-bag { animation: toningud .24s ease-in forwards; }
 @keyframes toning { from { opacity: 0; } }
 
 #toast {
