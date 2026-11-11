@@ -802,13 +802,14 @@ function importSide() {
     <ol class="trin vejledning">
       <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
         <textarea id="egen" rows="5" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
-        <div class="rakke venstre"><button type="button" class="knap" data-h="saetInd">Sæt ind</button><button type="button" class="knap fare" data-h="rydEgen">Ryd</button></div>
+        <div class="rakke venstre"><button type="button" class="knap" data-h="saetInd" data-v="egen">Sæt ind</button><button type="button" class="knap fare" data-h="rydFelt" data-v="egen">Ryd</button></div>
         <button class="knap primaer stor" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button>
         <p class="lille" id="kopinote" role="status"></p></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
         <div class="rakke venstre"><a class="knap stor" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
       <li>Kopiér Claudes svar, og sæt det ind her:
-        <textarea id="claudesvar" rows="7" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea></li>
+        <textarea id="claudesvar" rows="7" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea>
+        <div class="rakke venstre"><button type="button" class="knap" data-h="saetInd" data-v="claudesvar">Sæt ind</button><button type="button" class="knap fare" data-h="rydFelt" data-v="claudesvar">Ryd</button></div></li>
     </ol>
     <div id="formfejl"></div>
     <button class="knap primaer stor" data-h="gemImport">Gem opskriften</button>`;
@@ -1052,12 +1053,12 @@ const H = {
   async fjernValgt() { if (await Laerred.fjernValgt()) toast('Fjernet'); },
   print() { window.print(); },
   // Sæt ind: lægger det kopierede i feltet med en retur efter, så næste link kan stå på en ny linje
-  rydEgen() {
-    const felt = $('#egen');
-    felt.value = ''; lager.gem('importEgen', ''); felt.focus();
+  rydFelt(el) {
+    const felt = $('#' + el.dataset.v);
+    felt.value = ''; felt.dispatchEvent(new Event('input', { bubbles: true })); felt.focus();
   },
-  async saetInd() {
-    const felt = $('#egen'), t = await laesUdklip();
+  async saetInd(el) {
+    const felt = $('#' + el.dataset.v), t = await laesUdklip();
     if (t === null) { toast('Appen må ikke læse udklipsholderen. Hold fingeren i feltet, og vælg «Sæt ind».'); return; }
     if (!t) { toast('Der er ikke noget kopieret.'); return; }
     const foer = felt.value, mellem = foer && !foer.endsWith('\n') ? '\n' : '';
