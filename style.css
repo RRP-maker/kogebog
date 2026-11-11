@@ -42,14 +42,14 @@ p { margin: 0 0 16px; }
 :focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
 
 /* Liquid Glass: gennemsigtige flader med sløring, lyskant og blød skygge. Teksten er altid helt dækkende. */
-.top, .knap, .rund, .chip, .kort, .fane, .forklaring, .maerke, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
+.top, .knap, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .maerke, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
   background: var(--glas);
   -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
   border: 1px solid var(--glaskant);
   box-shadow: var(--skygge), var(--glans);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .top, .knap, .rund, .chip, .kort, .forklaring, .maerke, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: rgba(255, 255, 255, .94); }
+  .top, .knap, .rund, .chip, .rk-knap, .kort, .forklaring, .maerke, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: rgba(255, 255, 255, .94); }
 }
 
 .top {
@@ -165,6 +165,8 @@ form .knap.stor, #app > .knap.stor { width: 100%; margin-top: 24px; }
 .trin > li { counter-increment: trin; position: relative; padding: 0 0 16px 44px; overflow-wrap: anywhere; }
 .trin > li::before { content: counter(trin); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--smor); display: grid; place-items: center; font: 22px/1 var(--hoved); }
 .vejledning .knap, .vejledning textarea { margin-top: 8px; }
+.vejledning .knap.stor { width: 100%; }
+.vejledning .lille { margin: 8px 0 0; }
 .begreb {
   font: inherit; color: #0b5c9c; background: rgba(111, 183, 217, .22); border: 0; border-bottom: 2px solid #0b5c9c;
   border-radius: 6px 6px 0 0; padding: 0 4px; margin: 0; cursor: pointer; transition: background-color .2s;
@@ -183,6 +185,50 @@ form .knap.stor, #app > .knap.stor { width: 100%; margin-top: 24px; }
 .stjernevalg button.til { color: var(--guld); }
 .stjernevalg button:active { transform: scale(1.25); }
 
+/* Knapper øverst på opskriften: «Tilføj tip» sidder fast øverst til venstre, når man ruller */
+.vaerktoej { position: sticky; top: calc(66px + max(8px, env(safe-area-inset-top)) + var(--ure-h, 0px)); z-index: 18; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 4px 0 12px; }
+.vaerktoej .knap { min-height: 44px; padding: 4px 16px; background: linear-gradient(135deg, rgba(255, 253, 245, .94), rgba(255, 253, 245, .82)); }
+
+/* Ingredienser: overskrift (fx Sovs) og deltrin */
+.ing li.grp, .ing.tjek li.grp { display: block; min-height: 0; padding: 14px 0 2px; font: 26px/32px var(--hoved); border-bottom: 2px solid var(--smor); }
+.ing li.grp:first-child { padding-top: 0; }
+.deltrin { list-style: none; margin: 8px 0 0; padding: 0; }
+.deltrin li { position: relative; padding: 0 0 6px 24px; }
+.deltrin li::before { content: ""; position: absolute; left: 6px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--gryde); }
+.lav-del { margin-top: 16px; }
+.lav-del li { flex-wrap: wrap; font-size: 24px; line-height: 32px; }
+.lav-del li label { align-items: flex-start; padding: 8px 0; }
+.lav-del .lav-ur { margin: 0 0 8px 32px; }
+.lav-del .urvis { font-size: 32px; line-height: 40px; }
+
+/* Redigering: ét skrivefelt pr. linje, knapper til højre */
+.edfelt { margin-top: 24px; }
+.ed-titel { font: 28px/32px var(--hoved); font-weight: 400; margin: 0 0 4px; }
+.ed { display: grid; gap: 12px; margin-top: 12px; }
+.rk { display: flex; align-items: flex-start; gap: 6px; }
+.rk[data-niv="1"] { margin-left: 18px; }
+.rk-felt { position: relative; flex: 1; min-width: 0; }
+.rk-tekst { resize: none; overflow: hidden; min-height: 52px; padding-right: 40px; }
+.rk[data-niv="1"] .rk-tekst { font-size: 19px; }
+.rk.over .rk-tekst { font: 26px/32px var(--hoved); background: rgba(255, 217, 90, .4); }
+.rk-fjern { position: absolute; right: 6px; top: 9px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: rgba(34, 56, 107, .1); color: var(--blyant); font: 20px/1 sans-serif; cursor: pointer; }
+.rk-knap {
+  flex: none; width: 56px; min-height: 52px; padding: 2px 0; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font: inherit; color: var(--blaek); cursor: pointer; touch-action: manipulation; transition: transform .16s var(--ud), background-color .16s;
+}
+.rk-knap:active { transform: scale(.94); }
+.rk-knap b { font: 22px/24px var(--skrift); font-weight: 400; }
+.rk-knap small { display: block; margin: 0; font-size: 12px; line-height: 14px; color: var(--blyant); white-space: nowrap; }
+/* nummer-mærke på hjørnet af trinnets felt: 1, 2, 3 og 2.1, 2.2 */
+.ed-trin { counter-reset: t; }
+.ed-trin .rk[data-niv="0"] { counter-increment: t; counter-reset: d; }
+.ed-trin .rk[data-niv="1"] { counter-increment: d; }
+.rk-mark { position: absolute; left: -12px; top: -10px; z-index: 1; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; display: grid; place-items: center; background: var(--smor); box-shadow: 0 1px 2px rgba(34, 56, 107, .25); font: 17px/1 var(--hoved); pointer-events: none; }
+.rk[data-niv="0"] .rk-mark::before { content: counter(t); }
+.rk[data-niv="1"] .rk-mark { background: var(--mynte); font-size: 14px; }
+.rk[data-niv="1"] .rk-mark::before { content: counter(t) "." counter(d); }
+@media (hover: hover) { .rk-knap:hover { background: rgba(255, 255, 255, .8); } }
+
 /* Lærred */
 .laerred-ramme { border-radius: 22px; padding: 8px; }
 .laerred { background-image: radial-gradient(rgba(34, 56, 107, .16) 1px, transparent 1px); background-size: 16px 16px; border-radius: 14px; }
@@ -198,7 +244,7 @@ body[data-side=lav] main { padding-top: max(16px, env(safe-area-inset-top)); pad
 .lav progress::-webkit-progress-value { background: var(--tomat); border-radius: 6px; transition: width .3s var(--ud); }
 .lav progress::-moz-progress-bar { background: var(--tomat); }
 .lav-trin { font-size: 32px; line-height: 48px; overflow-wrap: anywhere; }
-.lav-ur { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.lav-ur { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0 0 8px; }
 .urvis { font: 44px/48px var(--hoved); font-weight: 400; font-variant-numeric: tabular-nums; color: var(--tomat-mork); }
 .lav-bund {
   position: fixed; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom));

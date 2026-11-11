@@ -16,3 +16,7 @@ En delt kogebog som statisk web app: opskrifter, metode og tips i et kladdehæft
 | `sw.js`, `manifest.webmanifest` | Installér på hjemmeskærm, læs uden internet |
 
 Tabeller: `opskrifter`, `tips`, `metoder`, `favoritter`, `stjerner`, `indkob`, `laerred`. Alle har åben læse- og skriveadgang.
+
+**Format i databasen (ingen ekstra kolonner):**
+- `opskrifter.ingredienser` er en liste. `{ "g": "Sovs" }` er en overskrift, resten er `{ m, e, n }`.
+- `opskrifter.fremgangsmaade` er tekst: ét trin pr. linje. En linje, der starter med mellemrum, er et deltrin under trinnet over.

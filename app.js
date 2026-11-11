@@ -42,8 +42,8 @@ const TYPER = {
       { n: 'svaerhed', l: 'Sværhed', t: 'valg', valg: [[1, '1 · Meget let'], [2, '2 · Let'], [3, '3 · Middel'], [4, '4 · Svær'], [5, '5 · Meget svær']] },
       { n: 'portioner', l: 'Antal portioner', t: 'number' },
       { n: 'tid_minutter', l: 'Tid i minutter', t: 'number' },
-      { n: 'ingredienser', l: 'Ingredienser', t: 'ingredienser', hint: 'Én på hver linje. Skriv mængden først, fx «2 dl mælk».' },
-      { n: 'fremgangsmaade', l: 'Trin', t: 'textarea', rows: 8, hint: 'Ét trin på hver linje. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' }
+      { n: 'ingredienser', l: 'Ingredienser', t: 'ingredienser', hint: 'Én ingrediens i hvert felt. Skriv mængden først, fx «2 dl mælk». Tryk på «overskrift» for at sætte en overskrift over en ingrediens, fx Sovs eller Kødboller.' },
+      { n: 'fremgangsmaade', l: 'Trin', t: 'trin', hint: 'Ét trin i hvert felt. Tryk på «deltrin» for at lave små skridt under et trin. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' }
     ]
   },
   metoder: {
@@ -153,7 +153,33 @@ function normIng(x) {
   if (!n) return null;
   return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n };
 }
-const ingAf = r => (Array.isArray(r.ingredienser) ? r.ingredienser : []).map(normIng).filter(Boolean);
+// ingredienser gemmes som en liste. Et element { g: "Sovs" } er en overskrift, resten er ingredienser.
+// (Ældre kode ignorerer overskrifterne, så de gør ingen skade.)
+function ingListe(r) {
+  return (Array.isArray(r.ingredienser) ? r.ingredienser : []).map(x =>
+    x && typeof x === 'object' && typeof x.g === 'string' ? (x.g.trim() ? { g: x.g.trim() } : null) : normIng(x)).filter(Boolean);
+}
+const ingAf = r => ingListe(r).filter(x => !('g' in x));
+// [{ navn: null | "Sovs", ing: [...] }, ...]. Første gruppe har intet navn, hvis der står ingredienser før første overskrift.
+function ingGrupper(r) {
+  const ud = [{ navn: null, ing: [] }];
+  for (const x of ingListe(r)) {
+    if ('g' in x) ud.push({ navn: x.g, ing: [] }); else ud[ud.length - 1].ing.push(x);
+  }
+  return ud.filter((g, i) => g.ing.length || (i > 0 && g.navn));
+}
+// fremgangsmaade er tekst: ét trin pr. linje. En linje, der starter med mellemrum, er et deltrin under trinnet over.
+const TRINRENS = /^(\d+[.)]|[-•*])\s+/;
+function trinAf(r) {
+  const ud = [];
+  for (const raa of String(r.fremgangsmaade || '').split('\n')) {
+    const t = raa.trim().replace(TRINRENS, '');
+    if (!t) continue;
+    if (/^\s/.test(raa) && ud.length) ud[ud.length - 1].del.push(t); else ud.push({ t, del: [] });
+  }
+  return ud;
+}
+const trinTilTekst = trin => trin.map(t => [t.t, ...t.del.map(d => '  ' + d)].join('\n')).join('\n');
 function visTal(n) {
   const d = n >= 100 ? 0 : n >= 1 ? 1 : 2;
   return String(Math.round(n * 10 ** d) / 10 ** d).replace('.', ',');
@@ -210,6 +236,7 @@ function tegnUre() {
   $('#ure').innerHTML = ure.map(u => `<div class="ur${u.faerdig ? ' faerdig' : ''}" data-ur="${u.id}">
     <span>⏱ <b>${u.faerdig ? 'Færdig!' : visTid((u.slut - Date.now()) / 1000)}</b> ${esc(u.navn)}</span>
     <button type="button" data-h="stopUr" data-v="${u.id}" aria-label="Stop uret">×</button></div>`).join('');
+  document.documentElement.style.setProperty('--ure-h', $('#ure').offsetHeight + 'px'); // så «Tilføj tip» ikke skjuler sig bag urene
   document.querySelectorAll('[data-urvis]').forEach(el => {
     const u = ure.find(x => x.navn === el.dataset.urvis);
     el.textContent = u ? (u.faerdig ? 'Tiden er gået!' : visTid((u.slut - Date.now()) / 1000)) : '';
@@ -253,7 +280,7 @@ function tael(noegle) {
 // ---------- Router ----------
 async function route() {
   const id = ++visning;
-  lukArk(); lukForklaring(); slipSkaerm();
+  lukArk(); lukForklaring(); slipSkaerm(); sidsteValg = '';
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
   dybde = dele.length;
@@ -386,20 +413,18 @@ async function opskriftSide(rid) {
   kendteBegreber = begreberAf(tips, metoder);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
   app.innerHTML = `<a class="tilbage skaerm" href="#/opskrifter">‹ Opskrifter</a>
+    ${vaerktoej(`<a class="knap" href="#/opskrifter/${r.id}/rediger">✏️ Rediger</a>`)}
     <div class="titelrakke"><h1>${esc(r.titel)}</h1>
       <button id="favknap" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${S.fav ? '★' : '☆'}</button></div>
     ${c.length ? `<p class="chips">${c.map(x => `<span>${x}</span>`).join('')}</p>` : ''}
     ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
+    <button class="knap primaer stor skaerm" data-h="lav">▶ Lav retten trin for trin</button>
     <h2>Ingredienser</h2>
     <div class="portioner skaerm"><button class="rund" data-h="port" data-v="-1" aria-label="Færre portioner">−</button>
       <span id="portvis"></span><button class="rund" data-h="port" data-v="1" aria-label="Flere portioner">+</button></div>
     <ul class="ing" id="ing"></ul>
     <h2>Sådan gør du</h2>
     <div id="trin"></div>
-    <div class="rakke skaerm">
-      <button class="knap primaer stor" data-h="lav">▶ Lav retten trin for trin</button>
-      <button class="knap" data-h="nytBegreb">+ Forklar et ord</button>
-    </div>
     <h2 class="skaerm">Vores side</h2>
     <p class="lille skaerm">Sæt billeder og figurer på siden, og flyt dem rundt.</p>
     <div class="laerred-ramme skaerm"><div id="laerred" class="laerred"></div></div>
@@ -408,25 +433,32 @@ async function opskriftSide(rid) {
     <h2 class="skaerm">Hvordan smagte det?</h2>
     <div id="stjerner" class="skaerm"></div>
     ${egne.length ? `<h2>Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}` : ''}
-    ${knapper('opskrifter', r.id, '<button class="knap" data-h="print">Print</button>')}`;
+    <div class="rakke skaerm"><button class="knap" data-h="print">Print</button>
+      <button class="knap fare" data-h="slet" data-v="opskrifter:${r.id}">Slet</button></div>`;
   tegnIng(); tegnTrin(); tegnStjerner(); tegnLaerredKnapper(false);
   $('#billedfil').addEventListener('change', nytBillede);
   const lel = $('#laerred');
   lel.addEventListener('valgt', e => { const k = $('#fjernvalgt'); if (k) k.disabled = !e.detail; });
-  Hjaelper.side('Her er opskriften. Tryk på plus og minus for at ændre antal portioner. Blå ord kan du trykke på. Tryk på «Lav retten trin for trin», når du er klar.');
+  Hjaelper.side('Her er opskriften. Tryk på plus og minus for at ændre antal portioner. Blå ord kan du trykke på. Tryk på «Lav retten trin for trin» øverst, når du er klar.');
   await Laerred.start(lel, lr, r.id);
 }
+// Knapperne øverst. «Tilføj tip» sidder fast øverst til venstre, mens man ruller. Ekstra knapper kommer til højre.
+const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="button" class="knap" data-h="nytBegreb">💡 Tilføj tip</button>${hoejre}</div>`;
+// Overskrift (fx «Sovs») i en liste af ingredienser
+const ingOverskrift = navn => `<li class="grp">${esc(navn)}</li>`;
 function tegnIng() {
-  const ing = ingAf(S.r), f = S.port / (S.r.portioner || S.port);
+  const grp = ingGrupper(S.r), f = S.port / (S.r.portioner || S.port);
+  let n = 0;
   $('#portvis').textContent = S.port + (S.port === 1 ? ' portion' : ' portioner');
-  $('#ing').innerHTML = ing.length ? ing.map((i, n) => `<li><span>${esc(visIng(i, f))}</span>
-      <button class="rund lille-rund skaerm" data-h="koeb" data-v="${n}" aria-label="Læg ${esc(i.n)} på indkøbslisten">🛒</button></li>`).join('')
+  $('#ing').innerHTML = grp.length ? grp.map(g => (g.navn ? ingOverskrift(g.navn) : '') + g.ing.map(i => `<li><span>${esc(visIng(i, f))}</span>
+      <button class="rund lille-rund skaerm" data-h="koeb" data-v="${n++}" aria-label="Læg ${esc(i.n)} på indkøbslisten">🛒</button></li>`).join('')).join('')
     + '<li class="skaerm"><button class="knap" data-h="koebAlle">🛒 Læg alle på indkøbslisten</button></li>'
     : '<li class="lille">Ingen ingredienser endnu. Tryk på «Rediger» for at skrive dem.</li>';
 }
 function tegnTrin() {
-  const trin = linjer(S.r.fremgangsmaade);
-  $('#trin').innerHTML = trin.length ? `<ol class="trin">${trin.map(t => `<li>${medBegreber(t, kendteBegreber)}</li>`).join('')}</ol>`
+  const trin = trinAf(S.r), b = kendteBegreber;
+  $('#trin').innerHTML = trin.length ? `<ol class="trin">${trin.map(t => `<li>${medBegreber(t.t, b)}${
+    t.del.length ? `<ul class="deltrin">${t.del.map(d => `<li>${medBegreber(d, b)}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ol>`
     : '<p class="lille">Der er ingen trin endnu. Tryk på «Rediger» for at skrive dem.</p>';
 }
 function stjerneHtml(stj) {
@@ -465,26 +497,34 @@ async function lavSide(rid) {
   const r = rr[0];
   if (!r) return info('Opskriften findes ikke længere.<br><a href="#/opskrifter">Tilbage til Opskrifter</a>');
   kendteBegreber = begreberAf(tips, metoder);
-  K = { r, trin: linjer(r.fremgangsmaade), i: -1, port: portValg[rid] || r.portioner || 4, talt: false };
+  K = { r, trin: trinAf(r), i: -1, port: portValg[rid] || r.portioner || 4, talt: false, afkr: {} };
   S = { r, tips, metoder, stj, port: K.port, fav: false };
   holdSkaerm();
   tegnLav();
   Hjaelper.side('Her laver du retten. Der er ét trin ad gangen. Tryk på «Næste», når du er færdig med et trin. Står der en tid, kan du starte et ur.');
 }
+const urKnap = (tekst, navn, stor) => {
+  const sek = tidISek(tekst);
+  if (!sek) return '';
+  const igang = ure.some(u => u.navn === navn);
+  return `<div class="lav-ur"><button class="knap${stor ? ' stor' : ''}" data-h="ur" data-v="${sek}" data-navn="${esc(navn)}">⏱ ${igang ? 'Start uret igen' : 'Start ur'}: ${visVarighed(sek)}</button>
+    <b class="urvis" data-urvis="${esc(navn)}"></b></div>`;
+};
 function tegnLav() {
   const { r, trin, i } = K, n = trin.length;
   lukForklaring();
   let midte, naeste = 'Næste ›';
   if (i === -1) {
-    const ing = ingAf(r), f = K.port / (r.portioner || K.port);
+    const grp = ingGrupper(r), f = K.port / (r.portioner || K.port);
     midte = `<h1>Find tingene frem</h1><p class="lille">${K.port} ${K.port === 1 ? 'portion' : 'portioner'}</p>
-      <ul class="ing tjek">${ing.map(x => `<li><label><input type="checkbox"> <span>${esc(visIng(x, f))}</span></label></li>`).join('') || '<li class="lille">Der står ingen ingredienser.</li>'}</ul>`;
+      <ul class="ing tjek">${grp.map(g => (g.navn ? ingOverskrift(g.navn) : '') + g.ing.map(x => `<li><label><input type="checkbox"> <span>${esc(visIng(x, f))}</span></label></li>`).join('')).join('')
+        || '<li class="lille">Der står ingen ingredienser.</li>'}</ul>`;
     naeste = n ? 'Start ›' : 'Færdig';
   } else if (i < n) {
-    const sek = tidISek(trin[i]), navn = `${r.titel}, trin ${i + 1}`, igang = ure.some(u => u.navn === navn);
-    midte = `<p class="lav-trin">${medBegreber(trin[i], kendteBegreber)}</p>
-      ${sek ? `<div class="lav-ur"><button class="knap stor" data-h="ur" data-v="${sek}" data-navn="${esc(navn)}">⏱ ${igang ? 'Start uret igen' : 'Start ur'}: ${visVarighed(sek)}</button>
-        <b class="urvis" data-urvis="${esc(navn)}"></b></div>` : ''}`;
+    const t = trin[i], navn = `${r.titel}, trin ${i + 1}`;
+    // Trinnet og dets deltrin står på samme side. Deltrin kan man sætte flueben ved, og de kan have eget ur.
+    midte = `<p class="lav-trin">${medBegreber(t.t, kendteBegreber)}</p>${urKnap(t.t, navn, true)}
+      ${t.del.length ? `<ul class="ing tjek lav-del">${t.del.map((d, j) => `<li><label><input type="checkbox" data-del="${i}:${j}" ${K.afkr[i + ':' + j] ? 'checked' : ''}> <span>${medBegreber(d, kendteBegreber)}</span></label>${urKnap(d, `${navn}.${j + 1}`)}</li>`).join('')}</ul>` : ''}`;
     if (i === n - 1) naeste = 'Færdig ✓';
   } else {
     midte = `<h1>Velbekomme!</h1><p class="tekst">Du har lavet ${esc(r.titel)}. Hvordan smagte det?</p><div id="stjerner">${stjerneHtml(S.stj)}</div>`;
@@ -508,13 +548,94 @@ function tegnLav() {
   }
 }
 
+// ---------- Redigering af ingredienser og trin: ét skrivefelt pr. linje ----------
+const ORD_OVERSKRIFT = 'overskrift'; // ordet i knappen, der deler ingredienserne op (fx Sovs, Kødboller)
+function rkHtml(ed, { art = 'ing', niv = 0, tekst = '' } = {}) {
+  const fjern = '<button type="button" class="rk-fjern" data-h="rkFjern" aria-label="Fjern linjen">×</button>';
+  if (ed === 'ing') {
+    const o = art === 'over';
+    return `<div class="rk${o ? ' over' : ''}" data-art="${o ? 'over' : 'ing'}">
+      <div class="rk-felt"><textarea class="rk-tekst" rows="1" enterkeyhint="next" autocomplete="off" aria-label="${o ? 'Overskrift' : 'Ingrediens'}"
+        placeholder="${o ? 'Overskrift, fx Sovs' : 'fx 2 dl mælk'}">${esc(tekst)}</textarea>${fjern}</div>
+      <button type="button" class="rk-knap" data-h="rkSkift" aria-label="Skift til ${o ? 'ingrediens' : ORD_OVERSKRIFT}"><b>${o ? '🥕' : 'Aa'}</b><small>${o ? 'ingrediens' : ORD_OVERSKRIFT}</small></button>
+      <button type="button" class="rk-knap" data-h="rkNy" aria-label="Tilføj ingrediens"><b>＋</b><small>ingrediens</small></button></div>`;
+  }
+  return `<div class="rk" data-niv="${niv}">
+    <div class="rk-felt"><span class="rk-mark" aria-hidden="true"></span><textarea class="rk-tekst" rows="1" enterkeyhint="next" autocomplete="off"
+      aria-label="${niv ? 'Deltrin' : 'Trin'}" placeholder="${niv ? 'Deltrin, fx Hak løget' : 'Skriv et trin'}">${esc(tekst)}</textarea>${fjern}</div>
+    <button type="button" class="rk-knap" data-h="rkNy" data-v="trin" aria-label="Tilføj trin"><b>＋</b><small>trin</small></button>
+    <button type="button" class="rk-knap" data-h="rkNy" data-v="del" aria-label="Tilføj deltrin"><b>↳</b><small>deltrin</small></button></div>`;
+}
+function edFelt(f, rad) {
+  const ed = f.t === 'trin' ? 'trin' : 'ing';
+  let rader;
+  if (ed === 'ing') rader = ingListe(rad).map(x => 'g' in x ? { art: 'over', tekst: x.g } : { art: 'ing', tekst: visIng(x) });
+  else rader = trinAf(rad).flatMap(t => [{ niv: 0, tekst: t.t }, ...t.del.map(d => ({ niv: 1, tekst: d }))]);
+  if (!rader.length) rader = [{}];
+  return `<div class="edfelt"><h3 class="ed-titel">${f.l}</h3>${f.hint ? `<small>${f.hint}</small>` : ''}
+    <div class="ed ed-${ed}" data-ed="${ed}" id="ed_${f.n}">${rader.map(r => rkHtml(ed, r)).join('')}</div></div>`;
+}
+const rkFelt = rk => rk.querySelector('.rk-tekst');
+function rkVokser(t) { if (!t.scrollHeight) return; t.style.height = 'auto'; t.style.height = (t.scrollHeight + t.offsetHeight - t.clientHeight) + 'px'; }
+function rkFokus(rk) { const t = rkFelt(rk); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+function rkIndsaet(ed, efter, data, fokus = true, foer = false) {
+  const tmp = document.createElement('template');
+  tmp.innerHTML = rkHtml(ed.dataset.ed, data).trim();
+  const rk = tmp.content.firstElementChild;
+  if (efter) efter[foer ? 'before' : 'after'](rk); else ed.append(rk);
+  rkVokser(rkFelt(rk));
+  if (fokus) rkFokus(rk);
+  return rk;
+}
+function rkGruppeSlut(rk) { // sidste deltrin under et trin (eller trinnet selv)
+  let sidste = rk;
+  if (rk.dataset.niv === '0') while (sidste.nextElementSibling && sidste.nextElementSibling.dataset.niv === '1') sidste = sidste.nextElementSibling;
+  return sidste;
+}
+function rkEnter(rk) { // retur: videre til næste felt, eller lav et nyt
+  const ed = rk.closest('.ed'), naeste = rk.nextElementSibling, tom = !rkFelt(rk).value.trim();
+  if (naeste) return rkFokus(naeste);
+  if (ed.dataset.ed === 'ing') { if (!tom) rkIndsaet(ed, null, { art: 'ing' }); return; }
+  if (rk.dataset.niv === '1' && tom) { rk.dataset.niv = '0'; rkFelt(rk).placeholder = 'Skriv et trin'; return; } // tomt deltrin + retur = nyt trin
+  rkIndsaet(ed, null, { niv: rk.dataset.niv === '1' ? 1 : 0 });
+}
+function rkInput(t) { // vokser med teksten, og delt tekst med linjeskift (indsat) bliver til flere felter
+  rkVokser(t);
+  if (!t.value.includes('\n')) return;
+  const rk = t.closest('.rk'), ed = rk.closest('.ed'), trin = ed.dataset.ed === 'trin';
+  const dele = t.value.split('\n').map(x => x.trim().replace(trin ? TRINRENS : /^[-•*]\s+/, '')).filter(Boolean);
+  t.value = dele.shift() || ''; rkVokser(t);
+  let efter = rk;
+  for (const d of dele) efter = rkIndsaet(ed, efter, { art: rk.dataset.art, niv: rk.dataset.niv, tekst: d }, false);
+  rkFokus(efter);
+}
+function laesIngEd(ed) {
+  const ud = [];
+  for (const rk of ed.querySelectorAll('.rk')) {
+    const t = rkFelt(rk).value.replace(/\s*\n\s*/g, ' ').trim();
+    if (t) ud.push(rk.dataset.art === 'over' ? { g: t } : parseIng(t));
+  }
+  return ud;
+}
+function laesTrinEd(ed) {
+  const ud = [];
+  let ejer = false; // hører deltrinnet til et trin med tekst?
+  for (const rk of ed.querySelectorAll('.rk')) {
+    const t = rkFelt(rk).value.replace(/\s*\n\s*/g, ' ').trim().replace(TRINRENS, '');
+    if (rk.dataset.niv !== '1') ejer = !!t;
+    if (!t) continue;
+    if (rk.dataset.niv === '1' && ejer && ud.length) ud[ud.length - 1].del.push(t); else ud.push({ t, del: [] });
+  }
+  return ud.length ? trinTilTekst(ud) : null;
+}
+
 // ---------- Formular (opret / rediger) ----------
 function felt(f, rad, ekstra) {
   const v = rad[f.n];
   const m = `id="f_${f.n}" name="${f.n}"` + (f.kraevet ? ' required' : '');
   let input;
+  if (f.t === 'ingredienser' || f.t === 'trin') return edFelt(f, rad);
   if (f.t === 'textarea') input = `<textarea ${m} rows="${f.rows || 4}">${esc(v)}</textarea>`;
-  else if (f.t === 'ingredienser') input = `<textarea ${m} rows="6">${esc(ingAf(rad).map(i => visIng(i)).join('\n'))}</textarea>`;
   else if (f.t === 'number') input = `<input ${m} type="number" inputmode="numeric" min="0" step="1" value="${esc(v)}">`;
   else if (f.t === 'valg') input = `<select ${m}><option value="">Vælg</option>${f.valg.map(([k, t]) => `<option value="${k}"${k === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
   else if (f.t === 'opskrift') input = `<select ${m}><option value="">Ingen bestemt opskrift</option>${
@@ -528,10 +649,11 @@ function felt(f, rad, ekstra) {
 function laesFelter(form, felter, visFejl) {
   const data = {};
   for (const f of felter) {
+    if (f.t === 'ingredienser') { data[f.n] = laesIngEd($('#ed_' + f.n, form)); continue; }
+    if (f.t === 'trin') { data[f.n] = laesTrinEd($('#ed_' + f.n, form)); continue; }
     const el = form.elements[f.n], v = el.value.trim();
     if (f.kraevet && !v) { visFejl(`Skriv noget i feltet «${f.l}».`); el.focus(); return null; }
-    if (f.t === 'ingredienser') data[f.n] = v.split('\n').map(s => s.trim()).filter(Boolean).map(parseIng);
-    else if (f.t === 'number' || f.t === 'valg') {
+    if (f.t === 'number' || f.t === 'valg') {
       const n = v === '' ? null : Number(v);
       if (n !== null && !(Number.isInteger(n) && n >= 0)) { visFejl(`«${f.l}» skal være et helt tal, fx 4.`); el.focus(); return null; }
       data[f.n] = n;
@@ -551,14 +673,23 @@ async function formular(type, rid) {
   const rad = r[0] || {};
   const tilbage = rid && type !== 'tips' ? `#/${type}/${rid}` : `#/${type}`;
   app.innerHTML = `<a class="tilbage" href="${tilbage}">‹ Fortryd</a>
+    ${type === 'opskrifter' ? vaerktoej() : ''}
     <h1>${rid ? T.rediger : T.ny}</h1>
     <form id="form" novalidate>
       ${T.felter.map(f => felt(f, rad, ekstra)).join('')}
       <div id="formfejl"></div>
       <button class="knap primaer stor" type="submit">Gem</button>
     </form>`;
-  Hjaelper.side(type === 'opskrifter' ? 'Skriv opskriften her. Skriv én ingrediens på hver linje og ét trin på hver linje. Tryk på «Gem», når du er færdig.' : 'Skriv i felterne, og tryk på «Gem». Navnet bliver til et link i opskrifter, hvor ordet står.');
+  Hjaelper.side(type === 'opskrifter' ? 'Skriv opskriften her. Skriv én ingrediens i hvert felt og ét trin i hvert felt. Tryk på retur for at komme til næste felt. Tryk på «Gem», når du er færdig.' : 'Skriv i felterne, og tryk på «Gem». Navnet bliver til et link i opskrifter, hvor ordet står.');
   const form = $('#form');
+  form.querySelectorAll('.rk-tekst').forEach(rkVokser);
+  form.addEventListener('input', e => { if (e.target.classList.contains('rk-tekst')) rkInput(e.target); });
+  form.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.isComposing && e.target.classList.contains('rk-tekst')) { e.preventDefault(); rkEnter(e.target.closest('.rk')); }
+  });
+  form.addEventListener('beforeinput', e => { // telefoner sender ikke altid Enter som tast
+    if (e.target.classList.contains('rk-tekst') && (e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph')) { e.preventDefault(); rkEnter(e.target.closest('.rk')); }
+  });
   const visFejl = tekst => { $('#formfejl').innerHTML = `<div class="fejlboks">${tekst}</div>`; };
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -606,6 +737,8 @@ async function indkobSide() {
 }
 const vareHtml = v => `<li><label><input type="checkbox" data-vare="${v.id}" ${v.krydset ? 'checked' : ''}> <span>${esc(v.tekst)}</span></label></li>`;
 document.addEventListener('change', async e => {
+  const d = e.target.closest('[data-del]');
+  if (d && K) { K.afkr[d.dataset.del] = d.checked; return; } // husk flueben på deltrin
   const el = e.target.closest('[data-vare]');
   if (!el) return;
   try { await api(`indkob?id=eq.${enc(el.dataset.vare)}`, { method: 'PATCH', body: { krydset: el.checked } }); }
@@ -669,42 +802,63 @@ function tegnForslag() {
 }
 
 // ---------- Tilføj med Claude ----------
-const CLAUDE_BESKED = `Omskriv opskriften nederst til min kogebog-app. Den skal kunne laves af en 10-årig.
+const CLAUDE_BESKED = `Omskriv opskriften nederst til min kogebog-app. Den skal kunne laves af en 10-årig, men uden at være mere detaljeret end nødvendigt.
 
 Regler:
 - Skriv på dansk.
-- Ét trin pr. handling. Korte sætninger.
-- Skriv konkrete værdier: komfurets varme fra 1 til 9, om ovnen skal forvarmes, og hvor lang tid det tager, fx "Kog i 10 minutter".
-- Mængder skal være tal, fx 2,5 dl skrives som 2.5.
+- Del retten op i trin. Et trin er en meningsfuld del af arbejdet, fx "Lav kødbollerne" eller "Kog pastaen". Er der flere små handlinger i et trin, så skriv dem som deltrin under trinnet.
+- Slå oplagte småting sammen. Skriv fx "Skræl og hak løget" som ét deltrin, ikke to. Er et trin kun én handling, så skriv det uden deltrin.
+- Korte sætninger.
+- Skriv konkrete værdier: komfurets varme fra 1 til 9, om ovnen skal forvarmes (og til hvor mange grader), og hvor lang tid det tager. Skriv tiden i den sætning, den hører til, fx "Kog i 10 minutter".
+- Har retten flere dele, fx sovs og kødboller, så del ingredienserne op i grupper med en overskrift. Har den kun én del, så brug én gruppe med "overskrift": null.
+- Mængder skal være tal, fx 2,5 dl skrives som 2.5. Mangler der en mængde (fx "salt"), så udelad "mængde" og "enhed".
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
 {
-  "navn": "Pandekager",
-  "sværhed": 2,
-  "tid": 30,
+  "navn": "Spaghetti med kødboller",
+  "sværhed": 3,
+  "tid": 45,
   "portioner": 4,
-  "kategori": "Dessert",
-  "ingredienser": [{ "mængde": 2.5, "enhed": "dl", "navn": "mel" }],
-  "trin": ["Pisk mel og mælk sammen.", "Steg ved varme 6 i 1 minut på hver side."]
+  "kategori": "Aftensmad",
+  "ingredienser": [
+    { "overskrift": "Kødboller", "varer": [
+      { "mængde": 500, "enhed": "g", "navn": "hakket svinekød" },
+      { "mængde": 1, "enhed": "stk", "navn": "løg" } ] },
+    { "overskrift": "Sovs", "varer": [
+      { "mængde": 2.5, "enhed": "dl", "navn": "fløde" },
+      { "navn": "salt" } ] }
+  ],
+  "trin": [
+    { "tekst": "Lav kødbollerne.", "deltrin": ["Skræl og hak løget.", "Bland kød, løg og æg i en skål."] },
+    { "tekst": "Steg kødbollerne ved varme 6 i 10 minutter.", "deltrin": [] },
+    "Kog spaghettien efter anvisningen på posen."
+  ]
 }
-"sværhed" er et tal fra 1 til 5. "tid" er minutter i alt.
+"sværhed" er et tal fra 1 til 5. "tid" er minutter i alt. Et trin uden deltrin kan skrives som ren tekst.
 
-Her er opskriften (jeg indsætter et link, en tekst eller et billede):
+Her er opskriften:
 `;
+const CLAUDE_FOERSTE = CLAUDE_BESKED.slice(0, 30); // bruges til at se, om udklipsholderen allerede indeholder beskeden
+let claudeBesked = '';
 function importSide() {
+  claudeBesked = CLAUDE_BESKED;
   app.innerHTML = `<a class="tilbage" href="#/opskrifter">‹ Opskrifter</a><h1>Tilføj med Claude</h1>
     <ol class="trin vejledning">
-      <li>Tryk på knappen. Beskeden bliver kopieret, og Claude åbner.
-        <button class="knap primaer stor" data-h="kopierBesked">✨ Kopiér besked og åbn Claude</button></li>
-      <li>Sæt beskeden ind hos Claude, og tilføj din opskrift: et link, en tekst eller et billede.</li>
+      <li>Kopiér din opskrift (et link eller en tekst). Tryk så her. Din opskrift bliver sat sammen med beskeden til Claude.
+        <button class="knap primaer stor" data-h="kopierBesked">✨ Kopiér besked</button>
+        <p class="lille" id="kopinote" role="status"></p></li>
+      <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
+        <a class="knap stor" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></li>
       <li>Kopiér Claudes svar, og sæt det ind her:
         <textarea id="claudesvar" rows="7" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea></li>
     </ol>
     <div id="formfejl"></div>
     <button class="knap primaer stor" data-h="gemImport">Gem opskriften</button>`;
-  Hjaelper.side('Her kan Claude skrive en opskrift om for dig. Tryk på den første knap, sæt beskeden ind hos Claude sammen med din opskrift, og sæt svaret ind i feltet her.');
+  Hjaelper.side('Her kan Claude skrive en opskrift om for dig. Kopiér først din opskrift. Tryk så på den første knap, åbn Claude, og sæt beskeden ind. Sæt til sidst Claudes svar ind i feltet her.');
 }
 // Læser Claudes svar. Giver { data } eller { fejl } med en besked på dansk.
+const tekstAf = x => typeof x === 'string' ? x : (x && (x.tekst ?? x.trin ?? x.beskrivelse)) || '';
+const enLinje = t => String(t).replace(/\s*\n\s*/g, ' ').trim();
 function laesImport(tekst) {
   const s = String(tekst).replace(/[“”]/g, '"'), a = s.indexOf('{'), b = s.lastIndexOf('}');
   if (!s.trim()) return { fejl: 'Feltet er tomt. Sæt Claudes svar ind først.' };
@@ -715,16 +869,31 @@ function laesImport(tekst) {
   const mangler = [];
   const navn = typeof j.navn === 'string' ? j.navn.trim() : '';
   if (!navn) mangler.push('navn');
-  const ing = Array.isArray(j.ingredienser) ? j.ingredienser.map(normIng).filter(Boolean) : [];
-  if (!ing.length) mangler.push('ingredienser');
-  const trin = Array.isArray(j.trin) ? j.trin.map(t => typeof t === 'string' ? t : (t && (t.tekst || t.trin)) || '').map(t => String(t).replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean) : [];
+  // Ingredienser: enten en flad liste eller grupper med overskrift og varer. Gemmes som liste med { g: overskrift } imellem.
+  const ing = [];
+  for (const x of Array.isArray(j.ingredienser) ? j.ingredienser : []) {
+    const varer = x && (Array.isArray(x.varer) ? x.varer : Array.isArray(x.ingredienser) ? x.ingredienser : null);
+    const over = x && typeof x === 'object' ? String(x.overskrift ?? x.gruppe ?? '').trim() : '';
+    if (varer) {
+      if (over) ing.push({ g: over });
+      ing.push(...varer.map(normIng).filter(Boolean));
+    } else if (over && !(x.navn || x.n || x.name)) ing.push({ g: over });
+    else { const i = normIng(x); if (i) ing.push(i); }
+  }
+  if (!ing.some(x => !('g' in x))) mangler.push('ingredienser');
+  const trin = [];
+  for (const x of Array.isArray(j.trin) ? j.trin : []) {
+    const t = enLinje(tekstAf(x));
+    const del = (x && Array.isArray(x.deltrin ?? x.delt) ? (x.deltrin ?? x.delt) : []).map(d => enLinje(tekstAf(d))).filter(Boolean);
+    if (t) trin.push({ t, del }); else del.forEach(d => trin.push({ t: d, del: [] }));
+  }
   if (!trin.length) mangler.push('trin');
   if (mangler.length) return { fejl: `Svaret mangler: ${mangler.join(', ')}. Bed Claude om at svare igen i det rigtige format.` };
   const helt = (v, min, max) => { const n = Math.round(tal(v)); return tal(v) != null && n >= min && n <= max ? n : null; };
   return { data: {
     titel: navn, kategori: typeof j.kategori === 'string' && j.kategori.trim() ? j.kategori.trim() : null,
     svaerhed: helt(j['sværhed'] ?? j.svaerhed, 1, 5), tid_minutter: helt(j.tid, 0, 6000), portioner: helt(j.portioner, 1, 100),
-    ingredienser: ing, fremgangsmaade: trin.join('\n')
+    ingredienser: ing, fremgangsmaade: trinTilTekst(trin)
   } };
 }
 async function kopier(tekst) {
@@ -735,6 +904,10 @@ async function kopier(tekst) {
     let ok = false; try { ok = document.execCommand('copy'); } catch (e2) { /* ingen adgang */ }
     t.remove(); return ok;
   }
+}
+// Det, der ligger i udklipsholderen lige nu. Tom tekst, hvis der intet er, eller hvis browseren ikke må læse den.
+async function laesUdklip() {
+  try { return String(await navigator.clipboard.readText()).trim(); } catch (e) { return null; }
 }
 
 // ---------- Mere: backup, mærker, indstillinger ----------
@@ -757,6 +930,13 @@ function mereSide() {
 }
 
 // ---------- Klik ----------
+// Den tekst, man sidst har markeret (bruges, når «Tilføj tip» åbnes)
+let sidsteValg = '';
+document.addEventListener('selectionchange', () => { const t = String(window.getSelection ? window.getSelection() : '').trim(); if (t) sidsteValg = t; });
+document.addEventListener('select', e => {
+  const t = e.target;
+  if (typeof t.selectionStart === 'number' && t.selectionEnd > t.selectionStart) sidsteValg = t.value.slice(t.selectionStart, t.selectionEnd).trim();
+}, true);
 const H = {
   igen: () => route(),
   async slet(el) {
@@ -812,7 +992,8 @@ const H = {
   },
   ur(el) {
     ure = ure.filter(u => u.navn !== el.dataset.navn);
-    startUr(el.dataset.navn, Number(el.dataset.v)); tegnLav();
+    startUr(el.dataset.navn, Number(el.dataset.v));
+    el.textContent = '⏱ Start uret igen: ' + visVarighed(Number(el.dataset.v)); // siden bliver stående, hvor den er
   },
   stopUr(el) { ure = ure.filter(u => u.id !== Number(el.dataset.v)); tegnUre(); },
   begreb(el) {
@@ -828,8 +1009,10 @@ const H = {
     Hjaelper.sig(`${b.navn}: ${b.tekst || 'Der er ingen forklaring endnu.'}`, { peg: el, nu: true });
   },
   nytBegreb() {
-    const valgt = String(window.getSelection ? window.getSelection() : '').trim().slice(0, 60);
-    const d = ark(`<h2>Forklar et ord</h2>
+    const valgt = (String(window.getSelection ? window.getSelection() : '').trim() || sidsteValg).slice(0, 60);
+    sidsteValg = '';
+    const paaOpskrift = !!$('#trin'); // på opskriftssiden opdateres teksten med det samme
+    const d = ark(`<h2>Tilføj tip</h2>
       <form id="begrebform" novalidate>
         <label for="b_navn">Ordet fra opskriften</label><small>Skriv det præcis, som det står, fx «koge ris».</small>
         <input id="b_navn" type="text" value="${esc(valgt)}" autocomplete="off">
@@ -846,10 +1029,11 @@ const H = {
       if (!navn || !tekst) { $('#arkfejl').innerHTML = '<div class="fejlboks">Skriv både ordet og en forklaring.</div>'; return; }
       try {
         const [ny] = await api(type, { method: 'POST', body: type === 'tips' ? { titel: navn, tekst } : { titel: navn, beskrivelse: tekst } });
+        if (!paaOpskrift) { lukArk(); toast('Gemt'); Hjaelper.glad(`Gemt! Nu kan man trykke på «${navn}» i opskrifter, hvor ordet står.`); return; }
         (type === 'tips' ? S.tips : S.metoder).push(ny);
         kendteBegreber = begreberAf(S.tips, S.metoder);
         lukArk(); tegnTrin();
-        const findes = linjer(S.r.fremgangsmaade).some(t => medBegreber(t, kendteBegreber.filter(b => b.id === ny.id)).includes('data-h'));
+        const findes = trinAf(S.r).some(t => [t.t, ...t.del].some(x => medBegreber(x, kendteBegreber.filter(b => b.id === ny.id)).includes('data-h')));
         Hjaelper.glad(findes ? `Gemt! Nu kan man trykke på «${navn}» i opskriften.` : `Gemt! Ordet «${navn}» står ikke i trinene, så der er ikke noget link endnu.`);
         toast('Gemt');
       } catch (err) { console.error(err); $('#arkfejl').innerHTML = '<div class="fejlboks">Det blev ikke gemt. Tjek internettet, og prøv igen.</div>'; }
@@ -857,6 +1041,28 @@ const H = {
     $('#b_navn').focus();
   },
   lukArk,
+  rkNy(el) {
+    const rk = el.closest('.rk'), ed = rk.closest('.ed');
+    if (ed.dataset.ed === 'ing') return rkIndsaet(ed, rk, { art: 'ing' });
+    if (el.dataset.v === 'del') rkIndsaet(ed, rkGruppeSlut(rk), { niv: 1 });
+    else rkIndsaet(ed, rkGruppeSlut(rk), { niv: 0 });
+  },
+  rkSkift(el) { // en ingrediens med tekst får en overskrift over sig. Ellers skifter linjen mellem ingrediens og overskrift.
+    const rk = el.closest('.rk'), ed = rk.closest('.ed'), over = rk.dataset.art === 'over', tekst = rkFelt(rk).value;
+    if (!over && tekst.trim()) return rkIndsaet(ed, rk, { art: 'over' }, true, true);
+    const ny = rkIndsaet(ed, rk, { art: over ? 'ing' : 'over', tekst }, false);
+    rk.remove(); rkVokser(rkFelt(ny)); rkFokus(ny);
+  },
+  async rkFjern(el) {
+    const rk = el.closest('.rk'), ed = rk.closest('.ed');
+    const grp = [rk];
+    if (rk.dataset.niv === '0') for (let x = rk.nextElementSibling; x && x.dataset.niv === '1'; x = x.nextElementSibling) grp.push(x);
+    if (grp.slice(1).some(x => rkFelt(x).value.trim()) && !await bekraeft('Vil du fjerne trinnet og dets deltrin?', 'Fjern')) return;
+    const naboe = grp[grp.length - 1].nextElementSibling || rk.previousElementSibling;
+    grp.forEach(x => x.remove());
+    if (!ed.querySelector('.rk')) rkIndsaet(ed, null, ed.dataset.ed === 'ing' ? { art: 'ing' } : { niv: 0 }, false);
+    else if (naboe) rkFokus(naboe);
+  },
   laerredRediger(el) { const ja = el.dataset.v === '1'; Laerred.saetRediger(ja); tegnLaerredKnapper(ja); if (ja) Hjaelper.sig('Træk i en ting for at flytte den. Tryk på den for at gøre den større eller dreje den.', { nu: true }); },
   vaelgBillede() { $('#billedfil').click(); },
   async figur(el) { await Laerred.ny('figur', el.dataset.v); },
@@ -864,10 +1070,23 @@ const H = {
   print() { window.print(); },
   forslag: tegnForslag,
   async kopierBesked() {
-    const kopi = kopier(CLAUDE_BESKED); // start kopieringen, før Claude åbner og tager fokus
-    window.open('https://claude.ai/new', '_blank', 'noopener');
-    const ok = await kopi;
-    toast(ok ? 'Beskeden er kopieret. Sæt den ind hos Claude.' : 'Beskeden kunne ikke kopieres. Prøv igen.');
+    const udklip = await laesUdklip(); // null = browseren måtte ikke læse udklipsholderen
+    // Ligger beskeden selv i udklipsholderen (man trykker to gange), så beholder vi den, vi allerede har bygget.
+    let status;
+    if (udklip && udklip.startsWith(CLAUDE_FOERSTE)) status = 'igen';
+    else if (udklip) { claudeBesked = CLAUDE_BESKED + udklip + '\n'; status = 'med'; }
+    else { claudeBesked = CLAUDE_BESKED; status = udklip === null ? 'naegtet' : 'tom'; }
+    const ok = await kopier(claudeBesked);
+    // Hos Claude kan feltet udfyldes via adressen. Er beskeden for lang til det, åbner Claude tomt, og beskeden ligger i udklipsholderen.
+    const kodet = encodeURIComponent(claudeBesked);
+    $('#aabnClaude').href = 'https://claude.ai/new' + (kodet.length < 7000 ? '?q=' + kodet : '');
+    $('#kopinote').textContent = !ok ? 'Beskeden kunne ikke kopieres. Prøv igen.' : {
+      med: 'Kopieret. Din opskrift er sat med i beskeden.',
+      igen: 'Kopieret igen.',
+      tom: 'Kopieret. Der lå ingen tekst i udklipsholderen, så beskeden er uden opskrift. Sæt opskriften ind hos Claude.',
+      naegtet: 'Kopieret. Appen måtte ikke læse din udklipsholder, så beskeden er uden opskrift. Sæt opskriften ind hos Claude.'
+    }[status];
+    toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres');
   },
   async gemImport(el) {
     const svar = laesImport($('#claudesvar').value);
