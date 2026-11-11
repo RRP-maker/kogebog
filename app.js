@@ -46,16 +46,6 @@ const TYPER = {
       { n: 'fremgangsmaade', l: 'Trin', t: 'trin', hint: 'Ét trin i hvert felt. Tryk på «deltrin» for at lave små skridt under et trin. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' }
     ]
   },
-  metoder: {
-    navn: 'Metode', ny: 'Ny metode', rediger: 'Rediger metode',
-    tom: 'Der er ingen metoder endnu. En metode er en teknik, fx «koge ris» eller «piske æggehvider».',
-    bekraeft: 'Vil du slette metoden? Den kan ikke hentes tilbage.', slettet: 'Metoden er slettet',
-    felter: [
-      { n: 'titel', l: 'Navn', t: 'text', kraevet: true, hint: 'Skriv det, som det står i opskrifterne, fx «koge ris». Så bliver ordet til et link.' },
-      { n: 'beskrivelse', l: 'Kort forklaring', t: 'textarea', rows: 3 },
-      { n: 'trin', l: 'Sådan gør du', t: 'textarea', rows: 8, hint: 'Ét trin på hver linje.' }
-    ]
-  },
   tips: {
     navn: 'Tips', ny: 'Nyt tip', rediger: 'Rediger tip',
     tom: 'Der er ingen tips endnu. Et tip er et lille råd, fx «Kom salt i vandet, før pastaen».',
@@ -106,7 +96,7 @@ function chips(r) {
 }
 const linjer = t => String(t || '').split('\n').map(s => s.trim().replace(/^(\d+[.)]|[-•*])\s+/, '')).filter(Boolean);
 
-// Ark: lille vindue nedefra. Bruges til bekræftelse og til at oprette tip/metode på stedet.
+// Ark: lille vindue nedefra. Bruges til bekræftelse og til at oprette tip på stedet.
 function ark(html) {
   lukArk();
   const d = document.createElement('div');
@@ -187,11 +177,10 @@ function visTal(n) {
 }
 const visIng = (i, faktor = 1) => [i.m != null ? visTal(i.m * faktor) : '', i.e, i.n].filter(Boolean).join(' ');
 
-// ---------- Begreber: ord i en opskrift, der har et tip eller en metode ----------
-function begreberAf(tips, metoder) {
+// ---------- Begreber: ord i en opskrift, der har et tip ----------
+function begreberAf(tips) {
   return [
-    ...tips.filter(t => t.titel).map(t => ({ type: 'tips', id: t.id, navn: t.titel.trim(), tekst: t.tekst })),
-    ...metoder.filter(m => m.titel).map(m => ({ type: 'metoder', id: m.id, navn: m.titel.trim(), tekst: [m.beskrivelse, linjer(m.trin).map((s, i) => `${i + 1}. ${s}`).join(' ')].filter(Boolean).join(' ') }))
+    ...tips.filter(t => t.titel).map(t => ({ type: 'tips', id: t.id, navn: t.titel.trim(), tekst: t.tekst }))
   ].filter(b => b.navn.length > 1).sort((a, b) => b.navn.length - a.navn.length);
 }
 const BOGSTAV = /[a-zæøåéü0-9]/;
@@ -289,7 +278,6 @@ async function route() {
     if (c === 'rediger') return await formular(a, b);
     if (a === 'opskrifter' && b && c === 'lav') return await lavSide(b);
     if (a === 'opskrifter' && b) return await opskriftSide(b);
-    if (a === 'metoder' && b) return await metodeSide(b);
     return await liste(a);
   } catch (e) { fejl(e); }
 }
@@ -301,7 +289,6 @@ async function forside() {
   app.innerHTML = `<h1 class="forsidetitel">Hvad skal vi lave?</h1>
     <nav class="faner">
       <a class="fane f1" href="#/opskrifter"><span aria-hidden="true">${ik('gryde')}</span>Opskrifter</a>
-      <a class="fane f2" href="#/metoder"><span aria-hidden="true">${ik('ske')}</span>Metode</a>
       <a class="fane f3" href="#/tips"><span aria-hidden="true">${ik('paere')}</span>Tips</a>
     </nav>
     <h2>Favoritter</h2>
@@ -309,7 +296,7 @@ async function forside() {
     <nav class="genveje">
       <a class="knap" href="#/forslag">${ik('kurv')} Hvad kan jeg lave?</a>
     </nav>`;
-  Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Metode og Tips kan du lære, hvordan man gør. Favoritter er dem med stjerne.');
+  Hjaelper.side('Her er forsiden. Tryk på Opskrifter for at finde en ret. Under Tips kan du læse små råd. Favoritter er dem med stjerne.');
   tilfoejTilHjem();
   const [fav, ops] = await Promise.all([api('favoritter?select=opskrift_id'), api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter&order=titel')]);
   if (id !== visning) return;
@@ -335,7 +322,7 @@ async function liste(type) {
   const id = visning, T = TYPER[type];
   henter();
   const [rader, ekstra] = await Promise.all([
-    api(`${type}?select=*&order=${type === 'opskrifter' || type === 'metoder' ? 'titel' : 'oprettet.desc'}`),
+    api(`${type}?select=*&order=${type === 'opskrifter' ? 'titel' : 'oprettet.desc'}`),
     type === 'tips' ? api('opskrifter?select=id,titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : []
   ]);
   if (id !== visning) return;
@@ -356,7 +343,6 @@ async function liste(type) {
   const s = $('#soeg');
   if (s) s.addEventListener('input', () => { L.q = s.value.trim().toLowerCase(); tegnListe(); });
   Hjaelper.side({ opskrifter: 'Her er alle opskrifter. Skriv i søgefeltet for at finde en ret, eller tryk på en kategori. Tryk på «Ny opskrift» for at skrive din egen.',
-    metoder: 'En metode er en teknik, fx at koge ris. Hvis en metode har samme navn som et ord i en opskrift, bliver ordet til et link.',
     tips: 'Et tip er et lille råd. Hvis et tip har samme navn som et ord i en opskrift, bliver ordet til et link.' }[type]);
 }
 function tegnListe() {
@@ -365,7 +351,6 @@ function tegnListe() {
     (!q || (r.titel || '').toLowerCase().includes(q) || (type === 'opskrifter' && ingAf(r).some(i => i.n.toLowerCase().includes(q)))));
   $('#liste').innerHTML = vis.length ? vis.map(r => {
     if (type === 'opskrifter') return opskriftKort(r, L.fav.has(r.id));
-    if (type === 'metoder') return `<a class="kort" href="#/metoder/${r.id}"><strong>${esc(r.titel)}</strong>${r.beskrivelse ? `<span>${esc(r.beskrivelse)}</span>` : ''}</a>`;
     const til = L.navne[r.opskrift_id];
     return `<article class="kort" id="tip-${r.id}">${r.titel ? `<strong>${esc(r.titel)}</strong>` : ''}<p class="tekst">${esc(r.tekst)}</p>
       ${til ? `<p class="lille">Til: <a href="#/opskrifter/${r.opskrift_id}">${esc(til)}</a></p>` : ''}${knapper('tips', r.id)}</article>`;
@@ -375,22 +360,6 @@ const knapper = (type, id, ekstra = '') => `<div class="rakke skaerm">
   <a class="knap" href="#/${type}/${id}/rediger">Rediger</a>${ekstra}
   <button class="knap fare" data-h="slet" data-v="${type}:${id}">Slet</button></div>`;
 
-// ---------- Metode ----------
-async function metodeSide(rid) {
-  const id = visning;
-  henter();
-  const [r] = await api(`metoder?id=eq.${enc(rid)}&select=*`);
-  if (id !== visning) return;
-  if (!r) return info('Metoden findes ikke længere.<br><a href="#/metoder">Tilbage til Metode</a>');
-  const trin = linjer(r.trin);
-  app.innerHTML = `<a class="tilbage" href="#/metoder">‹ Tilbage</a><h1>${esc(r.titel)}</h1>
-    ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
-    <h2>Sådan gør du</h2>
-    ${trin.length ? `<ol class="trin">${trin.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '<p class="lille">Der er ingen trin endnu. Tryk på «Rediger» for at skrive dem.</p>'}
-    ${knapper('metoder', r.id)}`;
-  Hjaelper.side('Her er en metode. Læs trinene, og prøv selv. Du kan rette teksten med «Rediger».');
-}
-
 // ---------- Opskrift ----------
 let S = null; // den opskrift, der vises
 const portValg = {};
@@ -398,15 +367,15 @@ async function opskriftSide(rid) {
   const id = visning;
   henter();
   const q = `opskrift_id=eq.${enc(rid)}`;
-  const [rr, tips, metoder, fav, stj, lr] = await Promise.all([
-    api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*&order=oprettet.desc'), api('metoder?select=*'),
+  const [rr, tips, fav, stj, lr] = await Promise.all([
+    api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*&order=oprettet.desc'),
     api(`favoritter?${q}&select=id`), api(`stjerner?${q}&select=antal,bruger_id`), api(`laerred?${q}&select=*&order=oprettet`)
   ]);
   if (id !== visning) return;
   const r = rr[0];
   if (!r) return info('Opskriften findes ikke længere.<br><a href="#/opskrifter">Tilbage til Opskrifter</a>');
-  S = { r, tips, metoder, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
-  kendteBegreber = begreberAf(tips, metoder);
+  S = { r, tips, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
+  kendteBegreber = begreberAf(tips);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
   app.innerHTML = `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>
     ${vaerktoej(`<a class="knap" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
@@ -488,13 +457,13 @@ async function lavSide(rid) {
   const id = visning;
   henter();
   const q = `opskrift_id=eq.${enc(rid)}`;
-  const [rr, tips, metoder, stj] = await Promise.all([api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*'), api('metoder?select=*'), api(`stjerner?${q}&select=antal,bruger_id`)]);
+  const [rr, tips, stj] = await Promise.all([api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*'), api(`stjerner?${q}&select=antal,bruger_id`)]);
   if (id !== visning) return;
   const r = rr[0];
   if (!r) return info('Opskriften findes ikke længere.<br><a href="#/opskrifter">Tilbage til Opskrifter</a>');
-  kendteBegreber = begreberAf(tips, metoder);
+  kendteBegreber = begreberAf(tips);
   K = { r, trin: trinAf(r), i: -1, port: portValg[rid] || r.portioner || 4, talt: false, afkr: {} };
-  S = { r, tips, metoder, stj, port: K.port, fav: false };
+  S = { r, tips, stj, port: K.port, fav: false };
   holdSkaerm();
   tegnLav();
   Hjaelper.side('Her laver du retten. Der er ét trin ad gangen. Tryk på «Næste», når du er færdig med et trin. Står der en tid, kan du starte et ur.');
@@ -999,8 +968,7 @@ const H = {
     if (!b || (aaben && aaben.dataset.for === el.dataset.v && aaben.previousElementSibling === el)) return;
     const f = document.createElement('span');
     f.className = 'forklaring'; f.dataset.for = el.dataset.v; f.setAttribute('role', 'note');
-    f.innerHTML = `<b>${esc(b.navn)}</b> <i>${type === 'tips' ? 'Tip' : 'Metode'}</i><span>${esc(b.tekst || 'Der er ingen forklaring endnu.')}</span>
-      ${type === 'metoder' ? `<a href="#/metoder/${id}">Se hele metoden</a>` : ''}`;
+    f.innerHTML = `<b>${esc(b.navn)}</b> <i>Tip</i><span>${esc(b.tekst || 'Der er ingen forklaring endnu.')}</span>`;
     el.after(f);
     Hjaelper.sig(`${b.navn}: ${b.tekst || 'Der er ingen forklaring endnu.'}`, { peg: el, nu: true });
   },
@@ -1012,7 +980,6 @@ const H = {
       <form id="begrebform" novalidate>
         <label for="b_navn">Ordet fra opskriften</label><small>Skriv det præcis, som det står, fx «koge ris».</small>
         <input id="b_navn" type="text" value="${esc(valgt)}" autocomplete="off">
-        <div class="valgrakke"><label><input type="radio" name="b_type" value="tips" checked> Tip</label><label><input type="radio" name="b_type" value="metoder"> Metode</label></div>
         <label for="b_tekst">Forklaring</label><textarea id="b_tekst" rows="4"></textarea>
         <div id="arkfejl"></div>
         <div class="rakke"><button class="knap" type="button" data-h="lukArk">Fortryd</button><button class="knap primaer" type="submit">Gem</button></div>
@@ -1021,13 +988,13 @@ const H = {
     $('.ark-bag', d).addEventListener('click', lukArk);
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const navn = $('#b_navn').value.trim(), tekst = $('#b_tekst').value.trim(), type = form.elements.b_type.value;
+      const navn = $('#b_navn').value.trim(), tekst = $('#b_tekst').value.trim();
       if (!navn || !tekst) { $('#arkfejl').innerHTML = '<div class="fejlboks">Skriv både ordet og en forklaring.</div>'; return; }
       try {
-        const [ny] = await api(type, { method: 'POST', body: type === 'tips' ? { titel: navn, tekst } : { titel: navn, beskrivelse: tekst } });
+        const [ny] = await api('tips', { method: 'POST', body: { titel: navn, tekst } });
         if (!paaOpskrift) { lukArk(); toast('Gemt'); Hjaelper.glad(`Gemt! Nu kan man trykke på «${navn}» i opskrifter, hvor ordet står.`); return; }
-        (type === 'tips' ? S.tips : S.metoder).push(ny);
-        kendteBegreber = begreberAf(S.tips, S.metoder);
+        S.tips.push(ny);
+        kendteBegreber = begreberAf(S.tips);
         lukArk(); tegnTrin();
         const findes = trinAf(S.r).some(t => [t.t, ...t.del].some(x => medBegreber(x, kendteBegreber.filter(b => b.id === ny.id)).includes('data-h')));
         Hjaelper.glad(findes ? `Gemt! Nu kan man trykke på «${navn}» i opskriften.` : `Gemt! Ordet «${navn}» står ikke i trinene, så der er ikke noget link endnu.`);
@@ -1104,7 +1071,7 @@ const H = {
     } catch (err) { el.disabled = false; throw err; }
   },
   async eksport() {
-    const tabeller = ['opskrifter', 'tips', 'metoder', 'favoritter', 'stjerner', 'laerred'], data = { hentet: new Date().toISOString() };
+    const tabeller = ['opskrifter', 'tips', 'favoritter', 'stjerner', 'laerred'], data = { hentet: new Date().toISOString() };
     for (const t of tabeller) data[t] = await api(`${t}?select=*`);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));

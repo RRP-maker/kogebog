@@ -1,6 +1,6 @@
 # Kogebog
 
-En delt kogebog som statisk web app: opskrifter, metode og tips i et kladdehæfte, med hjælperen Grydelil.
+En delt kogebog som statisk web app: opskrifter og tips i et kladdehæfte, med hjælperen Grydelil.
 
 - **Hosting:** GitHub Pages (branch `main`, mappe `/`).
 - **Database:** Supabase. `config.js` indeholder kun Project URL og den offentlige nøgle.
@@ -17,7 +17,7 @@ En delt kogebog som statisk web app: opskrifter, metode og tips i et kladdehæft
 | `laerred.js` | Lærred med billeder og figurer (Konva) |
 | `sw.js`, `manifest.webmanifest` | Installér på hjemmeskærm, læs uden internet |
 
-Tabeller: `opskrifter`, `tips`, `metoder`, `favoritter`, `stjerner`, `laerred`. Alle har åben læse- og skriveadgang.
+Tabeller: `opskrifter`, `tips`, `favoritter`, `stjerner`, `laerred`. Alle har åben læse- og skriveadgang.
 
 **Format i databasen (ingen ekstra kolonner):**
 - `opskrifter.ingredienser` er en liste. `{ "g": "Sovs" }` er en overskrift, resten er `{ m, e, n }`.
