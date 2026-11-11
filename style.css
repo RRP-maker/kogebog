@@ -586,7 +586,7 @@ input:focus, textarea:focus, select:focus, input:focus-visible, textarea:focus-v
 /* Sortér og ret med Claude: små felter, fast knapbredde */
 .ark-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ark-top h2 { margin: 0; }
-.modusknap { width: 176px; padding: 0 8px; white-space: nowrap; }
+.modusknap { width: 232px; padding: 0 8px; white-space: nowrap; }
 .felt-knapper .hoejre { display: flex; align-items: center; gap: 8px; }
 textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px; line-height: 32px; resize: none; }
 

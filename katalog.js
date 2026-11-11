@@ -1,5 +1,5 @@
 // Kataloget over ingredienser (tabellerne «ingredienser» og «ingrediens_kategorier» i Supabase).
-// Opskrifter lægger deres ingredienser her. Kategorien kommer fra kataloget, fra Claude, fra dig, eller bliver «Andet» (tom).
+// Opskrifter lægger deres ingredienser her. Kategorien kommer fra kataloget, fra Claude eller fra dig. Uden kategori (tom) hedder «Ikke kategoriseret». «Andet» er en rigtig kategori til det, der ikke passer andre steder.
 const Katalog = (() => {
   let kat = [], ing = [];
   const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -7,7 +7,13 @@ const Katalog = (() => {
   const katId = navn => { const k = kat.find(x => x.navn_norm === norm(navn)); return k ? k.id : null; };
   const sorteret = () => [...kat].sort((a, b) => a.raekkefolge - b.raekkefolge || a.navn.localeCompare(b.navn, 'da'));
   const unik = navne => [...new Set(navne.map(rens).filter(Boolean))];
-  async function hent() { [kat, ing] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*')]); }
+  async function hent() {
+    [kat, ing] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*')]);
+    if (!kat.some(k => k.navn_norm === 'andet')) { // «Andet» er en rigtig kategori, som altid skal findes (står sidst)
+      try { await api('ingrediens_kategorier?on_conflict=navn_norm', { method: 'POST', flet: 'ignorer', body: { navn: 'Andet', navn_norm: 'andet', raekkefolge: 1000 } }); kat = await api('ingrediens_kategorier?select=*'); }
+      catch (e) { console.error(e); }
+    }
+  }
   // Gæt ud fra kendte ingredienser: «rødløg» og «røde løg» ligner «løg». Længste match vinder.
   function gaet(n) {
     let bedst = null;
@@ -19,15 +25,15 @@ const Katalog = (() => {
   }
   const ukendte = navne => unik(navne).filter(n => !ing.some(i => i.navn_norm === n) && !gaet(n));
 
-  // Ved «Gem» i en opskrift: spørg om kategorier til ingredienser, appen ikke kender. Springer man over, bliver de «Andet».
+  // Ved «Gem» i en opskrift: spørg om kategorier til ingredienser, appen ikke kender. Springer man over, bliver de «Ikke kategoriseret».
   async function spoerg(navne) {
     await hent();
     const uk = ukendte(navne);
     if (!uk.length) return {};
     return new Promise(svar => {
       const valg = sorteret().map(k => `<option value="${k.id}">${esc(k.navn)}</option>`).join('');
-      const d = ark(`<h2>Hvilken kategori?</h2><small>Vælg en kategori til hver ny ingrediens. Springer du over, står de under «Andet».</small>
-        ${uk.map((n, i) => `<label for="kn${i}">${esc(n)}</label><select id="kn${i}" class="felt felt-m" data-n="${i}"><option value="">Andet</option>${valg}</select>`).join('')}
+      const d = ark(`<h2>Hvilken kategori?</h2><small>Vælg en kategori til hver ny ingrediens. Springer du over, står de under «Ikke kategoriseret».</small>
+        ${uk.map((n, i) => `<label for="kn${i}">${esc(n)}</label><select id="kn${i}" class="felt felt-m" data-n="${i}"><option value="">Ikke kategoriseret</option>${valg}</select>`).join('')}
         <div class="rakke"><button type="button" class="knap" data-kat="spring">Spring over</button><button type="button" class="knap primaer" data-tpid="gem" data-kat="gem">Gem</button></div>`);
       d.addEventListener('click', e => {
         const a = e.target.closest('[data-kat]');
@@ -53,8 +59,8 @@ const Katalog = (() => {
   const kategorier = () => sorteret().map(k => k.navn);
 
   // Knappen i Hvad kan jeg lave?: bed Claude om at sortere og rette ingredienserne
-  let andre = [], efterSortering = null, besked = '', modus = 'alle'; // modus: «alle» (ret alle kategorier) eller «andet» (kun dem uden kategori)
-  const MODUSNAVN = { alle: 'Ret alle kategorier', andet: 'Ret kun Andet' };
+  let andre = [], efterSortering = null, besked = '', modus = 'alle'; // modus: «alle» (ret alle kategorier) eller «andet» (kun dem uden kategori, «Ikke kategoriseret»)
+  const MODUSNAVN = { alle: 'Ret alle kategorier', andet: 'Ret kun ikke kategoriserede' };
   function bygBesked() {
     const alle = [...ing].sort((a, b) => a.navn.localeCompare(b.navn, 'da'));
     andre = modus === 'alle' ? alle : alle.filter(i => !i.kategori_id);
@@ -75,7 +81,7 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format (ingre
 }
 
 Ingredienser:
-${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.find(c => c.id === i.kategori_id) || {}).navn || 'Andet'})` : '')).join('\n')}
+${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.find(c => c.id === i.kategori_id) || {}).navn || 'Ikke kategoriseret'})` : '')).join('\n')}
 `;
   }
   function visBesked() {
@@ -122,7 +128,7 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.
   function oversigtHtml() {
     const grupper = new Map();
     for (const c of sorteret()) grupper.set(c.id, { navn: c.navn, liste: [] });
-    const andet = { navn: 'Andet', liste: [] };
+    const andet = { navn: 'Ikke kategoriseret', liste: [] };
     for (const i of ing) (grupper.get(i.kategori_id) || andet).liste.push(i.navn);
     const alle = [...grupper.values(), andet].filter(g => g.liste.length);
     return alle.length ? `<table class="ing-tabel tekst-s"><thead><tr><th>Kategori</th><th>Ingredienser</th></tr></thead><tbody>${alle.map(g =>
@@ -138,7 +144,7 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.
       $('.ark-bag', d).addEventListener('click', lukArk);
     },
     katModus() {
-      if (modus === 'alle' && !ing.some(i => !i.kategori_id)) { toast('Der står ikke noget under «Andet».'); return; }
+      if (modus === 'alle' && !ing.some(i => !i.kategori_id)) { toast('Der står ikke noget under «Ikke kategoriseret».'); return; }
       modus = modus === 'alle' ? 'andet' : 'alle'; visBesked();
     },
     async katKopier() {

@@ -59,7 +59,7 @@ const Hjemme = (() => {
     const a = document.activeElement, rk0 = a && a.closest && a.closest('#hj-liste .hj-rk');
     const fokus = rk0 && { id: rk0.dataset.id, k: [...a.classList].find(c => c.startsWith('hj-')) };
     const sorter = [...D.kat].sort((x, y) => x.raekkefolge - y.raekkefolge || x.navn.localeCompare(y.navn, 'da')).map(k => ({ navn: k.navn, id: k.id }));
-    sorter.push({ navn: 'Andet', id: null });
+    sorter.push({ navn: 'Ikke kategoriseret', id: null });
     const navn = h => (ingAf(h.ingrediens_id) || {}).navn || '';
     const html = sorter.map(g => {
       const rader = D.hj.filter(h => ((ingAf(h.ingrediens_id) || {}).kategori_id || null) === g.id && (g.id || !katAf(((ingAf(h.ingrediens_id) || {}).kategori_id))))
@@ -111,13 +111,14 @@ const Hjemme = (() => {
     const [ny] = await api(`ingredienser?id=eq.${enc(ingId)}`, { method: 'PATCH', body: { kategori_id: katId } });
     Object.assign(ingAf(ingId), ny);
     lukArk(); tegn();
-    toast(`${ingAf(ingId).navn} står nu under ${katId ? katAf(katId).navn : 'Andet'}`);
+    toast(`${ingAf(ingId).navn} står nu under ${katId ? katAf(katId).navn : 'Ikke kategoriseret'}`);
   }
 
   const navne = () => D.hj.map(h => (ingAf(h.ingrediens_id) || {}).navn).filter(Boolean);
   // Lægger listen ind i en boks på siden. «aendret» kaldes, hver gang listen ændrer sig.
   async function vis(boks, aendret) {
     const id = visning;
+    await Katalog.hent().catch(() => {}); // sørger for, at kategorien «Andet» findes
     const [kat, ing, hj] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('hjemme?select=*&order=oprettet')]);
     if (id !== visning) return;
     D = { kat, ing, hj }; ved = aendret;
@@ -141,7 +142,7 @@ const Hjemme = (() => {
       const kat = [...D.kat].sort((x, y) => x.raekkefolge - y.raekkefolge || x.navn.localeCompare(y.navn, 'da'));
       const d = ark(`<h2>Kategori</h2><small>${esc(i.navn)} hører til:</small>
         <div class="hj-katvalg">${kat.map(k => `<button type="button" class="chip${k.id === i.kategori_id ? ' valgt' : ''}" data-h="hjVaelgKat" data-v="${k.id}">${esc(k.navn)}</button>`).join('')}
-          <button type="button" class="chip${i.kategori_id ? '' : ' valgt'}" data-h="hjVaelgKat" data-v="">Andet</button></div>
+          <button type="button" class="chip${i.kategori_id ? '' : ' valgt'}" data-h="hjVaelgKat" data-v="">Ikke kategoriseret</button></div>
         <label for="hj_nykat">Ny kategori</label>
         <div class="linjeform"><input id="hj_nykat" type="text" maxlength="30" autocomplete="off" placeholder="fx Brød"><button type="button" class="knap primaer" data-h="hjNyKat">Opret</button></div>
         <div id="arkfejl"></div>
@@ -154,7 +155,7 @@ const Hjemme = (() => {
       if (!n) { $('#arkfejl').innerHTML = '<div class="fejlboks">Skriv et navn til kategorien.</div>'; return; }
       let k = D.kat.find(x => x.navn_norm === n);
       if (!k) {
-        [k] = await api('ingrediens_kategorier', { method: 'POST', body: { navn, navn_norm: n, raekkefolge: Math.max(0, ...D.kat.map(x => x.raekkefolge)) + 1 } });
+        [k] = await api('ingrediens_kategorier', { method: 'POST', body: { navn, navn_norm: n, raekkefolge: Math.max(0, ...D.kat.filter(x => x.navn_norm !== 'andet').map(x => x.raekkefolge)) + 1 } });
         D.kat.push(k);
       }
       await gemKat(valgtIng, k.id);
