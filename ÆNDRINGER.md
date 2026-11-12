@@ -2,6 +2,16 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.6.0 · «Hvad kan jeg lave?», madplan og formularer (fase 3c)
+- «Hvad kan jeg lave?» i to ruder, når «to ruder» er slået til og skærmen er bred: det, du har derhjemme, i et kort til venstre (ruller for sig), forslagene og «Madplan» til højre. Ellers én kolonne som før, med samme rækkefølge.
+- Kategorierne i ingredienslisten kan foldes sammen (tryk på navnet). Valget huskes på enheden.
+- «Madplan» står øverst i højre rude og ikke længere over det første forslag.
+- Madplan er uændret i opbygningen: dagene står i kolonner (1, 2 eller 3 efter bredden), og valgene står over dem. Beslutning: Valgene blev ikke samlet i et kort, fordi dine gemte placeringer i tilpasseren er målt fra de nuværende steder og ville ende forkert.
+- Formularer er altid én kolonne på højst 704 px (44 kolonner). Knapper har deres egen bredde (før var «Gem» 910 px).
+- «Gem» sidder ikke længere fast over indholdet, men står i flowet efter sidste felt, så den aldrig dækker kategorier eller sværhedsvalg. Beslutning: Den kan ikke længere ses uden at rulle ned på lange formularer.
+- «Fjern linjen» er 44 × 44 px og har eget sted til højre i feltet (teksten kommer aldrig ind under den).
+- Navne: «Fortryd» bruges kun om at fortryde en ændring, «Tilbage» om at gå et skridt tilbage og «Annuller» om at forlade en formular.
+
 ## 1.5.2 · «Tilbage» i højre rude, værktøjsknapper til højre
 - Højre rude har «Tilbage» på første række. Den går til listen alene (ikke til forrige opskrift). Kommer man fra «Hvad kan jeg lave?», går den dertil som før.
 - «Tilføj tip» og «Rediger» står helt til højre på samme række som «Tilbage». Standardplaceringerne er skrevet om fra pixels til «ved højre kant, afstand fra kanten» (kant 1), så de passer til alle bredder. Før lå «Tilføj tip» oven på «Tilbage» på brede skærme.

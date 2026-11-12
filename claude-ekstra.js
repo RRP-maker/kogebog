@@ -9,7 +9,7 @@ const ClaudeEkstra = (() => {
         <li>${tekst1}
           ${udenEgen ? '' : `<textarea id="egen" rows="5" data-husk="${husk}" placeholder="Skriv her" aria-label="Din besked"></textarea>
           ${felter(pre + '-egen', 'egen')}`}
-          <button class="knap primaer stor" data-tpid="${pre}-kopier" data-h="${kopierH}">${ik('gnist')} Kopiér besked</button></li>
+          <button class="knap primaer stor formknap" data-tpid="${pre}-kopier" data-h="${kopierH}">${ik('gnist')} Kopiér besked</button></li>
         <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt.
           <div class="rakke venstre"><a class="knap stor" data-tpid="aabn-claude" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
         <li>Kopiér Claudes svar, og sæt det ind her:
@@ -17,7 +17,7 @@ const ClaudeEkstra = (() => {
           ${felter(pre + '-svar', 'claudesvar')}</li>
       </ol>
       <div id="formfejl"></div>
-      <button class="knap primaer stor" data-tpid="${pre}-gem" data-h="${gemH}">${gemTekst}</button>${ekstra}`;
+      <button class="knap primaer stor formknap" data-tpid="${pre}-gem" data-h="${gemH}">${gemTekst}</button>${ekstra}`;
     document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); });
     Hjaelper.side([
       ...(udenEgen ? [] : [{ tekst: 'Skriv her, hvad Claude skal gøre.', maal: '#egen', bev: 'salto' }]),
@@ -46,7 +46,7 @@ const ClaudeEkstra = (() => {
       udenEgen: true,
       tekst1: `Claude skriver «${esc(r.titel)}» om, så den følger skabelonen. Tryk på knappen. Så kopierer jeg beskeden med din opskrift.`,
       plads: '{ "navn": "…" }',
-      ekstra: sikkerhedskopi() ? '<button class="knap stor" data-tpid="opdat-gendan" data-h="gendanOpdat">Gendan det, der stod før</button>' : '' });
+      ekstra: sikkerhedskopi() ? '<button class="knap stor formknap" data-tpid="opdat-gendan" data-h="gendanOpdat">Gendan det, der stod før</button>' : '' });
   }
   async function tipsSide() {
     const id = visning;

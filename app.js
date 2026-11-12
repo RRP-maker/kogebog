@@ -343,8 +343,8 @@ async function route() {
   if (a === 'forslag' || a === 'hjemme') opskriftFra = a === 'forslag' && b === 'madplan' ? '#/forslag/madplan' : '#/forslag'; else if (a !== 'opskrifter' || !b) opskriftFra = null;
   if (a !== 'opskrifter') FIL = null; // søgning og filtre huskes kun, mens man er i opskrifterne
   // To ruder (brede skærme, indstilling): kun når en opskrift er valgt. Listen til venstre bliver stående, og kun opskriften til højre skiftes
-  const iRuder = ruderAktiv() && a === 'opskrifter' && !!b && b !== 'ny' && !c, bliv = iRuder && !!app.querySelector('.ruder');
-  document.body.classList.toggle('ruder-vist', iRuder);
+  const iRuder = ruderAktiv() && a === 'opskrifter' && !!b && b !== 'ny' && !c, iForslag = ruderAktiv() && (a === 'forslag' || a === 'hjemme') && !b, bliv = iRuder && !!app.querySelector('.ruder');
+  document.body.classList.toggle('ruder-vist', iRuder || iForslag);
   if (!bliv && !foerste && app.firstChild) {
     app.classList.remove('sideind'); app.classList.add('sideud');
     await new Promise(r => setTimeout(r, 120));
@@ -427,7 +427,7 @@ const BRED = matchMedia('(min-width: 1024px)');
 const toRuder = () => { const v = lager.hent('toRuder', null); return v === null ? matchMedia('(hover: hover) and (pointer: fine)').matches : !!v; };
 const ruderAktiv = () => toRuder() && BRED.matches;
 const iOpskrifter = () => /^#\/opskrifter(\/(?!ny$)[^/]+)?$/.test(location.hash);
-BRED.addEventListener('change', () => { if (toRuder() && iOpskrifter()) route(); });
+BRED.addEventListener('change', () => { if (toRuder() && (iOpskrifter() || /^#\/(forslag|hjemme)\/?$/.test(location.hash))) route(); });
 const HENTER = '<p class="tomt">Henter…</p>';
 // Ruller kun listen (ikke siden), så den valgte opskrift kan ses
 function visValgt() {
@@ -826,7 +826,7 @@ async function formular(type, rid) {
     <form id="form" novalidate>
       ${T.felter.map(f => felt(f, rad, ekstra)).join('')}
       <div id="formfejl"></div>
-      <button class="knap primaer stor" data-tpid="gem" type="submit">Gem</button>
+      <button class="knap primaer stor formknap" data-tpid="gem" type="submit">Gem</button>
     </form>`;
   Hjaelper.side(type === 'opskrifter' ? [
     { tekst: 'Start med navnet på retten.', maal: '#form input:not([type=hidden])', bev: 'salto' },
@@ -924,15 +924,16 @@ async function forslagSide() {
   F = (await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel')).filter(r => !r.skjul_forslag);
   await Katalog.hent().catch(() => {}); // kategorierne bruges til at kende krydderier
   if (id !== visning) return;
-  app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Hvad kan jeg lave?</h1>
-    <div id="hj-boks"></div>
-    <div id="forslag-nu"></div>
-    <a class="knap felt felt-m" data-tpid="madplan" href="#/forslag/madplan">${ik('gryde')} Madplan</a>
-    <div id="hj-liste-boks"></div>
-    <div class="rakke to-knapper"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button>
-      <button type="button" class="knap" data-tpid="sorter-claude" data-h="sorterAndet">${ik('gnist')} Sortér med Claude</button></div>
-    <div id="forslag-resten"></div>
-    <button type="button" class="knap" data-h="ingOversigt">${ik('tag')} Se alle ingredienser</button>`;
+  // Brede skærme med «to ruder»: ingredienserne i et kort til venstre, forslagene til højre. Ellers én kolonne, som før.
+  const tilbage = '<a class="tilbage" href="#/">‹ Tilbage</a>', titel = '<h1>Hvad kan jeg lave?</h1>',
+    madplan = rude => `<a class="knap felt felt-m" data-tpid="${rude ? 'madplan-rude' : 'madplan'}" href="#/forslag/madplan">${ik('gryde')} Madplan</a>`, // i ruden står knappen på en anden plads end i én kolonne, så den har sit eget id
+    claude = `<div class="rakke to-knapper"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button>
+      <button type="button" class="knap" data-tpid="sorter-claude" data-h="sorterAndet">${ik('gnist')} Sortér med Claude</button></div>`,
+    oversigt = `<button type="button" class="knap" data-h="ingOversigt">${ik('tag')} Se alle ingredienser</button>`;
+  app.innerHTML = ruderAktiv()
+    ? `<div class="ruder ruder-forslag"><section class="rude-liste" aria-label="Det, du har derhjemme">${titel}<div id="hj-boks"></div><div id="hj-liste-boks"></div>${claude}${oversigt}</section>
+      <div class="rude-indhold">${tilbage}${madplan(true)}<div id="forslag-nu"></div><div id="forslag-resten"></div></div></div>`
+    : `${tilbage}${titel}<div id="hj-boks"></div><div id="forslag-nu"></div>${madplan(false)}<div id="hj-liste-boks"></div>${claude}<div id="forslag-resten"></div>${oversigt}`;
   Hjaelper.side([
     { tekst: 'Skriv det, du har derhjemme. Ét ord i hvert felt.', maal: '#hj-boks', bev: 'salto' },
     { tekst: 'Her kommer de retter, du kan lave nu.', maal: '#forslag-nu', bev: 'skridt', valgfri: true },
@@ -1024,7 +1025,7 @@ function importSide() {
       <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
         <textarea id="egen" rows="5" data-husk="importEgen" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
         <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-egen-saet" data-h="saetInd" data-v="egen">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="import-egen-fortryd" data-h="fortrydRyd" data-v="egen" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="import-egen-ryd" data-h="rydFelt" data-v="egen">Ryd</button></span></div>
-        <button class="knap primaer stor" data-tpid="kopier-besked" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button></li>
+        <button class="knap primaer stor formknap" data-tpid="kopier-besked" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
         <div class="rakke venstre"><a class="knap stor" data-tpid="aabn-claude" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
       <li>Kopiér Claudes svar, og sæt det ind her:
@@ -1032,7 +1033,7 @@ function importSide() {
         <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-svar-saet" data-h="saetInd" data-v="claudesvar">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="import-svar-fortryd" data-h="fortrydRyd" data-v="claudesvar" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="import-svar-ryd" data-h="rydFelt" data-v="claudesvar">Ryd</button></span></div></li>
     </ol>
     <div id="formfejl"></div>
-    <button class="knap primaer stor" data-h="gemImport">Gem opskriften</button>`;
+    <button class="knap primaer stor formknap" data-h="gemImport">Gem opskriften</button>`;
   document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); }); // teksten huskes, til opskriften er gemt
   Hjaelper.side([
     { tekst: 'Sæt din opskrift eller dine links ind her.', maal: '#egen', bev: 'salto' },

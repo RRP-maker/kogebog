@@ -55,6 +55,7 @@ const Hjemme = (() => {
       <button type="button" class="rund hj-ikon" data-h="hjKat" aria-label="Skift kategori">${ik('tag')}</button>
       <button type="button" class="rund hj-ikon hj-x" data-h="hjFjern" aria-label="Fjern fra listen">×</button></div>`;
   }
+  const LUKKET = new Set(lager.hent('hjLukket', [])); // kategorier, der er foldet sammen
   function tegn() {
     const el = $('#hj-liste');
     if (!el) return;
@@ -68,7 +69,9 @@ const Hjemme = (() => {
     const kid = h => { const k = (ingAf(h.ingrediens_id) || {}).kategori_id; return k && katAf(k) ? k : (andet ? andet.id : null); };
     const html = sorter.map(g => {
       const rader = D.hj.filter(h => kid(h) === g.id).sort((x, y) => navn(x).localeCompare(navn(y), 'da'));
-      return rader.length ? `<h3 class="hj-grp tekst-l">${esc(g.navn)}</h3><div class="hj-gruppe${rader.length % 2 ? ' ulige' : ''}">${rader.map(raekke).join('')}</div>` : '';
+      if (!rader.length) return '';
+      const gid = g.id || 'ingen', luk = LUKKET.has(gid) && !(fokus && rader.some(h => h.id === fokus.id));
+      return `<h3 class="hj-grp tekst-l"><button type="button" class="hj-fold" data-h="hjFold" data-v="${gid}" aria-expanded="${!luk}">${esc(g.navn)} <small>${rader.length}</small></button></h3>${luk ? '' : `<div class="hj-gruppe${rader.length % 2 ? ' ulige' : ''}">${rader.map(raekke).join('')}</div>`}`;
     }).join('');
     el.innerHTML = html ? LABELS + html : '<p class="tomt">Der står ikke noget endnu. Skriv den første ting i feltet ovenfor.</p>';
     if (fokus) { const x = el.querySelector(`.hj-rk[data-id="${fokus.id}"] .${fokus.k}`); if (x) x.focus(); }
@@ -136,11 +139,12 @@ const Hjemme = (() => {
         <input id="hj-ny-navn" class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ny ingrediens" placeholder="fx gulerødder">
       </div>
       ${listeBoks ? '' : LISTE}`;
-    if (listeBoks) listeBoks.innerHTML = LISTE;
+    if (listeBoks) listeBoks.innerHTML = listeBoks.closest('.rude-liste') ? LISTE.replace('<h2>', '<h2 data-tpid="hj-liste-rude">') : LISTE; // i ruden står overskriften på sin egen plads
     tegn();
   }
 
   Object.assign(H, {
+    hjFold(el) { const g = el.dataset.v; LUKKET.has(g) ? LUKKET.delete(g) : LUKKET.add(g); lager.gem('hjLukket', [...LUKKET]); tegn(); const ny = $(`#hj-liste .hj-fold[data-v="${g}"]`); if (ny) ny.focus(); },
     hjKat(el) {
       const h = D.hj.find(x => x.id === el.closest('.hj-rk').dataset.id), i = h && ingAf(h.ingrediens_id);
       if (!i) return;

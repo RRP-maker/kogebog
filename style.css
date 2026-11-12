@@ -292,10 +292,10 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .rk { display: flex; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); padding-right: 8px; } /* knapperne: 56 + 8 + 56, så deres venstre kanter står på kolonnerne */
 .rk[data-niv="1"] { margin-left: var(--kol); }
 .rk-felt { position: relative; flex: 1; min-width: 0; }
-.rk-tekst { resize: none; overflow: hidden; min-height: 64px; margin: 0; padding-right: 40px; }
+.rk-tekst { resize: none; overflow: hidden; min-height: 64px; margin: 0; padding-right: 56px; } /* 56 px til højre er forbeholdt «Fjern linjen» */
 .rk[data-niv="1"] .rk-tekst { font-size: 19px; }
 .rk.over .rk-tekst { font: 26px/32px var(--hoved); background: var(--gul-svag); }
-.rk-fjern { position: absolute; right: 6px; top: 17px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: rgba(var(--blaek-rgb), .1); color: var(--blyant); font: 20px/1 sans-serif; cursor: pointer; }
+.rk-fjern { position: absolute; right: 6px; top: 10px; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: rgba(var(--blaek-rgb), .1); color: var(--blyant); font: 24px/1 sans-serif; cursor: pointer; touch-action: manipulation; }
 .rk-knap {
   flex: none; width: 56px; height: 64px; padding: 2px 0; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   font: inherit; color: var(--blaek); cursor: pointer; touch-action: manipulation; transition: transform .16s var(--ud), background-color .16s;
@@ -699,11 +699,12 @@ input.felt-l, select.felt-l { height: 96px; }
 .knap.gron::before { background: linear-gradient(rgba(255, 255, 255, .28), rgba(255, 255, 255, 0)); }
 
 /* Hvad har du derhjemme?: små rækker à 32 px */
-.hj-rk.felt-s { grid-template-columns: 48px 64px minmax(0, 1fr) 32px 32px; font-size: 18px; }
+.hj-rk.felt-s { grid-template-columns: 48px 64px minmax(0, 1fr) 40px 40px; font-size: 18px; }
 .hj-rk.felt-s input, .hj-rk.felt-s select { height: 32px; padding: 0 8px; font-size: 18px; border-radius: 10px; }
 .hj-rk.felt-s .hj-mgd { padding: 0 2px; }
 .hj-rk.felt-s select { padding: 0 14px 0 6px; }
-.hj-rk.felt-s .hj-ikon { width: 32px; height: 32px; font-size: 20px; }
+.hj-rk.felt-s .hj-ikon { width: 32px; height: 32px; font-size: 20px; justify-self: center; position: relative; }
+.hj-rk.felt-s .hj-ikon::after { content: ""; position: absolute; inset: -6px -4px; } /* tryk-flade på 44 px, selv om knappen er 32 px */
 .hj-rk.felt-s .hj-ikon .ikon { width: 18px; height: 18px; }
 
 /* Skema over ingredienser og kategorier */
@@ -835,10 +836,11 @@ button.kort { width: 100%; text-align: left; font: inherit; cursor: pointer; }
 .katvalg { display: flex; flex-wrap: wrap; gap: 0 8px; margin: 0; } /* rækkerne står tæt (32 px), så højden er hele rækker */
 .katvalg .chip { height: 32px; font-size: 18px; position: relative; top: calc(var(--l0) - 32px); } /* lille felt: kanterne på to linjer */
 
-/* «Gem» i en formular sidder altid fast i bunden af skærmen, så den ikke kan forsvinde ud af syne */
-#form > button[type=submit] { position: sticky; bottom: calc(12px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 30; width: 100%; box-shadow: 0 8px 24px rgba(var(--skyg-rgb), .35); }
-body:has(#form) #hjaelper { bottom: calc(96px + var(--nav-b) + env(safe-area-inset-bottom)); }
-body:has(#form) #hjaelper-vis { bottom: calc(92px + var(--nav-b) + env(safe-area-inset-bottom)); }
+/* Formularer: én kolonne på højst 44 kolonner (704 px), og knapperne har deres egen bredde. «Gem» står i flowet efter det sidste felt, så den aldrig dækker et felt. */
+#form, #formfejl { max-width: 704px; }
+form > .knap.stor.formknap, main > .knap.stor.formknap, .vejledning .knap.formknap { width: auto; min-width: 192px; max-width: 100%; align-self: flex-start; }
+.formknap { margin: var(--m) 0 var(--pt); }
+.vejledning > li > .formknap { margin: var(--m) 0 var(--pt); }
 
 /* iPad og skærmvending. iPhone står som før, men kan vendes. */
 /* Tablet: bredere side, så iPad ikke ligner en stor telefon. Rækkerne à 32 px og den røde margen er uændrede. */
@@ -909,7 +911,6 @@ body[data-side=lav] #nav { display: none; }
   #nav a .ikon, #nav #tilpas-knap .ikon { width: 22px; height: 22px; }
   main { padding-top: 32px; }
   #hjaelper, #hjaelper-vis { display: none !important; }
-  #form > button[type=submit] { position: static; margin-top: 0; } /* afkrydsningen over knappen ender 12 px under en række, så knappen står på nettet uden egen margen */
   html { scroll-padding: 16px 0; }
 }
 /* iPhone på højkant: bjælken sidder lavere, tæt på hjemmestregen. Det, der sidder fast over den, følger med. */
@@ -986,4 +987,16 @@ body.ruder-vist main { --maxb: 1248px; max-width: 1248px; }
 @media (min-width: 1154px) and (pointer: coarse), (min-width: 1362px) {
   body.ruder-vist .opsk-ruder { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 0 32px; align-items: start; }
 }
+/* Hvad kan jeg lave?: det, du har, i kortet til venstre (lidt bredere, så navnene står), forslagene til højre */
+.ruder-forslag { grid-template-columns: 352px minmax(0, 1fr); grid-template-columns: round(down, clamp(352px, 36%, 416px), var(--kol)) minmax(0, 1fr); }
+.ruder-forslag .rude-liste h1 { margin-bottom: 0; }
+.ruder-forslag .rude-liste .hj-rk { grid-template-columns: 40px 56px minmax(0, 1fr) 40px 40px; }
+.ruder-forslag .rude-liste .hj-ny { grid-template-columns: 40px 56px minmax(0, 1fr); }
+.ruder-forslag .rude-liste .hj-labels { grid-template-columns: 40px 56px minmax(0, 1fr); }
+/* Kategorierne i listen kan foldes sammen */
+.hj-fold { display: flex; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; position: relative; touch-action: manipulation; }
+.hj-fold::before { content: ""; position: absolute; inset: -6px 0; } /* tryk-flade på 44 px */
+.hj-fold::after { content: ""; flex: none; width: 8px; height: 8px; margin: -4px 4px 0 auto; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform .16s var(--ud); }
+.hj-fold[aria-expanded=false]::after { margin-top: 0; transform: rotate(-45deg); }
+.hj-fold small { font-size: 12px; opacity: .7; }
 @media print { .rude-liste { display: none; } .ruder { display: block; } }
