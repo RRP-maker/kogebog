@@ -48,13 +48,14 @@
   /* Notesbogens net: alt står på rækker à 32 px. Linjen ligger --l0 under rækkens top, lige under teksten.
      Felter (knapper, kort, inputs) har top og bund midt mellem to linjer: margen foroven = --m, polstring foroven = --pt, forneden = --pb. */
   --kol: 16px; --raekke: 32px; /* gitterets mål: kolonner à 16 px og rækker à 32 px. JS læser dem herfra */
+  --nav-b: 76px; --nav-l: 0px; /* plads til navigationen: nederst (bjælke) eller til venstre (sidebjælke, skinne). Sættes i afsnittet «Navigation». */
   --kol-x: 34px; /* hvor kolonnen begynder (sættes af app.js). Den røde margen følger den */
   --l0: 28px; --m: calc(var(--l0) - 16px); --pt: calc(48px - var(--l0)); --pb: var(--m);
   --streg: rgba(var(--blaek-rgb), .3); --dæk: rgba(var(--papir-rgb), .9);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; scroll-padding: 80px 0 112px; } /* et felt i fokus rulles væk fra topbjælken og den faste «Gem» */
+html { -webkit-text-size-adjust: 100%; scroll-padding: 80px 0 calc(112px + var(--nav-b)); } /* et felt i fokus rulles væk fra topbjælken og den faste «Gem» */
 body {
   margin: 0; min-height: 100vh; min-height: 100dvh; color: var(--blaek);
   font: 20px/32px var(--skrift);
@@ -107,7 +108,7 @@ main {
   --maxb: 680px; --L: max(34px, env(safe-area-inset-left)); --R: max(16px, env(safe-area-inset-right));
   max-width: 680px; margin: 0 auto; overflow-x: clip; /* sideskift må ikke gøre siden bredere */
   display: flex; flex-direction: column; /* flex: så margener ikke smelter sammen og rækkerne holder 32 px */
-  padding: 32px var(--R) calc(192px + env(safe-area-inset-bottom)) var(--L);
+  padding: 32px var(--R) calc(192px + var(--nav-b) + env(safe-area-inset-bottom)) var(--L);
 }
 /* Kolonnens bredde rundes ned til hele kolonner (16 px), og siden står på hele pixels. Uden round() bruges den gamle bredde. */
 @supports (width: round(down, 10px, 4px)) {
@@ -318,7 +319,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 
 /* Trin for trin */
 body[data-side=lav] .top { display: none; }
-body[data-side=lav] main { padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: calc(220px + env(safe-area-inset-bottom)); }
+body[data-side=lav] main { padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: calc(220px + var(--nav-b) + env(safe-area-inset-bottom)); }
 .lav-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; color: var(--blyant); }
 .lav-top .knap { margin: var(--m) 0 var(--pt); }
 .lav-top > span { margin-top: 32px; }
@@ -330,7 +331,7 @@ body[data-side=lav] main { padding-top: max(16px, env(safe-area-inset-top)); pad
 .lav-ur { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 32px 16px; margin: var(--m) 0 var(--pt); }
 .urvis { font: 44px/48px var(--hoved); font-weight: 400; font-variant-numeric: tabular-nums; color: var(--tomat-mork); }
 .lav-bund {
-  position: fixed; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom));
+  position: fixed; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + var(--nav-b) + env(safe-area-inset-bottom));
   z-index: 15; display: flex; gap: 8px; padding: 8px; border-radius: 40px;
 }
 .lav-bund .knap { flex: 1; white-space: nowrap; padding-left: 12px; padding-right: 12px; }
@@ -379,15 +380,15 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 #toast.fejl .toast-knap { background: rgba(var(--blaek-rgb), .1); }
 
 /* Hjælperen */
-#hjaelper { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 40; width: 80px; pointer-events: none; }
-body[data-side=lav] #hjaelper { bottom: calc(100px + env(safe-area-inset-bottom)); }
+#hjaelper { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 40; width: 80px; pointer-events: none; }
+body[data-side=lav] #hjaelper { bottom: calc(100px + var(--nav-b) + env(safe-area-inset-bottom)); }
 #hjaelper > * { pointer-events: auto; }
 .h-figur { display: block; width: 80px; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
 .h-figur svg { display: block; width: 100%; overflow: visible; transform-origin: 50% 62%; }
 .h-skjul { position: absolute; right: 0; top: -6px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--valgt-fast); color: #fff; font: 20px/1 sans-serif; cursor: pointer; opacity: .75; }
 .h-skjul::after { content: ""; position: absolute; inset: -8px; }
-#hjaelper-vis { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 40; font: 18px/1 var(--skrift); color: var(--blaek); border-radius: 20px; padding: 10px 14px; cursor: pointer; }
-body[data-side=lav] #hjaelper-vis { bottom: calc(96px + env(safe-area-inset-bottom)); }
+#hjaelper-vis { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 40; font: 18px/1 var(--skrift); color: var(--blaek); border-radius: 20px; padding: 10px 14px; cursor: pointer; }
+body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-area-inset-bottom)); }
 .h-boble {
   position: absolute; right: 4px; bottom: 90px; width: max-content; max-width: min(300px, calc(100vw - 24px)); max-height: 46vh; overflow: auto;
   background: var(--boble); border-radius: 22px 22px 6px 22px; padding: 10px 16px; cursor: pointer;
@@ -567,13 +568,13 @@ body.tilpas [data-org], body.tilpas [data-flyt] { outline: 2px dashed var(--gryd
 body.tilpas [data-laast] { outline: 2px solid var(--tomat); }
 .plads { opacity: 0; } /* usynlig kopi, der holder pladsen, når et felt er fastlåst på skærmen */
 #tilpas-knap {
-  position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 18px; border-radius: 24px;
+  position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 18px; border-radius: 24px;
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
   background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
 }
 body.tilpas #tilpas-knap { background: var(--gul); color: var(--paa-lys); }
-body.tilpas-menu #hjaelper, body.tilpas-menu #hjaelper-vis { bottom: calc(70px + env(safe-area-inset-bottom)); } /* plads til knappen */
-body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjaelper-vis { bottom: calc(160px + env(safe-area-inset-bottom)); }
+body.tilpas-menu #hjaelper, body.tilpas-menu #hjaelper-vis { bottom: calc(70px + var(--nav-b) + env(safe-area-inset-bottom)); } /* plads til knappen */
+body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjaelper-vis { bottom: calc(160px + var(--nav-b) + env(safe-area-inset-bottom)); }
 .ark-kort .rakke.venstre { justify-content: flex-start; }
 .farver { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .sw { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--glaskant); box-shadow: 0 1px 3px rgba(var(--skyg-rgb), .3); font: 16px/1 var(--skrift); color: var(--blyant); background: var(--hvid); cursor: pointer; padding: 0; }
@@ -660,13 +661,13 @@ input.felt, select.felt { padding: 0 12px; }
 
 /* Tilpas: fortryd/gentag, glas-farveknap, felter der ikke kan flyttes, og forbudt sted */
 #tilpas-fortryd, #tilpas-gentag {
-  position: fixed; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 16px; border-radius: 24px;
+  position: fixed; bottom: calc(10px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 16px; border-radius: 24px;
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
   background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
 }
 #tilpas-fortryd { left: max(10px, env(safe-area-inset-left)); }
 #tilpas-gentag { left: calc(max(10px, env(safe-area-inset-left)) + 112px); }
-#tilpas-gruppe { position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; display: flex; align-items: center; gap: 8px; }
+#tilpas-gruppe { position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; display: flex; align-items: center; gap: 8px; }
 #tilpas-gruppe #tilpas-knap { position: static; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 140px; padding: 0; white-space: nowrap; } /* fast bredde: knappen skifter ikke størrelse, når teksten skifter */
 #tilpas-forlad {
   width: 48px; height: 48px; padding: 0; border-radius: 50%; font: 20px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
@@ -844,9 +845,9 @@ button.kort { width: 100%; text-align: left; font: inherit; cursor: pointer; }
 .katvalg .chip { height: 32px; font-size: 18px; position: relative; top: calc(var(--l0) - 32px); } /* lille felt: kanterne på to linjer */
 
 /* «Gem» i en formular sidder altid fast i bunden af skærmen, så den ikke kan forsvinde ud af syne */
-#form > button[type=submit] { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 30; width: 100%; box-shadow: 0 8px 24px rgba(var(--skyg-rgb), .35); }
-body:has(#form) #hjaelper { bottom: calc(96px + env(safe-area-inset-bottom)); }
-body:has(#form) #hjaelper-vis { bottom: calc(92px + env(safe-area-inset-bottom)); }
+#form > button[type=submit] { position: sticky; bottom: calc(12px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 30; width: 100%; box-shadow: 0 8px 24px rgba(var(--skyg-rgb), .35); }
+body:has(#form) #hjaelper { bottom: calc(96px + var(--nav-b) + env(safe-area-inset-bottom)); }
+body:has(#form) #hjaelper-vis { bottom: calc(92px + var(--nav-b) + env(safe-area-inset-bottom)); }
 
 /* iPad og skærmvending. iPhone står som før, men kan vendes. */
 /* Tablet: bredere side, så iPad ikke ligner en stor telefon. Rækkerne à 32 px og den røde margen er uændrede. */
@@ -862,8 +863,8 @@ body:has(#form) #hjaelper-vis { bottom: calc(92px + env(safe-area-inset-bottom))
 /* Vendt telefon (lav skærm): vinduet fylder højden, og faste knapper fylder mindre, så der er plads til siden */
 @media (max-height: 520px) {
   .ark-kort { width: min(100%, 720px); padding-top: 12px; }
-  main { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
-  body[data-side=lav] main { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
+  main { padding-bottom: calc(112px + var(--nav-b) + env(safe-area-inset-bottom)); }
+  body[data-side=lav] main { padding-bottom: calc(150px + var(--nav-b) + env(safe-area-inset-bottom)); }
   .h-boble { max-height: 60vh; }
   #tilpas-fortryd, #tilpas-gentag, #tilpas-knap, #tilpas-forlad { height: 44px; }
   #tilpas-forlad { width: 44px; }
@@ -872,3 +873,51 @@ body:has(#form) #hjaelper-vis { bottom: calc(92px + env(safe-area-inset-bottom))
 /* Importér links: fremdriftsbjælke (højden kommer fra felt-s) */
 .importbar { display: block; overflow: hidden; border-radius: 16px; background: var(--felt-bg); border: 2px solid var(--blyant); }
 .importbar i { display: block; height: 100%; width: 0; background: var(--gron); transition: width .3s var(--ud); }
+
+/* ---------- Navigation (opdatering 3a) ----------
+   Fem destinationer. Bjælke nederst på telefon og tablet, sidebjælke på brede skærme med mus, og i selve siden ved lav højde (telefon på langs).
+   Vælges efter plads og input, ikke efter enhed. Topbjælken er væk: .top bærer kun beskeder (#toast). */
+.top { position: fixed; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top)); z-index: 70; height: 0; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+#toast { left: 0; right: 0; top: 0; }
+main { padding-top: calc(32px + env(safe-area-inset-top)); }
+#ure { top: max(8px, env(safe-area-inset-top)); }
+html { scroll-padding-top: 64px; }
+#nav {
+  position: fixed; z-index: 36; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; align-items: center; height: 64px; padding: 0 6px; border-radius: 32px; max-width: 640px; margin: 0 auto;
+  background: var(--glas); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #nav { background: var(--flade); } }
+#nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; height: 56px; border-radius: 26px; font-size: 12px; line-height: 13px; text-align: center; text-decoration: none; color: var(--blaek); touch-action: manipulation; transition: background-color .16s, transform .16s var(--ud); }
+#nav a > span:first-child { display: grid; }
+#nav a .ikon { width: 26px; height: 26px; }
+#nav a:active { transform: scale(.95); }
+#nav a[aria-current=page] { background: var(--valgt); color: #fff; }
+#nav .nav-hjem { display: none; }
+@media (hover: hover) { #nav a:hover:not([aria-current=page]) { background: var(--flade-hover); } }
+body[data-side=lav] { --nav-b: 0px; --nav-l: 0px; }
+body[data-side=lav] #nav { display: none; }
+
+/* Bred skærm med mus (Mac): sidebjælke til venstre, og intet fast nederst */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  :root { --nav-b: 0px; --nav-l: 208px; }
+  body { padding-left: var(--nav-l); }
+  #nav { left: 0; right: auto; top: 0; bottom: 0; width: var(--nav-l); max-width: none; height: auto; box-sizing: border-box; margin: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 16px 10px; border-radius: 0; border-width: 0 1px 0 0; }
+  #nav a { flex-direction: row; justify-content: flex-start; gap: 10px; height: 48px; flex: none; padding: 0 12px; border-radius: 16px; font-size: 18px; line-height: 22px; text-align: left; }
+  #nav .nav-hjem { display: flex; height: 64px; font: 28px/32px var(--hoved); }
+  .top { left: calc(var(--nav-l) + 10px); }
+  .lav-bund { left: calc(var(--nav-l) + 10px); }
+}
+
+/* Lav højde (telefon på langs): navigationen står i siden, intet sidder fast, og hjælperen er skjult */
+@media (max-height: 520px) and (pointer: coarse), (max-height: 520px) and (max-width: 1023px) {
+  :root { --nav-b: 0px; }
+  #nav { position: static; margin: calc(8px + env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); height: 48px; max-width: none; }
+  #nav a { flex-direction: row; gap: 6px; height: 40px; font-size: 14px; line-height: 15px; text-align: left; }
+  #nav a .ikon { width: 22px; height: 22px; }
+  main { padding-top: 32px; }
+  #hjaelper, #hjaelper-vis { display: none !important; }
+  #form > button[type=submit] { position: static; }
+  html { scroll-padding: 16px 0; }
+}
+@media print { #nav { display: none !important; } }

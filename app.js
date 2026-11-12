@@ -349,6 +349,9 @@ async function route() {
   foerste = false; indKlar = true;
   window.scrollTo(0, 0);
   document.body.dataset.side = c === 'lav' ? 'lav' : (a || 'forside');
+  // Navigationen viser, hvor man er
+  const sted = a === 'forslag' && b === 'madplan' ? 'madplan' : ({ opskrifter: 'opskrifter', opdater: 'opskrifter', import: 'opskrifter', tips: 'tips', tipsimport: 'tips', forslag: 'forslag', hjemme: 'forslag', mere: 'mere' })[a] || 'forside';
+  document.querySelectorAll('#nav a').forEach(l => { if (l.dataset.nav === sted) l.setAttribute('aria-current', 'page'); else l.removeAttribute('aria-current'); });
   try {
     if (a === 'forslag' && b === 'madplan') return await Madplan.side();
     if (a === 'forslag' && b === 'nye') return await Hjemme.gennemgang();
@@ -1076,6 +1079,9 @@ function mereSide() {
       <button type="button" class="rund felt felt-s" id="tphned" aria-label="Lavere">−</button>
       <input id="tphoejde" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="${tilpasHoejde()}" aria-label="Højde i procent">
       <button type="button" class="rund felt felt-s" id="tpop" aria-label="Højere">+</button> <span>%</span></div>
+    <h2>Genindlæs</h2>
+    <p class="lille">Henter appen forfra, så du får den nyeste version.</p>
+    <button type="button" class="knap" id="genstart">${ik('genindlaes')} Genindlæs appen</button>
     <h2>Sikkerhedskopi</h2>
     <p class="lille">Hent alt indhold som en fil. Gem den et sikkert sted.</p>
     <button class="knap" data-h="eksport">${ik('hent')} Hent sikkerhedskopi</button>
@@ -1370,7 +1376,7 @@ function rasterIgen() {
 }
 new MutationObserver(rasterIgen).observe(app, { childList: true, subtree: true });
 addEventListener('resize', rasterIgen);
-if (window.ResizeObserver) { const ro = new ResizeObserver(rasterIgen); ['main', '.top', '#ure'].forEach(q => ro.observe(document.querySelector(q))); }
+if (window.ResizeObserver) { const ro = new ResizeObserver(rasterIgen); ['main', '#nav', '#ure'].forEach(q => ro.observe(document.querySelector(q))); }
 if (document.fonts) document.fonts.ready.then(rasterIgen);
 // Tryk-animation: glansen starter, hvor fingeren rammer
 document.addEventListener('pointerdown', e => {

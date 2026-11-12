@@ -14,7 +14,8 @@ const Tilpas = (() => {
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
   const standardFast = el => el.matches('.vaerktoej .knap');
-  const erFast = (el, k) => !el.closest('.top') && (get(k) && get(k).l !== undefined ? !!get(k).l : standardFast(el));
+  const lavt = () => matchMedia('(max-height: 520px)').matches; // lav højde (telefon på langs): intet sidder fast på skærmen
+  const erFast = (el, k) => !lavt() && !el.closest('.top') && (get(k) && get(k).l !== undefined ? !!get(k).l : standardFast(el));
   // Fastlåst felt: position: fixed (browseren ruller det selv, så det hakker ikke). En usynlig kopi holder pladsen på siden.
   const fjernFast = el => {
     if (!el._ph) return;
@@ -25,7 +26,7 @@ const Tilpas = (() => {
   // En gemt placering passer måske ikke til den skærm, man bruger nu (iPad → iPhone, eller vendt om). Den må aldrig sende et felt uden for skærmen eller oven på et andet felt.
   // Gør den det, ignoreres først den vandrette forskydning og så hele placeringen. Kun visning, intet gemmes.
   const ANDRE = '.knap, .tilbage, .fane, .kort, .rund, .chip, .rk-knap, .favknap, input:not([type=checkbox]):not([type=radio]), textarea, select, .mp-dagfelt, .mp-ret';
-  const IKKE = '.plads, #ark, #hjaelper, #hjaelper-vis, #toast, #tilpas-gruppe, .top, #ure';
+  const IKKE = '.plads, #ark, #hjaelper, #hjaelper-vis, #toast, #tilpas-gruppe, .top, #ure, #nav';
   function paaFelt(el, r = el.getBoundingClientRect()) {
     if (!r.width || el.hasAttribute('data-laast')) return false; // fastlåste felter svæver over siden, som de skal
     for (const e of document.querySelectorAll(ANDRE)) {
