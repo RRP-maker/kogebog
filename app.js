@@ -341,8 +341,9 @@ async function route() {
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
   dybde = dele.length;
   if (a === 'forslag' || a === 'hjemme') opskriftFra = a === 'forslag' && b === 'madplan' ? '#/forslag/madplan' : '#/forslag'; else if (a !== 'opskrifter' || !b) opskriftFra = null;
-  // To ruder (brede skærme, indstilling): opskriftslisten til venstre bliver stående, og kun den valgte opskrift til højre skiftes
-  const iRuder = ruderAktiv() && a === 'opskrifter' && b !== 'ny' && !c, bliv = iRuder && !!app.querySelector('.ruder');
+  if (a !== 'opskrifter') FIL = null; // søgning og filtre huskes kun, mens man er i opskrifterne
+  // To ruder (brede skærme, indstilling): kun når en opskrift er valgt. Listen til venstre bliver stående, og kun opskriften til højre skiftes
+  const iRuder = ruderAktiv() && a === 'opskrifter' && !!b && b !== 'ny' && !c, bliv = iRuder && !!app.querySelector('.ruder');
   document.body.classList.toggle('ruder-vist', iRuder);
   if (!bliv && !foerste && app.firstChild) {
     app.classList.remove('sideind'); app.classList.add('sideud');
@@ -419,6 +420,7 @@ const opskriftRaekke = (r, fav, valgt) => `<a class="oprk" href="#/opskrifter/${
 
 // ---------- Lister ----------
 let L = {}; // data til den liste, der vises
+let FIL = null; // opskriftslistens søgning og filtre, så de overlever skiftet mellem listen alene og to ruder
 const SOEG = { begge: ['Begge', 'Søg i navne og ingredienser'], navn: ['Navn', 'Søg i navne'], ing: ['Ingredienser', 'Søg i ingredienser'] };
 // To ruder: en indstilling under Indstillinger, gemt på enheden. Standard: slået til med mus (Mac), fra med touch. Virker kun på brede skærme.
 const BRED = matchMedia('(min-width: 1024px)');
@@ -441,11 +443,10 @@ async function ruderSide(rid) {
     await liste('opskrifter', $('#rude-liste'));
     if (id !== visning) return;
   }
-  L.valgt = rid || ''; tegnListe();
+  L.valgt = rid; tegnListe();
   const h = $('#rude-indhold');
   h.classList.remove('trinind'); void h.offsetWidth; h.classList.add('trinind');
-  if (rid) { await opskriftSide(rid, h); visValgt(); }
-  else h.innerHTML = '<p class="tomt">Vælg en opskrift i listen.</p>';
+  await opskriftSide(rid, h); visValgt();
 }
 async function liste(type, maal = app) {
   const id = visning, T = TYPER[type];
@@ -455,28 +456,47 @@ async function liste(type, maal = app) {
     type === 'tips' ? api('opskrifter?select=id,titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : []
   ]);
   if (id !== visning) return;
-  L = { type, rader, q: '', kat: '', koekken: '', kunFav: false, valgt: '', soeg: SOEG[lager.hent('soegtype', 'begge')] ? lager.hent('soegtype', 'begge') : 'begge', navne: {}, fav: new Set() };
+  const fil = type === 'opskrifter' && FIL ? FIL : {}, rude = maal !== app;
+  L = { type, rader, q: fil.q || '', kat: fil.kat || '', koekken: fil.koekken || '', kunFav: !!fil.kunFav, valgt: '', soeg: SOEG[lager.hent('soegtype', 'begge')] ? lager.hent('soegtype', 'begge') : 'begge', navne: {}, fav: new Set() };
   if (type === 'tips') L.navne = Object.fromEntries(ekstra.map(o => [o.id, o.titel]));
   if (type === 'opskrifter') L.fav = new Set(ekstra.map(f => f.opskrift_id));
   const unik = n => [...new Set(rader.map(r => r[n]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da')), kat = unik('kategori'), koek = unik('koekken');
-  maal.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a>
+  if (L.kat && !kat.includes(L.kat)) L.kat = '';
+  if (L.koekken && !koek.includes(L.koekken)) L.koekken = '';
+  const valg = (id, h, navn, alle, liste, nu) => `<select id="${id}" data-hs="${h}" aria-label="${navn}"><option value="">${alle}</option>${liste.map(k => `<option${k === nu ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select>`;
+  const soegChips = `<div class="filter soegtype" data-tpid="bjaelke-soeg" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>`;
+  const favChip = `<button type="button" class="chip${L.kunFav ? ' valgt' : ''}" data-tpid="kun-favoritter" data-h="kunFav" aria-pressed="${L.kunFav}">${ik('stjerne')} Favoritter</button>`;
+  const soeg = `<input id="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off" value="${esc(fil.qr || '')}">`;
+  // I ruden til venstre er der kun smal plads: ingen «Tilbage» (navigationen findes), én «Importér»-menu og valgfelter i stedet for rækker af chips, der ruller væk
+  const hoved = rude && type === 'opskrifter' ? `<h1>${T.navn}</h1>
+    <div class="rakke rude-knapper">
+      <a class="knap primaer" href="#/${type}/ny">+ ${T.ny}</a>
+      <details class="tilfoej"><summary class="knap" data-tpid="opskrifter-importer">Importér</summary>
+        <div class="tilfoej-menu"><a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a><a class="knap" data-tpid="opskrifter-links" href="#/import/links">${ik('gryde')} Importér links</a></div></details>
+    </div>
+    ${rader.length ? `${soeg}
+      <div class="rude-valg" data-r="kat">${kat.length ? valg('valg-kat', 'katValg', 'Kategori', 'Alle kategorier', kat, L.kat) : ''}${koek.length ? valg('valg-koek', 'koekkenValg', 'Køkken', 'Alle køkkener', koek, L.koekken) : ''}</div>
+      ${soegChips}
+      <div class="filter" data-tpid="bjaelke-favoritter" role="group" aria-label="Favoritter">${favChip}</div>` : ''}` : `<a class="tilbage" href="#/">‹ Tilbage</a>
     <h1>${T.navn}</h1>
     <div class="rakke">
       <a class="knap primaer" href="#/${type}/ny">+ ${T.ny}</a>
       ${type === 'opskrifter' ? `<a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a><a class="knap" data-tpid="opskrifter-links" href="#/import/links">${ik('gryde')} Importér links</a>` : ''}
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
-    ${type === 'opskrifter' && rader.length ? `<input id="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off">
-      <div class="filter soegtype" data-tpid="bjaelke-soeg" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>
-      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" role="group" aria-label="Kategori"><button class="chip valgt" data-h="kat" data-v="">Alle</button><button type="button" class="chip" data-tpid="kun-favoritter" data-h="kunFav" aria-pressed="false">${ik('stjerne')} Favoritter</button>${kat.map(k => `<button class="chip" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
-      ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" role="group" aria-label="Køkken"><button class="chip valgt" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}
+    ${type === 'opskrifter' && rader.length ? `${soeg}
+      ${soegChips}
+      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" role="group" aria-label="Kategori"><button class="chip${L.kat ? '' : ' valgt'}" data-h="kat" data-v="">Alle</button>${favChip}${kat.map(k => `<button class="chip${k === L.kat ? ' valgt' : ''}" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
+      ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" role="group" aria-label="Køkken"><button class="chip${L.koekken ? '' : ' valgt'}" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip${k === L.koekken ? ' valgt' : ''}" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}`;
+  maal.innerHTML = `${hoved}
     <div id="liste"${type === 'opskrifter' ? ' class="oplist"' : ''}></div>`;
   tegnListe();
   const s = $('#soeg');
   if (s) s.addEventListener('input', () => { L.q = s.value.trim().toLowerCase(); tegnListe(); });
   Hjaelper.side(type === 'opskrifter' ? [
     { tekst: 'Vil du skrive din egen ret? Tryk her.', maal: '.rakke .primaer', bev: 'salto' },
-    { tekst: 'Har du en opskrift fra nettet? Claude skriver den ind for dig.', maal: 'a[href="#/import"]', bev: 'skridt', valgfri: true },
+    rude ? { tekst: 'Har du en opskrift fra nettet? Tryk på «Importér», så skriver Claude den ind for dig.', maal: '.tilfoej summary', bev: 'skridt', valgfri: true }
+         : { tekst: 'Har du en opskrift fra nettet? Claude skriver den ind for dig.', maal: 'a[href="#/import"]', bev: 'skridt', valgfri: true },
     { tekst: 'Skriv et navn eller en ingrediens. Så finder jeg retten.', maal: '#soeg', bev: 'dans', valgfri: true },
     { tekst: 'Vælg, om jeg skal søge i navne, ingredienser eller begge dele.', maal: '.soegtype', bev: 'skridt', valgfri: true },
     { tekst: 'Tryk på en kategori eller et køkken for at sortere.', maal: '[data-r=kat]', bev: 'hop', valgfri: true },
@@ -486,6 +506,7 @@ async function liste(type, maal = app) {
 }
 function tegnListe() {
   const { type, rader, q, kat, koekken, soeg } = L, T = TYPER[type];
+  if (type === 'opskrifter') FIL = { q, qr: ($('#soeg') || {}).value || '', kat, koekken, kunFav: L.kunFav };
   const iNavn = r => (r.titel || '').toLowerCase().includes(q), iIng = r => ingAf(r).some(i => i.n.toLowerCase().includes(q));
   const vis = rader.filter(r => (!kat || r.kategori === kat) && (!koekken || r.koekken === koekken) && (!L.kunFav || L.fav.has(r.id)) &&
     (!q || (type !== 'opskrifter' || soeg === 'navn' ? iNavn(r) : soeg === 'ing' ? iIng(r) : iNavn(r) || iIng(r))));
@@ -521,7 +542,7 @@ async function opskriftSide(rid, maal = app) {
   S = { r, tips, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
-  maal.innerHTML = `${iRude && !opskriftFra ? '' : `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>`}
+  maal.innerHTML = `${iRude && !opskriftFra ? `<a class="tilbage direkte skaerm" href="#/opskrifter">‹ Alle opskrifter</a>` : `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>`}
     ${vaerktoej(`<a class="knap" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
     <div class="titelrakke"><h1>${esc(r.titel)}</h1>
       <button id="favknap" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
@@ -1113,7 +1134,7 @@ function mereSide() {
     <label class="skift"><input type="checkbox" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
     <label class="skift"><input type="checkbox" id="toruder" ${toRuder() ? 'checked' : ''}> <span>Vis to ruder på brede skærme</span></label>
-    <p class="lille">Opskrifter: listen til venstre og den valgte opskrift til højre.${BRED.matches ? '' : ' Skærmen her er for smal, så det ses kun på en bred skærm (iPad på langs og Mac).'}</p>
+    <p class="lille">Når du åbner en opskrift: listen til venstre og opskriften til højre.${BRED.matches ? '' : ' Skærmen her er for smal, så det ses kun på en bred skærm (iPad på langs og Mac).'}</p>
     <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Tilpas siden</span></label>
     <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
     <p class="lille">Hvor højt vinduet til at tilpasse et felt må blive, i procent af skærmen.</p>
@@ -1169,6 +1190,8 @@ const H = {
     app.innerHTML = ''; // også listen i to ruder hentes forfra
     if (location.hash === '#/' + type) route(); else location.hash = '#/' + type;
   },
+  katValg(el) { L.kat = el.value; tegnListe(); },
+  koekkenValg(el) { L.koekken = el.value; tegnListe(); },
   kunFav(el) { L.kunFav = !L.kunFav; el.classList.toggle('valgt', L.kunFav); el.setAttribute('aria-pressed', L.kunFav); tegnListe(); },
   kat(el) {
     L.kat = el.dataset.v;
@@ -1386,12 +1409,17 @@ document.addEventListener('input', e => { // teksten på «Tilføj med Claude» 
 function markerKat() { document.querySelectorAll('.katvalg .chip').forEach(c => { const f = $('#f_' + (c.dataset.f || 'kategori')); c.classList.toggle('valgt', !!f && c.dataset.v.toLowerCase() === f.value.trim().toLowerCase()); }); }
 document.addEventListener('input', e => { if (e.target.id === 'f_kategori' || e.target.id === 'f_koekken') markerKat(); });
 document.addEventListener('change', e => {
+  if (e.target.matches('select[data-hs]') && H[e.target.dataset.hs]) H[e.target.dataset.hs](e.target);
   if (e.target.id === 'maks') saetMaks(e.target.value);
   if (e.target.id === 'udenkryd') { lager.gem('udenKrydderier', e.target.checked); tegnForslag(); }
   if (e.target.id === 'portinp') { S.port = Math.max(1, Math.min(50, Math.round(Number(e.target.value)) || S.r.portioner || 4)); portValg[S.r.id] = S.port; tegnIng(); }
 });
+document.addEventListener('click', e => { // «Importér»-menuen lukkes, når man trykker et andet sted
+  document.querySelectorAll('details.tilfoej[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; });
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('details.tilfoej[open]').forEach(d => { d.open = false; d.querySelector('summary').focus(); }); });
 document.addEventListener('click', async e => {
-  const tb = e.target.closest('a.tilbage:not(.fortryd)');
+  const tb = e.target.closest('a.tilbage:not(.fortryd):not(.direkte)');
   if (tb) { // gå til den side, man kom fra. Rediger- og ny-sider springes over.
     let i = spor.length - 2;
     while (i >= 0 && (formSide(spor[i]) || spor[i] === spor[spor.length - 1])) i--;

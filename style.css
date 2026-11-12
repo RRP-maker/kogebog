@@ -924,8 +924,8 @@ body.tilpas-menu[data-side=lav] #nav #tilpas-knap { flex-direction: column; gap:
 /* ---------- Opskrifter og en opskrift (opdatering 3b) ---------- */
 /* Tæt liste: to tekstrækker pr. opskrift (navn + kategori, køkken og tid). Notesbogens linjer skiller dem, så der er ingen kort. */
 #liste.oplist { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 32px; }
-.oprk { display: block; min-width: 0; height: 64px; margin: 0 -8px; padding: 0 8px; border-radius: 12px; color: inherit; text-decoration: none; touch-action: manipulation; }
-.oprk strong, .oprk > span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 32px; }
+.oprk { display: block; min-width: 0; min-height: 64px; margin: 0 -8px; padding: 0 8px; border-radius: 12px; color: inherit; text-decoration: none; touch-action: manipulation; }
+.oprk strong, .oprk > span { display: block; line-height: 32px; overflow-wrap: anywhere; } /* hele navnet vises: brækker i hele linjer à 32 px, så rækkerne bliver på linjerne */
 .oprk strong { font: 24px/32px var(--hoved); font-weight: 400; }
 .oprk > span { font-size: 17px; color: var(--blyant); }
 .oprk .ikon { width: 20px; height: 20px; vertical-align: -.12em; }
@@ -949,19 +949,39 @@ body.tilpas-menu[data-side=lav] #nav #tilpas-knap { flex-direction: column; gap:
 .titelrakke { justify-content: flex-start; }
 .sletrakke { margin-top: calc(32px + var(--m)); }
 
-/* To ruder: listen til venstre ruller for sig, den valgte opskrift til højre følger siden */
+/* To ruder: kun når en opskrift er valgt. Listen står som et kort til venstre og ruller for sig. Opskriften står på notesbogens side til højre. */
 body.ruder-vist main { --maxb: 1248px; max-width: 1248px; }
-.ruder { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 0 32px; align-items: start; }
+.ruder { display: grid; grid-template-columns: 352px minmax(0, 1fr); gap: 0 32px; align-items: start; }
 .rude-liste, .rude-indhold { display: flex; flex-direction: column; min-width: 0; }
 .rude-liste > *, .rude-indhold > * { flex: none; min-width: 0; }
-.rude-liste > .tilbage, .rude-liste > .knap, .rude-indhold > .tilbage, .rude-indhold > .knap { align-self: flex-start; }
+.rude-indhold > .tilbage, .rude-indhold > .knap { align-self: flex-start; }
 .rude-indhold > .knap { margin: var(--m) 0 var(--pt); }
 .rude-indhold > .knap.stor { align-self: stretch; }
-.rude-liste { position: sticky; top: 0; max-height: 100vh; max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain; margin: -32px -8px 0; padding: 32px 8px 32px; scrollbar-width: thin; }
-.rude-liste .filter { flex-wrap: nowrap; height: 56px; min-height: 0; overflow-x: auto; gap: 8px; padding-right: 34px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); }
+/* Kortet slutter over navigationen (--nav-b) og følger safe areas. Dets indhold starter, hvor indholdet i main starter. */
+.rude-liste {
+  position: sticky; top: calc(16px + env(safe-area-inset-top)); margin: -16px 0 0; padding: 16px 12px;
+  max-height: 100vh; max-height: calc(100dvh - 32px - env(safe-area-inset-top) - var(--nav-b) - env(safe-area-inset-bottom));
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  border-radius: 24px; background: var(--flade); box-shadow: var(--skygge), 0 0 0 1px var(--glaskant);
+}
+.rude-liste h1 { font-size: 29px; line-height: 32px; top: 0; }
+.rude-knapper { flex-wrap: nowrap; gap: 8px; }
+.rude-knapper > .primaer { flex: 1 1 auto; min-width: 0; padding: 0 12px; }
+/* «Importér»: de to måder at hente en opskrift ind på ligger i en menu, så de ikke fylder over listen */
+.tilfoej { position: relative; flex: none; }
+.tilfoej summary { list-style: none; cursor: pointer; padding: 0 14px 0 18px; }
+.tilfoej summary::-webkit-details-marker { display: none; }
+.tilfoej summary::after { content: ""; width: 8px; height: 8px; margin: -4px 0 0 4px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform .16s var(--ud); }
+.tilfoej[open] summary::after { margin-top: 4px; transform: rotate(-135deg); }
+.tilfoej summary:focus-visible { outline: 3px solid var(--gryde); outline-offset: 2px; }
+.tilfoej-menu { position: absolute; z-index: 5; right: 0; top: calc(100% + 4px); width: 288px; display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 32px; background: var(--flade); box-shadow: var(--skygge), 0 0 0 1px var(--glaskant); }
+.tilfoej-menu .knap { justify-content: flex-start; }
+/* Kategori og køkken: valgfelter med hele navnet, i stedet for rækker af chips, der ruller ud af ruden */
+.rude-valg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rude-valg select { min-width: 0; margin: var(--m) 0 var(--pt); font-size: 17px; padding: 14px 28px 14px 10px; background-position: calc(100% - 15px) 50%, calc(100% - 8px) 50%; }
 /* En opskrift: ingredienser til venstre og trin til højre, når ruden er bred nok (mindst ca. 720 px) */
 .opsk-ruder, .opsk-ruder > section { display: flex; flex-direction: column; min-width: 0; }
-@media (min-width: 1122px) and (pointer: coarse), (min-width: 1330px) {
+@media (min-width: 1154px) and (pointer: coarse), (min-width: 1362px) {
   body.ruder-vist .opsk-ruder { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 0 32px; align-items: start; }
 }
 @media print { .rude-liste { display: none; } .ruder { display: block; } }
