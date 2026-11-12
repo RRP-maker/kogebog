@@ -35,7 +35,8 @@ const Tilpas = (() => {
     }
     return false;
   }
-  const uheldig = el => { const r = el.getBoundingClientRect(), vw = document.documentElement.clientWidth; return !!r.width && (r.left < -.5 || r.right > vw + .5 || paaFelt(el, r)); };
+  const SKAERM = 8; // mindste afstand til skærmkanten
+  const uheldig = el => { const r = el.getBoundingClientRect(), vw = document.documentElement.clientWidth; return !!r.width && (r.left < SKAERM - .5 || r.right > vw - SKAERM + .5 || paaFelt(el, r)); };
   // Vandret placering: en forskydning i px fra feltets normale plads passer kun til den skærmbredde, den blev lavet på (iPhone: 340 px bred kolonne, iPad: 770 px).
   // Derfor husker et flyttet felt, om det sidder ved venstre eller højre kant af kolonnen, og hvor langt fra kanten (pos: «dx,dy,kant,afstand», kant 0 = venstre, 1 = højre).
   // Ældre placeringer («dx,dy») gælder en iPhone-kolonne på 340 px og regnes om til en kant og en afstand.

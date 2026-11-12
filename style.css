@@ -236,6 +236,8 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .trin > li { counter-increment: trin; position: relative; padding: 0 0 32px 48px; overflow-wrap: anywhere; }
 .trin > li::before { content: counter(trin); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--smor); color: var(--paa-lys); display: grid; place-items: center; font: 22px/1 var(--hoved); }
 .vejledning .lille { margin: 0; }
+.vejledning > li { display: flex; flex-direction: column; } /* flex: så margenerne ikke smelter sammen, og rækkerne holder 32 px */
+.vejledning > li > .knap { align-self: flex-start; }
 .begreb {
   font: inherit; color: var(--link); background: var(--blaa-svag); border: 0; border-bottom: 2px solid var(--link);
   border-radius: 6px 6px 0 0; padding: 0 4px; margin: 0; cursor: pointer; transition: background-color .2s;
@@ -710,6 +712,7 @@ input.felt-l, select.felt-l { height: 96px; }
 
 /* Knapper lige under et skrivefelt: Sæt ind til venstre, Ryd (lille) til højre */
 .felt-knapper { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: var(--m) 0 var(--pt); }
+.felt-knapper .knap.mini { min-width: 64px; }
 .knap.mini { height: 32px; min-height: 0; padding: 0 14px; font-size: 18px; line-height: 32px; border-radius: 16px; }
 
 /* Rigtig Liquid Glass alle steder: også skrivefelter, vinduer og farvede knapper er gennemsigtige med sløring og lyskant */
