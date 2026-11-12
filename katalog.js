@@ -158,10 +158,12 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.
     async katGem() {
       const svar = laesKat($('#katsvar').value);
       if (!svar || !Object.keys(svar).length) { $('#arkfejl').innerHTML = '<div class="fejlboks">Svaret kan ikke læses. Kopiér hele Claudes svar, og prøv igen.</div>'; return; }
-      let sat = 0, rettet = 0;
+      let sat = 0, rettet = 0, fejlede = 0;
       for (const i of andre) {
         const r = svar[i.navn_norm];
         if (!r) continue;
+        try { // én fejl stopper ikke resten
+
         const kid = r.kat && (modus === 'alle' || !i.kategori_id) ? katId(r.kat) : null; // «Ret alle kategorier» må også ændre en kategori, der er sat
         if (r.rettet) r.rettet = rens(simpel(r.rettet)); // navnet gøres simpelt, også hvis Claude glemmer det
         if (r.rettet && r.rettet !== i.navn_norm) {
@@ -175,16 +177,22 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.
             }
             if (!fund.kategori_id && kid) await api(`ingredienser?id=eq.${enc(fund.id)}`, { method: 'PATCH', body: { kategori_id: kid } });
             await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'DELETE' });
-          } else await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: kid ? { navn: r.rettet, navn_norm: r.rettet, kategori_id: kid } : { navn: r.rettet, navn_norm: r.rettet } });
+            ing = ing.filter(x => x.id !== i.id);
+            if (!fund.kategori_id && kid) fund.kategori_id = kid;
+          } else {
+            await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: kid ? { navn: r.rettet, navn_norm: r.rettet, kategori_id: kid } : { navn: r.rettet, navn_norm: r.rettet } });
+            i.navn = i.navn_norm = r.rettet; if (kid) i.kategori_id = kid; // husk det nye navn: får en senere ingrediens samme navn, lægges de sammen
+          }
           rettet++; if (kid) sat++;
           continue;
         }
         if (!kid || kid === i.kategori_id) continue;
-        await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: kid } }); sat++;
+        await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: kid } }); sat++; i.kategori_id = kid;
+        } catch (e) { console.error(i.navn, e); fejlede++; }
       }
       lager.gem('katSvar', '');
       lukArk();
-      const dele = [sat && `${sat} sorteret`, rettet && `${rettet} stavefejl rettet`].filter(Boolean);
+      const dele = [sat && `${sat} sorteret`, rettet && `${rettet} navne rettet`, fejlede && `${fejlede} kunne ikke gemmes`].filter(Boolean);
       toast(dele.length ? dele.join(', ') : 'Ingen af svarene passede');
       if (efterSortering) efterSortering();
     }

@@ -1281,7 +1281,7 @@ document.addEventListener('click', async e => {
   const f = H[el.dataset.h];
   if (!f) return;
   try { await f(el, e); }
-  catch (err) { console.error(err); toast('Det virkede ikke. Tjek internettet, og prøv igen.'); }
+  catch (err) { console.error(err); toast(err instanceof TypeError && /fetch|load|network/i.test(err.message) ? 'Det virkede ikke. Tjek internettet, og prøv igen.' : 'Noget gik galt. Prøv igen.'); }
 });
 
 // Notesbogens linjer: et net à 32 px, der starter, hvor indholdet i <main> starter. Så står alle rækker, felter og knapper på linjerne.
