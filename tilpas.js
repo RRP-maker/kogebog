@@ -119,8 +119,8 @@ const Tilpas = (() => {
     "Hvad har du derhjemme?": {"p": [0, -10]},
     "‹ Forside": {"l": true},
     "Du mangler lidt": {"t": "Der mangler"},
-    "Rediger": {"p": [-110.81, -64]},
-    "Tilføj tip": {"p": [288, -64]},
+    "Rediger": {"p": [0, -64, 1, 0]}, // helt til højre, på «Tilbage»s række (kant 1 = højre, afstand fra kanten)
+    "Tilføj tip": {"p": [0, -64, 1, 112]}, // lige til venstre for «Rediger» (dennes bredde + 8 px)
     "▶ Lav retten trin for trin": {"t": "Lav retten trin for trin"},
     "slet": {"z": "s", "p": [-106.74, 36.7]},
     "tips|nyt-tip": {"z": "s"},
