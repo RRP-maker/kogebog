@@ -34,7 +34,11 @@ async function hentSide(start: string): Promise<string> {
     await tjekVaert(url);
     const r = await fetch(url, {
       redirect: 'manual', signal: AbortSignal.timeout(12000),
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KogebogImport/1.0)', 'Accept': 'text/html,application/xhtml+xml', 'Accept-Language': 'da,en;q=0.8' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Language': 'da-DK,da;q=0.9,en;q=0.7',
+        'Upgrade-Insecure-Requests': '1', 'Sec-Fetch-Dest': 'document', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'none',
+      },
     });
     if (r.status >= 300 && r.status < 400 && r.headers.get('location')) { url = new URL(r.headers.get('location')!, url); continue; }
     if (!r.ok) throw new Error(`Siden svarede ${r.status}.`);
@@ -120,7 +124,13 @@ Deno.serve(async (req) => {
   try { html = await hentSide(u.href); }
   catch (e) { return fejl(e instanceof Error && e.message ? e.message : 'Siden kunne ikke hentes.'); }
   const r = jsonLdBlokke(html).map(findOpskrift).find(Boolean);
-  if (!r) return fejl('Der ligger ingen opskrift i siden (ingen JSON-LD).');
+  if (!r) { // fortæl, hvad siden egentlig sendte, så fejlen kan findes
+    const blokke = jsonLdBlokke(html), typer = new Set<string>();
+    const saml = (x: any) => { if (Array.isArray(x)) x.forEach(saml); else if (x && typeof x === 'object') { liste(x['@type']).forEach(t => typer.add(String(t))); saml(x['@graph']); } };
+    blokke.forEach(saml);
+    const titel = rens((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1]).slice(0, 60);
+    return fejl(`Der ligger ingen opskrift i siden (ingen JSON-LD). Siden er ${html.length} tegn, titel «${titel}», ${blokke.length} JSON-LD-blokke${typer.size ? ' (' + [...typer].slice(0, 6).join(', ') + ')' : ''}.`);
+  }
   const ingredienser = liste(r.recipeIngredient ?? r.ingredients).map(rens).filter(Boolean);
   const trin = trinListe(r.recipeInstructions);
   if (!ingredienser.length || !trin.length) return fejl('Opskriften mangler ingredienser eller trin.');
