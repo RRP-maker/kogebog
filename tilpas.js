@@ -102,16 +102,14 @@ const Tilpas = (() => {
   // Standardværdier: placeringer, størrelser, tekster og farver, som felterne har efter gennemgangen. «Nulstil» går tilbage til dem.
   const STANDARD = {
     "forside|hvad-skal-vi-lave": {}, "forslag|hvad-kan-jeg-lave": {}, "Ingredienser": {}, // tomme: feltet arver ikke fra teksten
-    "Kopiér besked": {"s": 20, "z": "s", "p": [196, -72]},
-    "Sæt ind": {"s": 20, "z": "s", "p": [100, -20]},
-    "Ryd": {"p": [-257.19, -4]},
+    "Kopiér besked": {"s": 20, "z": "s"},
+    "Sæt ind": {"s": 20, "z": "s"},
     "Tips": {"s": 34},
     "Sæt svar ind": {"z": "s", "p": [228, -12.5]},
     "Ryd svar": {"p": [-128.94, 3.5]},
     "‹ Fortryd": {"l": true},
-    "import-svar-saet": {"s": 20, "z": "s", "p": [260, -12.5]},
+    "import-svar-saet": {"s": 20, "z": "s"},
     "Hvad skal vi lave?": {"t": "Kogebogen", "s": 34},
-    "import-svar-ryd": {"p": [-97.19, 3.5]},
     "forslag|hvad-har-du-derhjemme": {"p": [0, 34]},
     "Favoritter": {"p": [0, 2]},
     "Hvad kan jeg lave?": {"s": 34, "z": "l"},
