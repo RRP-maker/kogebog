@@ -195,7 +195,7 @@ input[type=text], input[type=number], input[type=search], textarea, select {
 }
 input[type=text], input[type=number], input[type=search], select { height: 64px; }
 select { background-image: linear-gradient(45deg, transparent 50%, var(--blaek) 50%), linear-gradient(135deg, var(--blaek) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 13px) 50%; background-size: 7px 7px; background-repeat: no-repeat; padding-right: 36px; }
-textarea { resize: vertical; }
+textarea { resize: vertical; padding-top: 15px; padding-bottom: 15px; } /* 1 + 15 + 15 + 1 = 32: højden bliver hele rækker (linjer à 32 px + 32 px) */
 input:focus, textarea:focus, select:focus { outline: 3px solid var(--gryde); outline-offset: 1px; }
 input[type=checkbox], input[type=radio] { width: 26px; height: 26px; accent-color: var(--tomat); vertical-align: -5px; margin: 0 6px 0 0; }
 form { display: flex; flex-direction: column; }
@@ -277,8 +277,8 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .edfelt { margin-top: 0; }
 .ed-titel { font: 28px/32px var(--hoved); font-weight: 400; margin: 0; padding-top: 32px; position: relative; top: -2px; }
 .ed { display: grid; gap: 0; margin: 0; }
-.rk { display: flex; align-items: flex-start; gap: 6px; margin: var(--m) 0 var(--pt); }
-.rk[data-niv="1"] { margin-left: 18px; }
+.rk { display: flex; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); padding-right: 8px; } /* knapperne: 56 + 8 + 56, så deres venstre kanter står på kolonnerne */
+.rk[data-niv="1"] { margin-left: var(--kol); }
 .rk-felt { position: relative; flex: 1; min-width: 0; }
 .rk-tekst { resize: none; overflow: hidden; min-height: 64px; margin: 0; padding-right: 40px; }
 .rk[data-niv="1"] .rk-tekst { font-size: 19px; }
@@ -808,7 +808,8 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 @media (min-width: 1024px) { .mp-grid { grid-template-columns: repeat(3, 1fr); grid-template-columns: repeat(3, round(down, calc((100% - 2 * var(--kol)) / 3), var(--kol))); } }
 .mp-dagfelt { display: flex; flex-direction: column; min-width: 0; }
 .mp-dagfelt h3 { margin: 0; }
-.mp-dagchips { display: flex; gap: 6px; flex-wrap: nowrap; }
+.mp-dagchips { display: flex; gap: 6px; flex-wrap: nowrap; position: relative; top: calc(var(--l0) - 32px); } /* chips: kanterne på to linjer */
+.mp-ret .knap.mini { position: relative; top: calc(var(--l0) - 32px); }
 .mp-ret.kort { margin: var(--m) 0 var(--pt); box-sizing: border-box; min-height: 128px; min-width: 0; } /* 4 rækker som mindst. Længere tekst vokser i hele rækker (linjehøjde 32 px) */
 .mp-ret strong { font-size: inherit; } /* teksten følger feltets størrelse, så den kan tilpasses */
 .mp-ret strong, .mp-ret > span { overflow-wrap: anywhere; }
@@ -821,8 +822,8 @@ button.kort { width: 100%; text-align: left; font: inherit; cursor: pointer; }
 .mp-blandet { display: inline-flex; align-items: center; padding: 0 12px; }
 
 /* Forslag til kategori under feltet */
-.katvalg { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 var(--pt); }
-.katvalg .chip { height: 32px; font-size: 18px; position: relative; }
+.katvalg { display: flex; flex-wrap: wrap; gap: 0 8px; margin: 0; } /* rækkerne står tæt (32 px), så højden er hele rækker */
+.katvalg .chip { height: 32px; font-size: 18px; position: relative; top: calc(var(--l0) - 32px); } /* lille felt: kanterne på to linjer */
 
 /* «Gem» i en formular sidder altid fast i bunden af skærmen, så den ikke kan forsvinde ud af syne */
 #form > button[type=submit] { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 30; width: 100%; box-shadow: 0 8px 24px rgba(var(--skyg-rgb), .35); }

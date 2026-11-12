@@ -6,6 +6,8 @@ let visning = 0; // tæller sider, så et langsomt svar ikke overskriver en nyer
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const enc = encodeURIComponent;
+// Gitterets mål står ét sted: --kol og --raekke i style.css. Her og i tilpas.js læses de derfra.
+const maal = v => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v)) || 0, KOL = () => maal('--kol') || 16, RAEKKE = () => maal('--raekke') || 32;
 
 // Små ting, der kun gemmes på denne enhed (hjælper til/fra, dine egne stjerner)
 const lager = {
@@ -638,7 +640,7 @@ function edFelt(f, rad) {
     <div class="ed ed-${ed}" data-ed="${ed}" id="ed_${f.n}">${rader.map(r => rkHtml(ed, r)).join('')}</div></div>`;
 }
 const rkFelt = rk => rk.querySelector('.rk-tekst');
-function rkVokser(t) { if (!t.scrollHeight) return; t.style.height = 'auto'; t.style.height = (t.scrollHeight + t.offsetHeight - t.clientHeight) + 'px'; }
+function rkVokser(t) { if (!t.scrollHeight) return; t.style.height = 'auto'; const R = RAEKKE(); t.style.height = Math.max(2 * R, Math.ceil((t.scrollHeight + t.offsetHeight - t.clientHeight) / R - 0.02) * R) + 'px'; } // hele rækker
 function rkFokus(rk) { const t = rkFelt(rk); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
 function rkIndsaet(ed, efter, data, fokus = true, foer = false) {
   const tmp = document.createElement('template');
@@ -1331,8 +1333,7 @@ let rasterTimer;
 function rasterIgen() {
   cancelAnimationFrame(rasterTimer);
   rasterTimer = requestAnimationFrame(() => {
-    const main = document.querySelector('main'), rod = document.documentElement.style, mal = v => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v)); // gitterets mål står i style.css (--kol, --raekke)
-    const R = mal('--raekke') || 32;
+    const main = document.querySelector('main'), rod = document.documentElement.style, R = RAEKKE();
     app.querySelectorAll('.laerred-ramme').forEach(el => { // rammen runder op til hele rækker, så resten af siden bliver på linjerne
       el.style.height = '';
       el.style.height = Math.ceil(el.getBoundingClientRect().height / R - 0.02) * R + 'px';

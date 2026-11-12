@@ -21,8 +21,7 @@ const Tilpas = (() => {
     el._ph.remove(); el._ph = null;
     ['position', 'margin', 'left', 'top', 'width', 'zIndex'].forEach(k => { el.style[k] = ''; });
   };
-  // Gitterets mål står i style.css (--kol og --raekke), så der ikke står tal i koden.
-  const maal = v => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v)) || 0, KOL = () => maal('--kol') || 16, RAEKKE = () => maal('--raekke') || 32;
+  // Gitterets mål (KOL og RAEKKE) læses fra style.css i app.js, så der ikke står tal i koden.
   // En gemt placering passer måske ikke til den skærm, man bruger nu (iPad → iPhone, eller vendt om). Den må aldrig sende et felt uden for skærmen eller oven på et andet felt.
   // Gør den det, ignoreres først den vandrette forskydning og så hele placeringen. Kun visning, intet gemmes.
   const ANDRE = '.knap, .tilbage, .fane, .kort, .rund, .chip, .rk-knap, .favknap, input:not([type=checkbox]):not([type=radio]), textarea, select, .mp-dagfelt, .mp-ret';
