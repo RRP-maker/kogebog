@@ -20,8 +20,18 @@ const Tilpas = (() => {
     el._ph.remove(); el._ph = null;
     ['position', 'margin', 'left', 'top', 'width', 'zIndex'].forEach(k => { el.style[k] = ''; });
   };
+  // Skærmen kan være smallere end på den enhed, feltet blev flyttet på (iPad → iPhone, eller vendt om): feltet holdes inden for skærmen. Kun visning, intet gemmes.
+  const SKAERM = 8;
+  const holdInde = (el, p, fast) => {
+    el._kx = 0; const r = el.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+    if (!p || !r.width || r.width > vw - 2 * SKAERM) return;
+    const kx = r.left < SKAERM ? SKAERM - r.left : r.right > vw - SKAERM ? vw - SKAERM - r.right : 0;
+    if (!kx) return;
+    el._kx = kx;
+    if (fast) el.style.left = (parseFloat(el.style.left) + kx) + 'px'; else el.style.translate = `${p[0] + kx}px ${p[1]}px`;
+  };
   function plac(el, p, fast) {
-    if (!fast) { fjernFast(el); el.style.translate = p ? `${p[0]}px ${p[1]}px` : ''; return; }
+    if (!fast) { fjernFast(el); el.style.translate = p ? `${p[0]}px ${p[1]}px` : ''; holdInde(el, p, false); return; }
     let ph = el._ph;
     if (!ph || !ph.isConnected) {
       ph = el._ph = el.cloneNode(true); ph.classList.add('plads'); ph.setAttribute('aria-hidden', 'true');
@@ -34,6 +44,7 @@ const Tilpas = (() => {
     ph.style.fontSize = el.style.fontSize; ph.style.display = el.style.display;
     const r = ph.getBoundingClientRect(); if (!r.width) return;
     Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (p ? p[0] : 0)) + 'px', top: (r.top + scrollY + (p ? p[1] : 0)) + 'px', width: r.width + 'px', zIndex: '19' });
+    holdInde(el, p, true);
   }
   const raster = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--raster')) || 0;
   const fase = el => el.matches('.kort, .knap, .tilbage, .fane') ? (Math.round(el.offsetHeight / 32) === 1 ? 28 : 12) : 0;
@@ -252,7 +263,7 @@ const Tilpas = (() => {
       ${el.closest('.top') || opsk ? '' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button></div>
       <p class="lille" id="tp-laastekst">${laasTekst(l)}</p>`}
 `);
-    { const h = Math.max(20, Math.min(90, Number(lager.hent('tilpasHoejde', 33)) || 33)); $('.ark-kort', d).style.maxHeight = h + 'dvh'; } // vinduets højde i procent af skærmen, sættes under Mere
+    { const h = Math.max(20, Math.min(90, Number(lager.hent('tilpasHoejde', 33)) || 33)); $('.ark-kort', d).style.maxHeight = `min(max(${h}dvh, var(--ark-min, 280px)), calc(100dvh - 16px))`; } // vinduets højde i procent af skærmen (sættes under Mere), dog mindst --ark-min (280 px, på iPad 480 px), så det kan bruges på en vendt telefon
     d.addEventListener('click', e => {
       const s = e.target.closest('[data-st]'), a = e.target.closest('[data-tp]'), c = e.target.closest('.sw'), fz = e.target.closest('[data-fz]');
       if (fz) { z = fz.dataset.fz; d.querySelectorAll('[data-fz]').forEach(x => x.classList.toggle('valgt', x === fz)); return; }
@@ -316,8 +327,9 @@ const Tilpas = (() => {
     d.el.style.transition = 'none'; d.el.style.transform = 'none'; // målt uden «trykket ned»-effekten
     const r = d.el.getBoundingClientRect(); d.el.style.transform = tf; void d.el.offsetWidth; d.el.style.transition = ov;
     d.fast = d.el.hasAttribute('data-laast') && !!d.el._ph; d.top0 = r.top;
+    d.kx = d.el._kx || 0; // hvor meget feltet er skubbet ind på skærmen
     if (d.fast) { const q = d.el._ph.getBoundingClientRect(); d.nx = q.left; d.natDoc = q.top + scrollY; } // fastlåst: pladsholderen viser, hvor feltet ville stå
-    else { d.nx = r.left - d.p0[0]; d.natDoc = r.top - d.p0[1] + scrollY; }
+    else { d.nx = r.left - d.p0[0] - d.kx; d.natDoc = r.top - d.p0[1] + scrollY; }
     d.rast = raster(); d.fase = fase(d.el); d.xo = m.getBoundingClientRect().left + parseFloat(getComputedStyle(m).paddingLeft) + scrollX;
     d.stat = getComputedStyle(d.el).position === 'static'; if (d.stat) d.el.style.position = 'relative';
     d.el.classList.add('traekker');
@@ -340,7 +352,7 @@ const Tilpas = (() => {
     return false;
   }
   function flyt(d, e) {
-    const tx = d.nx + d.p0[0] + e.clientX - d.x0 + scrollX, ty = d.top0 + e.clientY - d.y0 + (d.fast ? 0 : scrollY);
+    const tx = d.nx + d.p0[0] + d.kx + e.clientX - d.x0 + scrollX, ty = d.top0 + e.clientY - d.y0 + (d.fast ? 0 : scrollY);
     const X = d.xo + Math.round((tx - d.xo) / G) * G, Y = d.rast + d.fase + Math.round((ty - d.rast - d.fase) / 32) * 32;
     d.p = [Math.round((X - scrollX - d.nx) * 100) / 100, Math.round((Y - d.natDoc) * 100) / 100];
     if (d.fast) { d.el.style.left = (d.nx + d.p[0]) + 'px'; d.el.style.top = (d.natDoc + d.p[1]) + 'px'; }
@@ -382,7 +394,10 @@ const Tilpas = (() => {
   }, true);
   const igen = () => { cancelAnimationFrame(timer); timer = requestAnimationFrame(anvend); };
   new MutationObserver(igen).observe(document.body, { childList: true, subtree: true });
-  document.addEventListener('DOMContentLoaded', () => { anvend(); hent(); });
+  // Vendes skærmen, eller ændres vinduets bredde, sættes alle felter på plads igen (efter at siden har lagt sig om)
+  let vendTimer;
+  const omlaeg = () => { clearTimeout(vendTimer); vendTimer = setTimeout(() => { if (drag && drag.laast) return; anvend(); requestAnimationFrame(anvend); }, 120); };
+  addEventListener('resize', omlaeg); addEventListener('orientationchange', omlaeg);  document.addEventListener('DOMContentLoaded', () => { anvend(); hent(); });
   return { saet, til: () => til, async nulstil() {
     husk(); data = {}; lager.gem('tilpas', data); anvend();
     try { await api('tilpasning?noegle=not.is.null', { method: 'DELETE' }); } catch (err) { console.error(err); }

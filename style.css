@@ -791,3 +791,24 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 #form > button[type=submit] { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 30; width: 100%; box-shadow: 0 8px 24px rgba(var(--skyg-rgb), .35); }
 body:has(#form) #hjaelper { bottom: calc(96px + env(safe-area-inset-bottom)); }
 body:has(#form) #hjaelper-vis { bottom: calc(92px + env(safe-area-inset-bottom)); }
+
+/* iPad og skærmvending. iPhone står som før, men kan vendes. */
+/* Tablet: bredere side, så iPad ikke ligner en stor telefon. Rækkerne à 32 px og den røde margen er uændrede. */
+@media (min-width: 744px) {
+  main { max-width: 860px; }
+  #ure { max-width: 860px; }
+  .top, .ark-kort { -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); }
+}
+@media (min-width: 1024px) { main { max-width: 960px; } #ure { max-width: 960px; } }
+/* Tilpasser-vinduet bliver nederst (så siden kan ses over det), men er bredere på iPad */
+@media (min-width: 744px) { .ark-kort { width: min(100%, 720px); } }
+@media (min-width: 744px) and (min-height: 700px) { :root { --ark-min: 480px; } }
+/* Vendt telefon (lav skærm): vinduet fylder højden, og faste knapper fylder mindre, så der er plads til siden */
+@media (max-height: 520px) {
+  .ark-kort { width: min(100%, 720px); padding-top: 12px; }
+  main { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+  body[data-side=lav] main { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
+  .h-boble { max-height: 60vh; }
+  #tilpas-fortryd, #tilpas-gentag, #tilpas-knap, #tilpas-forlad { height: 44px; }
+  #tilpas-forlad { width: 44px; }
+}
