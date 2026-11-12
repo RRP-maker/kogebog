@@ -35,3 +35,6 @@ join ingredienser i on i.navn_norm = v.n on conflict (ingrediens_id) do nothing;
 
 -- Opskrifter kan skjules fra «Hvad kan jeg lave?»
 alter table opskrifter add column if not exists skjul_forslag boolean not null default false;
+
+-- Opskrifters kategorier: Hovedret, Forret, Salat, Dessert, Tilbehør, Drikke (Aftensmad er blevet til Hovedret)
+update opskrifter set kategori = 'Hovedret' where kategori = 'Aftensmad';

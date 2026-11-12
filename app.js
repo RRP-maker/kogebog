@@ -47,6 +47,7 @@ async function api(sti, { method = 'GET', body, flet } = {}) {
 }
 
 // ---------- Typer ----------
+const OPSKRIFT_KAT = ['Hovedret', 'Forret', 'Salat', 'Dessert', 'Tilbehør', 'Drikke']; // faste forslag til opskrifters kategori. Man kan altid skrive en ny.
 const TYPER = {
   opskrifter: {
     navn: 'Opskrifter', ny: 'Ny opskrift', rediger: 'Rediger opskrift',
@@ -55,7 +56,7 @@ const TYPER = {
     felter: [
       { n: 'titel', l: 'Navn', t: 'text', kraevet: true },
       { n: 'beskrivelse', l: 'Kort beskrivelse', t: 'textarea', rows: 2 },
-      { n: 'kategori', l: 'Kategori', t: 'kategori', hint: 'Fx Aftensmad, Bagværk eller Dessert' },
+      { n: 'kategori', l: 'Kategori', t: 'kategori', hint: 'Vælg en af forslagene, eller skriv en ny.' },
       { n: 'svaerhed', l: 'Sværhed', t: 'valg', valg: [[1, '1 · Meget let'], [2, '2 · Let'], [3, '3 · Middel'], [4, '4 · Svær'], [5, '5 · Meget svær']] },
       { n: 'portioner', l: 'Antal portioner', t: 'number' },
       { n: 'tid_minutter', l: 'Tid i minutter', t: 'number' },
@@ -695,7 +696,7 @@ function felt(f, rad, ekstra) {
   else if (f.t === 'opskrift') input = `<select ${m}><option value="">Ingen bestemt opskrift</option>${
     ekstra.map(o => `<option value="${o.id}"${o.id === v ? ' selected' : ''}>${esc(o.titel)}</option>`).join('')}</select>`;
   else if (f.t === 'kategori') input = `<input ${m} type="text" list="kategorier" value="${esc(v)}" autocomplete="off"><datalist id="kategorier">${
-    [...new Set([...ekstra.map(o => o.kategori).filter(Boolean), 'Aftensmad', 'Morgenmad', 'Frokost', 'Bagværk', 'Dessert', 'Snack'])].map(k => `<option value="${esc(k)}">`).join('')}</datalist>`;
+    [...new Set([...OPSKRIFT_KAT, ...ekstra.map(o => o.kategori).filter(Boolean)])].map(k => `<option value="${esc(k)}">`).join('')}</datalist>`;
   else input = `<input ${m} type="text" value="${esc(v)}" autocomplete="off">`;
   return `<label for="f_${f.n}">${f.l}${f.kraevet ? '' : ' <span>(kan springes over)</span>'}</label>
     ${f.hint ? `<small>${f.hint}</small>` : ''}${input}`;
@@ -880,6 +881,7 @@ Regler:
 - Har retten flere dele, fx sovs og kødboller, så del ingredienserne op i grupper med en overskrift. Har den kun én del, så brug én gruppe med "overskrift": null.
 - Mængder skal være tal, fx 2,5 dl skrives som 2.5. Mangler der en mængde (fx "salt"), så udelad "mængde" og "enhed".
 - Skriv ingen forkortelser i navne. Skriv "hakket", ikke "hakk", og "revet", ikke "rev".
+- Giv retten en "kategori" på øverste niveau. Brug præcis en af disse: ${OPSKRIFT_KAT.join(', ')}.
 - Giv hver ingrediens en "kategori". Brug præcis en af disse: §KAT§. Passer ingen, så skriv "Andet".
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
@@ -888,7 +890,7 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
   "sværhed": 3,
   "tid": 45,
   "portioner": 4,
-  "kategori": "Aftensmad",
+  "kategori": "Hovedret",
   "ingredienser": [
     { "overskrift": "Kødboller", "varer": [
       { "mængde": 500, "enhed": "g", "navn": "hakket svinekød", "kategori": "Kød" },
