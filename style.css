@@ -920,3 +920,48 @@ body.tilpas-menu[data-side=lav] #nav { display: grid; position: fixed; left: aut
 body.tilpas-menu[data-side=lav] #nav a { display: none; }
 body.tilpas-menu[data-side=lav] #nav #tilpas-knap { flex-direction: column; gap: 0; height: 56px; margin: 0; padding: 0; font-size: 12px; line-height: 13px; text-align: center; justify-content: center; }
 @media print { #nav { display: none !important; } }
+
+/* ---------- Opskrifter og en opskrift (opdatering 3b) ---------- */
+/* Tæt liste: to tekstrækker pr. opskrift (navn + kategori, køkken og tid). Notesbogens linjer skiller dem, så der er ingen kort. */
+.oplist { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 32px; }
+.oprk { display: block; min-width: 0; height: 64px; margin: 0 -8px; padding: 0 8px; border-radius: 12px; color: inherit; text-decoration: none; touch-action: manipulation; }
+.oprk strong, .oprk > span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 32px; }
+.oprk strong { font: 24px/32px var(--hoved); font-weight: 400; }
+.oprk > span { font-size: 17px; color: var(--blyant); }
+.oprk .ikon { width: 20px; height: 20px; vertical-align: -.12em; }
+.oprk:active { background: rgba(var(--blaek-rgb), .08); }
+.oprk[aria-current] { background: var(--valgt); color: #fff; }
+.oprk[aria-current] > span { color: inherit; }
+@media (hover: hover) { .oprk:hover:not([aria-current]) { background: rgba(var(--blaek-rgb), .06); } }
+.oplist-bogstav { grid-column: 1 / -1; margin: 32px 0 0; font: 24px/32px var(--hoved); font-weight: 400; color: var(--gryde-mork); }
+.oplist-bogstav:first-child { margin-top: 0; }
+.chip .ikon { width: 16px; height: 16px; vertical-align: -.1em; }
+/* Uden to ruder: to kolonner, når der er plads (iPad) */
+@media (min-width: 744px) { body:not(.ruder-vist) .oplist { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Filtre: på smalle skærme ruller de vandret og toner ud i højre side, så man ser, at der er flere. På brede skærme står de på flere linjer. */
+.filter { padding-right: 34px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); }
+@media (min-width: 744px) {
+  .filter { flex-wrap: wrap; height: auto; min-height: 56px; overflow: visible; gap: 0 8px; padding-right: 2px; -webkit-mask-image: none; mask-image: none; }
+}
+
+/* Opskriftssiden: stjernen står ved titlen, og «Slet» står for sig selv nederst */
+.titelrakke { justify-content: flex-start; }
+.sletrakke { margin-top: calc(32px + var(--m)); }
+
+/* To ruder: listen til venstre ruller for sig, den valgte opskrift til højre følger siden */
+body.ruder-vist main { --maxb: 1248px; max-width: 1248px; }
+.ruder { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 0 32px; align-items: start; }
+.rude-liste, .rude-indhold { display: flex; flex-direction: column; min-width: 0; }
+.rude-liste > *, .rude-indhold > * { flex: none; min-width: 0; }
+.rude-liste > .tilbage, .rude-liste > .knap, .rude-indhold > .tilbage, .rude-indhold > .knap { align-self: flex-start; }
+.rude-indhold > .knap { margin: var(--m) 0 var(--pt); }
+.rude-indhold > .knap.stor { align-self: stretch; }
+.rude-liste { position: sticky; top: 0; max-height: 100vh; max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain; margin: -32px -8px 0; padding: 32px 8px 32px; scrollbar-width: thin; }
+.rude-liste .filter { flex-wrap: nowrap; height: 56px; min-height: 0; overflow-x: auto; gap: 8px; padding-right: 34px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); }
+/* En opskrift: ingredienser til venstre og trin til højre, når ruden er bred nok (mindst ca. 720 px) */
+.opsk-ruder, .opsk-ruder > section { display: flex; flex-direction: column; min-width: 0; }
+@media (min-width: 1122px) and (pointer: coarse), (min-width: 1330px) {
+  body.ruder-vist .opsk-ruder { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 0 32px; align-items: start; }
+}
+@media print { .rude-liste { display: none; } .ruder { display: block; } }
