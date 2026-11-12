@@ -11,6 +11,8 @@ const LinkImport = (() => {
   const mapKat = t => { const s = String(t || ''); const fast = OPSKRIFT_KAT.find(k => k.toLowerCase() === s.toLowerCase()); if (fast) return fast; const m = KAT.find(([re]) => re.test(s)); return m ? m[1] : null; };
   const mapKoekken = t => { const s = String(t || '').trim().toLowerCase(); const fast = OPSKRIFT_KOEKKEN.find(k => k.toLowerCase() === s); return fast || KOEKKEN[s] || (s ? s.charAt(0).toUpperCase() + s.slice(1) : null); };
 
+  // «hakket kalv (med 10 % fedt)» -> «hakket kalv»: parenteser står ikke i ingrediensnavne, og navnet bruges til at finde kategori
+  const renIng = t => { const u = String(t).replace(/\s*\([^)]*\)/g, '').replace(/\s{2,}/g, ' ').replace(/[\s,;:]+$/, '').trim(); return u || String(t); };
   const laesLinks = tekst => [...new Set((String(tekst).match(/https?:\/\/[^\s<>"']+/g) || []).map(l => l.replace(/[.,;)\]]+$/, '')))];
   const fejlboks = t => { const e = $('#formfejl'); if (e) e.innerHTML = t ? `<div class="fejlboks">${esc(t)}</div>` : ''; };
 
@@ -26,7 +28,7 @@ const LinkImport = (() => {
     if (svar.status === 401 || svar.status === 403) { const e = new Error('Supabase afviste kaldet. Funktionen skal lægges ind uden «Verify JWT».'); e.fatal = true; throw e; }
     let j; try { j = await svar.json(); } catch (e) { throw new Error('Svaret kunne ikke læses.'); }
     if (!j.ok) throw new Error(j.fejl || 'Siden kunne ikke hentes.');
-    const d = j.data, r = laesEn({ navn: d.navn, kategori: mapKat(d.kategori), koekken: mapKoekken(d.koekken), portioner: d.portioner, tid: d.tid, ingredienser: d.ingredienser, trin: d.trin });
+    const d = j.data, ingredienser = d.ingredienser.map(renIng), r = laesEn({ navn: d.navn, kategori: mapKat(d.kategori), koekken: mapKoekken(d.koekken), portioner: d.portioner, tid: d.tid, ingredienser, trin: d.trin });
     if (r.fejl) throw new Error(r.fejl);
     return r;
   }
