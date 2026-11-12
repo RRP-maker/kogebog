@@ -2,6 +2,12 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.6.1 · Gemte placeringer ignoreres under opdatering 3
+- Tilpasserens gemte placeringer (tabellen «tilpasning») ignoreres, til opdatering 3 er færdig. Kun STANDARD i `tilpas.js` gælder (`IGNORER_GEMTE`). Databasen er urørt. Sæt `IGNORER_GEMTE = false`, når opdateringen er færdig.
+- Madplan: valgene står i et kort (handlinger til venstre, dagvalg og tal til højre fra 744 px). Dagene står i kolonner under.
+- Import-siderne er højst 704 px brede som formularerne.
+- Chips har 44 px tryk-flade.
+
 ## 1.6.0 · «Hvad kan jeg lave?», madplan og formularer (fase 3c)
 - «Hvad kan jeg lave?» i to ruder, når «to ruder» er slået til og skærmen er bred: det, du har derhjemme, i et kort til venstre (ruller for sig), forslagene og «Madplan» til højre. Ellers én kolonne som før, med samme rækkefølge.
 - Kategorierne i ingredienslisten kan foldes sammen (tryk på navnet). Valget huskes på enheden.
