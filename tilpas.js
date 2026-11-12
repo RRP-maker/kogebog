@@ -98,7 +98,7 @@ const Tilpas = (() => {
   // Tilpasninger, der før var gemt på teksten, gælder stadig, til feltet ændres første gang (arv).
   const arv = {}, arvFelt = {};
   // Tekster på knapper og faner. En overskrift med samme tekst som en knap, der fører til siden, arver intet fra knappen.
-  const feltTekster = new Set(['Hvad kan jeg lave?', 'Opskrifter', 'Tips', 'Tilføj med Claude', 'Mere', 'Ny opskrift', 'Nyt tip', ...lager.hent('tpFeltTekster', [])]);
+  const feltTekster = new Set(['Hvad kan jeg lave?', 'Opskrifter', 'Tips', 'Tilføj med Claude', 'Mere', 'Indstillinger', 'Ny opskrift', 'Nyt tip', ...lager.hent('tpFeltTekster', [])]);
   // Standardværdier: placeringer, størrelser, tekster og farver, som felterne har efter gennemgangen. «Nulstil» går tilbage til dem.
   const STANDARD = {
     "forside|hvad-skal-vi-lave": {}, "forslag|hvad-kan-jeg-lave": {}, "Ingredienser": {}, // tomme: feltet arver ikke fra teksten
@@ -205,16 +205,13 @@ const Tilpas = (() => {
     if (til && !b) {
       b = document.createElement('button'); b.id = 'tilpas-knap'; b.type = 'button';
       b.addEventListener('click', () => { aktiv = !aktiv; lager.gem('tilpasAktiv', aktiv); if (aktiv) toast('Tryk for at ændre. Hold og træk for at flytte.'); anvend(); });
-      const g = document.createElement('div'); g.id = 'tilpas-gruppe'; // forlad-krydset står til venstre for pause-knappen
-      const kryds = document.createElement('button'); kryds.id = 'tilpas-forlad'; kryds.type = 'button'; kryds.textContent = '✕'; kryds.setAttribute('aria-label', 'Forlad tilpasseren');
-      kryds.addEventListener('click', () => { saet(false); toast('Tilpasningen er slået fra. Slå den til igen under «Mere».'); });
-      g.append(kryds, b); document.body.append(g);
+      document.getElementById('nav').append(b); // knappen står i navigationen, så længe «Tilpas siden» er slået til under Indstillinger
       for (const [id, tekst, fkt] of [['tilpas-fortryd', '↶ Fortryd', fortryd], ['tilpas-gentag', 'Gentag ↷', gentag]]) {
         const x = document.createElement('button'); x.id = id; x.type = 'button'; x.textContent = tekst; x.addEventListener('click', fkt); document.body.append(x);
       }
-    } else if (!til && b) { b.parentElement.remove(); ['tilpas-fortryd', 'tilpas-gentag'].forEach(id => { const x = document.getElementById(id); if (x) x.remove(); }); }
+    } else if (!til && b) { b.remove(); ['tilpas-fortryd', 'tilpas-gentag'].forEach(id => { const x = document.getElementById(id); if (x) x.remove(); }); }
     knapper();
-    if (b) b.innerHTML = Ikoner.svg(aktiv ? 'pause' : 'blyant') + (aktiv ? ' Pause tilpas' : ' Tilpas igen');
+    if (b) b.innerHTML = `<span>${Ikoner.svg(aktiv ? 'pause' : 'blyant')}</span><span>${aktiv ? 'Pause tilpas' : 'Tilpas igen'}</span>`;
   }
   // Fortryd og gentag: hver ændring gemmer et billede af tilpasningerne før ændringen
   let hist = [], frem = [];

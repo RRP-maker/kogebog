@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.4.1 · Rettelser til navigationen
+- iPhone på højkant: bjælken sidder lavere (tæt på hjemmestregen). iPad og iPhone på langs er uændret.
+- Tilpasserens knap står i navigationen med ikon og lille tekst, når «Tilpas siden» er slået til. Den gør det samme som før (pause og tilpas igen). Krydset «Forlad tilpasseren» er fjernet. Tilpasseren slås fra under Indstillinger.
+- «Mere» hedder «Indstillinger».
+
 ## 1.4.0 · Fase 3a: navigation og lav højde
 - Fem destinationer med ikon og tekst: Opskrifter, Tips, Hvad kan jeg lave?, Madplan og Mere. Den aktuelle er markeret (`aria-current`).
 - Bjælke nederst på telefon og tablet. Sidebjælke til venstre på brede skærme med mus (mindst 1024 px, `hover` og `pointer: fine`), med «Kogebog» som vej til forsiden. Valgt efter plads og input, ikke efter enhed.
