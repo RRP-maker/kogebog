@@ -6,7 +6,7 @@
 // Ændringen gælder alle steder, hvor den samme tekst står. Den gemmes i Supabase (tabellen «tilpasning») og dermed på alle enheder.
 // Mangler tabellen, gemmes den kun på denne enhed.
 const Tilpas = (() => {
-  const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret'; // de to sidste: dagene og retternes felter på Madplan
+  const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret, .mp-rk > span'; // de sidste: dagene, retternes felter og tællernes navne på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
   const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, DELE = '.mp-valg .rund, .mp-valg .mp-inp, .filter .chip', TRIN = '.mp-valg .stepper, .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT;
