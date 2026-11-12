@@ -657,7 +657,7 @@ body.tilpas [data-ikkeflyt][data-laast] { outline-color: var(--tomat); }
 .mangler-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 32px 0 0; }
 .mangler-top h2 { margin: 0; }
 .stepper { display: flex; align-items: center; gap: 4px; }
-.stepper .rund { width: 32px; font-size: 20px; border-radius: 50%; }
+.stepper .rund { width: 32px; padding: 0; font-family: system-ui, sans-serif; font-size: 20px; line-height: 1; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; } /* − og + står midt i cirklen */
 .stepper input { width: 48px; text-align: center; padding: 0 4px; border-radius: 8px; }
 /* Skrivefelter: skabelonens højde og margen vinder over de generelle regler for input */
 input.felt, select.felt { height: 64px; margin: var(--m) 0 var(--pt); }

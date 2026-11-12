@@ -9,8 +9,8 @@ const Tilpas = (() => {
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret'; // de to sidste: dagene og retternes felter på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
-  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, DELE = '.mp-valg .rund, .mp-valg .mp-inp', TRIN = '.mp-valg .stepper', FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT;
-  // Tæller på Madplan: «−», skrivefeltet og «+» kan tilpasses hver for sig (DELE), men et tryk-og-træk flytter hele tælleren (TRIN) med alle tre. // opskrifter kan ikke tilpasses
+  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, DELE = '.mp-valg .rund, .mp-valg .mp-inp, .filter .chip', TRIN = '.mp-valg .stepper, .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT;
+  // Tæller på Madplan («−», skrivefelt, «+») og bjælker med mærker (kategorier, køkkener, søgning): delene kan tilpasses hver for sig (DELE), men et tryk-og-træk flytter hele tælleren eller bjælken (TRIN). // opskrifter kan ikke tilpasses
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
   const standardFast = el => el.matches('.vaerktoej .knap');
@@ -158,7 +158,7 @@ const Tilpas = (() => {
       const ret = til && aktiv; // under tilpasning vises skjulte felter svagt, så de kan hentes tilbage
       const skj = !!o.x && !(beskyttet.has(k) || beskyttet.has(leg));
       if (o.x && !skj && !ryd.includes(k)) ryd.push(k);
-      el.style.display = skj && !ret ? 'none' : '';
+      el.style.display = ''; el.style.visibility = skj && !ret ? 'hidden' : ''; el.style.pointerEvents = skj && !ret ? 'none' : ''; // et skjult felt beholder sin plads, så siden ikke kryber sammen
       el.style.opacity = skj && ret ? '.35' : '';
       el.style.color = tCss(o.f) || (FELT_TEKST[o.b] || '');
       el.style.background = o.b === 'glas' ? 'var(--glas)' : fCss(o.b);
@@ -183,10 +183,7 @@ const Tilpas = (() => {
       el.toggleAttribute('data-laast', fast);
       el.toggleAttribute('data-ikkeflyt', !!o.m || el.matches(FAST));
     });
-    document.querySelectorAll('.rakke, .vaerktoej, .genveje, .faner').forEach(c => { // tomme rækker skjules med
-      const tom = c.children.length > 0 && [...c.children].every(k => k.style.display === 'none');
-      if (tom) { c.style.display = 'none'; c.dataset.tom = '1'; } else if (c.dataset.tom) { c.style.display = ''; delete c.dataset.tom; }
-    });
+    document.querySelectorAll('[data-tom]').forEach(c => { c.style.display = ''; delete c.dataset.tom; }); // en række med skjulte felter beholder sin plads, så siden ikke kryber sammen
     bjaelke();
   }
   // Knap nederst til højre: sætter tilpasningen på pause, så man kan bladre i appen, og tænder den igen
@@ -270,7 +267,7 @@ const Tilpas = (() => {
   }
   const flytTekst = v => v ? 'Feltet kan ikke flyttes. Du kan stadig ændre tekst og farve.' : 'Du flytter feltet ved at holde fingeren på det og trække.';
   function aabn(el) {
-    const k = el.dataset.org, o = get(k) || {}, felt = el.matches('.knap, .tilbage, .fane'), nat = naturligZ(el), std = standardFarver(el);
+    const k = el.dataset.org, o = get(k) || {}, felt = el.matches('.knap, .tilbage, .fane'), farvefelt = felt || el.matches('.rund, .mp-inp, .chip, .mp-dagfelt, .mp-ret'), nat = naturligZ(el), std = standardFarver(el);
     const opsk = el.matches(FAST);
     const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !(beskyttet.has(k) || beskyttet.has(el.dataset.orgtekst)), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
@@ -282,7 +279,7 @@ const Tilpas = (() => {
       <div class="rakke venstre">${STR.map(([v, n]) => `<button class="chip${v === st ? ' valgt' : ''}" type="button" data-st="${v}">${n}</button>`).join('')}</div>
       ${felt ? `<label>Feltets størrelse</label><div class="rakke venstre">${FELTSTR.map(([v, n]) => `<button class="chip${v === z ? ' valgt' : ''}" type="button" data-fz="${v}">${n}</button>`).join('')}</div>` : ''}
       <label>Tekstfarve</label>${sw(TEKSTFARVER, f, 'f', false, tCss)}
-      ${felt ? `<label>Feltets farve</label>${sw(FELTFARVER, b, 'b', true, fCss)}` : ''}
+      ${farvefelt ? `<label>Feltets farve</label>${sw(FELTFARVER, b, 'b', true, fCss)}` : ''}
       <p class="lille">Ændringen gælder dette felt og de felter, der hænger sammen med det.</p>
       ${opsk ? '<p class="lille">Teksten i opskriften kan ændres, men ikke flyttes.</p>' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
       <p class="lille" id="tp-flyttekst">${flytTekst(m)}</p>`}
@@ -307,7 +304,7 @@ const Tilpas = (() => {
         if (t && t !== el.dataset.orgtekst) ny.t = t;
         if (o.s || st !== st0) ny.s = st;
         if (f !== std.f) ny.f = f; // en farve, der er appens egen, gemmes ikke
-        if (felt && b !== std.b) ny.b = b;
+        if (farvefelt && b !== std.b) ny.b = b;
         if (m) ny.m = true;
         let p = o.p;
         if (l !== foer) { const g = p || [0, 0]; p = [g[0], Math.round((g[1] + (l ? -scrollY : scrollY)) * 100) / 100, ...g.slice(2)]; if (!p[0] && !p[1]) p = null; } // feltet bliver, hvor det står på skærmen nu
@@ -402,7 +399,7 @@ const Tilpas = (() => {
   }
   document.addEventListener('pointerdown', e => {
     if (!til || !aktiv || e.button > 0) return;
-    let el = e.target.closest('[data-flyt]'); if (el && el.matches(DELE)) el = el.closest(TRIN + '[data-flyt]') || el; // træk i en del af tælleren flytter hele tælleren
+    let el = e.target.closest('[data-flyt]'); if (el && el.matches(DELE)) el = el.closest(TRINFLYT) || el; // træk i en del af tælleren flytter hele tælleren
     if (!el || el.closest('#ark') || (get(el.dataset.flyt) || {}).m || el.matches(FAST)) return;
     const d = drag = { el, x0: e.clientX, y0: e.clientY, p0: (get(el.dataset.flyt) || {}).p || [0, 0], laast: false };
     d.t = setTimeout(() => startTraek(d), 300);

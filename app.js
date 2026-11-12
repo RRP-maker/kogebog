@@ -412,9 +412,9 @@ async function liste(type) {
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `<input id="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off">
-      <div class="filter soegtype" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>
-      ${kat.length ? `<div class="filter" data-r="kat" role="group" aria-label="Kategori"><button class="chip valgt" data-h="kat" data-v="">Alle</button>${kat.map(k => `<button class="chip" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
-      ${koek.length ? `<div class="filter" data-r="koekken" role="group" aria-label="Køkken"><button class="chip valgt" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}
+      <div class="filter soegtype" data-tpid="bjaelke-soeg" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>
+      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" role="group" aria-label="Kategori"><button class="chip valgt" data-h="kat" data-v="">Alle</button>${kat.map(k => `<button class="chip" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
+      ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" role="group" aria-label="Køkken"><button class="chip valgt" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}
     <div id="liste"></div>`;
   tegnListe();
   const s = $('#soeg');

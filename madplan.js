@@ -144,7 +144,7 @@ const Madplan = (() => {
       <div id="mp-knapper"></div>
       <button type="button" class="knap primaer felt felt-m" data-tpid="mp-generer" data-h="mpGenerer">${ik('gryde')} Generer ny madplan</button>
       <h2>Hvad skal med hver dag?</h2>
-      <div class="filter mp-alle" id="mp-alle"></div>
+      <div class="filter mp-alle" id="mp-alle" data-tpid="bjaelke-madplan"></div>
       <small>Tryk for at slå hovedret, salat eller tilbehør til eller fra på alle dage. Under hver dag kan du vælge selv.</small>
       <div class="mp-valg">${Object.keys(VALG).map(raekke).join('')}</div>
       <div id="mp-plan"></div>`;
