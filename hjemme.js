@@ -128,7 +128,7 @@ const Hjemme = (() => {
     if (id !== visning) return;
     D = { kat, ing, hj }; ved = aendret;
     boks.innerHTML = `<h2>Tilføj ingrediens</h2>
-      <small>Skriv én ting i hvert felt. Tryk retur for at gemme og skrive næste. Mængden bruges ikke til at finde retter, kun til din egen oversigt og til at trække fra, når du har lavet en ret.</small>
+      <small>Retur gemmer og går videre til næste. Mængden er kun til din egen oversigt, ikke til at finde retter.</small>
       ${LABELS}
       <div class="hj-rk felt felt-m hj-ny" id="hj-ny">
         <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="fx 2">
