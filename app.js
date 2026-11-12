@@ -48,6 +48,7 @@ async function api(sti, { method = 'GET', body, flet } = {}) {
 
 // ---------- Typer ----------
 const OPSKRIFT_KAT = ['Hovedret', 'Forret', 'Salat', 'Dessert', 'Tilbehør', 'Drikke']; // faste forslag til opskrifters kategori. Man kan altid skrive en ny.
+const OPSKRIFT_KOEKKEN = ['Dansk', 'Italiensk', 'Asiatisk', 'Spansk', 'Mexicansk', 'Fransk', 'Indisk', 'Amerikansk', 'Græsk', 'Mellemøstlig']; // faste forslag til køkken. Man kan altid skrive et nyt.
 const TYPER = {
   opskrifter: {
     navn: 'Opskrifter', ny: 'Ny opskrift', rediger: 'Rediger opskrift',
@@ -57,6 +58,7 @@ const TYPER = {
       { n: 'titel', l: 'Navn', t: 'text', kraevet: true },
       { n: 'beskrivelse', l: 'Kort beskrivelse', t: 'textarea', rows: 2 },
       { n: 'kategori', l: 'Kategori', t: 'kategori', hint: 'Vælg en af forslagene, eller skriv en ny.' },
+      { n: 'koekken', l: 'Køkken', t: 'koekken', hint: 'Hvor kommer retten fra? Vælg et af forslagene, eller skriv et nyt.' },
       { n: 'svaerhed', l: 'Sværhed', t: 'valg', valg: [[1, '1 · Meget let'], [2, '2 · Let'], [3, '3 · Middel'], [4, '4 · Svær'], [5, '5 · Meget svær']] },
       { n: 'portioner', l: 'Antal portioner', t: 'number' },
       { n: 'tid_minutter', l: 'Tid i minutter', t: 'number' },
@@ -109,6 +111,7 @@ const stjernetekst = n => Ikoner.stjerner(n);
 function chips(r) {
   return [
     r.kategori && esc(r.kategori),
+    r.koekken && esc(r.koekken),
     r.svaerhed && `<span aria-label="Sværhed ${r.svaerhed} af 5">Sværhed ${stjernetekst(r.svaerhed)}</span>`,
     r.tid_minutter && `${ik('ur')} ${r.tid_minutter} min`
   ].filter(Boolean);
@@ -331,7 +334,7 @@ async function route() {
   window.scrollTo(0, 0);
   document.body.dataset.side = c === 'lav' ? 'lav' : (a || 'forside');
   try {
-    if (a === 'forslag' && b === 'madplan') return await Madplan.side();
+    if (a === 'forslag' && b === 'madplan') return c === 'rediger' ? await Madplan.rediger() : await Madplan.side();
     if (a === 'forslag' && b === 'nye') return await Hjemme.gennemgang();
     if (a === 'forslag') return await forslagSide();
     if (a === 'import') return importSide();
@@ -388,6 +391,7 @@ const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><s
 
 // ---------- Lister ----------
 let L = {}; // data til den liste, der vises
+const SOEG = { begge: ['Begge', 'Søg i navne og ingredienser'], navn: ['Navn', 'Søg i navne'], ing: ['Ingredienser', 'Søg i ingredienser'] };
 async function liste(type) {
   const id = visning, T = TYPER[type];
   henter();
@@ -396,10 +400,10 @@ async function liste(type) {
     type === 'tips' ? api('opskrifter?select=id,titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : []
   ]);
   if (id !== visning) return;
-  L = { type, rader, q: '', kat: '', navne: {}, fav: new Set() };
+  L = { type, rader, q: '', kat: '', koekken: '', soeg: SOEG[lager.hent('soegtype', 'begge')] ? lager.hent('soegtype', 'begge') : 'begge', navne: {}, fav: new Set() };
   if (type === 'tips') L.navne = Object.fromEntries(ekstra.map(o => [o.id, o.titel]));
   if (type === 'opskrifter') L.fav = new Set(ekstra.map(f => f.opskrift_id));
-  const kat = [...new Set(rader.map(r => r.kategori).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da'));
+  const unik = n => [...new Set(rader.map(r => r[n]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da')), kat = unik('kategori'), koek = unik('koekken');
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a>
     <h1>${T.navn}</h1>
     <div class="rakke">
@@ -407,8 +411,10 @@ async function liste(type) {
       ${type === 'opskrifter' ? `<a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a>` : ''}
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
-    ${type === 'opskrifter' && rader.length ? `<input id="soeg" type="search" placeholder="Søg i navne og ingredienser" aria-label="Søg i opskrifter" autocomplete="off">
-      ${kat.length ? `<div class="filter"><button class="chip valgt" data-h="kat" data-v="">Alle</button>${kat.map(k => `<button class="chip" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}
+    ${type === 'opskrifter' && rader.length ? `<input id="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off">
+      <div class="filter soegtype" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>
+      ${kat.length ? `<div class="filter" data-r="kat" role="group" aria-label="Kategori"><button class="chip valgt" data-h="kat" data-v="">Alle</button>${kat.map(k => `<button class="chip" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
+      ${koek.length ? `<div class="filter" data-r="koekken" role="group" aria-label="Køkken"><button class="chip valgt" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}
     <div id="liste"></div>`;
   tegnListe();
   const s = $('#soeg');
@@ -417,15 +423,17 @@ async function liste(type) {
     { tekst: 'Vil du skrive din egen ret? Tryk her.', maal: '.rakke .primaer', bev: 'salto' },
     { tekst: 'Har du en opskrift fra nettet? Claude skriver den ind for dig.', maal: 'a[href="#/import"]', bev: 'skridt', valgfri: true },
     { tekst: 'Skriv et navn eller en ingrediens. Så finder jeg retten.', maal: '#soeg', bev: 'dans', valgfri: true },
-    { tekst: 'Tryk på en kategori for at sortere.', maal: '.filter', bev: 'hop', valgfri: true },
+    { tekst: 'Vælg, om jeg skal søge i navne, ingredienser eller begge dele.', maal: '.soegtype', bev: 'skridt', valgfri: true },
+    { tekst: 'Tryk på en kategori eller et køkken for at sortere.', maal: '[data-r=kat]', bev: 'hop', valgfri: true },
     { tekst: 'Tryk på en ret for at åbne den.', maal: '#liste .kort, #liste a', bev: 'rul', valgfri: true }] : [
     { tekst: 'Skriv dit eget tip her. Det er et lille råd.', maal: '.rakke .primaer', bev: 'salto' },
     { tekst: 'Står tipsets navn i en opskrift, bliver ordet blåt. Tryk på det.', maal: '#liste .kort', bev: 'rul', valgfri: true }]);
 }
 function tegnListe() {
-  const { type, rader, q, kat } = L, T = TYPER[type];
-  const vis = rader.filter(r => (!kat || r.kategori === kat) &&
-    (!q || (r.titel || '').toLowerCase().includes(q) || (type === 'opskrifter' && ingAf(r).some(i => i.n.toLowerCase().includes(q)))));
+  const { type, rader, q, kat, koekken, soeg } = L, T = TYPER[type];
+  const iNavn = r => (r.titel || '').toLowerCase().includes(q), iIng = r => ingAf(r).some(i => i.n.toLowerCase().includes(q));
+  const vis = rader.filter(r => (!kat || r.kategori === kat) && (!koekken || r.koekken === koekken) &&
+    (!q || (type !== 'opskrifter' || soeg === 'navn' ? iNavn(r) : soeg === 'ing' ? iIng(r) : iNavn(r) || iIng(r))));
   $('#liste').innerHTML = vis.length ? vis.map(r => {
     if (type === 'opskrifter') return opskriftKort(r, L.fav.has(r.id));
     const til = L.navne[r.opskrift_id];
@@ -695,10 +703,10 @@ function felt(f, rad, ekstra) {
   else if (f.t === 'valg') input = `<select ${m}><option value="">Vælg</option>${f.valg.map(([k, t]) => `<option value="${k}"${k === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
   else if (f.t === 'opskrift') input = `<select ${m}><option value="">Ingen bestemt opskrift</option>${
     ekstra.map(o => `<option value="${o.id}"${o.id === v ? ' selected' : ''}>${esc(o.titel)}</option>`).join('')}</select>`;
-  else if (f.t === 'kategori') { // forslagene står som knapper under feltet, så man ser dem, før man skriver
-    const kat = [...new Set([...OPSKRIFT_KAT, ...ekstra.map(o => o.kategori).filter(Boolean)])], nu = String(v || '').trim().toLowerCase();
+  else if (f.t === 'kategori' || f.t === 'koekken') { // forslagene står som knapper under feltet, så man ser dem, før man skriver
+    const ko = f.t === 'koekken', kat = [...new Set([...(ko ? OPSKRIFT_KOEKKEN : OPSKRIFT_KAT), ...ekstra.map(o => o[f.n]).filter(Boolean)])], nu = String(v || '').trim().toLowerCase();
     input = `<input ${m} type="text" value="${esc(v)}" autocomplete="off">
-      <div class="katvalg" role="group" aria-label="Forslag til kategori">${kat.map(k => `<button type="button" class="chip${k.toLowerCase() === nu ? ' valgt' : ''}" data-h="vaelgKat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>`;
+      <div class="katvalg" role="group" aria-label="Forslag til ${ko ? 'køkken' : 'kategori'}">${kat.map(k => `<button type="button" class="chip${k.toLowerCase() === nu ? ' valgt' : ''}" data-h="vaelgKat" data-f="${f.n}" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>`;
   }
   else input = `<input ${m} type="text" value="${esc(v)}" autocomplete="off">`;
   return `<label for="f_${f.n}">${f.l}${f.kraevet ? '' : ' <span>(kan springes over)</span>'}</label>
@@ -725,7 +733,7 @@ async function formular(type, rid) {
   henter();
   const [r, ekstra] = await Promise.all([
     rid ? api(`${type}?id=eq.${enc(rid)}&select=*`) : [],
-    type === 'tips' ? api('opskrifter?select=id,titel&order=titel') : type === 'opskrifter' ? api('opskrifter?select=id,titel,kategori') : []
+    type === 'tips' ? api('opskrifter?select=id,titel&order=titel') : type === 'opskrifter' ? api('opskrifter?select=id,titel,kategori,koekken') : []
   ]);
   if (id !== visning) return;
   if (rid && !r[0]) return info(`Den findes ikke længere.<br><a href="#/${type}">Tilbage</a>`);
@@ -837,7 +845,7 @@ async function forslagSide() {
   if (id !== visning) return;
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Hvad kan jeg lave?</h1>
     <div id="forslag-nu"></div>
-    <a class="knap felt felt-m" data-tpid="madplan" href="#/forslag/madplan">${ik('gryde')} Lav en madplan</a>
+    <a class="knap felt felt-m" data-tpid="madplan" href="#/forslag/madplan">${ik('gryde')} Madplan</a>
     <div id="hj-boks"></div>
     <div class="rakke to-knapper"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button>
       <button type="button" class="knap" data-tpid="sorter-claude" data-h="sorterAndet">${ik('gnist')} Sortér med Claude</button></div>
@@ -885,6 +893,7 @@ Regler:
 - Mængder skal være tal, fx 2,5 dl skrives som 2.5. Mangler der en mængde (fx "salt"), så udelad "mængde" og "enhed".
 - Skriv ingen forkortelser i navne. Skriv "hakket", ikke "hakk", og "revet", ikke "rev".
 - Giv retten en "kategori" på øverste niveau. Brug præcis en af disse: ${OPSKRIFT_KAT.join(', ')}.
+- Giv retten et "køkken" på øverste niveau. Brug en af disse: ${OPSKRIFT_KOEKKEN.join(', ')}. Passer ingen, så skriv et andet kort navn, fx "Thai".
 - Giv hver ingrediens en "kategori". Brug præcis en af disse: §KAT§. Passer ingen, så skriv "Andet".
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
@@ -894,6 +903,7 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
   "tid": 45,
   "portioner": 4,
   "kategori": "Hovedret",
+  "køkken": "Italiensk",
   "ingredienser": [
     { "overskrift": "Kødboller", "varer": [
       { "mængde": 500, "enhed": "g", "navn": "hakket svinekød", "kategori": "Kød" },
@@ -1001,6 +1011,7 @@ function laesEn(j) {
   const helt = (v, min, max) => { const n = Math.round(tal(v)); return tal(v) != null && n >= min && n <= max ? n : null; };
   return { data: {
     titel: navn, kategori: typeof j.kategori === 'string' && j.kategori.trim() ? j.kategori.trim() : null,
+    koekken: (() => { const k = j['køkken'] ?? j.koekken; return typeof k === 'string' && k.trim() ? k.trim() : null; })(),
     svaerhed: helt(j['sværhed'] ?? j.svaerhed, 1, 5), tid_minutter: helt(j.tid, 0, 6000), portioner: helt(j.portioner, 1, 100),
     ingredienser: ing, fremgangsmaade: trinTilTekst(trin)
   }, kat };
@@ -1070,7 +1081,7 @@ document.addEventListener('select', e => {
 const H = {
   igen: () => route(),
   sorterAndet: () => Katalog.sorterAndet(() => Hjemme.vis($('#hj-boks'), tegnForslag)),
-  vaelgKat(el) { const f = $('#f_kategori'); if (!f) return; f.value = el.dataset.v; markerKat(); },
+  vaelgKat(el) { const f = $('#f_' + (el.dataset.f || 'kategori')); if (!f) return; f.value = el.dataset.v; markerKat(); },
   maksNed: () => saetMaks(maksMangler() - 1),
   maksOp: () => saetMaks(maksMangler() + 1),
   async slet(el) {
@@ -1082,7 +1093,18 @@ const H = {
   },
   kat(el) {
     L.kat = el.dataset.v;
-    document.querySelectorAll('.filter .chip').forEach(c => c.classList.toggle('valgt', c === el));
+    el.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('valgt', c === el));
+    tegnListe();
+  },
+  koekken(el) {
+    L.koekken = el.dataset.v;
+    el.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('valgt', c === el));
+    tegnListe();
+  },
+  soegType(el) {
+    L.soeg = el.dataset.v; lager.gem('soegtype', L.soeg);
+    el.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('valgt', c === el));
+    $('#soeg').placeholder = SOEG[L.soeg][1];
     tegnListe();
   },
   async favorit() {
@@ -1281,8 +1303,8 @@ const H = {
 document.addEventListener('input', e => { // teksten på «Tilføj med Claude» huskes, også hvis appen lukkes eller opdateres
   if (e.target.dataset && e.target.dataset.husk) lager.gem(e.target.dataset.husk, e.target.value);
 });
-function markerKat() { const f = $('#f_kategori'); if (!f) return; const nu = f.value.trim().toLowerCase(); document.querySelectorAll('.katvalg .chip').forEach(c => c.classList.toggle('valgt', c.dataset.v.toLowerCase() === nu)); }
-document.addEventListener('input', e => { if (e.target.id === 'f_kategori') markerKat(); });
+function markerKat() { document.querySelectorAll('.katvalg .chip').forEach(c => { const f = $('#f_' + (c.dataset.f || 'kategori')); c.classList.toggle('valgt', !!f && c.dataset.v.toLowerCase() === f.value.trim().toLowerCase()); }); }
+document.addEventListener('input', e => { if (e.target.id === 'f_kategori' || e.target.id === 'f_koekken') markerKat(); });
 document.addEventListener('change', e => {
   if (e.target.id === 'maks') saetMaks(e.target.value);
   if (e.target.id === 'udenkryd') { lager.gem('udenKrydderier', e.target.checked); tegnForslag(); }

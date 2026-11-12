@@ -59,7 +59,11 @@ const Hjaelper = (() => {
         </g>
         <path class="h-bryn" d="M35 34.5L54 37M86 30L66 36"/>
         <rect class="h-laaglaebe" x="18" y="56" width="84" height="6" rx="3"/>
-        <path class="h-tand" d="M44 59h7v8h-5.5a1.5 1.5 0 0 1-1.5-1.5z"/>
+        <path class="h-tand" transform="rotate(-7 47 59)" d="M44 59h7v8h-5.5a1.5 1.5 0 0 1-1.5-1.5z"/>
+        <path class="h-tand" transform="rotate(9 58 59)" d="M55 59h6v5.5h-4.5a1.5 1.5 0 0 1-1.5-1.5z"/>
+        <path class="h-tand" transform="rotate(-12 71 59)" d="M68 59h7v10h-5.5a1.5 1.5 0 0 1-1.5-1.5z"/>
+        <path class="h-tand" transform="rotate(14 86 59)" d="M83 59h6v6.5h-4.5a1.5 1.5 0 0 1-1.5-1.5z"/>
+        <path class="h-tand" transform="rotate(-5 32 59)" d="M29.5 59h5v5h-3.5a1.5 1.5 0 0 1-1.5-1.5z"/>
       </g>
       <g class="h-glimt"><path d="M104 30l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></g>
     </g>

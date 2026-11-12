@@ -31,7 +31,7 @@ const ClaudeEkstra = (() => {
     toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres');
   }
   const fejlboks = t => { $('#formfejl').innerHTML = `<div class="fejlboks">${esc(t)}</div>`; };
-  const FELTER = ['titel', 'kategori', 'svaerhed', 'tid_minutter', 'portioner', 'ingredienser', 'fremgangsmaade'];
+  const FELTER = ['titel', 'kategori', 'koekken', 'svaerhed', 'tid_minutter', 'portioner', 'ingredienser', 'fremgangsmaade'];
   const sikkerhedskopi = () => { const k = lager.hent('opdatFoer', null); return k && O && k.id === O.r.id ? k : null; };
 
   async function opdaterSide(rid) {
@@ -82,7 +82,7 @@ const ClaudeEkstra = (() => {
       if (svar.fejl) return fejlboks(svar.fejl);
       if (svar.liste) return fejlboks('Svaret har flere opskrifter. Her skal der kun være én.');
       const d = svar.data, r = O.r, ny = { titel: d.titel, ingredienser: d.ingredienser, fremgangsmaade: d.fremgangsmaade };
-      ['kategori', 'svaerhed', 'tid_minutter', 'portioner'].forEach(k => { if (d[k] != null) ny[k] = d[k]; });
+      ['kategori', 'koekken', 'svaerhed', 'tid_minutter', 'portioner'].forEach(k => { if (d[k] != null) ny[k] = d[k]; });
       el.disabled = true;
       try {
         lager.gem('opdatFoer', { id: r.id, data: Object.fromEntries(FELTER.map(k => [k, r[k] ?? null])) }); // så man kan fortryde

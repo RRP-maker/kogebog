@@ -17,7 +17,7 @@ En delt kogebog som statisk web app: opskrifter og tips i et kladdehæfte, med h
 | `laerred.js` | Lærred med billeder og figurer (Konva) |
 | `sw.js`, `manifest.webmanifest` | Installér på hjemmeskærm, læs uden internet |
 
-Tabeller: `opskrifter`, `tips`, `favoritter`, `stjerner`, `laerred`. Alle har åben læse- og skriveadgang.
+Tabeller: `opskrifter` (med `koekken`), `tips`, `favoritter`, `stjerner`, `laerred`, `madplan` (én række med valg og plan). Alle har åben læse- og skriveadgang.
 
 **Format i databasen (ingen ekstra kolonner):**
 - `opskrifter.ingredienser` er en liste. `{ "g": "Sovs" }` er en overskrift, resten er `{ m, e, n }`.

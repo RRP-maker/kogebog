@@ -38,3 +38,11 @@ alter table opskrifter add column if not exists skjul_forslag boolean not null d
 
 -- Opskrifters kategorier: Hovedret, Forret, Salat, Dessert, Tilbehør, Drikke (Aftensmad er blevet til Hovedret)
 update opskrifter set kategori = 'Hovedret' where kategori = 'Aftensmad';
+
+-- Køkken på opskrifter (Italiensk, Asiatisk, Spansk osv.)
+alter table opskrifter add column if not exists koekken text;
+
+-- Madplan: én række («faelles») med valg og plan, ens på alle enheder
+create table if not exists madplan (id text primary key, data jsonb not null default '{}', opdateret timestamptz default now());
+alter table madplan enable row level security;
+drop policy if exists "aaben" on madplan; create policy "aaben" on madplan for all using (true) with check (true);
