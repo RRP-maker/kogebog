@@ -1035,6 +1035,11 @@ async function laesUdklip() {
 
 // ---------- Mere: backup, indstillinger ----------
 const tilpasHoejde = () => Math.max(20, Math.min(90, Math.round(Number(lager.hent('tilpasHoejde', 33))) || 33));
+const versionstekst = () => {
+  const k = window.KOGEBOG; if (!k) return '';
+  const d = new Date(k.dato + 'T12:00:00');
+  return `Version ${esc(k.version)}${isNaN(d) ? '' : ' · ' + d.toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+};
 function mereSide() {
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a>
     <h2>Indstillinger</h2>
@@ -1056,6 +1061,7 @@ function mereSide() {
     <h2>Sikkerhedskopi</h2>
     <p class="lille">Hent alt indhold som en fil. Gem den et sikkert sted.</p>
     <button class="knap" data-h="eksport">${ik('hent')} Hent sikkerhedskopi</button>
+    <p class="lille" id="versionstekst">${versionstekst()}</p>
 `;
   document.querySelectorAll('input[name=tema]').forEach(r => r.addEventListener('change', e => Tema.saet(e.target.value)));
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
@@ -1356,8 +1362,36 @@ document.addEventListener('pointerdown', e => {
   el.classList.remove('tryk'); void el.offsetWidth; el.classList.add('tryk');
   el.addEventListener('animationend', ev => { if (ev.animationName === 'glans') el.classList.remove('tryk'); }, { once: true });
 }, { passive: true });
+// ---------- Tryk-område på mindst 48 px (kun touch) ----------
+// Små knapper og felter (32 px) kan ikke gøres større uden at flytte rækkerne, så et tryk op til (48 − højde) / 2 over eller under dem rammer dem alligevel.
+// Kun lodret, og kun hvis trykket ikke ligger på noget andet, så to naboer aldrig deler et tryk-område. Med mus og tastatur ændres intet.
+const Tryk = {
+  MIN: 48,
+  KAND: 'a[href], button, [role=button], select, input:not([type=hidden]):not([type=checkbox]):not([type=radio])',
+  AKTIV: 'a[href], button, input, select, textarea, label, summary, [role=button]',
+  find(x, y) {
+    let bedst = null, afst = Infinity, lige = false;
+    for (const el of document.querySelectorAll(Tryk.KAND)) {
+      if (el.classList.contains('plads') || el.disabled || (el.checkVisibility && !el.checkVisibility({ visibilityProperty: true }))) continue;
+      const r = el.getBoundingClientRect();
+      if (r.height >= Tryk.MIN || r.width === 0 || x < r.left || x > r.right) continue;
+      const d = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0;
+      if (d <= 0 || d > (Tryk.MIN - r.height) / 2) continue;
+      if (d < afst) { bedst = el; afst = d; lige = false; } else if (d === afst) lige = true;
+    }
+    return lige ? null : bedst;
+  }
+};
+document.addEventListener('click', e => {
+  if (!e.isTrusted || e.detail === 0 || !matchMedia('(pointer: coarse)').matches) return;
+  if (e.target.closest && e.target.closest(Tryk.AKTIV)) return;
+  const m = Tryk.find(e.clientX, e.clientY);
+  if (!m) return;
+  e.preventDefault(); e.stopPropagation();
+  if (m.matches('input, select')) m.focus(); else m.click();
+}, true);
 document.addEventListener('DOMContentLoaded', () => { Hjaelper.start(); route(); });
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=' + (window.KOGEBOG ? KOGEBOG.version : '')).catch(() => {});
 
 // Genindlæs-knappen foroven: tømmer den gemte kopi og henter siden forfra, så et nyt push ses uden at lukke appen
 document.addEventListener('click', async e => {

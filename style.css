@@ -1,4 +1,12 @@
 /* Kogebog: et kladdehæfte med blæk, linjer og glasknapper */
+/* Skrifttyper ligger i repoet (skrifter/, åben licens OFL). font-display: swap viser en erstatning med samme bredde (size-adjust), så rækkerne ikke flytter sig, når skriften er hentet. */
+@font-face { font-family: "Caveat Brush"; font-style: normal; font-weight: 400; font-display: swap; src: url("skrifter/caveat-brush-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Caveat Brush"; font-style: normal; font-weight: 400; font-display: swap; src: url("skrifter/caveat-brush-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Patrick Hand"; font-style: normal; font-weight: 400; font-display: swap; src: url("skrifter/patrick-hand-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Patrick Hand"; font-style: normal; font-weight: 400; font-display: swap; src: url("skrifter/patrick-hand-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Caveat Brush erstatning"; src: local("Chalkboard SE"), local("Bradley Hand"), local("Comic Sans MS"); size-adjust: 76.5%; }
+@font-face { font-family: "Patrick Hand erstatning"; src: local("Chalkboard SE"), local("Bradley Hand"), local("Comic Sans MS"); size-adjust: 78%; }
+
 :root {
   color-scheme: light;
   /* Farveroller: lyst tema. Mørkt tema overskriver dem i [data-tema="moerk"] nederst i filen. */
@@ -35,8 +43,8 @@
   --gron: linear-gradient(135deg, #2a8049, #236f3f); --gron-hover: linear-gradient(135deg, #247040, #1b5f35);
   --skjold: rgba(34, 56, 107, .35);
   --ud: cubic-bezier(.23, 1, .32, 1);
-  --hoved: "Caveat Brush", "Bradley Hand", "Chalkboard SE", "Comic Sans MS", cursive;
-  --skrift: "Patrick Hand", "Chalkboard SE", "Bradley Hand", "Comic Sans MS", cursive;
+  --hoved: "Caveat Brush", "Caveat Brush erstatning", cursive;
+  --skrift: "Patrick Hand", "Patrick Hand erstatning", cursive;
   /* Notesbogens net: alt står på rækker à 32 px. Linjen ligger --l0 under rækkens top, lige under teksten.
      Felter (knapper, kort, inputs) har top og bund midt mellem to linjer: margen foroven = --m, polstring foroven = --pt, forneden = --pb. */
   --kol: 16px; --raekke: 32px; /* gitterets mål: kolonner à 16 px og rækker à 32 px. JS læser dem herfra */
@@ -122,7 +130,7 @@ main > .knap.stor { align-self: stretch; }
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 64px; padding: 0 18px;
   border-radius: 24px; line-height: 32px;
 }
-.knap:active, .rund:active, .chip:active, .fane:active, .kort:active, .favknap:active { transform: scale(.97); }
+.fane:active, .kort:active, .favknap:active { transform: scale(.97); }
 .knap:disabled, .rund:disabled { opacity: .45; cursor: default; }
 .knap.primaer { background: var(--primaer); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(120, 30, 18, .3), 0 8px 22px var(--primaer-skygge), inset 0 1.5px 1px rgba(255, 255, 255, .55), inset 0 -1.5px 1px rgba(255, 255, 255, .18); }
 .knap.fare { color: var(--tomat-mork); }
@@ -133,7 +141,7 @@ main > .knap.stor { align-self: stretch; }
 .rakke.to-knapper { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .to-knapper .knap { min-width: 0; padding: 0 12px; line-height: 26px; text-align: left; }
 .to-knapper .knap svg { flex: none; }
-@media (hover: hover) { .knap:hover:not(:disabled):not(.primaer), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: var(--flade-hover); } .knap.primaer:hover:not(:disabled) { background: var(--primaer-hover); } }
+@media (hover: hover) { .knap:hover:not(:disabled):not(.primaer), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: var(--flade-hover); }}
 
 /* Forside: tre faneblade som sedler */
 .forsidetitel { font-size: 46px; line-height: 64px; margin: 0 0 32px; top: 8px; }
@@ -627,7 +635,6 @@ body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none
 .hj-ikon .ikon { width: 22px; height: 22px; }
 .hj-ny .hj-navn { grid-column: 3 / -1; }
 .hj-rk.blink .hj-navn, .hj-rk.blink .hj-mgd { animation: hjblink 1.2s var(--ud); }
-@keyframes hjblink { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 217, 90, 0); } 30% { box-shadow: 0 0 0 5px var(--smor); } }
 .mp-valg { display: flex; flex-direction: column; }
 .mp-rk { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 32px; margin: 0 0 32px; }
 .traek { display: flex; flex-direction: column; }

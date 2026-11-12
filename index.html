@@ -11,10 +11,13 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="ikon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="ikon-180.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Patrick+Hand&display=swap">
-  <link rel="stylesheet" href="style.css?v=1.1.0">
+  <link rel="preload" href="skrifter/caveat-brush-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="skrifter/patrick-hand-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- Versionen står kun her. Den bruges til ?v= på filerne, til cachens navn i sw.js og til teksten under «Mere». Hæv den (og datoen), når filer ændres. -->
+  <script>
+    window.KOGEBOG = { version: '1.2.0', dato: '2026-11-12' };
+    document.write('<link rel="stylesheet" href="style.css?v=' + KOGEBOG.version + '">');
+  </script>
 </head>
 <body>
   <header class="top">
@@ -29,15 +32,9 @@
   <main id="app"></main>
   <script src="config.js"></script>
   <script src="https://unpkg.com/konva@9/konva.min.js"></script>
-  <script src="ikoner.js?v=1.1.0"></script>
-  <script src="app.js?v=1.1.0"></script>
-  <script src="tilpas.js?v=1.1.0"></script>
-  <script src="katalog.js?v=1.1.0"></script>
-  <script src="hjemme.js?v=1.1.0"></script>
-  <script src="claude-ekstra.js?v=1.1.0"></script>
-  <script src="linkimport.js?v=1.1.0"></script>
-  <script src="madplan.js?v=1.1.0"></script>
-  <script src="hjaelper.js?v=1.1.0"></script>
-  <script src="laerred.js?v=1.1.0"></script>
+  <script>
+    ['ikoner', 'app', 'tilpas', 'katalog', 'hjemme', 'claude-ekstra', 'linkimport', 'madplan', 'hjaelper', 'laerred']
+      .forEach(function (n) { document.write('<script src="' + n + '.js?v=' + KOGEBOG.version + '"><\/script>'); });
+  </script>
 </body>
 </html>
