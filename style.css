@@ -835,3 +835,7 @@ body:has(#form) #hjaelper-vis { bottom: calc(92px + env(safe-area-inset-bottom))
   #tilpas-fortryd, #tilpas-gentag, #tilpas-knap, #tilpas-forlad { height: 44px; }
   #tilpas-forlad { width: 44px; }
 }
+
+/* Importér links: fremdriftsbjælke (højden kommer fra felt-s) */
+.importbar { display: block; overflow: hidden; border-radius: 16px; background: var(--felt-bg); border: 2px solid var(--blyant); }
+.importbar i { display: block; height: 100%; width: 0; background: var(--gron); transition: width .3s var(--ud); }

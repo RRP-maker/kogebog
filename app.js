@@ -337,6 +337,7 @@ async function route() {
     if (a === 'forslag' && b === 'madplan') return await Madplan.side();
     if (a === 'forslag' && b === 'nye') return await Hjemme.gennemgang();
     if (a === 'forslag') return await forslagSide();
+    if (a === 'import' && b === 'links') return LinkImport.side();
     if (a === 'import') return importSide();
     if (a === 'opdater' && b) return await ClaudeEkstra.opdaterSide(b);
     if (a === 'tipsimport') return await ClaudeEkstra.tipsSide();
@@ -408,7 +409,7 @@ async function liste(type) {
     <h1>${T.navn}</h1>
     <div class="rakke">
       <a class="knap primaer" href="#/${type}/ny">+ ${T.ny}</a>
-      ${type === 'opskrifter' ? `<a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a>` : ''}
+      ${type === 'opskrifter' ? `<a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a><a class="knap" data-tpid="opskrifter-links" href="#/import/links">${ik('gryde')} Importér links</a>` : ''}
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `<input id="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off">
