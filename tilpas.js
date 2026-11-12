@@ -127,7 +127,9 @@ const Tilpas = (() => {
     "tips|nyt-tip": {"z": "s"},
     "forside|hvad-kan-jeg-lave": {"s": 34, "b": "himmel", "z": "l"}
   };
-  const D = k => data[k] !== undefined ? data[k] : STANDARD[k];
+  // Midlertidigt under opdatering 3: dine gemte placeringer i databasen ignoreres, kun STANDARD gælder. Sæt til false, når opdateringen er færdig.
+  const IGNORER_GEMTE = true;
+  const D = k => !IGNORER_GEMTE && data[k] !== undefined ? data[k] : STANDARD[k];
   const get = k => {
     if (D(k) !== undefined) return D(k);
     if (arv[k] === undefined || D(arv[k]) === undefined) return undefined;

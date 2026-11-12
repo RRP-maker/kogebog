@@ -192,6 +192,7 @@ main > .knap.stor { align-self: stretch; }
 .chip { flex: none; padding: 0 16px; font-size: 20px; line-height: 32px; border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; white-space: nowrap; }
 .chip::before { content: ""; position: absolute; z-index: -1; inset: 2px 0; border-radius: 16px; background: var(--glas); border: 1px solid var(--glaskant); box-shadow: 0 1px 3px rgba(var(--skyg-rgb), .14), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); }
 .chip.valgt { color: #fff; }
+.chip::after { content: ""; position: absolute; inset: -6px -3px; } /* tryk-flade på 44 px, selv om chippen er 32 px */
 .chip.valgt::before { background: var(--valgt); border-color: rgba(255, 255, 255, .35); }
 
 /* Formularer */
@@ -813,6 +814,10 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 /* Madplan som gitter: alle dage er lige store, med tre faste felter (hovedret, salat, tilbehør) i hver.
    Dagens felt: 20 rækker (margen 12 + 608 + 20). Et felt i dagen: 5 rækker (margen 12 + 128 + 20), 3 tekstrækker i feltet. */
 #mp-plan { display: flex; flex-direction: column; }
+.mp-indst { display: flex; flex-direction: column; margin: var(--m) 0 var(--pt); }
+.mp-a, .mp-b { display: flex; flex-direction: column; min-width: 0; }
+.mp-a .knap.felt-m { align-self: flex-start; }
+@media (min-width: 744px) { .mp-indst { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-columns: repeat(2, round(down, calc((100% - var(--kol)) / 2), var(--kol))); gap: 0 var(--kol); align-items: start; } }
 .mp-knapper, #mp-knapper { display: flex; flex-wrap: wrap; gap: 0 8px; }
 .mp-grid { display: grid; grid-template-columns: 1fr; gap: 0 var(--kol); align-items: start; }
 @media (min-width: 744px) { .mp-grid { grid-template-columns: repeat(2, 1fr); grid-template-columns: repeat(2, round(down, calc((100% - var(--kol)) / 2), var(--kol))); } }
@@ -837,7 +842,7 @@ button.kort { width: 100%; text-align: left; font: inherit; cursor: pointer; }
 .katvalg .chip { height: 32px; font-size: 18px; position: relative; top: calc(var(--l0) - 32px); } /* lille felt: kanterne på to linjer */
 
 /* Formularer: én kolonne på højst 44 kolonner (704 px), og knapperne har deres egen bredde. «Gem» står i flowet efter det sidste felt, så den aldrig dækker et felt. */
-#form, #formfejl { max-width: 704px; }
+#form, #formfejl, .vejledning { max-width: 704px; }
 form > .knap.stor.formknap, main > .knap.stor.formknap, .vejledning .knap.formknap { width: auto; min-width: 192px; max-width: 100%; align-self: flex-start; }
 .formknap { margin: var(--m) 0 var(--pt); }
 .vejledning > li > .formknap { margin: var(--m) 0 var(--pt); }
