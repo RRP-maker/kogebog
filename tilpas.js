@@ -427,6 +427,8 @@ const Tilpas = (() => {
   const igen = () => { cancelAnimationFrame(timer); timer = requestAnimationFrame(anvend); };
   const appEl = document.getElementById('app'); // mens siden glider ind, er felternes mål forskudt: placeringerne sættes igen, når bevægelsen er slut
   if (appEl) appEl.addEventListener('animationend', e => { if (e.animationName === 'sideind') igen(); });
+  if (window.ResizeObserver) new ResizeObserver(igen).observe(document.querySelector('main')); // indholdet kan lægge sig om uden at DOM'en ændres (skrifttyper, billeder): placeringerne sættes igen
+  if (document.fonts) document.fonts.ready.then(igen);
   new MutationObserver(igen).observe(document.body, { childList: true, subtree: true });
   // Vendes skærmen, eller ændres vinduets bredde, sættes alle felter på plads igen (efter at siden har lagt sig om)
   let vendTimer;

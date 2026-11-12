@@ -237,7 +237,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .trin > li::before { content: counter(trin); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--smor); color: var(--paa-lys); display: grid; place-items: center; font: 22px/1 var(--hoved); }
 .vejledning .lille { margin: 0; }
 .vejledning > li { display: flex; flex-direction: column; } /* flex: så margenerne ikke smelter sammen, og rækkerne holder 32 px */
-.vejledning > li > .knap { align-self: flex-start; }
+.vejledning > li > .knap { align-self: flex-start; margin: var(--m) 0 var(--pt); }
 .begreb {
   font: inherit; color: var(--link); background: var(--blaa-svag); border: 0; border-bottom: 2px solid var(--link);
   border-radius: 6px 6px 0 0; padding: 0 4px; margin: 0; cursor: pointer; transition: background-color .2s;
