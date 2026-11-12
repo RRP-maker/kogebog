@@ -102,6 +102,7 @@ const Madplan = (() => {
     const d = ST.plan[dag], liste = kandidater(dag, s);
     ark(`<h2>${d[s] ? 'Udskift' : 'Vælg'} ${SLOT[s].toLowerCase()} · Dag ${dag + 1}</h2>
       <small>Retterne følger dine valg: højst ${ST.prRet} mangler pr. ret og ${ST.i_alt} varer i alt.</small>
+      ${liste.length && liste.length < 6 ? '<small>Vil du se flere retter? Tillad flere varer at købe i «Rediger madplan».</small>' : ''}
       <div class="mp-valgliste">${liste.length ? liste.map(x => `<button type="button" class="kort${x.r.id === d[s] ? ' valgt' : ''}" data-tpid="mp-vaelg" data-h="mpVaelg" data-v="${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>${esc(manglerTekst(x))}</span></button>`).join('')
         : '<p class="tomt">Jeg finder ingen retter, der passer. Tillad flere varer i «Rediger madplan».</p>'}</div>
       <div class="rakke">${d[s] ? '<button type="button" class="knap" data-tpid="mp-fjern" data-h="mpFjern">Fjern retten</button>' : ''}<button type="button" class="knap" data-tpid="mp-luk" data-h="lukArk">Luk</button></div>`);
