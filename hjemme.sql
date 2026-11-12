@@ -32,3 +32,6 @@ select v.n, v.n, k.id from (values
 insert into hjemme (ingrediens_id, maengde, enhed)
 select i.id, v.m, v.e from (values ('gulerødder',500,'g'),('kidneybønner',2,'dåse'),('mælk',1,'l'),('hakket oksekød',400,'g')) v(n,m,e)
 join ingredienser i on i.navn_norm = v.n on conflict (ingrediens_id) do nothing;
+
+-- Opskrifter kan skjules fra «Hvad kan jeg lave?»
+alter table opskrifter add column if not exists skjul_forslag boolean not null default false;

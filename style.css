@@ -763,3 +763,10 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 }
 /* udfyldt stjerne er klar gul i begge temaer: blæk-streg */
 [data-tema="moerk"] .ikon-stjerne { color: #22386b; }
+/* Tjekfelt nederst i opskriftsformularen */
+.tjekfelt { margin-top: var(--m); }
+.tjekfelt { align-items: flex-start; }
+.tjekfelt input { flex: none; margin-top: 3px; }
+.tjekfelt span { line-height: 32px; font-size: 20px; }
+.mangler-top .skift { flex: none; }
+.mangler-top .skift span { line-height: 32px; font-size: 17px; }

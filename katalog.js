@@ -57,6 +57,8 @@ const Katalog = (() => {
     for (const [id, k] of opdat) await api(`ingredienser?id=eq.${enc(id)}`, { method: 'PATCH', body: { kategori_id: k } });
   }
   const kategorier = () => sorteret().map(k => k.navn);
+  // Er ingrediensen et krydderi? Kategorien kommer fra kataloget. Ukendte ingredienser tæller ikke som krydderier.
+  const erKrydderi = n => { const i = ing.find(x => x.navn_norm === rens(simpel(n)) || x.navn_norm === norm(n)); const k = i && kat.find(c => c.id === i.kategori_id); return !!k && k.navn_norm === 'krydderier'; };
 
   // Knappen i Hvad kan jeg lave?: bed Claude om at sortere og rette ingredienserne
   let andre = [], efterSortering = null, besked = '', modus = 'alle'; // modus: «alle» (ret alle kategorier) eller «andet» (kun dem uden kategori, «Ikke kategoriseret»)
@@ -197,5 +199,5 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${(kat.
       if (efterSortering) efterSortering();
     }
   });
-  return { hent, rens, spoerg, laeg, kategorier, sorterAndet, laesKat };
+  return { hent, rens, spoerg, laeg, kategorier, sorterAndet, laesKat, erKrydderi };
 })();

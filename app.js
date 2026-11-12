@@ -60,7 +60,8 @@ const TYPER = {
       { n: 'portioner', l: 'Antal portioner', t: 'number' },
       { n: 'tid_minutter', l: 'Tid i minutter', t: 'number' },
       { n: 'ingredienser', l: 'Ingredienser', t: 'ingredienser', hint: 'Én ingrediens i hvert felt. Skriv mængden først, fx «2 dl mælk». Tryk på «overskrift» for at sætte en overskrift over en ingrediens, fx Sovs eller Kødboller.' },
-      { n: 'fremgangsmaade', l: 'Trin', t: 'trin', hint: 'Ét trin i hvert felt. Tryk på «deltrin» for at lave små skridt under et trin. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' }
+      { n: 'fremgangsmaade', l: 'Trin', t: 'trin', hint: 'Ét trin i hvert felt. Tryk på «deltrin» for at lave små skridt under et trin. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' },
+      { n: 'skjul_forslag', l: 'Foreslå ikke denne ret i «Hvad kan jeg lave?»', t: 'tjek', hint: 'Sæt kryds, hvis retten ikke skal dukke op som forslag.' }
     ]
   },
   tips: {
@@ -685,6 +686,8 @@ function felt(f, rad, ekstra) {
   const m = `id="f_${f.n}" name="${f.n}"` + (f.kraevet ? ' required' : '');
   let input;
   if (f.t === 'ingredienser' || f.t === 'trin') return edFelt(f, rad);
+  if (f.t === 'tjek') return `<label class="skift tjekfelt" for="f_${f.n}"><input id="f_${f.n}" name="${f.n}" type="checkbox"${v ? ' checked' : ''}> <span>${f.l}</span></label>
+    ${f.hint ? `<small>${f.hint}</small>` : ''}`;
   if (f.t === 'textarea') input = `<textarea ${m} rows="${f.rows || 4}">${esc(v)}</textarea>`;
   else if (f.t === 'number') input = `<input ${m} type="number" inputmode="numeric" min="0" step="1" value="${esc(v)}">`;
   else if (f.t === 'valg') input = `<select ${m}><option value="">Vælg</option>${f.valg.map(([k, t]) => `<option value="${k}"${k === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
@@ -701,6 +704,7 @@ function laesFelter(form, felter, visFejl) {
   for (const f of felter) {
     if (f.t === 'ingredienser') { data[f.n] = laesIngEd($('#ed_' + f.n, form)); continue; }
     if (f.t === 'trin') { data[f.n] = laesTrinEd($('#ed_' + f.n, form)); continue; }
+    if (f.t === 'tjek') { data[f.n] = form.elements[f.n].checked; continue; }
     const el = form.elements[f.n], v = el.value.trim();
     if (f.kraevet && !v) { visFejl(`Skriv noget i feltet «${f.l}».`); el.focus(); return null; }
     if (f.t === 'number' || f.t === 'valg') {
@@ -799,10 +803,10 @@ const BASIS = ['salt', 'olie', 'vand', 'peber'];
 const stamme = s => { s = s.toLowerCase().replace(/[^a-zæøåéü ]/g, '').trim(); return s.length > 4 ? s.replace(/(erne|ene|er|en|et|e|r)$/, '') : s; };
 const erBasis = n => BASIS.some(b => n === b || n.endsWith(b) || n.split(' ').includes(b));
 const passer = (a, b) => a === b || (a.length >= 3 && b.length >= 3 && (a.includes(b) || b.includes(a)));
-function beregnForslag(opskrifter, harTekst) {
+function beregnForslag(opskrifter, harTekst, udenKrydderier) {
   const har = harTekst.split(/[,\n]/).map(stamme).filter(Boolean);
   const rader = opskrifter.map(r => {
-    const brug = ingAf(r).map(i => simpel(i.n.toLowerCase())).filter(n => !erBasis(n));
+    const brug = ingAf(r).map(i => simpel(i.n.toLowerCase())).filter(n => !erBasis(n) && !(udenKrydderier && Katalog.erKrydderi(n)));
     const set = new Set(), mangler = []; // vises med hele ord («sojasauce»), men tæller kun én gang pr. stamme
     for (const n of brug) { const s = stamme(n); if (!har.some(h => passer(s, h)) && !set.has(s)) { set.add(s); mangler.push(n); } }
     return { r, antal: brug.length, mangler };
@@ -823,7 +827,8 @@ let F = [];
 async function forslagSide() {
   const id = visning;
   henter();
-  F = await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser&order=titel');
+  F = (await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel')).filter(r => !r.skjul_forslag);
+  await Katalog.hent().catch(() => {}); // kategorierne bruges til at kende krydderier
   if (id !== visning) return;
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Hvad kan jeg lave?</h1>
     <div id="forslag-nu"></div>
@@ -840,13 +845,15 @@ async function forslagSide() {
     { tekst: 'Står der noget skævt? Claude kan rydde op.', maal: '[data-h=sorterAndet]', bev: 'dans' }]);;
   await Hjemme.vis($('#hj-boks'), tegnForslag);
 }
+const udenKryd = () => lager.hent('udenKrydderier', false);
 const maksMangler = () => Math.max(0, Math.min(20, Math.round(Number(lager.hent('maxMangler', 3))) || 0));
 function tegnForslag() {
   const nu = $('#forslag-nu'), rest = $('#forslag-resten'), tekst = Hjemme.navne().join(',');
   if (!nu) return;
   if (!tekst.trim()) { nu.innerHTML = '<h2>Det kan du lave nu</h2><p class="tomt">Skriv mindst én ting herunder, så finder jeg retter.</p>'; rest.innerHTML = ''; return; }
-  const f = beregnForslag(F, tekst), maks = maksMangler(), naesten = f.naesten.filter(x => x.mangler.length <= maks);
-  nu.innerHTML = `<h2>Det kan du lave nu</h2>
+  const f = beregnForslag(F, tekst, udenKryd()), maks = maksMangler(), naesten = f.naesten.filter(x => x.mangler.length <= maks);
+  nu.innerHTML = `<div class="mangler-top"><h2>Det kan du lave nu</h2>
+      <label class="skift" data-tpid="uden-krydderier"><input type="checkbox" id="udenkryd" ${udenKryd() ? 'checked' : ''}> <span>Uden krydderier</span></label></div>
     ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe længere nede.</p>'}`;
   rest.innerHTML = `${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.join(' og '))}</strong>
       <span>Så kan du også lave: ${k.retter.map(r => `<a href="#/opskrifter/${r.id}">${esc(r.titel)}</a>`).join(', ')}</span></div>`).join('')}` : ''}
@@ -1269,6 +1276,7 @@ document.addEventListener('input', e => { // teksten på «Tilføj med Claude» 
 });
 document.addEventListener('change', e => {
   if (e.target.id === 'maks') saetMaks(e.target.value);
+  if (e.target.id === 'udenkryd') { lager.gem('udenKrydderier', e.target.checked); tegnForslag(); }
   if (e.target.id === 'portinp') { S.port = Math.max(1, Math.min(50, Math.round(Number(e.target.value)) || S.r.portioner || 4)); portValg[S.r.id] = S.port; tegnIng(); }
 });
 document.addEventListener('click', async e => {
