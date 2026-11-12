@@ -1,4 +1,4 @@
-// Madplan: en hovedret, en salat eller begge dele pr. dag ud fra det, du har derhjemme. Tilbehør og drikke er ikke med. Retterne vælges, så de mangler nogenlunde de samme varer.
+// Madplan: en hovedret, en salat eller begge dele pr. dag ud fra det, du har derhjemme. Tilbehør, drikke og dessert er ikke med. Retterne vælges, så de mangler nogenlunde de samme varer.
 // Så bliver indkøbslisten kort. Ren logik, ingen AI.
 const Madplan = (() => {
   const VALG = { // navn: [tekst, standard, mindst, højst]
@@ -10,10 +10,10 @@ const Madplan = (() => {
   let har = '';
   const foer = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]; return false; };
 
-  // Hvilke retter må med? Tilbehør og drikke er aldrig med. En salat kendes på ordet «salat» i navnet eller kategorien.
+  // Hvilke retter må med? Tilbehør, drikke og dessert er aldrig med. En salat kendes på ordet «salat» i navnet eller kategorien.
   const TYPER = [['hoved', 'Hovedret', 'En hovedret hver dag.'], ['salat', 'Salat', 'En salat hver dag.'], ['begge', 'Begge dele', 'En hovedret og en salat hver dag, altså to retter.']];
   const type = () => { const t = lager.hent('mp_type', 'hoved'); return TYPER.some(x => x[0] === t) ? t : 'hoved'; };
-  const udeladt = r => /tilbehør|drik/i.test(r.kategori || '');
+  const udeladt = r => /tilbehør|drik|dessert/i.test(r.kategori || '');
   const erSalat = r => /salat/i.test((r.kategori || '') + ' ' + (r.titel || ''));
   const pool = filter => { const f = beregnForslag(F.filter(r => !udeladt(r) && filter(r)), har);
     return [...f.kan.map(r => ({ r, mangler: [] })), ...f.naesten].map(x => ({ ...x, n: [...new Set(x.mangler.map(stamme))] })); };
