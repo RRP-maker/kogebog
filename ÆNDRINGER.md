@@ -2,6 +2,16 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.5.1 · Rettelser til to ruder (fase 3b)
+- To ruder vises kun, når en opskrift er valgt. Uden valgt opskrift står listen alene i fuld bredde (to kolonner fra 744 px). Søgning og filtre bevares, når man åbner en opskrift, og når man går tilbage til listen.
+- Listen til venstre er et farvet kort med skygge og kant, så ruderne er tydeligt adskilt. Kortet slutter over navigationsbjælken og følger safe areas (før kunne de nederste rækker ligge bag bjælken på iPad).
+- Hele opskriftens navn vises: lange navne brækker over på flere linjer i stedet for at blive klippet med «…». Rækkerne er stadig hele rækker à 32 px.
+- Kategori og køkken er valgfelter i ruden (hele navnet, hele listen) i stedet for rækker af chips, der rullede ud af ruden.
+- «Tilføj med Claude» og «Importér links» ligger i en «Importér»-menu i ruden, så kun «Ny opskrift» og «Importér» står før søgningen. «Tilbage» udgår i ruden (navigationen findes).
+- Ruden er 352 px (før 320). Ingredienser og trin side om side kræver derfor lidt mere plads: 1154 px med touch og 1362 px med mus.
+- Beslutning: Ingen «Luk»-knap i højre rude. «Opskrifter» i navigationen går til listen alene. En ekstra tilbage-knap ville ligge oven på «Tilføj tip» og «Rediger», som tilpasserens gemte placeringer lægger på første række.
+- Beslutning: Valgfelter i stedet for chips i ruden, fordi 7 kategorier og 11 køkkener ikke kan stå i 328 px uden at fylde meget eller rulle ud af ruden.
+
 ## 1.5.0 · Fase 3b: opskrifter og en opskrift
 - To ruder som indstilling («Vis to ruder på brede skærme» under Indstillinger). På skærme fra 1024 px står opskriftslisten til venstre og den valgte opskrift til højre. Listen ruller for sig og bliver stående, når man vælger en ny opskrift. Kan slås til og fra uden genindlæsning.
 - Er ruden bred nok (ca. 720 px), står ingredienser til venstre og trin til højre i opskriften.

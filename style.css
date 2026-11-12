@@ -29,6 +29,7 @@
   --glas: linear-gradient(135deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .1) 55%, rgba(255, 255, 255, .24));
   --glasfilter: blur(18px) saturate(1.9) brightness(1.05);
   --glaskant: rgba(255, 255, 255, .6);
+  --rude: rgba(34, 56, 107, .1); --rude-kant: rgba(34, 56, 107, .16); /* kortet med opskriftslisten (to ruder): en let farvet flade, så glasfelterne i det kan ses */
   --skygge: 0 1px 2px rgba(34, 56, 107, .14), 0 10px 30px rgba(34, 56, 107, .14);
   /* lyskant foroven, svag kant forneden: det, der får fladen til at ligne glas */
   --glans: inset 1.5px 1.5px 1px rgba(255, 255, 255, .95), inset -1px -1px 1px rgba(255, 255, 255, .55), inset 0 0 18px rgba(255, 255, 255, .35), inset 0 -10px 16px -10px rgba(34, 56, 107, .1);
@@ -773,6 +774,7 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --glas: linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .11)); /* Liquid Glass i mørkt: klart glas, ikke mørkeblåt */
   --glasfilter: blur(20px) saturate(1.8) brightness(1.18);
   --glaskant: rgba(255, 255, 255, .2);
+  --rude: rgba(255, 255, 255, .07); --rude-kant: rgba(255, 255, 255, .16);
   --skygge: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px rgba(0, 0, 0, .4);
   --glans: inset 1.5px 1.5px 1px rgba(255, 255, 255, .45), inset -1px -1px 1px rgba(255, 255, 255, .14), inset 0 0 18px rgba(255, 255, 255, .08);
   --sheen: .12; --plet: .3;
@@ -962,7 +964,7 @@ body.ruder-vist main { --maxb: 1248px; max-width: 1248px; }
   position: sticky; top: calc(16px + env(safe-area-inset-top)); margin: -16px 0 0; padding: 16px 12px;
   max-height: 100vh; max-height: calc(100dvh - 32px - env(safe-area-inset-top) - var(--nav-b) - env(safe-area-inset-bottom));
   overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
-  border-radius: 24px; background: var(--flade); box-shadow: var(--skygge), 0 0 0 1px var(--glaskant);
+  border-radius: 24px; background: var(--rude); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: var(--skygge), 0 0 0 1px var(--rude-kant);
 }
 .rude-liste h1 { font-size: 29px; line-height: 32px; top: 0; }
 .rude-knapper { flex-wrap: nowrap; gap: 8px; }

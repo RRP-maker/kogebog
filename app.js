@@ -542,7 +542,7 @@ async function opskriftSide(rid, maal = app) {
   S = { r, tips, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
-  maal.innerHTML = `${iRude && !opskriftFra ? `<a class="tilbage direkte skaerm" href="#/opskrifter">‹ Alle opskrifter</a>` : `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>`}
+  maal.innerHTML = `${iRude && !opskriftFra ? '' : `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>`}
     ${vaerktoej(`<a class="knap" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
     <div class="titelrakke"><h1>${esc(r.titel)}</h1>
       <button id="favknap" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
@@ -1419,7 +1419,7 @@ document.addEventListener('click', e => { // «Importér»-menuen lukkes, når m
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('details.tilfoej[open]').forEach(d => { d.open = false; d.querySelector('summary').focus(); }); });
 document.addEventListener('click', async e => {
-  const tb = e.target.closest('a.tilbage:not(.fortryd):not(.direkte)');
+  const tb = e.target.closest('a.tilbage:not(.fortryd)');
   if (tb) { // gå til den side, man kom fra. Rediger- og ny-sider springes over.
     let i = spor.length - 2;
     while (i >= 0 && (formSide(spor[i]) || spor[i] === spor[spor.length - 1])) i--;
