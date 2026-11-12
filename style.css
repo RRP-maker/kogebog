@@ -17,11 +17,13 @@
   --h-skaft: #d9a066; --h-kind: #ff9d94; --h-indre: #17404f; --h-tunge: #ff8f9c; --h-tungestreg: #d9566b;
   --link: #0b5c9c; --stjerne-fra: #8089aa;
   --fejl-bg: #fff0ee; --fejl-tekst: #7a1f16;
-  --glas: linear-gradient(135deg, rgba(255, 255, 255, .66), rgba(255, 255, 255, .3));
-  --glaskant: rgba(255, 255, 255, .85);
-  --skygge: 0 1px 2px rgba(34, 56, 107, .1), 0 8px 24px rgba(34, 56, 107, .12);
+  /* Rigtig Liquid Glass: næsten klart, med en svag hvid tone, sløring og lysbrydning af det bagved, en skarp lyskant foroven til venstre og en blød kant forneden til højre. Ingen farve af sig selv. */
+  --glas: linear-gradient(135deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .1) 55%, rgba(255, 255, 255, .24));
+  --glasfilter: blur(18px) saturate(1.9) brightness(1.05);
+  --glaskant: rgba(255, 255, 255, .6);
+  --skygge: 0 1px 2px rgba(34, 56, 107, .14), 0 10px 30px rgba(34, 56, 107, .14);
   /* lyskant foroven, svag kant forneden: det, der får fladen til at ligne glas */
-  --glans: inset 0 1.5px 1px rgba(255, 255, 255, .95), inset 0 -1.5px 1px rgba(255, 255, 255, .35), inset 0 0 12px rgba(255, 255, 255, .25);
+  --glans: inset 1.5px 1.5px 1px rgba(255, 255, 255, .95), inset -1px -1px 1px rgba(255, 255, 255, .55), inset 0 0 18px rgba(255, 255, 255, .35), inset 0 -10px 16px -10px rgba(34, 56, 107, .1);
   --sheen: .5; --plet: 1;
   --flade: rgba(255, 255, 255, .94); --flade-hover: rgba(255, 255, 255, .8); --hvid: #fff; --felt-bg: rgba(255, 255, 255, .4);
   --boble: linear-gradient(135deg, rgba(255, 255, 255, .88), rgba(255, 255, 255, .66));
@@ -72,7 +74,7 @@ p + p { margin-top: 32px; }
 /* Liquid Glass: gennemsigtige flader med sløring, lyskant og blød skygge. Teksten er altid helt dækkende. */
 .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
   background: var(--glas);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
+  -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
   border: 1px solid var(--glaskant);
   box-shadow: var(--skygge), var(--glans);
 }
@@ -167,7 +169,7 @@ main > .knap.stor { align-self: stretch; }
 .filter::-webkit-scrollbar { display: none; }
 .filter { margin-bottom: -12px; margin-top: -12px; }
 .chip { flex: none; padding: 0 16px; font-size: 20px; line-height: 32px; border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; white-space: nowrap; }
-.chip::before { content: ""; position: absolute; z-index: -1; inset: 2px 0; border-radius: 16px; background: var(--glas); border: 1px solid var(--glaskant); box-shadow: 0 1px 3px rgba(var(--skyg-rgb), .14), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8); }
+.chip::before { content: ""; position: absolute; z-index: -1; inset: 2px 0; border-radius: 16px; background: var(--glas); border: 1px solid var(--glaskant); box-shadow: 0 1px 3px rgba(var(--skyg-rgb), .14), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); }
 .chip.valgt { color: #fff; }
 .chip.valgt::before { background: var(--valgt); border-color: rgba(255, 255, 255, .35); }
 
@@ -539,7 +541,7 @@ body.tilpas [data-laast] { outline: 2px solid var(--tomat); }
 #tilpas-knap {
   position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 18px; border-radius: 24px;
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
-  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
+  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
 }
 body.tilpas #tilpas-knap { background: var(--gul); color: var(--paa-lys); }
 body.tilpas-menu #hjaelper, body.tilpas-menu #hjaelper-vis { bottom: calc(70px + env(safe-area-inset-bottom)); } /* plads til knappen */
@@ -631,7 +633,7 @@ input.felt, select.felt { padding: 0 12px; }
 #tilpas-fortryd, #tilpas-gentag {
   position: fixed; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 16px; border-radius: 24px;
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
-  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
+  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
 }
 #tilpas-fortryd { left: max(10px, env(safe-area-inset-left)); }
 #tilpas-gentag { left: calc(max(10px, env(safe-area-inset-left)) + 112px); }
@@ -639,7 +641,7 @@ input.felt, select.felt { padding: 0 12px; }
 #tilpas-gruppe #tilpas-knap { position: static; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 140px; padding: 0; white-space: nowrap; } /* fast bredde: knappen skifter ikke størrelse, når teksten skifter */
 #tilpas-forlad {
   width: 48px; height: 48px; padding: 0; border-radius: 50%; font: 20px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
-  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
+  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
 }
 #tilpas-fortryd:disabled, #tilpas-gentag:disabled { opacity: .4; cursor: default; }
 .sw.glas { position: relative; overflow: hidden; border: 1px solid var(--glaskant); background: linear-gradient(135deg, var(--smor) 0 34%, var(--himmel) 34% 67%, var(--rosa) 67%); }
@@ -699,7 +701,7 @@ input.felt-l, select.felt-l { height: 96px; }
 /* Rigtig Liquid Glass alle steder: også skrivefelter, vinduer og farvede knapper er gennemsigtige med sløring og lyskant */
 input[type=text], input[type=number], input[type=search], textarea, select {
   background-color: var(--felt-bg);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
+  -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
   border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans);
 }
 .ark-kort { background: linear-gradient(rgba(var(--papir-rgb), .72), rgba(var(--papir-rgb), .55)); }
@@ -746,10 +748,11 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --fl-smoer: #8a6a12; --fl-mynte: #2f7a52; --fl-rosa: #9a4a56; --fl-himmel: #2f6f90; --fl-hvid: #2a3250; --fl-indigo: #3a58b4; --paa-felt: #fff;
   --link: #8fc6f7; --stjerne-fra: #5f6a8c;
   --fejl-bg: #3b2028; --fejl-tekst: #ffb9ac;
-  --glas: linear-gradient(135deg, rgba(64, 72, 104, .62), rgba(40, 46, 72, .5));
-  --glaskant: rgba(255, 255, 255, .16);
-  --skygge: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
-  --glans: inset 0 1px 1px rgba(255, 255, 255, .22), inset 0 -1px 1px rgba(255, 255, 255, .04);
+  --glas: linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .11)); /* Liquid Glass i mørkt: klart glas, ikke mørkeblåt */
+  --glasfilter: blur(20px) saturate(1.8) brightness(1.18);
+  --glaskant: rgba(255, 255, 255, .2);
+  --skygge: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px rgba(0, 0, 0, .4);
+  --glans: inset 1.5px 1.5px 1px rgba(255, 255, 255, .45), inset -1px -1px 1px rgba(255, 255, 255, .14), inset 0 0 18px rgba(255, 255, 255, .08);
   --sheen: .12; --plet: .3;
   --flade: rgba(36, 42, 64, .96); --flade-hover: rgba(58, 66, 98, .9); --hvid: #262d45; --felt-bg: rgba(255, 255, 255, .07);
   --boble: linear-gradient(135deg, rgba(52, 60, 90, .95), rgba(40, 46, 72, .9));
@@ -797,7 +800,7 @@ body:has(#form) #hjaelper-vis { bottom: calc(92px + env(safe-area-inset-bottom))
 @media (min-width: 744px) {
   main { max-width: 860px; }
   #ure { max-width: 860px; }
-  .top, .ark-kort { -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); }
+  .top, .ark-kort { -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); }
 }
 @media (min-width: 1024px) { main { max-width: 960px; } #ure { max-width: 960px; } }
 /* Tilpasser-vinduet bliver nederst (så siden kan ses over det), men er bredere på iPad */
