@@ -1354,3 +1354,11 @@ document.addEventListener('pointerdown', e => {
 }, { passive: true });
 document.addEventListener('DOMContentLoaded', () => { Hjaelper.start(); route(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// Genindlæs-knappen foroven: tømmer den gemte kopi og henter siden forfra, så et nyt push ses uden at lukke appen
+document.addEventListener('click', async e => {
+  if (!e.target.closest('#genstart')) return;
+  try { if (window.caches) for (const k of await caches.keys()) await caches.delete(k); } catch (err) { /* ingen gemt kopi */ }
+  try { if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch (err) { /* ingen service worker */ }
+  location.reload();
+});

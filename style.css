@@ -88,6 +88,8 @@ p + p { margin-top: 32px; }
   border-radius: 30px; padding: 4px 8px 4px 22px;
 }
 .top nav { display: flex; gap: 4px; margin-left: auto; }
+.top nav button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; }
+.top nav button .ikon { width: 26px; height: 26px; }
 .top nav a { font-size: 22px; text-decoration: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; }
 
 html { overflow-x: hidden; overflow-x: clip; }
