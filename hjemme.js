@@ -295,23 +295,94 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
       try { await navigator.clipboard.writeText(besked()); ok = true; } catch (e) { ok = await kopier(besked()); }
       toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres. Prøv igen.');
     },
-    async hjcGem() {
+    hjcGem() { // viser en side, hvor man gennemgår listen, før noget gemmes
       const liste = laesListe($('#hjcsvar').value);
       if (!liste || !liste.length) { $('#arkfejl').innerHTML = '<div class="fejlboks">Svaret kan ikke læses. Kopiér hele Claudes svar, og prøv igen.</div>'; return; }
-      let ny = 0, fandtes = 0, fejl = 0;
-      for (const x of liste) {
-        if (dublet(x.navn)) { fandtes++; continue; }
+      const set = new Set();
+      lager.gem('hjcNye', liste.filter(x => !set.has(x.navn) && set.add(x.navn)));
+      lukArk(); location.hash = '#/forslag/nye';
+    },
+    gnFjern(el) { G.splice(Number(el.dataset.v), 1); lager.gem('hjcNye', G); tegnGennemgang(); },
+    gnFortryd() { lager.gem('hjcNye', []); location.hash = '#/forslag'; },
+    async gnGem() {
+      const nye = [], ret = [];
+      G.forEach(x => { const d = dublet(x.navn); if (d) { if (x.ret) ret.push([d, x]); } else nye.push(x); });
+      let ny = 0, rettet = 0, fejl = 0;
+      for (const x of nye) {
         try {
           const ing = await findEllerOpret(x.navn);
           const [h] = await api('hjemme', { method: 'POST', body: { ingrediens_id: ing.id, maengde: x.maengde, enhed: x.enhed } });
           D.hj.push(h); ny++;
-        } catch (e) { console.error(x.navn, e); if (/duplicate|23505|409/.test(String(e.message))) fandtes++; else fejl++; }
+        } catch (e) { console.error(x.navn, e); if (!/duplicate|23505|409/.test(String(e.message))) fejl++; }
       }
-      lager.gem('hjcSvar', ''); lukArk(); tegn();
-      toast([ny && `${ny} tilføjet`, fandtes && `${fandtes} stod der allerede`, fejl && `${fejl} kunne ikke gemmes`].filter(Boolean).join(', ') || 'Der var ikke noget nyt');
-      if (ny) Hjaelper.glad();
+      for (const [d, x] of ret) {
+        try { await api(`hjemme?id=eq.${enc(d.id)}`, { method: 'PATCH', body: { maengde: x.maengde, enhed: x.enhed } }); rettet++; }
+        catch (e) { console.error(x.navn, e); fejl++; }
+      }
+      lager.gem('hjcNye', []); lager.gem('hjcSvar', '');
+      toast([ny && `${ny} tilføjet`, rettet && `${rettet} mængder rettet`, fejl && `${fejl} kunne ikke gemmes`].filter(Boolean).join(', ') || 'Der var ikke noget nyt');
+      location.hash = '#/forslag';
+      if (ny || rettet) Hjaelper.glad();
     }
   });
 
-  return { vis, navne, traek };
+  // ---------- Gennemgang af det, Claude fandt: nye øverst, dem du allerede har nederst ----------
+  let G = [];
+  const mgdTekst = (m, e) => Number(m) > 0 ? `${visTal(Number(m))} ${e || 'stk'}` : 'ingen mængde';
+  function tegnGennemgang() {
+    const el = $('#gn');
+    if (!el) return;
+    const nye = [], har = [];
+    G.forEach((x, i) => { const d = dublet(x.navn); (d ? har : nye).push({ x, i, d }); });
+    el.innerHTML = `<h2>Nye ting <span class="gn-tal">${nye.length}</span></h2>
+      ${nye.length ? `<div class="hj-gruppe${nye.length % 2 ? ' ulige' : ''}">${nye.map(({ x, i }) => `<div class="hj-rk gn-rk felt felt-s" data-i="${i}">
+        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal" value="${Number(x.maengde) > 0 ? esc(visTal(Number(x.maengde))) : ''}">
+        <select class="hj-enh" aria-label="Enhed">${enhHtml(x.enhed)}</select>
+        <input class="hj-navn" type="text" autocomplete="off" aria-label="Ingrediens" value="${esc(x.navn)}">
+        <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen">×</button></div>`).join('')}</div>`
+        : '<p class="tomt">Alt, Claude fandt, står allerede i dit køkken.</p>'}
+      ${har.length ? `<h2>Du har dem allerede <span class="gn-tal">${har.length}</span></h2>
+        <small>De bliver ikke tilføjet igen. Sæt kryds, hvis du vil rette mængden til det, Claude så.</small>
+        ${har.map(({ x, i, d }) => { const h = d.maengde, ing = ingAf(d.ingrediens_id), kan = Number(x.maengde) > 0;
+          return `<div class="gn-har" data-i="${i}"><div class="gn-navn"><strong>${esc(ing ? ing.navn : x.navn)}</strong>
+            <span>Du har: ${esc(mgdTekst(h, d.enhed))}${kan ? `. Claude så: ${esc(mgdTekst(x.maengde, x.enhed))}` : ''}</span></div>
+            ${kan ? `<label class="skift"><input type="checkbox" class="gn-ret"${x.ret ? ' checked' : ''}> <span>Ret til ${esc(mgdTekst(x.maengde, x.enhed))}</span></label>` : ''}
+            <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen">×</button></div>`; }).join('')}` : ''}
+      <div id="arkfejl"></div>
+      <div class="rakke"><button type="button" class="knap" data-tpid="gn-fortryd" data-h="gnFortryd">Fortryd</button>
+        <button type="button" class="knap primaer" data-tpid="gn-gem" data-h="gnGem">${nye.length ? `Tilføj ${nye.length} ${nye.length === 1 ? 'ting' : 'ting'}` : 'Færdig'}</button></div>`;
+  }
+  async function gennemgang() {
+    const id = visning;
+    G = lager.hent('hjcNye', []).map(x => ({ ...x }));
+    if (!G.length) { location.hash = '#/forslag'; return; }
+    await Katalog.hent().catch(() => {});
+    const [kat, ing, hj] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('hjemme?select=*&order=oprettet')]);
+    if (id !== visning) return;
+    D = { kat, ing, hj }; ved = null;
+    app.innerHTML = `<a class="tilbage" href="#/forslag">‹ Tilbage</a><h1>Tjek ingredienserne</h1>
+      <small>Claude fandt ${G.length} ${G.length === 1 ? 'ting' : 'ting'}. Ret navn og mængde, og fjern det, du ikke vil have. Først når du trykker på «Tilføj», bliver det gemt.</small>
+      <div id="gn"></div>`;
+    tegnGennemgang();
+    const gem = () => lager.gem('hjcNye', G);
+    const side = $('#gn');
+    side.addEventListener('input', e => { // ændringer huskes, men siden tegnes ikke om, mens man skriver
+      const rk = e.target.closest('.gn-rk'); if (!rk || !G[rk.dataset.i]) return;
+      const x = G[rk.dataset.i];
+      if (e.target.classList.contains('hj-navn')) x.navn = norm(e.target.value);
+      if (e.target.classList.contains('hj-mgd')) { const m = tal(e.target.value); x.maengde = m > 0 ? m : null; }
+      gem();
+    });
+    side.addEventListener('change', e => {
+      const rk = e.target.closest('.gn-rk, .gn-har'); if (!rk || !G[rk.dataset.i]) return;
+      const x = G[rk.dataset.i];
+      if (e.target.classList.contains('hj-enh')) x.enhed = e.target.value;
+      if (e.target.classList.contains('hj-navn')) { x.navn = norm(e.target.value); if (!x.navn) G.splice(Number(rk.dataset.i), 1); tegnGennemgang(); }
+      if (e.target.classList.contains('gn-ret')) x.ret = e.target.checked;
+      gem();
+    });
+    Hjaelper.side('Her ser du det, Claude fandt. Ret navn og mængde, og tryk på krydset for at fjerne noget. Tryk på «Tilføj», når listen er rigtig.');
+  }
+
+  return { vis, navne, traek, gennemgang };
 })();
