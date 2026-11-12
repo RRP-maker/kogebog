@@ -786,3 +786,8 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 /* Forslag til kategori under feltet */
 .katvalg { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 var(--pt); }
 .katvalg .chip { height: 32px; font-size: 18px; position: relative; }
+
+/* «Gem» i en formular sidder altid fast i bunden af skærmen, så den ikke kan forsvinde ud af syne */
+#form > button[type=submit] { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 30; width: 100%; box-shadow: 0 8px 24px rgba(var(--skyg-rgb), .35); }
+body:has(#form) #hjaelper { bottom: calc(96px + env(safe-area-inset-bottom)); }
+body:has(#form) #hjaelper-vis { bottom: calc(92px + env(safe-area-inset-bottom)); }

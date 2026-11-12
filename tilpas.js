@@ -7,6 +7,7 @@
 // Mangler tabellen, gemmes den kun på denne enhed.
 const Tilpas = (() => {
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small';
+  const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
   const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, FLYT = VALG + ', ' + KORT; // opskrifter kan ikke tilpasses
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
@@ -130,6 +131,11 @@ const Tilpas = (() => {
     document.querySelectorAll(FLYT).forEach(el => { // felternes plads
       if (el.classList.contains('plads')) return;
       if (drag && drag.laast && drag.el === el) return;
+      if (el.matches(NEDE)) { // «Gem» i en formular sidder altid fast nederst på skærmen (CSS). Den kan ikke flyttes eller låses af tilpasseren.
+        fjernFast(el); el.style.translate = ''; el.removeAttribute('data-laast'); el.setAttribute('data-ikkeflyt', '');
+        if (el.dataset.org) el.dataset.flyt = el.dataset.org;
+        return;
+      }
       let k = el.dataset.org;
       if (el.matches('.kort')) k = el.closest('#ark') ? null : 'kort:' + (el.getAttribute('href') || el.textContent.trim().slice(0, 40));
       const p = !el.matches(FAST) && k && get(k) && get(k).p;
