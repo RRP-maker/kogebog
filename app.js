@@ -695,8 +695,11 @@ function felt(f, rad, ekstra) {
   else if (f.t === 'valg') input = `<select ${m}><option value="">Vælg</option>${f.valg.map(([k, t]) => `<option value="${k}"${k === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
   else if (f.t === 'opskrift') input = `<select ${m}><option value="">Ingen bestemt opskrift</option>${
     ekstra.map(o => `<option value="${o.id}"${o.id === v ? ' selected' : ''}>${esc(o.titel)}</option>`).join('')}</select>`;
-  else if (f.t === 'kategori') input = `<input ${m} type="text" list="kategorier" value="${esc(v)}" autocomplete="off"><datalist id="kategorier">${
-    [...new Set([...OPSKRIFT_KAT, ...ekstra.map(o => o.kategori).filter(Boolean)])].map(k => `<option value="${esc(k)}">`).join('')}</datalist>`;
+  else if (f.t === 'kategori') { // forslagene står som knapper under feltet, så man ser dem, før man skriver
+    const kat = [...new Set([...OPSKRIFT_KAT, ...ekstra.map(o => o.kategori).filter(Boolean)])], nu = String(v || '').trim().toLowerCase();
+    input = `<input ${m} type="text" value="${esc(v)}" autocomplete="off">
+      <div class="katvalg" role="group" aria-label="Forslag til kategori">${kat.map(k => `<button type="button" class="chip${k.toLowerCase() === nu ? ' valgt' : ''}" data-h="vaelgKat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>`;
+  }
   else input = `<input ${m} type="text" value="${esc(v)}" autocomplete="off">`;
   return `<label for="f_${f.n}">${f.l}${f.kraevet ? '' : ' <span>(kan springes over)</span>'}</label>
     ${f.hint ? `<small>${f.hint}</small>` : ''}${input}`;
@@ -1067,6 +1070,7 @@ document.addEventListener('select', e => {
 const H = {
   igen: () => route(),
   sorterAndet: () => Katalog.sorterAndet(() => Hjemme.vis($('#hj-boks'), tegnForslag)),
+  vaelgKat(el) { const f = $('#f_kategori'); if (!f) return; f.value = el.dataset.v; markerKat(); },
   maksNed: () => saetMaks(maksMangler() - 1),
   maksOp: () => saetMaks(maksMangler() + 1),
   async slet(el) {
@@ -1277,6 +1281,8 @@ const H = {
 document.addEventListener('input', e => { // teksten på «Tilføj med Claude» huskes, også hvis appen lukkes eller opdateres
   if (e.target.dataset && e.target.dataset.husk) lager.gem(e.target.dataset.husk, e.target.value);
 });
+function markerKat() { const f = $('#f_kategori'); if (!f) return; const nu = f.value.trim().toLowerCase(); document.querySelectorAll('.katvalg .chip').forEach(c => c.classList.toggle('valgt', c.dataset.v.toLowerCase() === nu)); }
+document.addEventListener('input', e => { if (e.target.id === 'f_kategori') markerKat(); });
 document.addEventListener('change', e => {
   if (e.target.id === 'maks') saetMaks(e.target.value);
   if (e.target.id === 'udenkryd') { lager.gem('udenKrydderier', e.target.checked); tegnForslag(); }
