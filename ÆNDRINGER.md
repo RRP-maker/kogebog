@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.5.2 · «Tilbage» i højre rude, værktøjsknapper til højre
+- Højre rude har «Tilbage» på første række. Den går til listen alene (ikke til forrige opskrift). Kommer man fra «Hvad kan jeg lave?», går den dertil som før.
+- «Tilføj tip» og «Rediger» står helt til højre på samme række som «Tilbage». Standardplaceringerne er skrevet om fra pixels til «ved højre kant, afstand fra kanten» (kant 1), så de passer til alle bredder. Før lå «Tilføj tip» oven på «Tilbage» på brede skærme.
+- «Tilføj tip» alene (ny opskrift) står også helt til højre (eget id `tip-alene`).
+- Beslutning: Erstatter beslutningen i 1.5.1 om ingen «Luk»-knap. Pladsen på første række var optaget af de to knapper, og det er løst ved at flytte dem til højre.
+- Gemte placeringer i databasen er uændrede. Har du selv flyttet knapperne, gælder dine placeringer fortsat.
+
 ## 1.5.1 · Rettelser til to ruder (fase 3b)
 - To ruder vises kun, når en opskrift er valgt. Uden valgt opskrift står listen alene i fuld bredde (to kolonner fra 744 px). Søgning og filtre bevares, når man åbner en opskrift, og når man går tilbage til listen.
 - Listen til venstre er et farvet kort med skygge og kant, så ruderne er tydeligt adskilt. Kortet slutter over navigationsbjælken og følger safe areas (før kunne de nederste rækker ligge bag bjælken på iPad).
