@@ -83,11 +83,25 @@ const TYPER = {
 
 // ---------- Små hjælpere ----------
 let tt;
-function toast(tekst) {
-  const el = $('#toast');
-  el.textContent = tekst; el.classList.add('vis');
-  clearTimeout(tt); tt = setTimeout(() => el.classList.remove('vis'), 2600);
+// Beskeder: står i 4 sekunder (8 med «Fortryd»). En fejl (valg.bliv) står, til man trykker «Luk», handler eller skifter side.
+function toast(tekst, valg = {}) {
+  const el = $('#toast'), luk = () => el.classList.remove('vis');
+  clearTimeout(tt);
+  const t = document.createElement('span'); t.className = 'toast-tekst'; t.textContent = tekst;
+  el.replaceChildren(t);
+  const knap = (navn, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'toast-knap'; b.textContent = navn; b.addEventListener('click', fn); el.append(b); };
+  if (valg.fortryd) knap('Fortryd', () => { luk(); valg.fortryd(); });
+  if (valg.bliv) knap('Luk', luk);
+  el.setAttribute('role', valg.bliv ? 'alert' : 'status');
+  el.classList.toggle('fejl', !!valg.bliv);
+  el.classList.add('vis');
+  if (!valg.bliv) tt = setTimeout(luk, valg.fortryd ? 8000 : 4000);
 }
+const fejlbesked = tekst => toast(tekst, { bliv: true });
+// Kategorien «Andet» i databasen og en ingrediens uden kategori vises begge som «Ikke sorteret»
+const IKKE_SORTERET = 'Ikke sorteret';
+const katNavn = k => !k || k.navn_norm === 'andet' ? IKKE_SORTERET : k.navn;
+window.addEventListener('hashchange', () => { const el = $('#toast'); if (el.classList.contains('fejl')) el.classList.remove('vis'); });
 const info = t => { app.innerHTML = `<p class="tomt">${t}</p>`; };
 const henter = () => { app.innerHTML = '<p class="tomt henter">Henter…</p>'; };
 
@@ -539,7 +553,7 @@ async function nytBillede(e) {
   const fil = e.target.files[0]; e.target.value = '';
   if (!fil) return;
   try { toast('Gemmer billedet…'); await Laerred.nytBillede(fil); toast('Billedet er sat på siden'); Hjaelper.glad(); }
-  catch (err) { console.error(err); toast('Billedet kunne ikke gemmes. Prøv et andet.'); }
+  catch (err) { console.error(err); fejlbesked('Billedet blev ikke gemt. Tjek internettet, eller vælg et andet billede.'); }
 }
 
 // ---------- Trin for trin ----------
@@ -742,7 +756,7 @@ async function formular(type, rid) {
   if (rid && !r[0]) return info(`Den findes ikke længere.<br><a href="#/${type}">Tilbage</a>`);
   const rad = r[0] || {};
   const tilbage = rid && type !== 'tips' ? `#/${type}/${rid}` : `#/${type}`;
-  app.innerHTML = `<a class="tilbage fortryd" href="${tilbage}">‹ Fortryd</a>
+  app.innerHTML = `<a class="tilbage fortryd" href="${tilbage}">‹ Annuller</a>
     ${type === 'opskrifter' ? vaerktoej() : ''}
     <h1>${rid ? T.rediger : T.ny}</h1>
     <form id="form" novalidate>
@@ -847,9 +861,10 @@ async function forslagSide() {
   await Katalog.hent().catch(() => {}); // kategorierne bruges til at kende krydderier
   if (id !== visning) return;
   app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a><h1>Hvad kan jeg lave?</h1>
+    <div id="hj-boks"></div>
     <div id="forslag-nu"></div>
     <a class="knap felt felt-m" data-tpid="madplan" href="#/forslag/madplan">${ik('gryde')} Madplan</a>
-    <div id="hj-boks"></div>
+    <div id="hj-liste-boks"></div>
     <div class="rakke to-knapper"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button>
       <button type="button" class="knap" data-tpid="sorter-claude" data-h="sorterAndet">${ik('gnist')} Sortér med Claude</button></div>
     <div id="forslag-resten"></div>
@@ -859,14 +874,16 @@ async function forslagSide() {
     { tekst: 'Her kommer de retter, du kan lave nu.', maal: '#forslag-nu', bev: 'skridt', valgfri: true },
     { tekst: 'Tag billeder af dit køleskab. Så skriver Claude listen for dig.', maal: '[data-h=hjClaude]', bev: 'skridt' },
     { tekst: 'Står der noget skævt? Claude kan rydde op.', maal: '[data-h=sorterAndet]', bev: 'dans' }]);;
-  await Hjemme.vis($('#hj-boks'), tegnForslag);
+  await visHjemme();
 }
+const visHjemme = () => Hjemme.vis($('#hj-boks'), tegnForslag, $('#hj-liste-boks'));
+let visNaesten = 20; // hvor mange af «Du mangler lidt»-retterne der vises
 const udenKryd = () => lager.hent('udenKrydderier', false);
 const maksMangler = () => Math.max(0, Math.min(20, Math.round(Number(lager.hent('maxMangler', 3))) || 0));
 function tegnForslag() {
   const nu = $('#forslag-nu'), rest = $('#forslag-resten'), tekst = Hjemme.navne().join(',');
   if (!nu) return;
-  if (!tekst.trim()) { nu.innerHTML = '<h2>Det kan du lave nu</h2><p class="tomt">Skriv mindst én ting herunder, så finder jeg retter.</p>'; rest.innerHTML = ''; return; }
+  if (!tekst.trim()) { nu.innerHTML = '<h2>Det kan du lave nu</h2><p class="tomt">Skriv mindst én ting i feltet ovenfor, så finder jeg retter.</p>'; rest.innerHTML = ''; return; }
   const f = beregnForslag(F, tekst, udenKryd()), maks = maksMangler(), naesten = f.naesten.filter(x => x.mangler.length <= maks);
   nu.innerHTML = `<div class="mangler-top"><h2>Det kan du lave nu</h2>
       <label class="skift" data-tpid="uden-krydderier"><input type="checkbox" id="udenkryd" ${udenKryd() ? 'checked' : ''}> <span>Uden krydderier</span></label></div>
@@ -878,10 +895,11 @@ function tegnForslag() {
         <button type="button" class="rund felt felt-s" data-h="maksNed" aria-label="Færre">−</button>
         <input id="maks" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="${maks}" aria-label="Højst så mange ingredienser må mangle">
         <button type="button" class="rund felt felt-s" data-h="maksOp" aria-label="Flere">+</button></div></div>
-    <small>Højst ${maks} ${maks === 1 ? 'ingrediens' : 'ingredienser'} må mangle.</small>
-    ${naesten.length ? naesten.slice(0, 20).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.join(', '))}</span></a>`).join('') : '<p class="lille">Ingen retter mangler så få. Skriv et højere tal.</p>'}`;
+    <small>Højst ${maks} ${maks === 1 ? 'ingrediens' : 'ingredienser'} må mangle.${naesten.length > visNaesten ? ` Viser ${visNaesten} af ${naesten.length} retter.` : ''}</small>
+    ${naesten.length ? naesten.slice(0, visNaesten).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.join(', '))}</span></a>`).join('') : '<p class="lille">Ingen retter mangler så få. Skriv et højere tal.</p>'}
+    ${naesten.length > visNaesten ? '<button type="button" class="knap felt felt-m" data-tpid="vis-flere" data-h="visFlere">Vis flere</button>' : ''}`;
 }
-function saetMaks(n) { lager.gem('maxMangler', Math.max(0, Math.min(20, Math.round(Number(n)) || 0))); tegnForslag(); }
+function saetMaks(n) { lager.gem('maxMangler', Math.max(0, Math.min(20, Math.round(Number(n)) || 0))); visNaesten = 20; tegnForslag(); }
 
 // ---------- Tilføj med Claude ----------
 const CLAUDE_BESKED = `Omskriv opskriften nederst til min kogebog-app. Den skal kunne laves af en 10-årig, men uden at være mere detaljeret end nødvendigt.
@@ -897,7 +915,7 @@ Regler:
 - Skriv ingen forkortelser i navne. Skriv "hakket", ikke "hakk", og "revet", ikke "rev".
 - Giv retten en "kategori" på øverste niveau. Brug præcis en af disse: ${OPSKRIFT_KAT.join(', ')}.
 - Giv retten et "køkken" på øverste niveau. Brug en af disse: ${OPSKRIFT_KOEKKEN.join(', ')}. Passer ingen, så skriv et andet kort navn, fx "Thai".
-- Giv hver ingrediens en "kategori". Brug præcis en af disse: §KAT§. Passer ingen, så skriv "Andet".
+- Giv hver ingrediens en "kategori". Brug præcis en af disse: §KAT§. Passer ingen, så skriv "Ikke sorteret".
 
 Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
 {
@@ -1089,8 +1107,9 @@ document.addEventListener('select', e => {
 }, true);
 const H = {
   igen: () => route(),
-  sorterAndet: () => Katalog.sorterAndet(() => Hjemme.vis($('#hj-boks'), tegnForslag)),
+  sorterAndet: () => Katalog.sorterAndet(visHjemme),
   vaelgKat(el) { const f = $('#f_' + (el.dataset.f || 'kategori')); if (!f) return; f.value = el.dataset.v; markerKat(); },
+  visFlere: () => { visNaesten += 20; tegnForslag(); },
   maksNed: () => saetMaks(maksMangler() - 1),
   maksOp: () => saetMaks(maksMangler() + 1),
   async slet(el) {
@@ -1141,7 +1160,7 @@ const H = {
     try {
       const t = await Hjemme.traek(ingAf(K.r), K.port / (K.r.portioner || K.port));
       K.traek = t.rettet ? `Færdig. Ingredienserne er trukket fra${t.fjernet ? `, og ${t.fjernet} er brugt op og fjernet` : ''}.` : 'Der var ikke noget at trække fra.';
-    } catch (err) { console.error(err); K.traek = ''; toast('Det virkede ikke. Tjek internettet, og prøv igen.'); }
+    } catch (err) { console.error(err); K.traek = ''; fejlbesked('Ingredienserne blev ikke trukket fra listen derhjemme. Tjek internettet, og tryk på knappen igen.'); }
     tegnLav();
   },
   traekNej() { K.traek = 'Okay, listen er ikke ændret.'; tegnLav(); },
@@ -1182,7 +1201,7 @@ const H = {
         <input id="b_navn" type="text" value="${esc(valgt)}" autocomplete="off">
         <label for="b_tekst">Forklaring</label><textarea id="b_tekst" rows="4"></textarea>
         <div id="arkfejl"></div>
-        <div class="rakke"><button class="knap" type="button" data-tpid="fortryd" data-h="lukArk">Fortryd</button><button class="knap primaer" data-tpid="gem" type="submit">Gem</button></div>
+        <div class="rakke"><button class="knap" type="button" data-tpid="fortryd" data-h="lukArk">Annuller</button><button class="knap primaer" data-tpid="gem" type="submit">Gem</button></div>
       </form>`);
     const form = $('#begrebform', d);
     $('.ark-bag', d).addEventListener('click', lukArk);
@@ -1244,8 +1263,8 @@ const H = {
   },
   async saetInd(el) {
     const felt = $('#' + el.dataset.v), t = await laesUdklip();
-    if (t === null) { toast('Appen må ikke læse udklipsholderen. Hold fingeren i feltet, og vælg «Sæt ind».'); return; }
-    if (!t) { toast('Der er ikke noget kopieret.'); return; }
+    if (t === null) { fejlbesked('Appen må ikke læse udklipsholderen. Hold fingeren i feltet, og vælg «Sæt ind».'); return; }
+    if (!t) { fejlbesked('Der er ikke noget i udklipsholderen. Kopiér teksten først, og tryk så på «Sæt ind».'); return; }
     const foer = felt.value, mellem = foer && !foer.endsWith('\n') ? '\n' : '';
     felt.value = foer + mellem + t + '\n';
     felt.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1265,7 +1284,7 @@ const H = {
     // Hos Claude kan feltet udfyldes via adressen. Er beskeden for lang til det, åbner Claude tomt, og beskeden ligger i udklipsholderen.
     const kodet = encodeURIComponent(claudeBesked);
     $('#aabnClaude').href = 'https://claude.ai/new' + (kodet.length < 7000 ? '?q=' + kodet : '');
-    toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres');
+    ok ? toast('Beskeden er kopieret') : fejlbesked('Beskeden blev ikke kopieret. Tryk på knappen igen.');
   },
   async gemImport(el) {
     const svar = laesImport($('#claudesvar').value);
@@ -1331,7 +1350,7 @@ document.addEventListener('click', async e => {
   const f = H[el.dataset.h];
   if (!f) return;
   try { await f(el, e); }
-  catch (err) { console.error(err); toast(err instanceof TypeError && /fetch|load|network/i.test(err.message) ? 'Det virkede ikke. Tjek internettet, og prøv igen.' : 'Noget gik galt. Prøv igen.'); }
+  catch (err) { console.error(err); fejlbesked(err instanceof TypeError && /fetch|load|network/i.test(err.message) ? 'Der er ikke forbindelse til internettet. Tjek det, og tryk på knappen igen.' : 'Noget gik galt, og det blev ikke gemt. Tryk på knappen igen.'); }
 });
 
 // Notesbogens linjer: et net à 32 px, der starter, hvor indholdet i <main> starter. Så står alle rækker, felter og knapper på linjerne.

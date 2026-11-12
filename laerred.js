@@ -33,7 +33,7 @@ const Laerred = (() => {
     k.x(Math.max(0, Math.min(B, k.x()))); k.y(Math.max(0, Math.min(H, k.y())));
     try {
       await api(`laerred?id=eq.${enc(k.id())}`, { method: 'PATCH', body: { x: k.x(), y: k.y(), skala: k.scaleX(), rotation: k.rotation() } });
-    } catch (e) { console.error(e); toast('Stedet blev ikke gemt. Tjek internettet.'); }
+    } catch (e) { console.error(e); fejlbesked('Stedet blev ikke gemt. Tjek internettet, og sæt det igen.'); }
   }
   function tilpas() {
     if (!stage || !document.contains(boks)) return;

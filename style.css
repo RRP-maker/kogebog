@@ -367,11 +367,16 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 
 /* Beskeder vises kun inde i headeren, til venstre for ikonerne */
 #toast {
-  position: absolute; left: 8px; right: 104px; top: 4px; bottom: 4px; z-index: 1; display: flex; align-items: center; padding: 0 16px; border-radius: 22px;
-  background: var(--valgt); color: #fff; font: 17px/20px var(--skrift); overflow: hidden;
+  position: absolute; left: 8px; right: 104px; top: 4px; min-height: 44px; box-sizing: border-box; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 12px 16px; border-radius: 22px;
+  background: var(--valgt); color: #fff; font: 17px/20px var(--skrift);
   opacity: 0; transform: translateY(-8px) scale(.97); pointer-events: none; transition: opacity .2s, transform .25s var(--ud);
 }
-#toast.vis { opacity: 1; transform: none; }
+#toast.vis { opacity: 1; transform: none; pointer-events: auto; }
+#toast .toast-tekst { flex: 1 1 140px; min-width: 0; }
+#toast .toast-knap { flex: none; font: inherit; color: inherit; cursor: pointer; height: 32px; margin: -6px 0; padding: 0 14px; border: 0; border-radius: 16px; background: rgba(255, 255, 255, .22); text-decoration: underline; }
+/* Fejl står, til man handler, og ses også uden farve: kant og ordet «Luk» */
+#toast.fejl { background: var(--fejl-bg); color: var(--fejl-tekst); border-left: 6px solid var(--tomat); }
+#toast.fejl .toast-knap { background: rgba(var(--blaek-rgb), .1); }
 
 /* Hjælperen */
 #hjaelper { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 40; width: 80px; pointer-events: none; }
@@ -634,6 +639,7 @@ body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none
 .hj-ikon { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: grid; place-items: center; font: 24px/1 var(--skrift); color: var(--blyant); cursor: pointer; }
 .hj-ikon .ikon { width: 22px; height: 22px; }
 .hj-ny .hj-navn { grid-column: 3 / -1; }
+.hj-labels { display: grid; grid-template-columns: 48px 64px minmax(0, 1fr); font-size: 17px; line-height: 32px; color: var(--blyant); } /* synlige navne over felterne, samme kolonner som rækkerne */
 .hj-rk.blink .hj-navn, .hj-rk.blink .hj-mgd { animation: hjblink 1.2s var(--ud); }
 .mp-valg { display: flex; flex-direction: column; }
 .mp-rk { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 32px; margin: 0 0 32px; }
@@ -734,7 +740,9 @@ input[type=text], input[type=number], input[type=search], textarea, select {
 @media (hover: hover) { .knap.primaer:hover:not(:disabled) { background: var(--primaer-hover); } .knap.gron:hover:not(:disabled) { background: var(--gron-hover); } }
 
 /* Ingen glød omkring felter */
-input:focus, textarea:focus, select:focus, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; border-color: var(--gryde-mork); }
+/* Fokus på felter: tydelig ring (kontrast mindst 3:1 i begge temaer), ikke kun en ændret kant */
+input:focus, textarea:focus, select:focus { border-color: var(--gryde-mork); }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
 @keyframes hjblink { 0%, 100% { background-color: var(--felt-bg); } 30% { background-color: var(--gul-staerk); } }
 
 /* «Størst»: skriften er 34 px, men linjehøjden er stadig 32 px, så teksten står på linjerne og ikke får luft mellem linjerne */

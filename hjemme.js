@@ -42,12 +42,14 @@ const Hjemme = (() => {
     rk.classList.remove('blink'); void rk.offsetWidth; rk.classList.add('blink');
     rk.querySelector('.hj-mgd').focus();
   }
+  // Synlige navne over felterne (felterne selv har kun aria-label). Står øverst i formularen og i listen.
+  const LABELS = '<div class="hj-labels" aria-hidden="true"><span>Antal</span><span>Enhed</span><span>Ingrediens</span></div>';
   const nej = (n, id) => { toast(`«${n}» står allerede på listen. Ret mængden her.`); fremhaev(id); };
 
   function raekke(h) {
     const i = ingAf(h.ingrediens_id);
     return `<div class="hj-rk felt felt-s" data-id="${h.id}">
-      <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal" value="${Number(h.maengde) > 0 ? esc(visTal(Number(h.maengde))) : ''}">
+      <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" value="${Number(h.maengde) > 0 ? esc(visTal(Number(h.maengde))) : ''}">
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
       <button type="button" class="rund hj-ikon" data-h="hjKat" aria-label="Skift kategori">${ik('tag')}</button>
@@ -58,15 +60,17 @@ const Hjemme = (() => {
     if (!el) return;
     const a = document.activeElement, rk0 = a && a.closest && a.closest('#hj-liste .hj-rk');
     const fokus = rk0 && { id: rk0.dataset.id, k: [...a.classList].find(c => c.startsWith('hj-')) };
-    const sorter = [...D.kat].sort((x, y) => x.raekkefolge - y.raekkefolge || x.navn.localeCompare(y.navn, 'da')).map(k => ({ navn: k.navn, id: k.id }));
-    sorter.push({ navn: 'Ikke kategoriseret', id: null });
+    const sorter = [...D.kat].sort((x, y) => x.raekkefolge - y.raekkefolge || x.navn.localeCompare(y.navn, 'da')).map(k => ({ navn: katNavn(k), id: k.id }));
+    const andet = D.kat.find(k => k.navn_norm === 'andet');
+    if (!andet) sorter.push({ navn: IKKE_SORTERET, id: null });
     const navn = h => (ingAf(h.ingrediens_id) || {}).navn || '';
+    // uden kategori (eller med en kategori, der ikke findes mere) står under «Ikke sorteret», sammen med kategorien «Andet»
+    const kid = h => { const k = (ingAf(h.ingrediens_id) || {}).kategori_id; return k && katAf(k) ? k : (andet ? andet.id : null); };
     const html = sorter.map(g => {
-      const rader = D.hj.filter(h => ((ingAf(h.ingrediens_id) || {}).kategori_id || null) === g.id && (g.id || !katAf(((ingAf(h.ingrediens_id) || {}).kategori_id))))
-        .sort((x, y) => navn(x).localeCompare(navn(y), 'da'));
+      const rader = D.hj.filter(h => kid(h) === g.id).sort((x, y) => navn(x).localeCompare(navn(y), 'da'));
       return rader.length ? `<h3 class="hj-grp tekst-l">${esc(g.navn)}</h3><div class="hj-gruppe${rader.length % 2 ? ' ulige' : ''}">${rader.map(raekke).join('')}</div>` : '';
     }).join('');
-    el.innerHTML = html || '<p class="tomt">Der står ikke noget endnu. Skriv den første ting i feltet ovenfor.</p>';
+    el.innerHTML = html ? LABELS + html : '<p class="tomt">Der står ikke noget endnu. Skriv den første ting i feltet ovenfor.</p>';
     if (fokus) { const x = el.querySelector(`.hj-rk[data-id="${fokus.id}"] .${fokus.k}`); if (x) x.focus(); }
     if (ved) ved();
   }
@@ -78,7 +82,7 @@ const Hjemme = (() => {
     if (d) { felt.value = ''; return nej(n, d.id); }
     const mgd = $('#hj-ny .hj-mgd'), enh = $('#hj-ny .hj-enh');
     let m = mgd.value.trim() ? tal(mgd.value) : null;
-    if (mgd.value.trim() && m == null) { toast('Skriv et tal i mængden, fx 2 eller 1,5.'); mgd.focus(); return; }
+    if (mgd.value.trim() && m == null) { fejlbesked(`«${mgd.value.trim()}» er ikke et tal. Skriv fx 2 eller 1,5, eller lad feltet stå tomt.`); mgd.focus(); return; }
     if (m <= 0) m = null; // 0 = ingen angivelse: så regnes der med, at man har nok
     laaser = true;
     try {
@@ -90,7 +94,7 @@ const Hjemme = (() => {
     } catch (e) {
       console.error(e);
       if (/duplicate|23505|409/.test(String(e.message))) { D.hj = await api('hjemme?select=*&order=oprettet'); tegn(); toast(`«${n}» står allerede på listen.`); felt.value = ''; }
-      else toast('Det blev ikke gemt. Tjek internettet, og prøv igen.');
+      else fejlbesked(`«${n}» blev ikke gemt på listen. Tjek internettet, og tryk retur igen.`);
     } finally { laaser = false; }
     felt.focus();
   }
@@ -111,26 +115,28 @@ const Hjemme = (() => {
     const [ny] = await api(`ingredienser?id=eq.${enc(ingId)}`, { method: 'PATCH', body: { kategori_id: katId } });
     Object.assign(ingAf(ingId), ny);
     lukArk(); tegn();
-    toast(`${ingAf(ingId).navn} står nu under ${katId ? katAf(katId).navn : 'Ikke kategoriseret'}`);
+    toast(`${ingAf(ingId).navn} står nu under ${katId ? katNavn(katAf(katId)) : IKKE_SORTERET}`);
   }
 
   const navne = () => D.hj.map(h => (ingAf(h.ingrediens_id) || {}).navn).filter(Boolean);
   // Lægger listen ind i en boks på siden. «aendret» kaldes, hver gang listen ændrer sig.
-  async function vis(boks, aendret) {
+  const LISTE = '<h2>Hvad har du derhjemme?</h2><div id="hj-liste"></div>';
+  async function vis(boks, aendret, listeBoks) {
     const id = visning;
     await Katalog.hent().catch(() => {}); // sørger for, at kategorien «Andet» findes
     const [kat, ing, hj] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('hjemme?select=*&order=oprettet')]);
     if (id !== visning) return;
     D = { kat, ing, hj }; ved = aendret;
     boks.innerHTML = `<h2>Tilføj ingrediens</h2>
-      <small>Skriv én ting i hvert felt. Tryk retur for at gemme og skrive næste.</small>
+      <small>Skriv én ting i hvert felt. Tryk retur for at gemme og skrive næste. Mængden bruges ikke til at finde retter, kun til din egen oversigt og til at trække fra, når du har lavet en ret.</small>
+      ${LABELS}
       <div class="hj-rk felt felt-m hj-ny" id="hj-ny">
-        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal">
+        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="fx 2">
         <select class="hj-enh" aria-label="Enhed">${enhHtml('stk')}</select>
         <input id="hj-ny-navn" class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ny ingrediens" placeholder="fx gulerødder">
       </div>
-      <h2>Hvad har du derhjemme?</h2>
-      <div id="hj-liste"></div>`;
+      ${listeBoks ? '' : LISTE}`;
+    if (listeBoks) listeBoks.innerHTML = LISTE;
     tegn();
   }
 
@@ -141,8 +147,8 @@ const Hjemme = (() => {
       valgtIng = i.id;
       const kat = [...D.kat].sort((x, y) => x.raekkefolge - y.raekkefolge || x.navn.localeCompare(y.navn, 'da'));
       const d = ark(`<h2>Kategori</h2><small>${esc(i.navn)} hører til:</small>
-        <div class="hj-katvalg">${kat.map(k => `<button type="button" class="chip${k.id === i.kategori_id ? ' valgt' : ''}" data-h="hjVaelgKat" data-v="${k.id}">${esc(k.navn)}</button>`).join('')}
-          <button type="button" class="chip${i.kategori_id ? '' : ' valgt'}" data-h="hjVaelgKat" data-v="">Ikke kategoriseret</button></div>
+        <div class="hj-katvalg">${kat.map(k => `<button type="button" class="chip${k.id === i.kategori_id || (!i.kategori_id && k.navn_norm === 'andet') ? ' valgt' : ''}" data-h="hjVaelgKat" data-v="${k.id}">${esc(katNavn(k))}</button>`).join('')}
+          ${kat.some(k => k.navn_norm === 'andet') ? '' : `<button type="button" class="chip${i.kategori_id ? '' : ' valgt'}" data-h="hjVaelgKat" data-v="">${IKKE_SORTERET}</button>`}</div>
         <label for="hj_nykat">Ny kategori</label>
         <div class="linjeform"><input id="hj_nykat" type="text" maxlength="30" autocomplete="off" placeholder="fx Brød"><button type="button" class="knap primaer" data-h="hjNyKat">Opret</button></div>
         <div id="arkfejl"></div>
@@ -165,14 +171,18 @@ const Hjemme = (() => {
       await api(`hjemme?id=eq.${enc(id)}`, { method: 'DELETE' });
       D.hj = D.hj.filter(x => x.id !== id);
       tegn();
-      toast(`${h ? (ingAf(h.ingrediens_id) || {}).navn : 'Ingrediensen'} er fjernet`);
+      const navn = h ? (ingAf(h.ingrediens_id) || {}).navn : 'Ingrediensen';
+      toast(`${navn} er fjernet`, h && { fortryd: async () => { // lægges ind igen med samme mængde og enhed
+        try { const [ny] = await api('hjemme', { method: 'POST', body: { ingrediens_id: h.ingrediens_id, maengde: h.maengde, enhed: h.enhed } }); D.hj.push(ny); tegn(); }
+        catch (e) { console.error(e); fejlbesked(`${navn} kom ikke tilbage på listen. Tjek internettet, og skriv den ind igen.`); }
+      } });
     }
   });
 
   // Retur: videre til næste felt, eller gem det nye felt og lav plads til det næste
   document.addEventListener('keydown', async e => {
     if (e.key !== 'Enter' || e.isComposing) return;
-    if (e.target.id === 'hj_nykat') { e.preventDefault(); return H.hjNyKat().catch(() => toast('Det virkede ikke. Prøv igen.')); }
+    if (e.target.id === 'hj_nykat') { e.preventDefault(); return H.hjNyKat().catch(() => fejlbesked('Kategorien blev ikke oprettet. Tjek internettet, og tryk retur igen.')); }
     const rk = e.target.closest && e.target.closest('.hj-rk');
     if (!rk || !app.contains(rk)) return;
     e.preventDefault();
@@ -181,7 +191,7 @@ const Hjemme = (() => {
       if (e.target.classList.contains('hj-navn')) await gemNavn(rk);
       const alle = [...app.querySelectorAll('.hj-rk')], nu = alle.indexOf(rk), naeste = alle[nu + 1];
       (naeste || $('#hj-ny')).querySelector('.hj-navn').focus();
-    } catch (err) { console.error(err); toast('Det virkede ikke. Tjek internettet, og prøv igen.'); }
+    } catch (err) { console.error(err); fejlbesked('Det blev ikke gemt. Tjek internettet, og tryk retur igen.'); }
   });
   // Ændringer gemmes, når man forlader feltet
   document.addEventListener('change', async e => {
@@ -194,12 +204,12 @@ const Hjemme = (() => {
       else if (h && e.target.classList.contains('hj-mgd')) {
         const t = e.target.value.trim();
         let m = t ? tal(t) : null;
-        if (t && m == null) { toast('Skriv et tal i mængden, fx 2 eller 1,5.'); e.target.value = h.maengde != null ? visTal(Number(h.maengde)) : ''; return; }
+        if (t && m == null) { fejlbesked(`«${t}» er ikke et tal. Skriv fx 2 eller 1,5, eller lad feltet stå tomt. Mængden er sat tilbage.`); e.target.value = h.maengde != null ? visTal(Number(h.maengde)) : ''; return; }
         if (m <= 0) m = null; // 0 = ingen angivelse: feltet bliver tomt, og man har nok
         await api(`hjemme?id=eq.${enc(h.id)}`, { method: 'PATCH', body: { maengde: m } });
         h.maengde = m; e.target.value = m != null ? visTal(m) : '';
       }
-    } catch (err) { console.error(err); toast('Det blev ikke gemt. Tjek internettet, og prøv igen.'); }
+    } catch (err) { console.error(err); fejlbesked('Ændringen blev ikke gemt. Tjek internettet, og ret feltet igen.'); }
   });
 
   // Når en ret er lavet: træk de brugte ingredienser fra det, du har derhjemme. Bliver mængden 0 eller mindre, fjernes varen.
@@ -293,7 +303,7 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
     async hjcKopier() {
       let ok = false;
       try { await navigator.clipboard.writeText(besked()); ok = true; } catch (e) { ok = await kopier(besked()); }
-      toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres. Prøv igen.');
+      ok ? toast('Beskeden er kopieret') : fejlbesked('Beskeden blev ikke kopieret. Tryk på knappen igen.');
     },
     hjcGem() { // viser en side, hvor man gennemgår listen, før noget gemmes
       const liste = laesListe($('#hjcsvar').value);
@@ -302,7 +312,11 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
       lager.gem('hjcNye', liste.filter(x => !set.has(x.navn) && set.add(x.navn)));
       lukArk(); location.hash = '#/forslag/nye';
     },
-    gnFjern(el) { G.splice(Number(el.dataset.v), 1); lager.gem('hjcNye', G); tegnGennemgang(); },
+    gnFjern(el) {
+      const i = Number(el.dataset.v), [x] = G.splice(i, 1);
+      lager.gem('hjcNye', G); tegnGennemgang();
+      if (x) toast(`${x.navn} er fjernet fra listen`, { fortryd: () => { G.splice(i, 0, x); lager.gem('hjcNye', G); tegnGennemgang(); } });
+    },
     gnFortryd() { lager.gem('hjcNye', []); location.hash = '#/forslag'; },
     async gnGem() {
       const nye = [], ret = [];
@@ -335,8 +349,8 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
     const nye = [], har = [];
     G.forEach((x, i) => { const d = dublet(x.navn); (d ? har : nye).push({ x, i, d }); });
     el.innerHTML = `<h2>Nye ting <span class="gn-tal">${nye.length}</span></h2>
-      ${nye.length ? `<div class="hj-gruppe${nye.length % 2 ? ' ulige' : ''}">${nye.map(({ x, i }) => `<div class="hj-rk gn-rk felt felt-s" data-i="${i}">
-        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="Antal" value="${Number(x.maengde) > 0 ? esc(visTal(Number(x.maengde))) : ''}">
+      ${nye.length ? `${LABELS}<div class="hj-gruppe${nye.length % 2 ? ' ulige' : ''}">${nye.map(({ x, i }) => `<div class="hj-rk gn-rk felt felt-s" data-i="${i}">
+        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" value="${Number(x.maengde) > 0 ? esc(visTal(Number(x.maengde))) : ''}">
         <select class="hj-enh" aria-label="Enhed">${enhHtml(x.enhed)}</select>
         <input class="hj-navn" type="text" autocomplete="off" aria-label="Ingrediens" value="${esc(x.navn)}">
         <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen">×</button></div>`).join('')}</div>`
@@ -349,7 +363,7 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
             ${kan ? `<label class="skift"><input type="checkbox" class="gn-ret"${x.ret ? ' checked' : ''}> <span>Ret til ${esc(mgdTekst(x.maengde, x.enhed))}</span></label>` : ''}
             <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen">×</button></div>`; }).join('')}` : ''}
       <div id="arkfejl"></div>
-      <div class="rakke"><button type="button" class="knap" data-tpid="gn-fortryd" data-h="gnFortryd">Fortryd</button>
+      <div class="rakke"><button type="button" class="knap" data-tpid="gn-fortryd" data-h="gnFortryd">Annuller</button>
         <button type="button" class="knap primaer" data-tpid="gn-gem" data-h="gnGem">${nye.length ? `Tilføj ${nye.length} ${nye.length === 1 ? 'ting' : 'ting'}` : 'Færdig'}</button></div>`;
   }
   async function gennemgang() {

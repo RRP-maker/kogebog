@@ -141,7 +141,7 @@ const LinkImport = (() => {
     stopLinks(el) { stop = true; el.disabled = true; toast('Stopper efter de links, jeg er i gang med'); },
     async kopierFejl() {
       const o = $('#fejlomraade'); let l = []; try { l = JSON.parse(o.dataset.links || '[]'); } catch (e) { /* tom */ }
-      toast(await kopier(l.join('\n')) ? 'Linkene er kopieret' : 'Linkene kunne ikke kopieres');
+      (await kopier(l.join('\n'))) ? toast('Linkene er kopieret') : fejlbesked('Linkene blev ikke kopieret. Tryk på knappen igen.');
     },
     async startForfra() {
       if (koerer) return;

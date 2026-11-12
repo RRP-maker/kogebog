@@ -28,7 +28,7 @@ const ClaudeEkstra = (() => {
   async function kopierTil(besked) {
     const ok = await kopier(besked), kodet = encodeURIComponent(besked);
     $('#aabnClaude').href = 'https://claude.ai/new' + (kodet.length < 7000 ? '?q=' + kodet : ''); // for lang til adressen: beskeden ligger i udklipsholderen
-    toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres');
+    ok ? toast('Beskeden er kopieret') : fejlbesked('Beskeden blev ikke kopieret. Tryk på knappen igen.');
   }
   const fejlboks = t => { $('#formfejl').innerHTML = `<div class="fejlboks">${esc(t)}</div>`; };
   const FELTER = ['titel', 'kategori', 'koekken', 'svaerhed', 'tid_minutter', 'portioner', 'ingredienser', 'fremgangsmaade'];

@@ -14,7 +14,7 @@ const Madplan = (() => {
   const gem = straks => {
     clearTimeout(gemTimer);
     const send = () => api('madplan?on_conflict=id', { method: 'POST', flet: true, body: { id: RAEKKE, data: ST, opdateret: new Date().toISOString() } })
-      .catch(e => { console.error(e); toast('Madplanen kunne ikke gemmes. Tjek internettet.'); });
+      .catch(e => { console.error(e); fejlbesked('Madplanen blev ikke gemt. Tjek internettet, og ændr noget for at prøve igen.'); });
     if (straks) return send(); gemTimer = setTimeout(send, 400);
   };
   const foer = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]; return false; };
