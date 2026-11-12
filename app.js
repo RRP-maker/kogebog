@@ -334,7 +334,7 @@ async function route() {
   window.scrollTo(0, 0);
   document.body.dataset.side = c === 'lav' ? 'lav' : (a || 'forside');
   try {
-    if (a === 'forslag' && b === 'madplan') return c === 'rediger' ? await Madplan.rediger() : await Madplan.side();
+    if (a === 'forslag' && b === 'madplan') return await Madplan.side();
     if (a === 'forslag' && b === 'nye') return await Hjemme.gennemgang();
     if (a === 'forslag') return await forslagSide();
     if (a === 'import') return importSide();
