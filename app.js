@@ -1331,13 +1331,15 @@ let rasterTimer;
 function rasterIgen() {
   cancelAnimationFrame(rasterTimer);
   rasterTimer = requestAnimationFrame(() => {
-    const main = document.querySelector('main');
+    const main = document.querySelector('main'), rod = document.documentElement.style, mal = v => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v)); // gitterets mål står i style.css (--kol, --raekke)
+    const R = mal('--raekke') || 32;
     app.querySelectorAll('.laerred-ramme').forEach(el => { // rammen runder op til hele rækker, så resten af siden bliver på linjerne
       el.style.height = '';
-      el.style.height = Math.ceil(el.getBoundingClientRect().height / 32 - 0.02) * 32 + 'px';
+      el.style.height = Math.ceil(el.getBoundingClientRect().height / R - 0.02) * R + 'px';
     });
-    const y = main.getBoundingClientRect().top + scrollY + parseFloat(getComputedStyle(main).paddingTop);
-    document.documentElement.style.setProperty('--raster', (((Math.round(y) % 32) + 32) % 32) + 'px');
+    const m = main.getBoundingClientRect(), cs = getComputedStyle(main), y = m.top + scrollY + parseFloat(cs.paddingTop);
+    rod.setProperty('--raster', (((Math.round(y) % R) + R) % R) + 'px');
+    rod.setProperty('--kol-x', (m.left + scrollX + parseFloat(cs.paddingLeft)) + 'px'); // kolonnens venstre kant: den røde margen følger den
   });
 }
 new MutationObserver(rasterIgen).observe(app, { childList: true, subtree: true });

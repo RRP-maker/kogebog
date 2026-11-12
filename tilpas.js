@@ -9,7 +9,7 @@ const Tilpas = (() => {
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret, .mp-rk > span'; // de sidste: dagene, retternes felter og tællernes navne på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
-  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, DELE = '.mp-valg .rund, .mp-valg .mp-inp, .filter .chip', TRIN = '.mp-valg .stepper, .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT;
+  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', DELE = '.mp-valg .rund, .mp-valg .mp-inp, .filter .chip', TRIN = '.mp-valg .stepper, .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT;
   // Tæller på Madplan («−», skrivefelt, «+») og bjælker med mærker (kategorier, køkkener, søgning): delene kan tilpasses hver for sig (DELE), men et tryk-og-træk flytter hele tælleren eller bjælken (TRIN). // opskrifter kan ikke tilpasses
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
@@ -21,16 +21,22 @@ const Tilpas = (() => {
     el._ph.remove(); el._ph = null;
     ['position', 'margin', 'left', 'top', 'width', 'zIndex'].forEach(k => { el.style[k] = ''; });
   };
-  // Skærmen kan være smallere end på den enhed, feltet blev flyttet på (iPad → iPhone, eller vendt om): feltet holdes inden for skærmen. Kun visning, intet gemmes.
-  const SKAERM = 8;
-  const holdInde = (el, p, fast) => {
-    el._kx = 0; const r = el.getBoundingClientRect(), vw = document.documentElement.clientWidth, dx = el._dx || 0;
-    if (!p || !r.width || r.width > vw - 2 * SKAERM) return;
-    const kx = r.left < SKAERM ? SKAERM - r.left : r.right > vw - SKAERM ? vw - SKAERM - r.right : 0;
-    if (!kx) return;
-    el._kx = kx;
-    if (fast) el.style.left = (parseFloat(el.style.left) + kx) + 'px'; else el.style.translate = `${dx + kx}px ${p[1]}px`;
-  };
+  // Gitterets mål står i style.css (--kol og --raekke), så der ikke står tal i koden.
+  const maal = v => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(v)) || 0, KOL = () => maal('--kol') || 16, RAEKKE = () => maal('--raekke') || 32;
+  // En gemt placering passer måske ikke til den skærm, man bruger nu (iPad → iPhone, eller vendt om). Den må aldrig sende et felt uden for skærmen eller oven på et andet felt.
+  // Gør den det, ignoreres først den vandrette forskydning og så hele placeringen. Kun visning, intet gemmes.
+  const ANDRE = '.knap, .tilbage, .fane, .kort, .rund, .chip, .rk-knap, .favknap, input:not([type=checkbox]):not([type=radio]), textarea, select, .mp-dagfelt, .mp-ret';
+  const IKKE = '.plads, #ark, #hjaelper, #hjaelper-vis, #toast, #tilpas-gruppe, .top, #ure';
+  function paaFelt(el, r = el.getBoundingClientRect()) {
+    if (!r.width || el.hasAttribute('data-laast')) return false; // fastlåste felter svæver over siden, som de skal
+    for (const e of document.querySelectorAll(ANDRE)) {
+      if (e === el || e.contains(el) || el.contains(e) || e.hasAttribute('data-laast') || e.closest(IKKE) || (el._ph && (e === el._ph || el._ph.contains(e)))) continue;
+      const q = e.getBoundingClientRect();
+      if (q.width && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden' && Math.min(q.right, r.right) - Math.max(q.left, r.left) > 4 && Math.min(q.bottom, r.bottom) - Math.max(q.top, r.top) > 4) return true;
+    }
+    return false;
+  }
+  const uheldig = el => { const r = el.getBoundingClientRect(), vw = document.documentElement.clientWidth; return !!r.width && (r.left < -.5 || r.right > vw + .5 || paaFelt(el, r)); };
   // Vandret placering: en forskydning i px fra feltets normale plads passer kun til den skærmbredde, den blev lavet på (iPhone: 340 px bred kolonne, iPad: 770 px).
   // Derfor husker et flyttet felt, om det sidder ved venstre eller højre kant af kolonnen, og hvor langt fra kanten (pos: «dx,dy,kant,afstand», kant 0 = venstre, 1 = højre).
   // Ældre placeringer («dx,dy») gælder en iPhone-kolonne på 340 px og regnes om til en kant og en afstand.
@@ -47,11 +53,13 @@ const Tilpas = (() => {
     }
     return (kant ? K.r - afst - w : K.l + afst) - natL;
   }
-  function plac(el, p, fast) {
+  // ign: 0 = hele placeringen, 1 = uden den vandrette forskydning, 2 = uden placering (se uheldig)
+  function plac(el, p, fast, ign = 0) {
+    el._dy = !p || ign === 2 ? 0 : p[1];
     if (!fast) {
       fjernFast(el); el.style.translate = ''; el._dx = 0;
-      if (p) { const r0 = el.getBoundingClientRect(); el._dx = dxAf(p, r0.left, r0.width, !!indeI(el)); el.style.translate = `${el._dx}px ${p[1]}px`; }
-      holdInde(el, p, false); return;
+      if (p) { const r0 = el.getBoundingClientRect(); el._dx = ign ? 0 : dxAf(p, r0.left, r0.width, !!indeI(el)); el.style.translate = `${el._dx}px ${el._dy}px`; }
+      return;
     }
     let ph = el._ph;
     if (!ph || !ph.isConnected) {
@@ -64,15 +72,10 @@ const Tilpas = (() => {
     if (el.dataset.fs) ph.dataset.fs = el.dataset.fs; else delete ph.dataset.fs;
     ph.style.fontSize = el.style.fontSize; ph.style.display = el.style.display;
     const r = ph.getBoundingClientRect(); if (!r.width) return;
-    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (el._dx = dxAf(p, r.left, r.width, !!indeI(el)))) + 'px', top: (r.top + scrollY + (p ? p[1] : 0)) + 'px', width: r.width + 'px', zIndex: '19' });
-    holdInde(el, p, true);
+    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (el._dx = ign ? 0 : dxAf(p, r.left, r.width, !!indeI(el)))) + 'px', top: (r.top + scrollY + el._dy) + 'px', width: r.width + 'px', zIndex: '19' });
   }
-  // Felter inde i et felt (retterne i en dag på Madplan) følger forælderens gitter: 16 px på tværs og rækker à 32 px, målt fra forældrefeltets indre kant.
-  // Deres placering gemmes som en forskydning, så den passer til alle dage.
+  // Felter inde i et felt (retterne i en dag på Madplan): deres placering gemmes som en forskydning, så den passer til alle dage.
   const indeI = el => el.matches('.mp-ret') ? el.parentElement.closest('.mp-dagfelt') : null;
-  const ankre = el => { const f = indeI(el); if (!f) return null; const r = f.getBoundingClientRect(), cs = getComputedStyle(f); return { x: r.left + scrollX + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft), y: r.top + scrollY + parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop) }; };
-  const raster = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--raster')) || 0;
-  const fase = el => el.matches('.kort, .knap, .tilbage, .fane') ? (Math.round(el.offsetHeight / 32) === 1 ? 28 : 12) : 0;
   const STR = [[17, 'Lille'], [20, 'Normal'], [24, 'Stor'], [34, 'Størst']]; // faste skriftstørrelser i px. 34 er skriften på forsidens faner.
   const GAMLE = { 0.85: 17, 1: 20, 1.2: 24, 1.45: 34 }; // tidligere gemt som gange den originale størrelse
   const pxAf = s => s >= 5 ? s : (GAMLE[s] || 20);
@@ -182,6 +185,13 @@ const Tilpas = (() => {
       plac(el, p, fast);
       el.toggleAttribute('data-laast', fast);
       el.toggleAttribute('data-ikkeflyt', !!o.m || el.matches(FAST));
+    });
+    document.querySelectorAll('[data-flyt]').forEach(el => { // først når alle står på plads: ingen må ende uden for skærmen eller oven på et andet felt
+      if (el.classList.contains('plads') || (drag && drag.laast && drag.el === el)) return;
+      const p = !el.matches(FAST) && get(el.dataset.flyt) && get(el.dataset.flyt).p;
+      if (!p || !uheldig(el)) return;
+      const fast = el.hasAttribute('data-laast');
+      plac(el, p, fast, 1); if (uheldig(el)) plac(el, p, fast, 2);
     });
     document.querySelectorAll('[data-tom]').forEach(c => { c.style.display = ''; delete c.dataset.tom; }); // en række med skjulte felter beholder sin plads, så siden ikke kryber sammen
     bjaelke();
@@ -313,7 +323,6 @@ const Tilpas = (() => {
         if (l !== standardFast(el)) ny.l = l;
       }
       lukArk(); gem(k, ny);
-      if (ny.p && (ny.z || '') !== (o.z || '')) setTimeout(() => genplacer(k), 80); // ny størrelse: ind på nettet igen
     });
     setTimeout(() => $('#tp-tekst', d).select(), 50);
   }
@@ -337,27 +346,20 @@ const Tilpas = (() => {
       }
     });
   }
-  function genplacer(k) {
-    const el = document.querySelector(`[data-flyt="${CSS.escape(k)}"]`), p = get(k) && get(k).p; if (!el || !p) return;
-    const r = el.getBoundingClientRect(), an = ankre(el), rast = an ? an.y : raster(), f = fase(el), T = r.top + (el.hasAttribute('data-laast') ? 0 : scrollY), Y = rast + f + Math.round((T - rast - f) / 32) * 32, dy = Y - T;
-    if (Math.abs(dy) > .5) gem(k, { ...get(k), p: [p[0], Math.round((p[1] + dy) * 100) / 100, ...p.slice(2)] }, true);
-  }
   // Træk: hold fingeren stille et øjeblik, så løfter feltet sig, og det følger fingeren og falder på gitteret
   let drag = null, sidstTrukket = 0;
   const gitter = () => { let g = document.getElementById('gitter'); if (!g) { g = document.createElement('div'); g.id = 'gitter'; document.body.append(g); } return g; };
   function startTraek(d) {
-    d.laast = true; const m = document.querySelector('main'), tf = d.el.style.transform, ov = d.el.style.transition;
+    d.laast = true; const tf = d.el.style.transform, ov = d.el.style.transition;
     d.el.style.transition = 'none'; d.el.style.transform = 'none'; // målt uden «trykket ned»-effekten
     const r = d.el.getBoundingClientRect(); d.el.style.transform = tf; void d.el.offsetWidth; d.el.style.transition = ov;
     d.fast = d.el.hasAttribute('data-laast') && !!d.el._ph; d.top0 = r.top;
-    d.kx = d.el._kx || 0; d.dx0 = d.el._dx || 0; // hvor meget feltet er skubbet ind på skærmen
+    d.dx0 = d.el._dx || 0; // den vandrette forskydning, feltet har nu (kan være ignoreret, se uheldig)
     if (d.fast) { const q = d.el._ph.getBoundingClientRect(); d.nx = q.left; d.natDoc = q.top + scrollY; } // fastlåst: pladsholderen viser, hvor feltet ville stå
-    else { d.nx = r.left - d.dx0 - d.kx; d.natDoc = r.top - d.p0[1] + scrollY; }
-    d.rast = raster(); d.fase = fase(d.el); d.xo = m.getBoundingClientRect().left + parseFloat(getComputedStyle(m).paddingLeft) + scrollX;
-    const an = ankre(d.el); if (an) { d.rast = an.y; d.xo = an.x; } // inde i et felt: forælderens gitter
+    else { d.nx = r.left - d.dx0; d.natDoc = r.top - (d.el._dy || 0) + scrollY; }
     d.stat = getComputedStyle(d.el).position === 'static'; if (d.stat) d.el.style.position = 'relative';
     d.el.classList.add('traekker');
-    gitter().style.backgroundPosition = `${d.xo - scrollX - 8}px ${d.rast + d.fase - (d.fast ? 0 : scrollY) - 16}px`;
+    gitter().style.backgroundPosition = `${d.nx - 8}px ${(d.fast ? d.natDoc : d.natDoc - scrollY) - 16}px`; // prikkerne står, hvor feltets hjørne kan lande: hele kolonner og rækker fra dets egen plads
     if (navigator.vibrate) navigator.vibrate(12);
   }
   // Et felt må ikke lande oven på tekst, der ikke kan tilpasses (opskrifter, trin, skrivefelter ...)
@@ -376,19 +378,18 @@ const Tilpas = (() => {
     return false;
   }
   function flyt(d, e) {
-    const tx = d.nx + d.dx0 + d.kx + e.clientX - d.x0 + scrollX, ty = d.top0 + e.clientY - d.y0 + (d.fast ? 0 : scrollY);
-    const X = d.xo + Math.round((tx - d.xo) / G) * G, Y = d.rast + d.fase + Math.round((ty - d.rast - d.fase) / 32) * 32;
-    d.p = [Math.round((X - scrollX - d.nx) * 100) / 100, Math.round((Y - d.natDoc) * 100) / 100];
+    const K = KOL(), R = RAEKKE(), tx = d.nx + d.dx0 + e.clientX - d.x0, ty = d.top0 + e.clientY - d.y0 + (d.fast ? 0 : scrollY);
+    d.p = [Math.round((tx - d.nx) / K) * K, Math.round((ty - d.natDoc) / R) * R]; // hele kolonner og rækker fra feltets egen plads, som står på nettet
     if (d.fast) { d.el.style.left = (d.nx + d.p[0]) + 'px'; d.el.style.top = (d.natDoc + d.p[1]) + 'px'; }
     else d.el.style.translate = `${d.p[0]}px ${d.p[1]}px`;
-    if (!d.fast) { const kl = d.p.join(); if (kl !== d.sidstP) { d.sidstP = kl; d.ulovlig = paaTekst(d.el); d.el.classList.toggle('ulovlig', d.ulovlig); } } // fastlåste felter følger skærmen: tekst ruller under dem
+    if (!d.fast) { const kl = d.p.join(); if (kl !== d.sidstP) { d.sidstP = kl; d.ulovlig = paaTekst(d.el) || paaFelt(d.el); d.el.classList.toggle('ulovlig', d.ulovlig); } } // fastlåste felter følger skærmen: tekst ruller under dem
   }
   function slutTraek() {
     const d = drag; drag = null; if (!d) return; clearTimeout(d.t);
     if (!d.laast) return;
     sidstTrukket = Date.now(); d.el.classList.remove('traekker'); if (d.stat) d.el.style.position = '';
     const g = document.getElementById('gitter'); if (g) g.remove();
-    if (d.ulovlig) { d.el.classList.remove('ulovlig'); anvend(); toast('Her ligger tekst, der ikke kan tilpasses. Prøv et andet sted.'); return; }
+    if (d.ulovlig) { d.el.classList.remove('ulovlig'); anvend(); toast('Her er der ikke plads. Prøv et andet sted.'); return; }
     const k = d.el.dataset.flyt, { p, ...rest } = get(k) || {};
     if (d.p && (d.p[0] || d.p[1]) && indeI(d.el)) rest.p = [d.p[0], d.p[1]];
     else if (d.p && (d.p[0] || d.p[1])) { // husk kanten: venstre eller højre, og afstanden fra den
