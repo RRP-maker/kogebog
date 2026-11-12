@@ -53,11 +53,13 @@ const Tilpas = (() => {
     return (kant ? K.r - afst - w : K.l + afst) - natL;
   }
   // ign: 0 = hele placeringen, 1 = uden den vandrette forskydning, 2 = uden placering (se uheldig)
+  // Placeringer, der blev gemt før gitteret (pixels fra det gamle net), vises rundet af til hele kolonner og rækker fra feltets plads. De gemte data røres ikke.
+  const paaNet = (v, m) => Math.round(v / m) * m || 0;
   function plac(el, p, fast, ign = 0) {
-    el._dy = !p || ign === 2 ? 0 : p[1];
+    el._dy = !p || ign === 2 ? 0 : paaNet(p[1], RAEKKE());
     if (!fast) {
       fjernFast(el); el.style.translate = ''; el._dx = 0;
-      if (p) { const r0 = el.getBoundingClientRect(); el._dx = ign ? 0 : dxAf(p, r0.left, r0.width, !!indeI(el)); el.style.translate = `${el._dx}px ${el._dy}px`; }
+      if (p) { const r0 = el.getBoundingClientRect(); el._dx = ign ? 0 : paaNet(dxAf(p, r0.left, r0.width, !!indeI(el)), KOL()); el.style.translate = `${el._dx}px ${el._dy}px`; }
       return;
     }
     let ph = el._ph;
@@ -71,7 +73,7 @@ const Tilpas = (() => {
     if (el.dataset.fs) ph.dataset.fs = el.dataset.fs; else delete ph.dataset.fs;
     ph.style.fontSize = el.style.fontSize; ph.style.display = el.style.display;
     const r = ph.getBoundingClientRect(); if (!r.width) return;
-    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (el._dx = ign ? 0 : dxAf(p, r.left, r.width, !!indeI(el)))) + 'px', top: (r.top + scrollY + el._dy) + 'px', width: r.width + 'px', zIndex: '19' });
+    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (el._dx = ign ? 0 : paaNet(dxAf(p, r.left, r.width, !!indeI(el)), KOL()))) + 'px', top: (r.top + scrollY + el._dy) + 'px', width: r.width + 'px', zIndex: '19' });
   }
   // Felter inde i et felt (retterne i en dag på Madplan): deres placering gemmes som en forskydning, så den passer til alle dage.
   const indeI = el => el.matches('.mp-ret') ? el.parentElement.closest('.mp-dagfelt') : null;
@@ -422,6 +424,8 @@ const Tilpas = (() => {
     e.preventDefault(); e.stopPropagation(); el.dataset.org ? aabn(el) : aabnKort(el);
   }, true);
   const igen = () => { cancelAnimationFrame(timer); timer = requestAnimationFrame(anvend); };
+  const appEl = document.getElementById('app'); // mens siden glider ind, er felternes mål forskudt: placeringerne sættes igen, når bevægelsen er slut
+  if (appEl) appEl.addEventListener('animationend', e => { if (e.animationName === 'sideind') igen(); });
   new MutationObserver(igen).observe(document.body, { childList: true, subtree: true });
   // Vendes skærmen, eller ændres vinduets bredde, sættes alle felter på plads igen (efter at siden har lagt sig om)
   let vendTimer;

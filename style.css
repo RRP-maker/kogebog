@@ -233,7 +233,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .ing.tjek.lav-del input { margin-top: 3px; } /* ud for første linje */
 .ing.tjek input:checked + span { text-decoration: line-through; color: var(--blyant); }
 .trin { padding-left: 0; margin: 0; list-style: none; counter-reset: trin; }
-.trin > li { counter-increment: trin; position: relative; padding: 0 0 32px 44px; overflow-wrap: anywhere; }
+.trin > li { counter-increment: trin; position: relative; padding: 0 0 32px 48px; overflow-wrap: anywhere; }
 .trin > li::before { content: counter(trin); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--smor); color: var(--paa-lys); display: grid; place-items: center; font: 22px/1 var(--hoved); }
 .vejledning .lille { margin: 0; }
 .begreb {
