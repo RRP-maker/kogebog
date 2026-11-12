@@ -582,7 +582,7 @@ async function opskriftSide(rid, maal = app) {
   await Laerred.start(lel, lr, r.id);
 }
 // Knapperne øverst. «Tilføj tip» sidder fast øverst til venstre, mens man ruller. Ekstra knapper kommer til højre.
-const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="button" class="knap" data-h="nytBegreb">${ik('paere')} Tilføj tip</button>${hoejre}</div>`;
+const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="button" class="knap"${hoejre ? '' : ' data-tpid="tip-alene"'} data-h="nytBegreb">${ik('paere')} Tilføj tip</button>${hoejre}</div>`;
 // Overskrift (fx «Sovs») i en liste af ingredienser
 const ingOverskrift = navn => `<li class="grp">${esc(navn)}</li>`;
 function tegnIng() {
