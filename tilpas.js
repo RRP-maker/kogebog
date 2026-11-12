@@ -23,15 +23,34 @@ const Tilpas = (() => {
   // Skærmen kan være smallere end på den enhed, feltet blev flyttet på (iPad → iPhone, eller vendt om): feltet holdes inden for skærmen. Kun visning, intet gemmes.
   const SKAERM = 8;
   const holdInde = (el, p, fast) => {
-    el._kx = 0; const r = el.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+    el._kx = 0; const r = el.getBoundingClientRect(), vw = document.documentElement.clientWidth, dx = el._dx || 0;
     if (!p || !r.width || r.width > vw - 2 * SKAERM) return;
     const kx = r.left < SKAERM ? SKAERM - r.left : r.right > vw - SKAERM ? vw - SKAERM - r.right : 0;
     if (!kx) return;
     el._kx = kx;
-    if (fast) el.style.left = (parseFloat(el.style.left) + kx) + 'px'; else el.style.translate = `${p[0] + kx}px ${p[1]}px`;
+    if (fast) el.style.left = (parseFloat(el.style.left) + kx) + 'px'; else el.style.translate = `${dx + kx}px ${p[1]}px`;
   };
+  // Vandret placering: en forskydning i px fra feltets normale plads passer kun til den skærmbredde, den blev lavet på (iPhone: 340 px bred kolonne, iPad: 770 px).
+  // Derfor husker et flyttet felt, om det sidder ved venstre eller højre kant af kolonnen, og hvor langt fra kanten (pos: «dx,dy,kant,afstand», kant 0 = venstre, 1 = højre).
+  // Ældre placeringer («dx,dy») gælder en iPhone-kolonne på 340 px og regnes om til en kant og en afstand.
+  const REF = 340;
+  const kolonne = () => { const m = document.querySelector('main'), r = m.getBoundingClientRect(), cs = getComputedStyle(m); return { l: r.left + parseFloat(cs.paddingLeft), r: r.right - parseFloat(cs.paddingRight) }; };
+  function dxAf(p, natL, w) {
+    if (!p) return 0;
+    const K = kolonne(); let kant, afst;
+    if (p.length >= 4) { kant = p[2]; afst = p[3]; }
+    else {
+      const ven = natL - K.l, hoj = K.r - (natL + w), refL = ven <= hoj ? ven + p[0] : REF - w - hoj + p[0];
+      if (refL + w / 2 > REF / 2) { kant = 1; afst = REF - refL - w; } else { kant = 0; afst = refL; }
+    }
+    return (kant ? K.r - afst - w : K.l + afst) - natL;
+  }
   function plac(el, p, fast) {
-    if (!fast) { fjernFast(el); el.style.translate = p ? `${p[0]}px ${p[1]}px` : ''; holdInde(el, p, false); return; }
+    if (!fast) {
+      fjernFast(el); el.style.translate = ''; el._dx = 0;
+      if (p) { const r0 = el.getBoundingClientRect(); el._dx = dxAf(p, r0.left, r0.width); el.style.translate = `${el._dx}px ${p[1]}px`; }
+      holdInde(el, p, false); return;
+    }
     let ph = el._ph;
     if (!ph || !ph.isConnected) {
       ph = el._ph = el.cloneNode(true); ph.classList.add('plads'); ph.setAttribute('aria-hidden', 'true');
@@ -43,7 +62,7 @@ const Tilpas = (() => {
     if (el.dataset.fs) ph.dataset.fs = el.dataset.fs; else delete ph.dataset.fs;
     ph.style.fontSize = el.style.fontSize; ph.style.display = el.style.display;
     const r = ph.getBoundingClientRect(); if (!r.width) return;
-    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (p ? p[0] : 0)) + 'px', top: (r.top + scrollY + (p ? p[1] : 0)) + 'px', width: r.width + 'px', zIndex: '19' });
+    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (el._dx = dxAf(p, r.left, r.width))) + 'px', top: (r.top + scrollY + (p ? p[1] : 0)) + 'px', width: r.width + 'px', zIndex: '19' });
     holdInde(el, p, true);
   }
   const raster = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--raster')) || 0;
@@ -284,7 +303,7 @@ const Tilpas = (() => {
         if (felt && b !== std.b) ny.b = b;
         if (m) ny.m = true;
         let p = o.p;
-        if (l !== foer) { const g = p || [0, 0]; p = [g[0], Math.round((g[1] + (l ? -scrollY : scrollY)) * 100) / 100]; if (!p[0] && !p[1]) p = null; } // feltet bliver, hvor det står på skærmen nu
+        if (l !== foer) { const g = p || [0, 0]; p = [g[0], Math.round((g[1] + (l ? -scrollY : scrollY)) * 100) / 100, ...g.slice(2)]; if (!p[0] && !p[1]) p = null; } // feltet bliver, hvor det står på skærmen nu
         if (p && !opsk) ny.p = p;
         if (felt && z !== nat) ny.z = z;
         if (l !== standardFast(el)) ny.l = l;
@@ -307,7 +326,7 @@ const Tilpas = (() => {
       if (a.dataset.tp === 'flyt') { const { m: _m, ...rest } = o; if (!m) rest.m = true; gem(k, rest); }
       else if (a.dataset.tp === 'nulstil') { const { p, ...rest } = o; gem(k, rest); }
       else if (a.dataset.tp === 'laas') {
-        const g = o.p || [0, 0], p = [g[0], Math.round((g[1] + (l ? scrollY : -scrollY)) * 100) / 100], { l: _l, p: _p, ...rest } = o;
+        const g = o.p || [0, 0], p = [g[0], Math.round((g[1] + (l ? scrollY : -scrollY)) * 100) / 100, ...g.slice(2)], { l: _l, p: _p, ...rest } = o;
         if (p[0] || p[1]) rest.p = p;
         if (!l !== standardFast(el)) rest.l = !l;
         gem(k, rest);
@@ -317,7 +336,7 @@ const Tilpas = (() => {
   function genplacer(k) {
     const el = document.querySelector(`[data-flyt="${CSS.escape(k)}"]`), p = get(k) && get(k).p; if (!el || !p) return;
     const r = el.getBoundingClientRect(), rast = raster(), f = fase(el), T = r.top + (el.hasAttribute('data-laast') ? 0 : scrollY), Y = rast + f + Math.round((T - rast - f) / 32) * 32, dy = Y - T;
-    if (Math.abs(dy) > .5) gem(k, { ...get(k), p: [p[0], Math.round((p[1] + dy) * 100) / 100] }, true);
+    if (Math.abs(dy) > .5) gem(k, { ...get(k), p: [p[0], Math.round((p[1] + dy) * 100) / 100, ...p.slice(2)] }, true);
   }
   // Træk: hold fingeren stille et øjeblik, så løfter feltet sig, og det følger fingeren og falder på gitteret
   let drag = null, sidstTrukket = 0;
@@ -327,9 +346,9 @@ const Tilpas = (() => {
     d.el.style.transition = 'none'; d.el.style.transform = 'none'; // målt uden «trykket ned»-effekten
     const r = d.el.getBoundingClientRect(); d.el.style.transform = tf; void d.el.offsetWidth; d.el.style.transition = ov;
     d.fast = d.el.hasAttribute('data-laast') && !!d.el._ph; d.top0 = r.top;
-    d.kx = d.el._kx || 0; // hvor meget feltet er skubbet ind på skærmen
+    d.kx = d.el._kx || 0; d.dx0 = d.el._dx || 0; // hvor meget feltet er skubbet ind på skærmen
     if (d.fast) { const q = d.el._ph.getBoundingClientRect(); d.nx = q.left; d.natDoc = q.top + scrollY; } // fastlåst: pladsholderen viser, hvor feltet ville stå
-    else { d.nx = r.left - d.p0[0] - d.kx; d.natDoc = r.top - d.p0[1] + scrollY; }
+    else { d.nx = r.left - d.dx0 - d.kx; d.natDoc = r.top - d.p0[1] + scrollY; }
     d.rast = raster(); d.fase = fase(d.el); d.xo = m.getBoundingClientRect().left + parseFloat(getComputedStyle(m).paddingLeft) + scrollX;
     d.stat = getComputedStyle(d.el).position === 'static'; if (d.stat) d.el.style.position = 'relative';
     d.el.classList.add('traekker');
@@ -352,7 +371,7 @@ const Tilpas = (() => {
     return false;
   }
   function flyt(d, e) {
-    const tx = d.nx + d.p0[0] + d.kx + e.clientX - d.x0 + scrollX, ty = d.top0 + e.clientY - d.y0 + (d.fast ? 0 : scrollY);
+    const tx = d.nx + d.dx0 + d.kx + e.clientX - d.x0 + scrollX, ty = d.top0 + e.clientY - d.y0 + (d.fast ? 0 : scrollY);
     const X = d.xo + Math.round((tx - d.xo) / G) * G, Y = d.rast + d.fase + Math.round((ty - d.rast - d.fase) / 32) * 32;
     d.p = [Math.round((X - scrollX - d.nx) * 100) / 100, Math.round((Y - d.natDoc) * 100) / 100];
     if (d.fast) { d.el.style.left = (d.nx + d.p[0]) + 'px'; d.el.style.top = (d.natDoc + d.p[1]) + 'px'; }
@@ -366,7 +385,10 @@ const Tilpas = (() => {
     const g = document.getElementById('gitter'); if (g) g.remove();
     if (d.ulovlig) { d.el.classList.remove('ulovlig'); anvend(); toast('Her ligger tekst, der ikke kan tilpasses. Prøv et andet sted.'); return; }
     const k = d.el.dataset.flyt, { p, ...rest } = get(k) || {};
-    if (d.p && (d.p[0] || d.p[1])) rest.p = d.p;
+    if (d.p && (d.p[0] || d.p[1])) { // husk kanten: venstre eller højre, og afstanden fra den
+      const K = kolonne(), w = d.el.getBoundingClientRect().width, L = d.nx + d.p[0], hoj = L + w / 2 > (K.l + K.r) / 2 ? 1 : 0;
+      rest.p = [d.p[0], d.p[1], hoj, Math.round((hoj ? K.r - (L + w) : L - K.l) * 100) / 100];
+    }
     gem(k, rest);
   }
   document.addEventListener('pointerdown', e => {
