@@ -9,7 +9,8 @@ const Tilpas = (() => {
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret'; // de to sidste: dagene og retternes felter på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
-  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, FLYT = VALG + ', ' + KORT; // opskrifter kan ikke tilpasses
+  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, DELE = '.mp-valg .rund, .mp-valg .mp-inp', TRIN = '.mp-valg .stepper', FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT;
+  // Tæller på Madplan: «−», skrivefeltet og «+» kan tilpasses hver for sig (DELE), men et tryk-og-træk flytter hele tælleren (TRIN) med alle tre. // opskrifter kan ikke tilpasses
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
   const standardFast = el => el.matches('.vaerktoej .knap');
@@ -140,7 +141,7 @@ const Tilpas = (() => {
     document.body.classList.toggle('tilpas', til && aktiv);
     document.body.classList.toggle('tilpas-menu', til);
     const ryd = []; // beskyttede tekster, der står som skjulte: flaget fjernes
-    document.querySelectorAll(VALG).forEach(el => {
+    document.querySelectorAll(VALG + ', ' + DELE).forEach(el => {
       if (el.classList.contains('plads')) return;
       if (el.dataset.orgtekst === undefined && tekstAf(el)) el.dataset.orgtekst = tekstAf(el);
       const leg = el.dataset.orgtekst || tekstAf(el);
@@ -172,6 +173,7 @@ const Tilpas = (() => {
         return;
       }
       let k = el.dataset.org;
+      if (!k && el.matches(TRIN)) k = el.dataset.tpid;
       if (el.matches('.kort')) k = el.closest('#ark') ? null : el.dataset.tpid || 'kort:' + (el.getAttribute('href') || el.textContent.trim().slice(0, 40)); // felter med data-tpid bruger det
       const p = !el.matches(FAST) && k && get(k) && get(k).p;
       if (k) el.dataset.flyt = k; else delete el.dataset.flyt;
@@ -400,7 +402,8 @@ const Tilpas = (() => {
   }
   document.addEventListener('pointerdown', e => {
     if (!til || !aktiv || e.button > 0) return;
-    const el = e.target.closest('[data-flyt]'); if (!el || el.closest('#ark') || (get(el.dataset.flyt) || {}).m || el.matches(FAST)) return;
+    let el = e.target.closest('[data-flyt]'); if (el && el.matches(DELE)) el = el.closest(TRIN + '[data-flyt]') || el; // træk i en del af tælleren flytter hele tælleren
+    if (!el || el.closest('#ark') || (get(el.dataset.flyt) || {}).m || el.matches(FAST)) return;
     const d = drag = { el, x0: e.clientX, y0: e.clientY, p0: (get(el.dataset.flyt) || {}).p || [0, 0], laast: false };
     d.t = setTimeout(() => startTraek(d), 300);
   }, true);
