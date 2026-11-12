@@ -427,6 +427,13 @@ const ruderAktiv = () => toRuder() && BRED.matches;
 const iOpskrifter = () => /^#\/opskrifter(\/(?!ny$)[^/]+)?$/.test(location.hash);
 BRED.addEventListener('change', () => { if (toRuder() && iOpskrifter()) route(); });
 const HENTER = '<p class="tomt">Henter…</p>';
+// Ruller kun listen (ikke siden), så den valgte opskrift kan ses
+function visValgt() {
+  const p = $('#rude-liste'), v = p && p.querySelector('.oprk[aria-current]');
+  if (!v) return;
+  const a = v.getBoundingClientRect(), b = p.getBoundingClientRect();
+  if (a.top < b.top + 64) p.scrollTop -= Math.ceil((b.top + 64 - a.top) / 32) * 32; else if (a.bottom > b.bottom - 96) p.scrollTop += Math.ceil((a.bottom - b.bottom + 96) / 32) * 32;
+}
 async function ruderSide(rid) {
   const id = visning;
   if (!app.querySelector('.ruder')) {
@@ -437,7 +444,7 @@ async function ruderSide(rid) {
   L.valgt = rid || ''; tegnListe();
   const h = $('#rude-indhold');
   h.classList.remove('trinind'); void h.offsetWidth; h.classList.add('trinind');
-  if (rid) { await opskriftSide(rid, h); const v = $('#liste [aria-current]'); if (v && id === visning) v.scrollIntoView({ block: 'nearest' }); }
+  if (rid) { await opskriftSide(rid, h); visValgt(); }
   else h.innerHTML = '<p class="tomt">Vælg en opskrift i listen.</p>';
 }
 async function liste(type, maal = app) {
