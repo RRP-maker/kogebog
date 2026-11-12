@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.4.0 · Fase 3a: navigation og lav højde
+- Fem destinationer med ikon og tekst: Opskrifter, Tips, Hvad kan jeg lave?, Madplan og Mere. Den aktuelle er markeret (`aria-current`).
+- Bjælke nederst på telefon og tablet. Sidebjælke til venstre på brede skærme med mus (mindst 1024 px, `hover` og `pointer: fine`), med «Kogebog» som vej til forsiden. Valgt efter plads og input, ikke efter enhed.
+- Lav højde (højst 520 px, telefon på langs): navigationen står øverst i siden, intet sidder fast på skærmen (heller ikke felter låst i tilpasseren og «Gem»), og Grydelil er skjult.
+- Topbjælken er væk. Beskeder vises stadig øverst. «Genindlæs appen» ligger under «Mere». Forsiden nås med «Tilbage» (og «Kogebog» i sidebjælken).
+- Alt, der sidder fast nederst (Grydelil, «Gem», trin for trin, tilpasserens knapper), er løftet over bjælken med `--nav-b`. Trin for trin viser ikke navigationen.
+- Nyt ikon: `kalender` (Madplan).
+- Beslutning: «Hvad kan jeg lave?» beholder sit fulde navn i bjælken (to linjer à 12 px), så siden og bjælken hedder det samme.
+
 ## 1.3.0 · Fase 1c: brug og tekster
 - Fjern en ingrediens (og fjern en ting i «Tjek ingredienserne») viser «Fortryd» i beskeden. Beskeder står i 4 sekunder, og dem med «Fortryd» i 8.
 - Fejl står, til man trykker «Luk», handler eller skifter side, har kant og knap (ikke kun farve) og siger, hvad der skete, og hvad man gør. Fejl i `tilpas.js` er ikke ændret, fordi tilpasseren er et eget system.

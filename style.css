@@ -917,7 +917,7 @@ body[data-side=lav] #nav { display: none; }
   #nav a .ikon { width: 22px; height: 22px; }
   main { padding-top: 32px; }
   #hjaelper, #hjaelper-vis { display: none !important; }
-  #form > button[type=submit] { position: static; }
+  #form > button[type=submit] { position: static; margin-top: 0; } /* afkrydsningen over knappen ender 12 px under en række, så knappen står på nettet uden egen margen */
   html { scroll-padding: 16px 0; }
 }
 @media print { #nav { display: none !important; } }
