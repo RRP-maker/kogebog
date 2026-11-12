@@ -6,7 +6,7 @@
 // Ændringen gælder alle steder, hvor den samme tekst står. Den gemmes i Supabase (tabellen «tilpasning») og dermed på alle enheder.
 // Mangler tabellen, gemmes den kun på denne enhed.
 const Tilpas = (() => {
-  const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small';
+  const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret'; // de to sidste: dagene og retternes felter på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
   const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', G = 16, FLYT = VALG + ', ' + KORT; // opskrifter kan ikke tilpasses
@@ -35,8 +35,9 @@ const Tilpas = (() => {
   // Ældre placeringer («dx,dy») gælder en iPhone-kolonne på 340 px og regnes om til en kant og en afstand.
   const REF = 340;
   const kolonne = () => { const m = document.querySelector('main'), r = m.getBoundingClientRect(), cs = getComputedStyle(m); return { l: r.left + parseFloat(cs.paddingLeft), r: r.right - parseFloat(cs.paddingRight) }; };
-  function dxAf(p, natL, w) {
+  function dxAf(p, natL, w, inde) {
     if (!p) return 0;
+    if (inde) return p[0];
     const K = kolonne(); let kant, afst;
     if (p.length >= 4) { kant = p[2]; afst = p[3]; }
     else {
@@ -48,7 +49,7 @@ const Tilpas = (() => {
   function plac(el, p, fast) {
     if (!fast) {
       fjernFast(el); el.style.translate = ''; el._dx = 0;
-      if (p) { const r0 = el.getBoundingClientRect(); el._dx = dxAf(p, r0.left, r0.width); el.style.translate = `${el._dx}px ${p[1]}px`; }
+      if (p) { const r0 = el.getBoundingClientRect(); el._dx = dxAf(p, r0.left, r0.width, !!indeI(el)); el.style.translate = `${el._dx}px ${p[1]}px`; }
       holdInde(el, p, false); return;
     }
     let ph = el._ph;
@@ -62,9 +63,13 @@ const Tilpas = (() => {
     if (el.dataset.fs) ph.dataset.fs = el.dataset.fs; else delete ph.dataset.fs;
     ph.style.fontSize = el.style.fontSize; ph.style.display = el.style.display;
     const r = ph.getBoundingClientRect(); if (!r.width) return;
-    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (el._dx = dxAf(p, r.left, r.width))) + 'px', top: (r.top + scrollY + (p ? p[1] : 0)) + 'px', width: r.width + 'px', zIndex: '19' });
+    Object.assign(el.style, { position: 'fixed', margin: '0', translate: 'none', left: (r.left + (el._dx = dxAf(p, r.left, r.width, !!indeI(el)))) + 'px', top: (r.top + scrollY + (p ? p[1] : 0)) + 'px', width: r.width + 'px', zIndex: '19' });
     holdInde(el, p, true);
   }
+  // Felter inde i et felt (retterne i en dag på Madplan) følger forælderens gitter: 16 px på tværs og rækker à 32 px, målt fra forældrefeltets indre kant.
+  // Deres placering gemmes som en forskydning, så den passer til alle dage.
+  const indeI = el => el.matches('.mp-ret') ? el.parentElement.closest('.mp-dagfelt') : null;
+  const ankre = el => { const f = indeI(el); if (!f) return null; const r = f.getBoundingClientRect(), cs = getComputedStyle(f); return { x: r.left + scrollX + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft), y: r.top + scrollY + parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop) }; };
   const raster = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--raster')) || 0;
   const fase = el => el.matches('.kort, .knap, .tilbage, .fane') ? (Math.round(el.offsetHeight / 32) === 1 ? 28 : 12) : 0;
   const STR = [[17, 'Lille'], [20, 'Normal'], [24, 'Stor'], [34, 'Størst']]; // faste skriftstørrelser i px. 34 er skriften på forsidens faner.
@@ -167,7 +172,7 @@ const Tilpas = (() => {
         return;
       }
       let k = el.dataset.org;
-      if (el.matches('.kort')) k = el.closest('#ark') ? null : 'kort:' + (el.getAttribute('href') || el.textContent.trim().slice(0, 40));
+      if (el.matches('.kort')) k = el.closest('#ark') ? null : el.dataset.tpid || 'kort:' + (el.getAttribute('href') || el.textContent.trim().slice(0, 40)); // felter med data-tpid bruger det
       const p = !el.matches(FAST) && k && get(k) && get(k).p;
       if (k) el.dataset.flyt = k; else delete el.dataset.flyt;
       const fast = !el.matches(FAST) && !!k && erFast(el, k), o = (k && get(k)) || {};
@@ -335,7 +340,7 @@ const Tilpas = (() => {
   }
   function genplacer(k) {
     const el = document.querySelector(`[data-flyt="${CSS.escape(k)}"]`), p = get(k) && get(k).p; if (!el || !p) return;
-    const r = el.getBoundingClientRect(), rast = raster(), f = fase(el), T = r.top + (el.hasAttribute('data-laast') ? 0 : scrollY), Y = rast + f + Math.round((T - rast - f) / 32) * 32, dy = Y - T;
+    const r = el.getBoundingClientRect(), an = ankre(el), rast = an ? an.y : raster(), f = fase(el), T = r.top + (el.hasAttribute('data-laast') ? 0 : scrollY), Y = rast + f + Math.round((T - rast - f) / 32) * 32, dy = Y - T;
     if (Math.abs(dy) > .5) gem(k, { ...get(k), p: [p[0], Math.round((p[1] + dy) * 100) / 100, ...p.slice(2)] }, true);
   }
   // Træk: hold fingeren stille et øjeblik, så løfter feltet sig, og det følger fingeren og falder på gitteret
@@ -350,6 +355,7 @@ const Tilpas = (() => {
     if (d.fast) { const q = d.el._ph.getBoundingClientRect(); d.nx = q.left; d.natDoc = q.top + scrollY; } // fastlåst: pladsholderen viser, hvor feltet ville stå
     else { d.nx = r.left - d.dx0 - d.kx; d.natDoc = r.top - d.p0[1] + scrollY; }
     d.rast = raster(); d.fase = fase(d.el); d.xo = m.getBoundingClientRect().left + parseFloat(getComputedStyle(m).paddingLeft) + scrollX;
+    const an = ankre(d.el); if (an) { d.rast = an.y; d.xo = an.x; } // inde i et felt: forælderens gitter
     d.stat = getComputedStyle(d.el).position === 'static'; if (d.stat) d.el.style.position = 'relative';
     d.el.classList.add('traekker');
     gitter().style.backgroundPosition = `${d.xo - scrollX - 8}px ${d.rast + d.fase - (d.fast ? 0 : scrollY) - 16}px`;
@@ -385,7 +391,8 @@ const Tilpas = (() => {
     const g = document.getElementById('gitter'); if (g) g.remove();
     if (d.ulovlig) { d.el.classList.remove('ulovlig'); anvend(); toast('Her ligger tekst, der ikke kan tilpasses. Prøv et andet sted.'); return; }
     const k = d.el.dataset.flyt, { p, ...rest } = get(k) || {};
-    if (d.p && (d.p[0] || d.p[1])) { // husk kanten: venstre eller højre, og afstanden fra den
+    if (d.p && (d.p[0] || d.p[1]) && indeI(d.el)) rest.p = [d.p[0], d.p[1]];
+    else if (d.p && (d.p[0] || d.p[1])) { // husk kanten: venstre eller højre, og afstanden fra den
       const K = kolonne(), w = d.el.getBoundingClientRect().width, L = d.nx + d.p[0], hoj = L + w / 2 > (K.l + K.r) / 2 ? 1 : 0;
       rest.p = [d.p[0], d.p[1], hoj, Math.round((hoj ? K.r - (L + w) : L - K.l) * 100) / 100];
     }

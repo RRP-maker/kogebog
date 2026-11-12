@@ -78,21 +78,22 @@ const Madplan = (() => {
   }
   const manglerTekst = x => x.mangler.length ? 'Mangler: ' + x.mangler.join(', ') : 'Du har det hele';
   function slotHtml(d, i, s) {
-    if (!d.paa[s]) return `<div class="kort mp-ret mp-av"><strong>${NAVN[s]}</strong><span>Er ikke med</span><div class="rakke"></div></div>`;
+    if (!d.paa[s]) return `<div class="kort mp-ret mp-av tekst-m" data-tpid="mp-ret-${s}"><strong>${NAVN[s]}</strong><span>Er ikke med</span><div class="rakke"></div></div>`;
     const x = d[s] ? P.get(d[s]) : null, info = x ? NAVN[s] + ' · ' + manglerTekst(x) : NAVN[s];
-    return `<div class="kort mp-ret"><strong>${x ? `<a href="#/opskrifter/${x.r.id}" title="${esc(x.r.titel)}">${esc(x.r.titel)}</a>` : d[s] ? 'Retten findes ikke mere' : 'Ingen ret endnu'}</strong>
+    return `<div class="kort mp-ret tekst-m" data-tpid="mp-ret-${s}"><strong>${x ? `<a href="#/opskrifter/${x.r.id}" title="${esc(x.r.titel)}">${esc(x.r.titel)}</a>` : d[s] ? 'Retten findes ikke mere' : 'Ingen ret endnu'}</strong>
       <span title="${esc(info)}">${esc(info)}</span>
-      <div class="rakke"><button type="button" class="knap mini" data-tpid="mp-udskift" data-h="mpUdskift" data-v="${i}:${s}">${d[s] ? 'Udskift' : 'Vælg ret'}</button></div></div>`;
+      <div class="rakke"><button type="button" class="knap mini" data-tpid="${d[s] ? 'mp-udskift' : 'mp-vaelg-ret'}" data-h="mpUdskift" data-v="${i}:${s}">${d[s] ? 'Udskift' : 'Vælg ret'}</button></div></div>`;
   }
-  const dagHtml = (d, i) => `<section class="kort mp-dagfelt"><h3 class="tekst-l">Dag ${i + 1}</h3>
+  const DAGORD = ['en', 'to', 'tre', 'fire', 'fem', 'seks', 'syv', 'otte', 'ni', 'ti', 'elleve', 'tolv', 'tretten', 'fjorten']; // id'er har ingen tal
+  const dagHtml = (d, i) => `<section class="kort mp-dagfelt tekst-l" data-tpid="mp-dagfelt-${DAGORD[i]}"><h3 class="tekst-l">Dag ${i + 1}</h3>
       <div class="mp-dagchips" role="group" aria-label="Dag ${i + 1}">${SLOTS.map(s => `<button type="button" class="chip${d.paa[s] ? ' valgt' : ''}" data-tpid="mp-dag-${s}" data-h="mpDagSlot" data-v="${i}:${s}" aria-pressed="${!!d.paa[s]}">${NAVN[s]}</button>`).join('')}</div>
       ${SLOTS.map(s => slotHtml(d, i, s)).join('')}</section>`;
   function tegn() {
     const pl = ST.plan;
     const har1 = pl.some(d => SLOTS.some(s => d[s]));
-    $('#mp-knapper').innerHTML = `<button type="button" class="knap mini" data-tpid="mp-fortryd" data-h="mpFortryd"${fortrydes.length ? '' : ' disabled'}>‹ Fortryd</button>
-      <button type="button" class="knap mini" data-tpid="mp-gentag" data-h="mpGentag"${gentages.length ? '' : ' disabled'}>Gentag ›</button>
-      <button type="button" class="knap mini" data-tpid="mp-ryd" data-h="mpRyd"${har1 ? '' : ' disabled'}>Ryd madplan</button>`;
+    $('#mp-knapper').innerHTML = `<button type="button" class="knap felt felt-s" data-tpid="mp-fortryd" data-h="mpFortryd">↶ Fortryd</button>
+      <button type="button" class="knap felt felt-s" data-tpid="mp-gentag" data-h="mpGentag">Gentag ↷</button>
+      <button type="button" class="knap felt felt-s" data-tpid="mp-ryd" data-h="mpRyd">Ryd madplan</button>`;
     $('#mp-alle').innerHTML = SLOTS.map(s => { const n = pl.filter(d => d.paa[s]).length; return `<button type="button" class="chip${n === pl.length ? ' valgt' : n ? ' delvis' : ''}" data-tpid="mp-alle-${s}" data-h="mpAlle" data-v="${s}" aria-pressed="${n === pl.length}">${NAVN[s]}</button>`; }).join('')
       + (blandet() ? '<span class="chip valgt mp-blandet">Blandet</span>' : '');
     const koeb = new Map(); // stamme -> { navn, antal }
@@ -139,7 +140,7 @@ const Madplan = (() => {
     P = new Map(pool(() => true).map(x => [x.r.id, x]));
     fortrydes = []; gentages = [];
     app.innerHTML = `<a class="tilbage" href="#/forslag">‹ Tilbage</a><h1>Madplan</h1>
-      <div class="rakke" id="mp-knapper"></div>
+      <div id="mp-knapper"></div>
       <button type="button" class="knap primaer felt felt-m" data-tpid="mp-generer" data-h="mpGenerer">${ik('gryde')} Generer ny madplan</button>
       <h2>Hvad skal med hver dag?</h2>
       <div class="filter mp-alle" id="mp-alle"></div>
@@ -161,12 +162,12 @@ const Madplan = (() => {
     gem(); tegn();
   };
   const goer = f => { snap(); f(); gem(true); tegn(); }; // en ændring af planen, som kan fortrydes
-  const flyt = (fra, til) => { if (!fra.length) return; til.push(JSON.stringify(ST.plan)); ST.plan = JSON.parse(fra.pop()); ST.dage = ST.plan.length; const inp = $('.mp-inp[data-k="dage"]'); if (inp) inp.value = vaerdi('dage'); gem(true); tegn(); };
+  const flyt = (fra, til, tom) => { if (!fra.length) return toast(tom); til.push(JSON.stringify(ST.plan)); ST.plan = JSON.parse(fra.pop()); ST.dage = ST.plan.length; const inp = $('.mp-inp[data-k="dage"]'); if (inp) inp.value = vaerdi('dage'); gem(true); tegn(); };
   const fyldTomme = (s) => ST.plan.forEach((d, i) => { if (d.paa[s] && !d[s]) { const k = kandidater(i, s)[0]; if (k) d[s] = k.r.id; } });
   Object.assign(H, {
-    mpFortryd() { flyt(fortrydes, gentages); },
-    mpGentag() { flyt(gentages, fortrydes); },
-    mpRyd() { goer(() => ST.plan.forEach(d => SLOTS.forEach(s => { d[s] = null; }))); toast('Madplanen er ryddet'); },
+    mpFortryd() { flyt(fortrydes, gentages, 'Der er ikke noget at fortryde.'); },
+    mpGentag() { flyt(gentages, fortrydes, 'Der er ikke noget at gentage.'); },
+    mpRyd() { if (!ST.plan.some(d => SLOTS.some(s => d[s]))) return toast('Madplanen er allerede tom.'); goer(() => ST.plan.forEach(d => SLOTS.forEach(s => { d[s] = null; }))); toast('Madplanen er ryddet'); },
     mpGenerer() { goer(nyPlan); toast('Ny madplan lavet'); },
     mpTrin(el) { const [k, d] = el.dataset.v.split(':'); saet(k, vaerdi(k) + Number(d)); },
     mpAlle(el) { // slå et felt til eller fra på alle dage. Når det slås til, får de tomme felter en ret.

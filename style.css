@@ -787,12 +787,16 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 
 /* Madplan: dag med to retter */
 
-/* Madplan som gitter: alle dage er lige store, med tre faste felter (hovedret, salat, tilbehør) i hver */
+/* Madplan som gitter: alle dage er lige store, med tre faste felter (hovedret, salat, tilbehør) i hver.
+   Dagens felt: 20 rækker (margen 12 + 608 + 20). Et felt i dagen: 5 rækker (margen 12 + 128 + 20), 3 tekstrækker i feltet. */
+#mp-plan { display: flex; flex-direction: column; }
+.mp-knapper, #mp-knapper { display: flex; flex-wrap: wrap; gap: 0 8px; }
 .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 0 12px; align-items: start; }
 .mp-dagfelt { display: flex; flex-direction: column; min-width: 0; }
 .mp-dagfelt h3 { margin: 0; }
 .mp-dagchips { display: flex; gap: 6px; flex-wrap: nowrap; }
-.mp-ret.kort { margin: var(--m) 0 0; box-sizing: border-box; height: 128px; min-width: 0; overflow: hidden; }
+.mp-ret.kort { margin: var(--m) 0 var(--pt); box-sizing: border-box; height: 128px; min-width: 0; overflow: hidden; }
+.mp-ret strong { font-size: inherit; } /* teksten følger feltets størrelse, så den kan tilpasses */
 .mp-ret strong, .mp-ret > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mp-ret .rakke { margin: 0; height: 32px; }
 .mp-av { opacity: .5; }
@@ -801,7 +805,7 @@ button.kort { width: 100%; text-align: left; font: inherit; cursor: pointer; }
 .kort.valgt { outline: 2px solid var(--gryde-mork); }
 .chip.delvis { border-style: dashed; }
 .mp-blandet { display: inline-flex; align-items: center; padding: 0 12px; }
-#mp-knapper { margin-bottom: 0; }
+
 /* Forslag til kategori under feltet */
 .katvalg { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 var(--pt); }
 .katvalg .chip { height: 32px; font-size: 18px; position: relative; }
