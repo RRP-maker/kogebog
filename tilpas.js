@@ -273,8 +273,8 @@ const Tilpas = (() => {
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas, css) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${css(c)}" aria-label="${NAVN[c] || c}"></button>`).join('')}</div>`;
     const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
-      <label for="tp-tekst">Tekst</label>
-      <input type="text" id="tp-tekst" value="${esc(o.t || el.dataset.orgtekst || '')}" maxlength="200" autocomplete="off">
+      ${el.matches('.mp-dagfelt, .mp-ret') ? '' : `<label for="tp-tekst">Tekst</label>
+      <input type="text" id="tp-tekst" value="${esc(o.t || el.dataset.orgtekst || '')}" maxlength="200" autocomplete="off">`}
       <label>Tekststørrelse</label>
       <div class="rakke venstre">${STR.map(([v, n]) => `<button class="chip${v === st ? ' valgt' : ''}" type="button" data-st="${v}">${n}</button>`).join('')}</div>
       ${felt ? `<label>Feltets størrelse</label><div class="rakke venstre">${FELTSTR.map(([v, n]) => `<button class="chip${v === z ? ' valgt' : ''}" type="button" data-fz="${v}">${n}</button>`).join('')}</div>` : ''}
@@ -300,7 +300,7 @@ const Tilpas = (() => {
       if (a.dataset.tp !== 'nulstil') {
         if (a.dataset.tp === 'skjul') x = !x;
         if (x) ny.x = true;
-        const t = $('#tp-tekst', d).value.trim();
+        const t = $('#tp-tekst', d) ? $('#tp-tekst', d).value.trim() : ''; // dagene og deres felter har ingen tekst, der kan rettes
         if (t && t !== el.dataset.orgtekst) ny.t = t;
         if (o.s || st !== st0) ny.s = st;
         if (f !== std.f) ny.f = f; // en farve, der er appens egen, gemmes ikke
