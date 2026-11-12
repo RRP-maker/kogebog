@@ -115,6 +115,10 @@ main > .knap.stor { align-self: stretch; }
 .knap.stor { font-size: 24px; padding: 0 24px; border-radius: 32px; }
 .rund { width: 64px; height: 64px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 24px; padding: 0; flex: none; }
 .rakke { display: flex; flex-wrap: wrap; gap: 32px 10px; margin: var(--m) 0 var(--pt); align-items: flex-start; }
+/* To knapper side om side, der deler bredden. Teksten må gå på to linjer. */
+.rakke.to-knapper { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.to-knapper .knap { min-width: 0; padding: 0 12px; line-height: 26px; text-align: left; }
+.to-knapper .knap svg { flex: none; }
 @media (hover: hover) { .knap:hover:not(:disabled):not(.primaer), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: var(--flade-hover); } .knap.primaer:hover:not(:disabled) { background: var(--primaer-hover); } }
 
 /* Forside: tre faneblade som sedler */

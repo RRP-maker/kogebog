@@ -237,5 +237,81 @@ const Hjemme = (() => {
     }
     return { rettet, fjernet };
   }
+  // ---------- Tilføj ingredienser med Claude: tag billeder af køleskab og skabe, Claude laver en liste ----------
+  const besked = () => `Jeg sender billeder af mit køleskab, min fryser og mine skabe. Find alle madvarer, du kan se, til min kogebog-app.
+
+Regler:
+- Skriv navnet på dansk, kort og simpelt: kun selve varen, fx "gulerødder", "mælk", "hakkede tomater".
+- Skriv ikke mærker. Skriv "havregryn", ikke "Ota havregryn".
+- Gæt mængden, hvis du kan. Brug en af disse enheder: ${ENH.join(', ')}. Kan du ikke se mængden, så skriv null.
+- Tag ikke ting med, der ikke er mad, fx opvaskemiddel.
+- Er du i tvivl om en vare, så tag den med og skriv "?" sidst i navnet.
+
+Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
+[
+  { "navn": "gulerødder", "mængde": 4, "enhed": "stk" },
+  { "navn": "mælk", "mængde": 1, "enhed": "l" },
+  { "navn": "ketchup", "mængde": null, "enhed": null }
+]
+
+Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
+  // Læser Claudes svar: en liste af { navn, mængde, enhed }, eller bare navne
+  function laesListe(tekst) {
+    const t = String(tekst).replace(/[“”]/g, '"'), a = t.search(/[[{]/), b = Math.max(t.lastIndexOf(']'), t.lastIndexOf('}'));
+    if (a === -1 || b <= a) return null;
+    let j; try { j = JSON.parse(t.slice(a, b + 1)); } catch (e) { return null; }
+    if (!Array.isArray(j)) j = j.varer || j.ingredienser || Object.entries(j).map(([navn, v]) => typeof v === 'object' && v ? { navn, ...v } : { navn });
+    if (!Array.isArray(j)) return null;
+    return j.map(x => typeof x === 'string' ? { navn: x } : x).filter(x => x && x.navn).map(x => {
+      const enh = String(x.enhed || '').toLowerCase(), m = Number(x['mængde'] ?? x.maengde ?? x.antal);
+      const ok = ENH.includes(enh) && m > 0;
+      return { navn: norm(String(x.navn).replace(/\?+$/, '')), maengde: ok ? m : null, enhed: ok ? enh : 'stk' };
+    }).filter(x => x.navn);
+  }
+  function claudeArk() {
+    const q = encodeURIComponent(besked());
+    const d = ark(`<h2>Tilføj med Claude</h2>
+      <small>Tag billeder af dit køleskab og dine skabe. Claude laver en liste, som du sætter ind her.</small>
+      <ol class="trin vejledning">
+        <li>Åbn Claude. Beskeden står klar.
+          <div class="rakke venstre"><a class="knap mini" data-tpid="hjc-aabn" href="https://claude.ai/new?q=${q}" target="_blank" rel="noopener">Åbn Claude ›</a>
+          <button type="button" class="knap mini" data-tpid="hjc-kopier" data-h="hjcKopier">Kopiér besked</button></div></li>
+        <li>Tag billeder af køleskab, fryser og skabe, og sæt dem på hos Claude. Står feltet tomt, så sæt beskeden ind.</li>
+        <li>Kopiér Claudes svar, og sæt det ind her:
+          <textarea id="hjcsvar" class="felt-s" rows="1" data-husk="hjcSvar" placeholder='[ { "navn": "gulerødder" } ]' aria-label="Claudes svar"></textarea>
+          <div class="felt-knapper"><button type="button" class="knap mini" data-tpid="hjc-saet" data-h="saetInd" data-v="hjcsvar">Sæt ind</button></div></li>
+      </ol>
+      <div id="arkfejl"></div>
+      <div class="rakke"><button type="button" class="knap mini" data-tpid="luk" data-h="lukArk">Luk</button><button type="button" class="knap mini gron" data-tpid="hjc-gem" data-h="hjcGem">Tilføj til listen</button></div>`);
+    const f = $('#hjcsvar', d);
+    f.value = lager.hent('hjcSvar', '');
+    f.addEventListener('input', () => lager.gem('hjcSvar', f.value));
+    $('.ark-bag', d).addEventListener('click', lukArk);
+  }
+  Object.assign(H, {
+    hjClaude: claudeArk,
+    async hjcKopier() {
+      let ok = false;
+      try { await navigator.clipboard.writeText(besked()); ok = true; } catch (e) { ok = await kopier(besked()); }
+      toast(ok ? 'Beskeden er kopieret' : 'Beskeden kunne ikke kopieres. Prøv igen.');
+    },
+    async hjcGem() {
+      const liste = laesListe($('#hjcsvar').value);
+      if (!liste || !liste.length) { $('#arkfejl').innerHTML = '<div class="fejlboks">Svaret kan ikke læses. Kopiér hele Claudes svar, og prøv igen.</div>'; return; }
+      let ny = 0, fandtes = 0, fejl = 0;
+      for (const x of liste) {
+        if (dublet(x.navn)) { fandtes++; continue; }
+        try {
+          const ing = await findEllerOpret(x.navn);
+          const [h] = await api('hjemme', { method: 'POST', body: { ingrediens_id: ing.id, maengde: x.maengde, enhed: x.enhed } });
+          D.hj.push(h); ny++;
+        } catch (e) { console.error(x.navn, e); if (/duplicate|23505|409/.test(String(e.message))) fandtes++; else fejl++; }
+      }
+      lager.gem('hjcSvar', ''); lukArk(); tegn();
+      toast([ny && `${ny} tilføjet`, fandtes && `${fandtes} stod der allerede`, fejl && `${fejl} kunne ikke gemmes`].filter(Boolean).join(', ') || 'Der var ikke noget nyt');
+      if (ny) Hjaelper.glad();
+    }
+  });
+
   return { vis, navne, traek };
 })();

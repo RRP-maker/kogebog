@@ -829,12 +829,14 @@ async function forslagSide() {
     <div id="forslag-nu"></div>
     <a class="knap felt felt-m" data-tpid="madplan" href="#/forslag/madplan">${ik('gryde')} Lav en madplan</a>
     <div id="hj-boks"></div>
-    <button type="button" class="knap" data-h="sorterAndet">${ik('gnist')} Sortér og ret ingredienser med Claude</button>
+    <div class="rakke to-knapper"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button>
+      <button type="button" class="knap" data-tpid="sorter-claude" data-h="sorterAndet">${ik('gnist')} Sortér med Claude</button></div>
     <div id="forslag-resten"></div>
     <button type="button" class="knap" data-h="ingOversigt">${ik('tag')} Se alle ingredienser</button>`;
   Hjaelper.side([
     { tekst: 'Skriv det, du har derhjemme. Ét ord i hvert felt.', maal: '#hj-boks', bev: 'salto' },
     { tekst: 'Her kommer de retter, du kan lave nu.', maal: '#forslag-nu', bev: 'skridt', valgfri: true },
+    { tekst: 'Tag billeder af dit køleskab. Så skriver Claude listen for dig.', maal: '[data-h=hjClaude]', bev: 'skridt' },
     { tekst: 'Står der noget skævt? Claude kan rydde op.', maal: '[data-h=sorterAndet]', bev: 'dans' }]);;
   await Hjemme.vis($('#hj-boks'), tegnForslag);
 }
