@@ -2,6 +2,17 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.5.0 · Fase 3b: opskrifter og en opskrift
+- To ruder som indstilling («Vis to ruder på brede skærme» under Indstillinger). På skærme fra 1024 px står opskriftslisten til venstre og den valgte opskrift til højre. Listen ruller for sig og bliver stående, når man vælger en ny opskrift. Kan slås til og fra uden genindlæsning.
+- Er ruden bred nok (ca. 720 px), står ingredienser til venstre og trin til højre i opskriften.
+- Tæt opskriftsliste: to linjer pr. opskrift (navn + kategori, køkken og tid) i stedet for kort, med bogstav-overskrifter. To kolonner fra 744 px, når to ruder ikke vises. Listen er ca. 13.700 px høj på iPhone mod 31.400 før.
+- «Favoritter» er et filter i listen.
+- Filtre: på smalle skærme toner rækken ud i højre side, så man ser, at der er flere. Fra 744 px står de på flere linjer.
+- Opskriftssiden: stjernen står ved titlen, «Vores side» er flyttet ned under stjerner og tips, og «Slet» står for sig selv nederst.
+- Beslutning: To ruder er som standard slået til med mus (Mac) og fra med touch (iPad). Valget gemmes på enheden.
+- Beslutning: «Vores side» er flyttet ned (stod åbent i planen). Det kan let flyttes tilbage.
+- Beslutning: Ruderne laves uden container queries, fordi de ville flytte felter, der er låst på skærmen i tilpasseren. Bredden afgøres med media queries.
+
 ## 1.4.1 · Rettelser til navigationen
 - iPhone på højkant: bjælken sidder lavere (tæt på hjemmestregen). iPad og iPhone på langs er uændret.
 - Tilpasserens knap står i navigationen med ikon og lille tekst, når «Tilpas siden» er slået til. Den gør det samme som før (pause og tilpas igen). Krydset «Forlad tilpasseren» er fjernet. Tilpasseren slås fra under Indstillinger.

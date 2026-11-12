@@ -923,7 +923,7 @@ body.tilpas-menu[data-side=lav] #nav #tilpas-knap { flex-direction: column; gap:
 
 /* ---------- Opskrifter og en opskrift (opdatering 3b) ---------- */
 /* Tæt liste: to tekstrækker pr. opskrift (navn + kategori, køkken og tid). Notesbogens linjer skiller dem, så der er ingen kort. */
-.oplist { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 32px; }
+#liste.oplist { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 32px; }
 .oprk { display: block; min-width: 0; height: 64px; margin: 0 -8px; padding: 0 8px; border-radius: 12px; color: inherit; text-decoration: none; touch-action: manipulation; }
 .oprk strong, .oprk > span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 32px; }
 .oprk strong { font: 24px/32px var(--hoved); font-weight: 400; }
@@ -937,7 +937,7 @@ body.tilpas-menu[data-side=lav] #nav #tilpas-knap { flex-direction: column; gap:
 .oplist-bogstav:first-child { margin-top: 0; }
 .chip .ikon { width: 16px; height: 16px; vertical-align: -.1em; }
 /* Uden to ruder: to kolonner, når der er plads (iPad) */
-@media (min-width: 744px) { body:not(.ruder-vist) .oplist { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 744px) { body:not(.ruder-vist) #liste.oplist { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Filtre: på smalle skærme ruller de vandret og toner ud i højre side, så man ser, at der er flere. På brede skærme står de på flere linjer. */
 .filter { padding-right: 34px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); }
