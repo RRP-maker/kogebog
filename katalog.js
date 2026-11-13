@@ -35,7 +35,7 @@ const Katalog = (() => {
       const valg = sorteret().map(k => `<option value="${k.id}">${esc(katNavn(k))}</option>`).join('');
       const d = ark(`<h2>Hvilken kategori?</h2><small>Vælg en kategori til hver ny ingrediens. Springer du over, står de under «Ikke sorteret».</small>
         ${uk.map((n, i) => `<label for="kn${i}">${esc(n)}</label><select id="kn${i}" class="felt felt-m" data-n="${i}"><option value="">${IKKE_SORTERET}</option>${valg}</select>`).join('')}
-        <div class="rakke"><button type="button" class="knap" data-kat="spring">Spring over</button><button type="button" class="knap primaer" data-tpid="gem" data-kat="gem">Gem</button></div>`);
+        <div class="rakke"><button type="button" class="knap" data-kat="spring">Spring over</button><button type="button" class="knap gem" data-tpid="gem" data-kat="gem">Gem</button></div>`);
       d.addEventListener('click', e => {
         const a = e.target.closest('[data-kat]');
         if (!a && !e.target.closest('.ark-bag')) return;
@@ -111,10 +111,10 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
         <li>Kopiér Claudes svar, og sæt det ind her:
           <textarea id="katsvar" class="felt-s" rows="1" data-husk="katSvar" placeholder='{ "gulerødder": { "kategori": "Grøntsager" } }' aria-label="Claudes svar"></textarea>
           <div class="felt-knapper"><button type="button" class="knap mini" data-tpid="kat-saet" data-h="saetInd" data-v="katsvar">Sæt ind</button>
-            <span class="hoejre"><button type="button" class="knap mini" data-tpid="kat-fortryd" data-h="fortrydRyd" data-v="katsvar" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="kat-ryd" data-h="rydFelt" data-v="katsvar">Ryd</button></span></div></li>
+            <span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="kat-fortryd" data-h="fortrydRyd" data-v="katsvar" hidden')}<button type="button" class="knap mini slet" data-tpid="kat-ryd" data-h="rydFelt" data-v="katsvar">Ryd</button></span></div></li>
       </ol>
       <div id="arkfejl"></div>
-      <div class="rakke"><button type="button" class="knap mini" data-tpid="luk" data-h="lukArk">Luk</button><button type="button" class="knap mini gron" data-tpid="gem" data-h="katGem">Gem kategorier</button></div>`);
+      <div class="rakke"><button type="button" class="knap mini annuller" data-tpid="annuller" data-h="lukArk">Annuller</button><button type="button" class="knap mini gem" data-tpid="gem" data-h="katGem">Gem kategorier</button></div>`);
     $('#katsvar', d).value = lager.hent('katSvar', '');
     visBesked();
     $('.ark-bag', d).addEventListener('click', lukArk);
@@ -146,7 +146,7 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
       await hent();
       const d = ark(`<h2>Ingredienser i databasen</h2><small>${ing.length} ${ing.length === 1 ? 'ingrediens' : 'ingredienser'} i alt.</small>
         ${oversigtHtml()}
-        <div class="rakke"><button type="button" class="knap" data-tpid="luk" data-h="lukArk">Luk</button></div>`);
+        <div class="rakke">${Ikoner.rund('luk', 'Luk', 'data-tpid="luk" data-h="lukArk"')}</div>`);
       $('.ark-bag', d).addEventListener('click', lukArk);
     },
     katModus() {

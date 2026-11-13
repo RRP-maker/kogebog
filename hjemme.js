@@ -154,9 +154,9 @@ const Hjemme = (() => {
         <div class="hj-katvalg">${kat.map(k => `<button type="button" class="chip${k.id === i.kategori_id || (!i.kategori_id && k.navn_norm === 'andet') ? ' valgt' : ''}" data-h="hjVaelgKat" data-v="${k.id}">${esc(katNavn(k))}</button>`).join('')}
           ${kat.some(k => k.navn_norm === 'andet') ? '' : `<button type="button" class="chip${i.kategori_id ? '' : ' valgt'}" data-h="hjVaelgKat" data-v="">${IKKE_SORTERET}</button>`}</div>
         <label for="hj_nykat">Ny kategori</label>
-        <div class="linjeform"><input id="hj_nykat" type="text" maxlength="30" autocomplete="off" placeholder="fx Brød"><button type="button" class="knap primaer" data-h="hjNyKat">Opret</button></div>
+        <div class="linjeform"><input id="hj_nykat" type="text" maxlength="30" autocomplete="off" placeholder="fx Brød"><button type="button" class="knap gem" data-h="hjNyKat">Gem</button></div>
         <div id="arkfejl"></div>
-        <div class="rakke"><button type="button" class="knap" data-tpid="luk" data-h="lukArk">Luk</button></div>`);
+        <div class="rakke">${Ikoner.rund('luk', 'Luk', 'data-tpid="luk" data-h="lukArk"')}</div>`);
       $('.ark-bag', d).addEventListener('click', lukArk);
     },
     hjVaelgKat(el) { return gemKat(valgtIng, el.dataset.v || null); },
@@ -296,7 +296,7 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
           <div class="felt-knapper"><button type="button" class="knap mini" data-tpid="hjc-saet" data-h="saetInd" data-v="hjcsvar">Sæt ind</button></div></li>
       </ol>
       <div id="arkfejl"></div>
-      <div class="rakke"><button type="button" class="knap mini" data-tpid="luk" data-h="lukArk">Luk</button><button type="button" class="knap mini gron" data-tpid="hjc-gem" data-h="hjcGem">Tilføj til listen</button></div>`);
+      <div class="rakke"><button type="button" class="knap mini annuller" data-tpid="annuller" data-h="lukArk">Annuller</button><button type="button" class="knap mini gem" data-tpid="hjc-gem" data-h="hjcGem">Tilføj til listen</button></div>`);
     const f = $('#hjcsvar', d);
     f.value = lager.hent('hjcSvar', '');
     f.addEventListener('input', () => lager.gem('hjcSvar', f.value));
@@ -367,8 +367,8 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
             ${kan ? `<label class="skift"><input type="checkbox" class="gn-ret"${x.ret ? ' checked' : ''}> <span>Ret til ${esc(mgdTekst(x.maengde, x.enhed))}</span></label>` : ''}
             <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen">×</button></div>`; }).join('')}` : ''}
       <div id="arkfejl"></div>
-      <div class="rakke"><button type="button" class="knap" data-tpid="gn-fortryd" data-h="gnFortryd">Annuller</button>
-        <button type="button" class="knap primaer" data-tpid="gn-gem" data-h="gnGem">${nye.length ? `Tilføj ${nye.length} ${nye.length === 1 ? 'ting' : 'ting'}` : 'Færdig'}</button></div>`;
+      <div class="rakke"><button type="button" class="knap annuller" data-tpid="gn-fortryd" data-h="gnFortryd">Annuller</button>
+        <button type="button" class="knap gem" data-tpid="gn-gem" data-h="gnGem">${nye.length ? `Tilføj ${nye.length} ${nye.length === 1 ? 'ting' : 'ting'}` : 'Færdig'}</button></div>`;
   }
   async function gennemgang() {
     const id = visning;
@@ -378,7 +378,7 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
     const [kat, ing, hj] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('hjemme?select=*&order=oprettet')]);
     if (id !== visning) return;
     D = { kat, ing, hj }; ved = null;
-    app.innerHTML = `<a class="tilbage" href="#/forslag">‹ Tilbage</a><h1>Tjek ingredienserne</h1>
+    app.innerHTML = `${Ikoner.tilbage('#/forslag')}<h1>Tjek ingredienserne</h1>
       <small>Claude fandt ${G.length} ${G.length === 1 ? 'ting' : 'ting'}. Ret navn og mængde, og fjern det, du ikke vil have. Først når du trykker på «Tilføj», bliver det gemt.</small>
       <div id="gn"></div>`;
     tegnGennemgang();

@@ -9,6 +9,43 @@
 
 :root {
   color-scheme: light;
+  /* ---------- Farver i to lag (opdatering 4a) ----------
+     1. Rå farver: navn efter råvaren, samme i begge temaer. Bruges KUN her i :root og i det mørke tema, aldrig i komponenter.
+     2. Roller: hvad farven betyder. Komponenter bruger kun roller. Hver rolle har flade, tekst på fladen (--paa-…) og kant.
+     Kontrast er beregnet (WCAG 2.2, se opdatering-4a-1): tekst mod flade mindst 4,5:1, kant mod papir mindst 3:1, i begge temaer. */
+  --raa-aeble: #2a7f3a; --raa-aeble-lys: #8fdc7a; --raa-aeble-moerk: #11240f;
+  --raa-smoer: #ffd95a; --raa-smoer-moerk: #946a00;
+  --raa-tomat: #cf3a24; --raa-tomat-lys: #ff8a75; --raa-tomat-moerk: #2e0d07;
+  --raa-mel: #ebe6d8; --raa-mel-kant: #7f7a6b; --raa-skifer: #3a4159; --raa-skifer-kant: #8d95b3;
+  --raa-blaabaer: #5a55c8; --raa-blaabaer-lys: #aeb0ff; --raa-blaabaer-moerk: #15133d;
+  --raa-blaek: #22386b; --raa-blaek-lys: #e9edf9; --raa-nat: #1a1f2e; --raa-hvid: #ffffff;
+  --raa-sovs: #f3ddd3; --raa-sovs-kant: #9a4b33; --raa-sovs-nat: #4a2c24; --raa-sovs-natkant: #d98a6e;
+  --raa-gulerod: #ffe2c7; --raa-gulerod-kant: #b85a10; --raa-gulerod-nat: #4d3319; --raa-gulerod-natkant: #f0a35c;
+  --raa-salat: #e3f1c9; --raa-salat-kant: #5c7a1c; --raa-salat-nat: #2f3d1c; --raa-salat-natkant: #a9c95f;
+  --raa-hindbaer: #fbd9e6; --raa-hindbaer-kant: #b8336f; --raa-hindbaer-nat: #4a2439; --raa-hindbaer-natkant: #f08ab8;
+  --raa-broed: #f1e3bd; --raa-broed-kant: #8a6a1e; --raa-broed-nat: #40351a; --raa-broed-natkant: #d1b25a;
+  --raa-hav: #d3ecf0; --raa-hav-kant: #1f7a8c; --raa-hav-nat: #1c3a42; --raa-hav-natkant: #6cc4d6;
+  --raa-lavendel: #ecebf2; --raa-lavendel-kant: #6a7396; --raa-lavendel-nat: #2c3247;
+  /* Handlinger: kun på knapper, altid med tekst eller ikon */
+  --gem: var(--raa-aeble); --paa-gem: var(--raa-hvid); --gem-kant: var(--raa-aeble);
+  --tilpas: var(--raa-smoer); --paa-tilpas: var(--raa-blaek); --tilpas-kant: var(--raa-smoer-moerk);
+  --slet: var(--raa-tomat); --paa-slet: var(--raa-hvid); --slet-kant: var(--raa-tomat);
+  --annuller: var(--raa-mel); --paa-annuller: var(--raa-blaek); --annuller-kant: var(--raa-mel-kant);
+  --hjaelp: var(--raa-blaabaer); --paa-hjaelp: var(--raa-hvid); --hjaelp-kant: var(--raa-blaabaer);
+  --hovedhandling: var(--raa-blaek); --paa-hovedhandling: var(--raa-hvid); --hovedhandling-kant: var(--raa-blaek); /* hovedhandling, der ikke gemmer (fx «Lav retten») */
+  /* Opskrifternes kategorier: kun som svag flade + kant, og navnet står der altid */
+  --paa-kat: var(--raa-blaek);
+  --kat-hovedret: var(--raa-sovs); --kat-hovedret-kant: var(--raa-sovs-kant);
+  --kat-forret: var(--raa-gulerod); --kat-forret-kant: var(--raa-gulerod-kant);
+  --kat-salat: var(--raa-salat); --kat-salat-kant: var(--raa-salat-kant);
+  --kat-dessert: var(--raa-hindbaer); --kat-dessert-kant: var(--raa-hindbaer-kant);
+  --kat-tilbehoer: var(--raa-broed); --kat-tilbehoer-kant: var(--raa-broed-kant);
+  --kat-drikke: var(--raa-hav); --kat-drikke-kant: var(--raa-hav-kant);
+  --kat-andet: var(--raa-lavendel); --kat-andet-kant: var(--raa-lavendel-kant);
+  --paa-valgt: var(--raa-hvid); --h-hvid: var(--raa-hvid); --h-plaster: #f3d9ad; --roeg-rgb: 225, 229, 236; --roeg-moerk-rgb: 150, 156, 170; /* Grydelils hvide, plaster og røg */
+  --plet1: 255, 217, 90; --plet2: 111, 183, 217; --plet3: 255, 157, 148; --plet4: 126, 211, 150; /* farvede pletter bag papiret */
+  --advarsel: var(--raa-tomat); /* fejl og ulovlige træk: samme rødt som Slet, altid med tekst */
+  --lys-rgb: 255, 255, 255; /* glassets lyskanter: hvidt lys, ikke en farve med betydning */
   /* Farveroller: lyst tema. Mørkt tema overskriver dem i [data-tema="moerk"] nederst i filen. */
   --papir: #fffdf5; --papir-rgb: 255, 253, 245; --linje: #cfe0f2; --margen: #f0a3a3;
   --blaek: #22386b; --blaek-rgb: 34, 56, 107; --blyant: #56638a; --skyg-rgb: 34, 56, 107; --skyg-hex: #22386b;
@@ -26,22 +63,19 @@
   --link: #0b5c9c; --stjerne-fra: #8089aa;
   --fejl-bg: #fff0ee; --fejl-tekst: #7a1f16;
   /* Rigtig Liquid Glass: næsten klart, med en svag hvid tone, sløring og lysbrydning af det bagved, en skarp lyskant foroven til venstre og en blød kant forneden til højre. Ingen farve af sig selv. */
-  --glas: linear-gradient(135deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .1) 55%, rgba(255, 255, 255, .24));
+  --glas: linear-gradient(135deg, rgba(var(--lys-rgb), .42), rgba(var(--lys-rgb), .1) 55%, rgba(var(--lys-rgb), .24));
   --glasfilter: blur(18px) saturate(1.9) brightness(1.05);
-  --glaskant: rgba(255, 255, 255, .6);
+  --glaskant: rgba(var(--lys-rgb), .6);
   --rude: rgba(34, 56, 107, .1); --rude-kant: rgba(34, 56, 107, .16); /* kortet med opskriftslisten (to ruder): en let farvet flade, så glasfelterne i det kan ses */
   --skygge: 0 1px 2px rgba(34, 56, 107, .14), 0 10px 30px rgba(34, 56, 107, .14);
   /* lyskant foroven, svag kant forneden: det, der får fladen til at ligne glas */
-  --glans: inset 1.5px 1.5px 1px rgba(255, 255, 255, .95), inset -1px -1px 1px rgba(255, 255, 255, .55), inset 0 0 18px rgba(255, 255, 255, .35), inset 0 -10px 16px -10px rgba(34, 56, 107, .1);
+  --glans: inset 1.5px 1.5px 1px rgba(var(--lys-rgb), .95), inset -1px -1px 1px rgba(var(--lys-rgb), .55), inset 0 0 18px rgba(var(--lys-rgb), .35), inset 0 -10px 16px -10px rgba(34, 56, 107, .1);
   --sheen: .5; --plet: 1;
-  --flade: rgba(255, 255, 255, .94); --flade-hover: rgba(255, 255, 255, .8); --hvid: #fff; --felt-bg: rgba(255, 255, 255, .4);
-  --boble: linear-gradient(135deg, rgba(255, 255, 255, .88), rgba(255, 255, 255, .66));
-  --gron-chip: rgba(160, 226, 178, .55);
+  --flade: rgba(var(--lys-rgb), .94); --flade-hover: rgba(var(--lys-rgb), .8); --hvid: #fff; --felt-bg: rgba(var(--lys-rgb), .4);
+  --boble: linear-gradient(135deg, rgba(var(--lys-rgb), .88), rgba(var(--lys-rgb), .66));
   --f1: linear-gradient(135deg, rgba(255, 217, 90, .82), rgba(255, 200, 60, .5));
   --f3: linear-gradient(135deg, rgba(255, 190, 182, .85), rgba(255, 157, 148, .5));
-  --valgt: linear-gradient(135deg, rgba(34, 56, 107, .92), rgba(34, 56, 107, .8)); --valgt-fast: #22386b; --sek: #56638a;
-  --primaer: linear-gradient(135deg, #cf3a24, #b02a17); --primaer-hover: linear-gradient(135deg, #b8301c, #98230f); --primaer-skygge: rgba(190, 45, 28, .32);
-  --gron: linear-gradient(135deg, #2a8049, #236f3f); --gron-hover: linear-gradient(135deg, #247040, #1b5f35);
+  --valgt: linear-gradient(135deg, rgba(34, 56, 107, .92), rgba(34, 56, 107, .8)); --valgt-fast: #22386b;
   --skjold: rgba(34, 56, 107, .35);
   --ud: cubic-bezier(.23, 1, .32, 1);
   --hoved: "Caveat Brush", "Caveat Brush erstatning", cursive;
@@ -70,12 +104,12 @@ body {
 body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(42vmax 42vmax at 8% 6%, rgba(255, 217, 90, calc(.42 * var(--plet))), transparent 70%),
-    radial-gradient(38vmax 38vmax at 100% 28%, rgba(111, 183, 217, calc(.34 * var(--plet))), transparent 70%),
-    radial-gradient(44vmax 44vmax at 12% 82%, rgba(255, 157, 148, calc(.32 * var(--plet))), transparent 70%),
-    radial-gradient(36vmax 36vmax at 92% 98%, rgba(126, 211, 150, calc(.34 * var(--plet))), transparent 70%);
+    radial-gradient(42vmax 42vmax at 8% 6%, rgba(var(--plet1), calc(.42 * var(--plet))), transparent 70%),
+    radial-gradient(38vmax 38vmax at 100% 28%, rgba(var(--plet2), calc(.34 * var(--plet))), transparent 70%),
+    radial-gradient(44vmax 44vmax at 12% 82%, rgba(var(--plet3), calc(.32 * var(--plet))), transparent 70%),
+    radial-gradient(36vmax 36vmax at 92% 98%, rgba(var(--plet4), calc(.34 * var(--plet))), transparent 70%);
 }
-a { color: var(--tomat-mork); text-underline-offset: 3px; }
+a { color: var(--link); text-underline-offset: 3px; }
 h1, h2 { font-family: var(--hoved); font-weight: 400; margin: 0; position: relative; }
 h1 { font-size: 40px; line-height: 64px; overflow-wrap: anywhere; top: 10px; }
 h2 { font-size: 28px; line-height: 32px; margin: 32px 0 0; top: -2px; }
@@ -84,14 +118,14 @@ p + p { margin-top: 32px; }
 :focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
 
 /* Liquid Glass: gennemsigtige flader med sløring, lyskant og blød skygge. Teksten er altid helt dækkende. */
-.top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
+.top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .lav-bund, .ark-kort, .h-boble, .ur, #toast {
   background: var(--glas);
   -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
   border: 1px solid var(--glaskant);
   box-shadow: var(--skygge), var(--glans);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .forklaring, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: var(--flade); }
+  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .forklaring, .lav-bund, .ark-kort, .h-boble, .ur { background: var(--flade); }
 }
 
 .top {
@@ -133,9 +167,6 @@ main > .knap.stor { align-self: stretch; }
   border-radius: 24px; line-height: 32px;
 }
 .fane:active, .kort:active, .favknap:active { transform: scale(.97); }
-.knap:disabled, .rund:disabled { opacity: .45; cursor: default; }
-.knap.primaer { background: var(--primaer); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(120, 30, 18, .3), 0 8px 22px var(--primaer-skygge), inset 0 1.5px 1px rgba(255, 255, 255, .55), inset 0 -1.5px 1px rgba(255, 255, 255, .18); }
-.knap.fare { color: var(--tomat-mork); }
 .knap.stor { font-size: 24px; padding: 0 24px; border-radius: 32px; }
 .rund { width: 64px; height: 64px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 24px; padding: 0; flex: none; }
 .rakke { display: flex; flex-wrap: wrap; gap: 32px 10px; margin: var(--m) 0 var(--pt); align-items: flex-start; }
@@ -143,7 +174,7 @@ main > .knap.stor { align-self: stretch; }
 .rakke.to-knapper { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .to-knapper .knap { min-width: 0; padding: 0 12px; line-height: 26px; text-align: left; }
 .to-knapper .knap svg { flex: none; }
-@media (hover: hover) { .knap:hover:not(:disabled):not(.primaer), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: var(--flade-hover); }}
+@media (hover: hover) { .knap:hover:not(:disabled), .rund:hover:not(:disabled), .chip:hover:not(.valgt) { background: var(--flade-hover); }}
 
 /* Forside: tre faneblade som sedler */
 .forsidetitel { font-size: 46px; line-height: 64px; margin: 0 0 32px; top: 8px; }
@@ -154,7 +185,7 @@ main > .knap.stor { align-self: stretch; }
   transition: transform .16s var(--ud);
 }
 /* genskin hen over den øverste halvdel */
-.fane::before { content: ""; position: absolute; inset: 0 0 50% 0; border-radius: 30px 30px 60% 60% / 30px 30px 24px 24px; background: linear-gradient(rgba(255, 255, 255, calc(var(--sheen) * 1.1)), rgba(255, 255, 255, .06)); pointer-events: none; }
+.fane::before { content: ""; position: absolute; inset: 0 0 50% 0; border-radius: 30px 30px 60% 60% / 30px 30px 24px 24px; background: linear-gradient(rgba(var(--lys-rgb), calc(var(--sheen) * 1.1)), rgba(var(--lys-rgb), .06)); pointer-events: none; }
 .fane span { font-size: 44px; line-height: 1; position: relative; display: grid; }
 .f1 { background: var(--f1); }
 .f3 { background: var(--f3); }
@@ -179,11 +210,24 @@ main > .knap.stor { align-self: stretch; }
 .chips { display: flex; flex-wrap: wrap; gap: 0 8px; margin: 0; padding: 0; }
 .chips > span, .chip { position: relative; z-index: 0; height: 32px; font-size: 17px; line-height: 32px; color: var(--blaek); }
 .chips > span { padding: 0 12px; }
-.chips > span::before { content: ""; position: absolute; z-index: -1; inset: 3px 0 3px; border-radius: 13px; background: var(--gron-chip); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
+.chips > span::before { content: ""; position: absolute; z-index: -1; inset: 3px 0 3px; border-radius: 13px; background: rgba(var(--blaek-rgb), .07); box-shadow: inset 0 1px 0 rgba(var(--lys-rgb), .7); }
+/* Kategori: svag flade og kant i kategoriens farve. Navnet står altid i teksten (ikke farve alene). */
+.kat-hovedret { --k: var(--kat-hovedret); --k-kant: var(--kat-hovedret-kant); } .kat-forret { --k: var(--kat-forret); --k-kant: var(--kat-forret-kant); } .kat-salat { --k: var(--kat-salat); --k-kant: var(--kat-salat-kant); }
+.kat-dessert { --k: var(--kat-dessert); --k-kant: var(--kat-dessert-kant); } .kat-tilbehoer { --k: var(--kat-tilbehoer); --k-kant: var(--kat-tilbehoer-kant); } .kat-drikke { --k: var(--kat-drikke); --k-kant: var(--kat-drikke-kant); } .kat-andet { --k: var(--kat-andet); --k-kant: var(--kat-andet-kant); }
+.chips > span.kat { color: var(--paa-kat); }
+.chips > span.kat::before { background: var(--k); box-shadow: inset 0 0 0 1.5px var(--k-kant); }
+.kat-maerke { display: inline-block; padding: 0 8px; border-radius: 10px; line-height: 24px; color: var(--paa-kat); background: var(--k); box-shadow: inset 0 0 0 1.5px var(--k-kant); }
+.oprk.kat { box-shadow: inset 4px 0 0 var(--k-kant); }
+.chip.kat:not(.valgt)::before { background: var(--k); border: 1.5px solid var(--k-kant); }
+.chip.kat:not(.valgt) { color: var(--paa-kat); }
 .lille { color: var(--blyant); font-size: 17px; }
 .tomt { text-align: center; color: var(--blyant); padding: 32px 8px; }
 .tekst { white-space: pre-wrap; overflow-wrap: anywhere; }
 .tilbage { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 32px; padding: 0 14px 0 10px; border-radius: 16px; font-size: 18px; color: var(--blaek); line-height: 32px; touch-action: manipulation; top: calc(var(--l0) - 32px); } /* lille felt: kanterne på to linjer */
+/* Tilbage er rund med ‹ (opdatering 4a). «Annuller» øverst på formularen (.fortryd) beholder teksten. */
+.tilbage:not(.fortryd), .rund.rund-s { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; margin: -6px 0; border-radius: 50%; font-size: 18px; flex: none; }
+.rund-s .ikon { width: 24px; height: 24px; }
+.tilbage:not(.fortryd) .ikon { width: 26px; height: 26px; }
 
 /* Søgning og filter */
 .filter { display: flex; gap: 8px; overflow-x: auto; padding: 12px 2px; margin: -12px -2px; height: 56px; scrollbar-width: none; }
@@ -191,9 +235,9 @@ main > .knap.stor { align-self: stretch; }
 .filter { margin-bottom: -12px; margin-top: -12px; }
 .chip { flex: none; padding: 0 16px; font-size: 20px; line-height: 32px; border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; white-space: nowrap; }
 .chip::before { content: ""; position: absolute; z-index: -1; inset: 2px 0; border-radius: 16px; background: var(--glas); border: 1px solid var(--glaskant); box-shadow: 0 1px 3px rgba(var(--skyg-rgb), .14), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); }
-.chip.valgt { color: #fff; }
+.chip.valgt { color: var(--paa-valgt); }
 .chip::after { content: ""; position: absolute; inset: -6px -3px; } /* tryk-flade på 44 px, selv om chippen er 32 px */
-.chip.valgt::before { background: var(--valgt); border-color: rgba(255, 255, 255, .35); }
+.chip.valgt::before { background: var(--valgt); border-color: rgba(var(--lys-rgb), .35); }
 
 /* Formularer */
 label { display: block; margin: 0; }
@@ -208,13 +252,13 @@ input[type=text], input[type=number], input[type=search], select { height: 64px;
 select { background-image: linear-gradient(45deg, transparent 50%, var(--blaek) 50%), linear-gradient(135deg, var(--blaek) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 13px) 50%; background-size: 7px 7px; background-repeat: no-repeat; padding-right: 36px; }
 textarea { resize: vertical; padding-top: 15px; padding-bottom: 15px; } /* 1 + 15 + 15 + 1 = 32: højden bliver hele rækker (linjer à 32 px + 32 px) */
 input:focus, textarea:focus, select:focus { outline: 3px solid var(--gryde); outline-offset: 1px; }
-input[type=checkbox], input[type=radio] { width: 26px; height: 26px; accent-color: var(--tomat); vertical-align: -5px; margin: 0 6px 0 0; }
+input[type=checkbox], input[type=radio] { width: 26px; height: 26px; accent-color: var(--gem); vertical-align: -5px; margin: 0 6px 0 0; }
 form { display: flex; flex-direction: column; }
 form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt); }
 .linjeform { display: flex; flex-direction: row; align-items: flex-start; gap: 8px; margin: var(--m) 0 var(--pt); }
 .linjeform input, .linjeform .knap { margin: 0; }
 .linjeform input { flex: 1; min-width: 0; }
-.fejlboks { background: var(--fejl-bg); border-left: 6px solid var(--tomat); color: var(--fejl-tekst); border-radius: 6px; padding: 16px 14px; margin: var(--m) 0 var(--pt); }
+.fejlboks { background: var(--fejl-bg); border-left: 6px solid var(--advarsel); color: var(--fejl-tekst); border-radius: 6px; padding: 16px 14px; margin: var(--m) 0 var(--pt); }
 .skift, .valgrakke label { display: flex; align-items: center; min-height: 32px; margin: 0; }
 .skift span { color: inherit; font-size: inherit; }
 .valgrakke { display: flex; gap: 24px; margin: var(--m) 0 var(--pt); }
@@ -312,7 +356,7 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .rk[data-niv="0"] .rk-mark::before { content: counter(t); }
 .rk[data-niv="1"] .rk-mark { background: var(--mynte); color: var(--paa-lys); font-size: 14px; }
 .rk[data-niv="1"] .rk-mark::before { content: counter(t) "." counter(d); }
-@media (hover: hover) { .rk-knap:hover { background: rgba(255, 255, 255, .8); } }
+@media (hover: hover) { .rk-knap:hover { background: rgba(var(--lys-rgb), .8); } }
 
 /* Trin for trin */
 body[data-side=lav] .top { display: none; }
@@ -322,11 +366,11 @@ body[data-side=lav] main { padding-top: max(16px, env(safe-area-inset-top)); pad
 .lav-top > span { margin-top: 32px; }
 .lav progress { display: block; width: 100%; height: 12px; margin: calc(var(--l0) - 6px) 0 calc(64px - var(--l0) - 6px); appearance: none; -webkit-appearance: none; border: 0; border-radius: 6px; overflow: hidden; background: rgba(var(--blaek-rgb), .12); }
 .lav progress::-webkit-progress-bar { background: rgba(var(--blaek-rgb), .12); }
-.lav progress::-webkit-progress-value { background: var(--tomat); border-radius: 6px; transition: width .3s var(--ud); }
-.lav progress::-moz-progress-bar { background: var(--tomat); }
+.lav progress::-webkit-progress-value { background: var(--hovedhandling); border-radius: 6px; transition: width .3s var(--ud); }
+.lav progress::-moz-progress-bar { background: var(--hovedhandling); }
 .lav-trin { font-size: 28px; line-height: 32px; overflow-wrap: anywhere; position: relative; top: -3px; }
 .lav-ur { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 32px 16px; margin: var(--m) 0 var(--pt); }
-.urvis { font: 44px/48px var(--hoved); font-weight: 400; font-variant-numeric: tabular-nums; color: var(--tomat-mork); }
+.urvis { font: 44px/48px var(--hoved); font-weight: 400; font-variant-numeric: tabular-nums; color: var(--blaek); }
 .lav-bund {
   position: fixed; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + var(--nav-b) + env(safe-area-inset-bottom));
   z-index: 15; display: flex; gap: 8px; padding: 8px; border-radius: 40px;
@@ -366,14 +410,14 @@ body[data-side=lav] #ure { top: max(8px, env(safe-area-inset-top)); }
 /* Beskeder vises kun inde i headeren, til venstre for ikonerne */
 #toast {
   position: absolute; left: 8px; right: 104px; top: 4px; min-height: 44px; box-sizing: border-box; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 12px 16px; border-radius: 22px;
-  background: var(--valgt); color: #fff; font: 17px/20px var(--skrift);
+  background: var(--valgt); color: var(--paa-valgt); font: 17px/20px var(--skrift);
   opacity: 0; transform: translateY(-8px) scale(.97); pointer-events: none; transition: opacity .2s, transform .25s var(--ud);
 }
 #toast.vis { opacity: 1; transform: none; pointer-events: auto; }
 #toast .toast-tekst { flex: 1 1 140px; min-width: 0; }
-#toast .toast-knap { flex: none; font: inherit; color: inherit; cursor: pointer; height: 32px; margin: -6px 0; padding: 0 14px; border: 0; border-radius: 16px; background: rgba(255, 255, 255, .22); text-decoration: underline; }
+#toast .toast-knap { flex: none; font: inherit; color: inherit; cursor: pointer; height: 32px; margin: -6px 0; padding: 0 14px; border: 0; border-radius: 16px; background: rgba(var(--lys-rgb), .22); text-decoration: underline; }
 /* Fejl står, til man handler, og ses også uden farve: kant og ordet «Luk» */
-#toast.fejl { background: var(--fejl-bg); color: var(--fejl-tekst); border-left: 6px solid var(--tomat); }
+#toast.fejl { background: var(--fejl-bg); color: var(--fejl-tekst); border-left: 6px solid var(--advarsel); }
 #toast.fejl .toast-knap { background: rgba(var(--blaek-rgb), .1); }
 
 /* Hjælperen */
@@ -382,9 +426,10 @@ body[data-side=lav] #hjaelper { bottom: calc(100px + var(--nav-b) + env(safe-are
 #hjaelper > * { pointer-events: auto; }
 .h-figur { display: block; width: 80px; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
 .h-figur svg { display: block; width: 100%; overflow: visible; transform-origin: 50% 62%; }
-.h-skjul { position: absolute; right: 0; top: -6px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--valgt-fast); color: #fff; font: 20px/1 sans-serif; cursor: pointer; opacity: .75; }
+.h-skjul { position: absolute; right: 0; top: -6px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--valgt-fast); color: var(--paa-valgt); font: 20px/1 sans-serif; cursor: pointer; opacity: .75; }
 .h-skjul::after { content: ""; position: absolute; inset: -8px; }
-#hjaelper-vis { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 40; font: 18px/1 var(--skrift); color: var(--blaek); border-radius: 20px; padding: 10px 14px; cursor: pointer; }
+#hjaelper-vis { position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 40; width: 48px; height: 48px; border-radius: 50%; padding: 0; display: grid; place-items: center; cursor: pointer; } /* rund med ? (Hjælp = blåbærblå) */
+#hjaelper-vis .ikon { width: 26px; height: 26px; }
 body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-area-inset-bottom)); }
 .h-boble {
   position: absolute; right: 4px; bottom: 90px; width: max-content; max-width: min(300px, calc(100vw - 24px)); max-height: 46vh; overflow: auto;
@@ -406,18 +451,18 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 .h-haand { fill: var(--gryde-mork); }
 .h-skaft, .h-skeblad { fill: var(--h-skaft); }
 .h-fod { fill: var(--paa-lys); }
-.h-plaster { fill: var(--h-plaster, #f3d9ad); stroke: var(--gryde-mork); stroke-width: 1.2; }
+.h-plaster { fill: var(--h-plaster); stroke: var(--gryde-mork); stroke-width: 1.2; }
 .h-plaster circle { fill: var(--gryde-mork); stroke: none; }
 .h-bryn { fill: none; stroke: var(--paa-lys); stroke-width: 3.5; stroke-linecap: round; }
 .h-hanekam { fill: none; stroke: var(--paa-lys); stroke-width: 3; stroke-linecap: round; }
 .h-laaglaebe { fill: var(--smor); stroke: var(--gryde-mork); stroke-width: 1.5; }
-.h-tand { fill: #fff; stroke: var(--gryde-mork); stroke-width: 1.2; stroke-linejoin: round; }
+.h-tand { fill: var(--h-hvid); stroke: var(--gryde-mork); stroke-width: 1.2; stroke-linejoin: round; }
 .h-indre { fill: var(--h-indre); display: none; }
 .h-tunge { fill: var(--h-tunge); stroke: var(--h-tungestreg); stroke-width: 1.2; }
 .h-tungestreg { fill: none; stroke: var(--h-tungestreg); stroke-width: 1.2; stroke-linecap: round; }
-.h-hvid { fill: #fff; stroke: var(--paa-lys); stroke-width: 1.6; }
+.h-hvid { fill: var(--h-hvid); stroke: var(--paa-lys); stroke-width: 1.6; }
 .h-sort { fill: var(--paa-lys); }
-.h-blink { fill: #fff; }
+.h-blink { fill: var(--h-hvid); }
 .h-glimt { fill: var(--guld); opacity: 0; }
 .h-krop, .h-laag, .h-pegearm, .h-ojne, .h-indre, .h-tunge, .h-pupil { transform-box: view-box; }
 .h-krop { transform-origin: 60px 120px; transform: rotate(-3deg); animation: hvile 3.4s ease-in-out infinite; }
@@ -520,14 +565,14 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 .h-tur[hidden] { display: none; }
 .h-tal { flex: 1; text-align: center; font-size: 15px; color: var(--blyant); }
 .h-tilbage, .h-naeste { font: inherit; font-size: 17px; line-height: 24px; padding: 6px 14px; border: 0; border-radius: 14px; cursor: pointer; }
-.h-naeste { color: #fff; background: var(--sek); }
+.h-naeste { color: var(--paa-hjaelp); background: var(--hjaelp); }
 .h-tilbage { color: var(--blaek); background: rgba(var(--blaek-rgb), .1); }
 .h-tilbage:disabled { opacity: .35; cursor: default; }
 .h-partikel { position: fixed; z-index: 39; pointer-events: none; }
 .h-partikel.stoev { width: 12px; height: 12px; border-radius: 50%; background: rgba(var(--blaek-rgb), .22); }
 .h-partikel.roeg { z-index: 41; }
-.h-partikel.roeg.moerk { background: radial-gradient(circle, rgba(170, 176, 188, .95) 30%, rgba(105, 112, 128, .8)); }
-.h-partikel.roeg { width: 14px; height: 14px; border-radius: 50%; width: 18px; height: 18px; background: radial-gradient(circle, rgba(225, 229, 236, .95) 30%, rgba(150, 160, 178, .75)); box-shadow: 0 0 6px rgba(120, 130, 150, .35); }
+.h-partikel.roeg.moerk { background: radial-gradient(circle, rgba(var(--roeg-moerk-rgb), .95) 30%, rgba(var(--roeg-moerk-rgb), .7)); }
+.h-partikel.roeg { width: 14px; height: 14px; border-radius: 50%; width: 18px; height: 18px; background: radial-gradient(circle, rgba(var(--roeg-rgb), .95) 30%, rgba(var(--roeg-rgb), .65)); box-shadow: 0 0 6px rgba(var(--roeg-moerk-rgb), .35); }
 .h-partikel.stjerne { color: var(--guld); font-size: 18px; line-height: 1; }
 .h-maal { outline: 3px dashed var(--gryde-mork); outline-offset: 4px; border-radius: 12px; animation: maalpuls 1.2s ease-in-out infinite; }
 @keyframes maalpuls { 50% { outline-offset: 8px; } }
@@ -553,16 +598,16 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 
 /* Print: kun opskriften */
 @media print {
-  body { background: #fff; font-size: 14pt; line-height: 1.4; }
+  body { background: var(--raa-hvid); font-size: 14pt; line-height: 1.4; }
   .top, #ure, #toast, #hjaelper, #hjaelper-vis, .skaerm, .forklaring { display: none !important; }
   main { padding: 0; max-width: none; }
   .begreb { background: none; border: 0; color: inherit; padding: 0; }
-  .kort { box-shadow: none; border: 1px solid #999; }
+  .kort { box-shadow: none; border: 1px solid var(--blyant); }
 }
 
 /* Tilpas tekster */
 body.tilpas [data-org], body.tilpas [data-flyt] { outline: 2px dashed var(--gryde-mork); outline-offset: 3px; cursor: pointer; }
-body.tilpas [data-laast] { outline: 2px solid var(--tomat); }
+body.tilpas [data-laast] { outline: 2px solid var(--advarsel); }
 .plads { opacity: 0; } /* usynlig kopi, der holder pladsen, når et felt er fastlåst på skærmen */
 #nav #tilpas-knap { font-family: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
 body.tilpas #nav #tilpas-knap { background: var(--gul); color: var(--paa-lys); }
@@ -580,7 +625,7 @@ body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjae
 .kort:active, .fane:active { transform: scale(.975); transition-duration: .09s, .2s; transition-timing-function: ease-out; }
 .knap::after, .tilbage::after, .rund::after, .rk-knap::after, .kort::after, .fane::after {
   content: ""; position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0) 70%); transform: scale(0); opacity: 0;
+  background: radial-gradient(circle, rgba(var(--lys-rgb), .85), rgba(var(--lys-rgb), 0) 70%); transform: scale(0); opacity: 0;
 }
 .tryk::after { animation: glans .6s var(--ud); }
 @keyframes glans { from { transform: scale(0); opacity: 1; } to { transform: scale(16); opacity: 0; } }
@@ -618,8 +663,7 @@ body.tilpas [data-flyt] { -webkit-touch-callout: none; -webkit-user-select: none
 
 /* Liquid Glass: blank glans over den øverste halvdel af knapper, som på fanerne */
 .knap, .tilbage { isolation: isolate; }
-.knap::before, .tilbage::before { content: ""; position: absolute; z-index: -1; inset: 0 0 45% 0; border-radius: inherit; background: linear-gradient(rgba(255, 255, 255, var(--sheen)), rgba(255, 255, 255, .03)); pointer-events: none; }
-.knap.primaer::before { background: linear-gradient(rgba(255, 255, 255, .28), rgba(255, 255, 255, 0)); }
+.knap::before, .tilbage::before { content: ""; position: absolute; z-index: -1; inset: 0 0 45% 0; border-radius: inherit; background: linear-gradient(rgba(var(--lys-rgb), var(--sheen)), rgba(var(--lys-rgb), .03)); pointer-events: none; }
 .chip:disabled { opacity: .45; cursor: default; }
 
 /* Hvad har du derhjemme? */
@@ -653,23 +697,24 @@ input.felt, select.felt { padding: 0 12px; }
 
 /* Tilpas: fortryd/gentag, glas-farveknap, felter der ikke kan flyttes, og forbudt sted */
 #tilpas-fortryd, #tilpas-gentag {
-  position: fixed; bottom: calc(10px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 16px; border-radius: 24px;
+  position: fixed; bottom: calc(10px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; /* runde med buede pile (4a) */
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
   background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
 }
 #tilpas-fortryd { left: max(10px, env(safe-area-inset-left)); }
-#tilpas-gentag { left: calc(max(10px, env(safe-area-inset-left)) + 112px); }
-#tilpas-fortryd:disabled, #tilpas-gentag:disabled { opacity: .4; cursor: default; }
+#tilpas-gentag { left: calc(max(10px, env(safe-area-inset-left)) + 58px); }
+#tilpas-fortryd .ikon, #tilpas-gentag .ikon { width: 24px; height: 24px; }
+#tilpas-fortryd:disabled, #tilpas-gentag:disabled { opacity: .4; cursor: default; border-style: dashed; border-color: var(--blyant); }
 .sw.glas { position: relative; overflow: hidden; border: 1px solid var(--glaskant); background: linear-gradient(135deg, var(--smor) 0 34%, var(--himmel) 34% 67%, var(--rosa) 67%); }
 .sw.glas::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--glas); -webkit-backdrop-filter: blur(3px) saturate(1.8); backdrop-filter: blur(3px) saturate(1.8); box-shadow: var(--glans); }
-.sw.glas::after { content: ""; position: absolute; left: 20%; top: 12%; width: 46%; height: 22%; border-radius: 50%; background: rgba(255, 255, 255, .85); transform: rotate(-30deg); }
+.sw.glas::after { content: ""; position: absolute; left: 20%; top: 12%; width: 46%; height: 22%; border-radius: 50%; background: rgba(var(--lys-rgb), .85); transform: rotate(-30deg); }
 body.tilpas [data-ikkeflyt] { outline-style: solid; outline-color: var(--blyant); cursor: pointer; }
-body.tilpas [data-ikkeflyt][data-laast] { outline-color: var(--tomat); }
-.traekker.ulovlig { outline: 3px solid var(--tomat) !important; outline-offset: 3px; opacity: .75; }
+body.tilpas [data-ikkeflyt][data-laast] { outline-color: var(--advarsel); }
+.traekker.ulovlig { outline: 3px solid var(--advarsel) !important; outline-offset: 3px; opacity: .75; }
 /* Sidebyggeren (opdatering 2): et element i en liste med egen farve får en prik og teksten «egen farve» (ikke kun farve) */
 body.tilpas [data-tpegen] { position: relative; }
-body.tilpas [data-tpegen]::after { content: "● egen farve"; position: absolute; top: -10px; right: 8px; z-index: 2; padding: 0 6px; border-radius: 8px; background: var(--tomat-mork); color: #fff; font: 12px/18px var(--skrift); pointer-events: none; }
-.tp-advarsel { color: var(--fejl-tekst); background: var(--fejl-bg); border-left: 4px solid var(--tomat); padding-left: 8px; }
+body.tilpas [data-tpegen]::after { content: "● egen farve"; position: absolute; top: -10px; right: 8px; z-index: 2; padding: 0 6px; border-radius: 8px; background: var(--hjaelp); color: var(--paa-hjaelp); font: 12px/18px var(--skrift); pointer-events: none; }
+.tp-advarsel { color: var(--fejl-tekst); background: var(--fejl-bg); border-left: 4px solid var(--advarsel); padding-left: 8px; }
 /* Plads (fase 3): kant og bredde i hele kolonner. Rækkefølgen ændres i koden, ikke her. */
 .tp-hoejre { margin-left: auto !important; margin-right: 0 !important; align-self: flex-end !important; justify-self: end !important; }
 .tp-venstre { margin-left: 0 !important; margin-right: auto !important; align-self: flex-start !important; justify-self: start !important; }
@@ -691,10 +736,10 @@ body.tilpas .tp-afstand { background: repeating-linear-gradient(135deg, rgba(var
 /* Under træk: de gyldige pladser er svage streger, og den nærmeste er tydelig */
 #tp-pladser { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 35; pointer-events: none; }
 #tp-pladser i { position: absolute; height: 2px; border-radius: 1px; background: rgba(var(--blaek-rgb), .25); }
-#tp-markoer { position: absolute; height: 4px; border-radius: 2px; background: var(--tomat); box-shadow: 0 0 0 2px rgba(255, 255, 255, .7); }
-#tp-markoer::before { content: "Her"; position: absolute; left: 0; top: -22px; padding: 0 6px; border-radius: 8px; background: var(--tomat); color: #fff; font: 13px/20px var(--skrift); }
+#tp-markoer { position: absolute; height: 4px; border-radius: 2px; background: var(--hjaelp); box-shadow: 0 0 0 2px rgba(var(--lys-rgb), .7); }
+#tp-markoer::before { content: "Her"; position: absolute; left: 0; top: -22px; padding: 0 6px; border-radius: 8px; background: var(--hjaelp); color: var(--paa-hjaelp); font: 13px/20px var(--skrift); }
 #tilpas-ny {
-  position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: calc(68px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; height: 48px; padding: 0 16px; border-radius: 24px;
+  position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: calc(68px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; /* runde med buede pile (4a) */
   font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
   background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
 }
@@ -742,8 +787,6 @@ input.felt-l, select.felt-l { height: 96px; }
 .tp-top h2 { margin: 0; }
 .ark-kort .tp-top .rakke { margin: 0 0 0 auto; gap: 6px; flex-wrap: nowrap; }
 .tp-top .knap { height: 32px; min-height: 0; padding: 0 12px; font-size: 16px; line-height: 32px; border-radius: 16px; }
-.knap.gron { background: var(--gron); color: #fff; border-color: rgba(255, 255, 255, .4); box-shadow: 0 1px 2px rgba(20, 80, 40, .3), 0 8px 22px rgba(38, 134, 72, .28), var(--glans); }
-.knap.gron::before { background: linear-gradient(rgba(255, 255, 255, .28), rgba(255, 255, 255, 0)); }
 
 /* Hvad har du derhjemme?: små rækker à 32 px */
 .hj-rk.felt-s { grid-template-columns: 48px 64px minmax(0, 1fr) 40px 40px; font-size: 18px; }
@@ -774,9 +817,23 @@ input[type=text], input[type=number], input[type=search], textarea, select {
   border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans);
 }
 .ark-kort { background: linear-gradient(rgba(var(--papir-rgb), .72), rgba(var(--papir-rgb), .55)); }
-.knap.primaer { background: var(--primaer); box-shadow: var(--skygge), inset 0 1.5px 1px rgba(255, 255, 255, .6), inset 0 -1.5px 1px rgba(255, 255, 255, .2); }
-.knap.gron { background: var(--gron); box-shadow: var(--skygge), inset 0 1.5px 1px rgba(255, 255, 255, .6), inset 0 -1.5px 1px rgba(255, 255, 255, .2); }
-@media (hover: hover) { .knap.primaer:hover:not(:disabled) { background: var(--primaer-hover); } .knap.gron:hover:not(:disabled) { background: var(--gron-hover); } }
+/* Knapper med en rolle (opdatering 4a): fast flade, tekst og kant fra rollen. Glassets lyskant ligger ovenpå.
+   gem = gemmer · hoved = hovedhandling, der ikke gemmer · slet = noget går tabt (Slet, Ryd) · annuller = forlad uden at gemme, Fjern, Nulstil · tilpas = ændr indholdet · hjaelp = hjælp og vejledning */
+.knap.gem { --r: var(--gem); --r-paa: var(--paa-gem); --r-kant: var(--gem-kant); }
+.knap.hoved { --r: var(--hovedhandling); --r-paa: var(--paa-hovedhandling); --r-kant: var(--hovedhandling-kant); }
+.knap.slet, .rund.slet { --r: var(--slet); --r-paa: var(--paa-slet); --r-kant: var(--slet-kant); }
+.knap.annuller, .tilbage.fortryd { --r: var(--annuller); --r-paa: var(--paa-annuller); --r-kant: var(--annuller-kant); }
+.knap.tilpas { --r: var(--tilpas); --r-paa: var(--paa-tilpas); --r-kant: var(--tilpas-kant); }
+.knap.hjaelp, .rund.hjaelp { --r: var(--hjaelp); --r-paa: var(--paa-hjaelp); --r-kant: var(--hjaelp-kant); }
+:is(.knap, .rund, .tilbage):is(.gem, .hoved, .slet, .annuller, .tilpas, .hjaelp, .fortryd) {
+  background: var(--r); color: var(--r-paa); border: 1px solid var(--r-kant);
+  box-shadow: var(--skygge), inset 1.5px 1.5px 1px rgba(var(--lys-rgb), .45), inset 0 -1.5px 1px rgba(var(--lys-rgb), .15);
+}
+.knap.annuller, .tilbage.fortryd { border-width: 2px; } /* tydelig kant, så melgrå ikke ligner en deaktiveret knap */
+:is(.knap, .rund, .tilbage):is(.gem, .hoved, .slet, .annuller, .tilpas, .hjaelp, .fortryd)::before { background: linear-gradient(rgba(var(--lys-rgb), .26), rgba(var(--lys-rgb), 0)); }
+@media (hover: hover) { :is(.knap, .rund, .tilbage):is(.gem, .hoved, .slet, .annuller, .tilpas, .hjaelp, .fortryd):hover:not(:disabled) { background: color-mix(in srgb, var(--r) 86%, var(--blaek)); } }
+/* Deaktiveret: bleg og stiplet kant (ikke kun farve) */
+.knap:disabled, .rund:disabled { opacity: .45; cursor: default; border-style: dashed; border-color: var(--blyant); box-shadow: none; }
 
 /* Ingen glød omkring felter */
 /* Fokus på felter: tydelig ring (kontrast mindst 3:1 i begge temaer), ikke kun en ændret kant */
@@ -801,7 +858,7 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 .hj-gruppe.ulige { padding-bottom: 16px; }
 
 
-.h-knap { display: block; margin: 8px 0 2px; padding: 6px 14px; font: inherit; font-size: 17px; line-height: 24px; color: #fff; background: var(--sek); border: 0; border-radius: 14px; cursor: pointer; }
+.h-knap { display: block; margin: 8px 0 2px; padding: 6px 14px; font: inherit; font-size: 17px; line-height: 24px; color: var(--paa-hjaelp); background: var(--hjaelp); border: 0; border-radius: 14px; cursor: pointer; }
 .h-knap[hidden] { display: none; }
 .knap.hel { width: 100%; }
 
@@ -819,25 +876,37 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --fl-smoer: #8a6a12; --fl-mynte: #2f7a52; --fl-rosa: #9a4a56; --fl-himmel: #2f6f90; --fl-hvid: #2a3250; --fl-indigo: #3a58b4; --paa-felt: #fff;
   --link: #8fc6f7; --stjerne-fra: #5f6a8c;
   --fejl-bg: #3b2028; --fejl-tekst: #ffb9ac;
-  --glas: linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .11)); /* Liquid Glass i mørkt: klart glas, ikke mørkeblåt */
+  --glas: linear-gradient(135deg, rgba(var(--lys-rgb), .18), rgba(var(--lys-rgb), .05) 55%, rgba(var(--lys-rgb), .11)); /* Liquid Glass i mørkt: klart glas, ikke mørkeblåt */
   --glasfilter: blur(20px) saturate(1.8) brightness(1.18);
-  --glaskant: rgba(255, 255, 255, .2);
-  --rude: rgba(255, 255, 255, .07); --rude-kant: rgba(255, 255, 255, .16);
+  --glaskant: rgba(var(--lys-rgb), .2);
+  --rude: rgba(var(--lys-rgb), .07); --rude-kant: rgba(var(--lys-rgb), .16);
   --skygge: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px rgba(0, 0, 0, .4);
-  --glans: inset 1.5px 1.5px 1px rgba(255, 255, 255, .45), inset -1px -1px 1px rgba(255, 255, 255, .14), inset 0 0 18px rgba(255, 255, 255, .08);
+  --glans: inset 1.5px 1.5px 1px rgba(var(--lys-rgb), .45), inset -1px -1px 1px rgba(var(--lys-rgb), .14), inset 0 0 18px rgba(var(--lys-rgb), .08);
   --sheen: .12; --plet: .3;
-  --flade: rgba(36, 42, 64, .96); --flade-hover: rgba(58, 66, 98, .9); --hvid: #262d45; --felt-bg: rgba(255, 255, 255, .07);
+  --flade: rgba(36, 42, 64, .96); --flade-hover: rgba(58, 66, 98, .9); --hvid: #262d45; --felt-bg: rgba(var(--lys-rgb), .07);
   --boble: linear-gradient(135deg, rgba(52, 60, 90, .95), rgba(40, 46, 72, .9));
-  --gron-chip: rgba(80, 170, 110, .38);
   --f1: linear-gradient(135deg, rgba(168, 126, 18, .9), rgba(120, 90, 14, .85));
   --f3: linear-gradient(135deg, rgba(168, 74, 88, .9), rgba(120, 50, 64, .85));
-  --valgt: linear-gradient(135deg, #4666c8, #3a58b4); --valgt-fast: #3a58b4; --sek: #4a5788;
-  --primaer: linear-gradient(135deg, #cf3a24, #b02a17); --primaer-hover: linear-gradient(135deg, #e04a33, #c43520); --primaer-skygge: rgba(0, 0, 0, .4);
-  --gron: linear-gradient(135deg, #2a8049, #236f3f); --gron-hover: linear-gradient(135deg, #339455, #2b8049);
+  --valgt: linear-gradient(135deg, #4666c8, #3a58b4); --valgt-fast: #3a58b4;
   --skjold: rgba(0, 0, 0, .6);
+  --gem: var(--raa-aeble-lys); --paa-gem: var(--raa-aeble-moerk); --gem-kant: var(--raa-aeble-lys);
+  --tilpas: var(--raa-smoer); --paa-tilpas: var(--raa-nat); --tilpas-kant: var(--raa-smoer);
+  --slet: var(--raa-tomat-lys); --paa-slet: var(--raa-tomat-moerk); --slet-kant: var(--raa-tomat-lys);
+  --annuller: var(--raa-skifer); --paa-annuller: var(--raa-blaek-lys); --annuller-kant: var(--raa-skifer-kant);
+  --hjaelp: var(--raa-blaabaer-lys); --paa-hjaelp: var(--raa-blaabaer-moerk); --hjaelp-kant: var(--raa-blaabaer-lys);
+  --hovedhandling: var(--raa-blaek-lys); --paa-hovedhandling: var(--raa-nat); --hovedhandling-kant: var(--raa-blaek-lys);
+  --paa-kat: var(--raa-blaek-lys);
+  --kat-hovedret: var(--raa-sovs-nat); --kat-hovedret-kant: var(--raa-sovs-natkant);
+  --kat-forret: var(--raa-gulerod-nat); --kat-forret-kant: var(--raa-gulerod-natkant);
+  --kat-salat: var(--raa-salat-nat); --kat-salat-kant: var(--raa-salat-natkant);
+  --kat-dessert: var(--raa-hindbaer-nat); --kat-dessert-kant: var(--raa-hindbaer-natkant);
+  --kat-tilbehoer: var(--raa-broed-nat); --kat-tilbehoer-kant: var(--raa-broed-natkant);
+  --kat-drikke: var(--raa-hav-nat); --kat-drikke-kant: var(--raa-hav-natkant);
+  --kat-andet: var(--raa-lavendel-nat); --kat-andet-kant: var(--raa-skifer-kant);
+  --advarsel: var(--raa-tomat-lys);
 }
 /* udfyldt stjerne er klar gul i begge temaer: blæk-streg */
-[data-tema="moerk"] .ikon-stjerne { color: #22386b; }
+[data-tema="moerk"] .ikon-stjerne { color: var(--raa-blaek); }
 /* Tjekfelt nederst i opskriftsformularen */
 .tjekfelt { margin-top: var(--m); }
 .tjekfelt { align-items: flex-start; }
@@ -910,12 +979,12 @@ form > .knap.stor.formknap, main > .knap.stor.formknap, .vejledning .knap.formkn
   main { padding-bottom: calc(112px + var(--nav-b) + env(safe-area-inset-bottom)); }
   body[data-side=lav] main { padding-bottom: calc(150px + var(--nav-b) + env(safe-area-inset-bottom)); }
   .h-boble { max-height: 60vh; }
-  #tilpas-fortryd, #tilpas-gentag, #tilpas-ny { height: 44px; }
+  #tilpas-fortryd, #tilpas-gentag { width: 44px; } #tilpas-fortryd, #tilpas-gentag, #tilpas-ny { height: 44px; }
 }
 
 /* Importér links: fremdriftsbjælke (højden kommer fra felt-s) */
 .importbar { display: block; overflow: hidden; border-radius: 16px; background: var(--felt-bg); border: 2px solid var(--blyant); }
-.importbar i { display: block; height: 100%; width: 0; background: var(--gron); transition: width .3s var(--ud); }
+.importbar i { display: block; height: 100%; width: 0; background: var(--gem); transition: width .3s var(--ud); }
 
 /* ---------- Navigation (opdatering 3a) ----------
    Fem destinationer. Bjælke nederst på telefon og tablet, sidebjælke på brede skærme med mus, og i selve siden ved lav højde (telefon på langs).
@@ -935,7 +1004,7 @@ html { scroll-padding-top: 64px; }
 #nav a > span:first-child, #tilpas-knap > span:first-child { display: grid; }
 #nav a .ikon, #nav #tilpas-knap .ikon { width: 26px; height: 26px; vertical-align: 0; }
 #nav a:active { transform: scale(.95); }
-#nav a[aria-current=page] { background: var(--valgt); color: #fff; }
+#nav a[aria-current=page] { background: var(--valgt); color: var(--paa-valgt); }
 #nav .nav-hjem { display: none; }
 @media (hover: hover) { #nav a:hover:not([aria-current=page]) { background: var(--flade-hover); } }
 body[data-side=lav] { --nav-b: 0px; --nav-l: 0px; }
@@ -950,7 +1019,7 @@ body[data-side=lav] #nav { display: none; }
   #nav .nav-hjem { display: flex; height: 64px; font: 28px/32px var(--hoved); }
   .top { left: calc(var(--nav-l) + 10px); }
   .lav-bund { left: calc(var(--nav-l) + 10px); }
-  #tilpas-fortryd { left: calc(var(--nav-l) + 10px); } #tilpas-gentag { left: calc(var(--nav-l) + 122px); } #tilpas-ny { left: calc(var(--nav-l) + 10px); }
+  #tilpas-fortryd { left: calc(var(--nav-l) + 10px); } #tilpas-gentag { left: calc(var(--nav-l) + 68px); } #tilpas-ny { left: calc(var(--nav-l) + 10px); }
   #nav #tilpas-knap { margin-top: auto; }
   /* Intet fast nederst over indholdet: Grydelil og «Vis hjælper» hviler nederst i sidebjælken, og trin for trin har knapperne i siden (piletasterne virker også) */
   body:not([data-side=lav]) #hjaelper, body:not([data-side=lav]) #hjaelper-vis { right: auto; left: 24px; bottom: 16px; }
@@ -992,7 +1061,7 @@ body.tilpas-menu[data-side=lav] #nav #tilpas-knap { flex-direction: column; gap:
 .oprk > span { font-size: 17px; color: var(--blyant); }
 .oprk .ikon { width: 20px; height: 20px; vertical-align: -.12em; }
 .oprk:active { background: rgba(var(--blaek-rgb), .08); }
-.oprk[aria-current] { background: var(--valgt); color: #fff; }
+.oprk[aria-current] { background: var(--valgt); color: var(--paa-valgt); }
 .oprk[aria-current] > span { color: inherit; }
 @media (hover: hover) { .oprk:hover:not([aria-current]) { background: rgba(var(--blaek-rgb), .06); } }
 .oplist-bogstav { grid-column: 1 / -1; margin: 32px 0 0; font: 24px/32px var(--hoved); font-weight: 400; color: var(--gryde-mork); }
@@ -1028,7 +1097,7 @@ body.ruder-vist main { --maxb: 1248px; max-width: 1248px; }
 }
 .rude-liste h1 { font-size: 29px; line-height: 32px; top: 0; }
 .rude-knapper { flex-wrap: nowrap; gap: 8px; }
-.rude-knapper > .primaer { flex: 1 1 auto; min-width: 0; padding: 0 12px; }
+.rude-knapper > .hoved { flex: 1 1 auto; min-width: 0; padding: 0 12px; }
 /* «Importér»: de to måder at hente en opskrift ind på ligger i en menu, så de ikke fylder over listen */
 .tilfoej { position: relative; flex: none; }
 .tilfoej summary { list-style: none; cursor: pointer; padding: 0 14px 0 18px; }

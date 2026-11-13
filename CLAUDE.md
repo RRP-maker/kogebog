@@ -1,6 +1,6 @@
 # Kogebog: regler for nye elementer
 
-Gælder alt, jeg indsætter. Tilpasseren (`tilpas.js`) er et separat system og ændres ikke af dette.
+Gælder alt, jeg indsætter. Designer (`tilpas.js`, hed før «tilpasseren») er et separat system og ændres ikke af dette.
 
 - **Net:** alt står på notesbogens rækker à 32 px (`--raekke`) og kolonner à 16 px (`--kol`). Se `--l0`, `--m`, `--pt`, `--kol-x` i `style.css`. Indholdet (`main`) er altid et helt antal kolonner bredt (venstre 34 px = marginlinjen, højre 16 px), og kort, kolonner og rækker i gitre (`.mp-grid`) har bredde i hele kolonner. Kort har padding `19px 15px 11px` (kant 1 px = 20/16 px indhold). Marginlinjen følger kolonnen via `--kol-x` (sættes af `rasterIgen()` i `app.js`).
 - **Felter** (knapper, skrivefelter, rækker): klasserne `felt` + `felt-s` / `felt-m` / `felt-l` = 32 / 64 / 96 px høje. M og L har margen foroven `--m` og forneden `--pt`. S sidder med kanterne på to linjer (`top: calc(var(--l0) - 32px)`). Standard er `felt-m`.
@@ -16,3 +16,6 @@ Gælder alt, jeg indsætter. Tilpasseren (`tilpas.js`) er et separat system og �
 - **Flerlinjefelter** vokser i hele rækker (`rkVokser` i `app.js`). Nye gitre bruger `round(down, …, var(--kol))` til kolonnebredde (med en almindelig `1fr`-regel som reserve).
 - Mål efter: toppen af et felt eller kort skal være 12 px under en række (`--raster`), tekstrækker 0 px, og venstre kant skal være på en kolonne (16 px). Gitteret kan ses med `#gitter` (i tilpasseren).
 - **Tilpasseren og id'er:** Hvert felt, der kan tilpasses, har et id. Har feltet ikke selv `data-tpid`, laves id'et af siden og teksten (`side|tekst`), så to felter med samme tekst på hver sin side ikke påvirker hinanden. Felter, der hænger sammen (fx alle «Gem»- eller «Luk»-knapper), får samme `data-tpid` i koden (kun bogstaver og bindestreger, ingen tal). Et felt, der skal stå for sig selv, får et eget `data-tpid`, også hvis teksten er den samme som på et andet felt. Tilbage-knapper deler id'et `tilbage`. Gamle tilpasninger gemt på teksten gælder, til feltet ændres første gang.
+- **Farver:** komponenter bruger kun roller fra `:root` i `style.css` (`--gem`, `--tilpas`, `--slet`, `--annuller`, `--hjaelp`, `--hovedhandling`, `--kat-…`, med `--paa-…` og `…-kant`), aldrig `--raa-…` eller hex. En ny rolle får lys og mørk værdi og målt kontrast (tekst 4,5:1, kant 3:1).
+- **Knapper:** `.knap` + én rolle (`gem`, `hoved`, `slet`, `annuller`, `tilpas`, `hjaelp`) eller ingen (glas). Rød kun når noget går tabt. Tilbage, Luk, Fortryd og Gentag er runde (`Ikoner.tilbage`, `Ikoner.rund`) med `aria-label`.
+- **Ord:** «Tilpas» = ændre indhold. «Designer» = layoutværktøjet. «Rediger» bruges ikke.

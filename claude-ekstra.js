@@ -2,14 +2,14 @@
 // appen laver en besked, du sætter ind hos Claude, og så sætter du Claudes svar ind her. Ingen nøgler i koden.
 const ClaudeEkstra = (() => {
   let O = null, TI = null; // O: opskriften, der opdateres. TI: opskrifter og tips, der allerede findes.
-  const felter = (pre, id) => `<div class="felt-knapper"><button type="button" class="knap" data-tpid="${pre}-saet" data-h="saetInd" data-v="${id}">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="${pre}-fortryd" data-h="fortrydRyd" data-v="${id}" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="${pre}-ryd" data-h="rydFelt" data-v="${id}">Ryd</button></span></div>`;
+  const felter = (pre, id) => `<div class="felt-knapper"><button type="button" class="knap" data-tpid="${pre}-saet" data-h="saetInd" data-v="${id}">Sæt ind</button><span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="${pre}-fortryd" data-h="fortrydRyd" data-v="${id}" hidden')}<button type="button" class="knap mini slet" data-tpid="${pre}-ryd" data-h="rydFelt" data-v="${id}">Ryd</button></span></div>`;
   const side = ({ tilbage, titel, tekst1, husk, pre, kopierH, gemH, gemTekst, plads, ekstra = '', udenEgen = false }) => {
-    app.innerHTML = `<a class="tilbage" href="${tilbage}">‹ Tilbage</a><h1>${esc(titel)}</h1>
+    app.innerHTML = `${Ikoner.tilbage(tilbage)}<h1>${esc(titel)}</h1>
       <ol class="trin vejledning">
         <li>${tekst1}
           ${udenEgen ? '' : `<textarea id="egen" data-tpid="egen-tekst" rows="5" data-husk="${husk}" placeholder="Skriv her" aria-label="Din besked"></textarea>
           ${felter(pre + '-egen', 'egen')}`}
-          <button class="knap primaer stor formknap" data-tpid="${pre}-kopier" data-h="${kopierH}">${ik('gnist')} Kopiér besked</button></li>
+          <button class="knap hoved stor formknap" data-tpid="${pre}-kopier" data-h="${kopierH}">${ik('gnist')} Kopiér besked</button></li>
         <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt.
           <div class="rakke venstre"><a class="knap stor" data-tpid="aabn-claude" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
         <li>Kopiér Claudes svar, og sæt det ind her:
@@ -17,7 +17,7 @@ const ClaudeEkstra = (() => {
           ${felter(pre + '-svar', 'claudesvar')}</li>
       </ol>
       <div id="formfejl"></div>
-      <button class="knap primaer stor formknap" data-tpid="${pre}-gem" data-h="${gemH}">${gemTekst}</button>${ekstra}`;
+      <button class="knap gem stor formknap" data-tpid="${pre}-gem" data-h="${gemH}">${gemTekst}</button>${ekstra}`;
     document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); });
     Hjaelper.side([
       ...(udenEgen ? [] : [{ tekst: 'Skriv her, hvad Claude skal gøre.', maal: 'egen-tekst', bev: 'salto' }]),

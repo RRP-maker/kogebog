@@ -91,9 +91,9 @@ const Madplan = (() => {
   function tegn() {
     const pl = ST.plan;
     const har1 = pl.some(d => SLOTS.some(s => d[s]));
-    $('#mp-knapper').innerHTML = `<button type="button" class="knap felt felt-s" data-tpid="mp-fortryd" data-h="mpFortryd">↶ Fortryd</button>
-      <button type="button" class="knap felt felt-s" data-tpid="mp-gentag" data-h="mpGentag">Gentag ↷</button>
-      <button type="button" class="knap felt felt-s" data-tpid="mp-ryd" data-h="mpRyd">Ryd madplan</button>`;
+    $('#mp-knapper').innerHTML = `${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="mp-fortryd" data-h="mpFortryd"', 'felt-s')}
+      ${Ikoner.rund('gentag', 'Gentag', 'data-tpid="mp-gentag" data-h="mpGentag"', 'felt-s')}
+      <button type="button" class="knap felt felt-s slet" data-tpid="mp-ryd" data-h="mpRyd">Ryd madplan</button>`;
     $('#mp-alle').innerHTML = SLOTS.map(s => { const n = pl.filter(d => d.paa[s]).length; return `<button type="button" class="chip${n === pl.length ? ' valgt' : n ? ' delvis' : ''}" data-tpid="mp-alle-${s}" data-h="mpAlle" data-v="${s}" aria-pressed="${n === pl.length}">${NAVN[s]}</button>`; }).join('')
       + (blandet() ? '<span class="chip valgt mp-blandet">Blandet</span>' : '');
     const koeb = new Map(); // stamme -> { navn, antal }
@@ -119,7 +119,7 @@ const Madplan = (() => {
       ${liste.length && liste.length < 6 ? '<small>Vil du se flere retter? Tillad flere varer at købe øverst på siden.</small>' : ''}
       <div class="mp-valgliste">${liste.length ? liste.map(x => `<button type="button" class="kort${x.r.id === d[s] ? ' valgt' : ''}" data-tpid="mp-vaelg" data-h="mpVaelg" data-v="${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>${esc(manglerTekst(x))}</span></button>`).join('')
         : '<p class="tomt">Jeg finder ingen retter, der passer. Tillad flere mangler eller varer øverst på siden.</p>'}</div>
-      <div class="rakke">${d[s] ? '<button type="button" class="knap" data-tpid="mp-fjern" data-h="mpFjern">Fjern retten</button>' : ''}<button type="button" class="knap" data-tpid="mp-luk" data-h="lukArk">Luk</button></div>`);
+      <div class="rakke">${d[s] ? '<button type="button" class="knap annuller" data-tpid="mp-fjern" data-h="mpFjern">Fjern retten</button>' : ''}${Ikoner.rund('luk', 'Luk', 'data-tpid="mp-luk" data-h="lukArk"')}</div>`);
     $('.ark-bag').addEventListener('click', lukArk);
   }
   const TRINID = { dage: 'dage', prRet: 'mangler', i_alt: 'varer' }; // id'er har ingen tal eller store bogstaver
@@ -140,10 +140,10 @@ const Madplan = (() => {
     ST.dage = ST.plan.length;
     P = new Map(pool(() => true).map(x => [x.r.id, x]));
     fortrydes = []; gentages = [];
-    app.innerHTML = `<a class="tilbage" href="#/forslag">‹ Tilbage</a><h1>Madplan</h1>
-      <section class="kort mp-indst" aria-label="Valg til madplanen">
+    app.innerHTML = `${Ikoner.tilbage('#/forslag')}<h1>Madplan</h1>
+      <section class="kort mp-indst" data-tpid="${'kort:↶ Fortryd\n      Gentag ↷\n      Ryd madpl'}" aria-label="Valg til madplanen">
         <div class="mp-a"><div id="mp-knapper"></div>
-          <button type="button" class="knap primaer felt felt-m" data-tpid="mp-generer" data-h="mpGenerer">${ik('gryde')} Generer ny madplan</button></div>
+          <button type="button" class="knap hoved felt felt-m" data-tpid="mp-generer" data-h="mpGenerer">${ik('gryde')} Generer ny madplan</button></div>
         <div class="mp-b"><h2>Hvad skal med hver dag?</h2>
           <div class="filter mp-alle" id="mp-alle" data-tpid="bjaelke-madplan"></div>
           <small>Tryk for at slå hovedret, salat eller tilbehør til eller fra på alle dage. Under hver dag kan du vælge selv.</small>

@@ -2,6 +2,18 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.2.0 · Farver med betydning, ens knapper, «Tilpas» og «Designer» (opdatering 4a-3)
+- **Farver i to lag** øverst i `style.css`: rå farver (`--raa-…`, kun i `:root` og det mørke tema) og roller, som komponenter bruger. Handlinger: `--gem` (æblegrøn), `--tilpas` (smørgul), `--slet` (tomatrød), `--annuller` (melgrå), `--hjaelp` (blåbærblå), `--hovedhandling` (blæk). Hver har `--paa-…` (tekst) og `…-kant`. Kategorier: `--kat-hovedret`, `-forret`, `-salat`, `-dessert`, `-tilbehoer`, `-drikke` og `-andet` (egne kategorier). Værdierne er fra farvelisten i 4a-1.
+- **Knapper efter rolle:** klasserne `gem`, `hoved`, `slet`, `annuller`, `tilpas`, `hjaelp` på `.knap` (erstatter `primaer`, `gron`, `fare`). Rød betyder kun, at noget går tabt (Slet, Ryd). Slet har skraldespand og tingens navn («Slet opskriften»). Fjern og Nulstil er melgrå. Melgrå har 2 px kant, og en deaktiveret knap er bleg med stiplet kant, så de ikke ligner hinanden.
+- **Runde knapper:** Tilbage er rund med ‹ (`Ikoner.tilbage`), Luk er rund med ×, Fortryd og Gentag er runde med de buede pile fra 4a-1 (`Ikoner.rund`), og «Vis hjælper» er rund med ?. Alle har `aria-label` og er 44 px (fylder én række i nettet). «‹ Annuller» øverst i formularen hedder nu «Annuller».
+- «Luk» ved siden af «Gem» i vinduer hedder nu «Annuller» (`data-tpid="annuller"`). «Opret» (ny kategori) hedder «Gem».
+- **Ord:** «Rediger» hedder «Tilpas» overalt (knapper, overskrifter «Tilpas opskriften» og «Tilpas tippet», hjælpetekster). Layoutværktøjet hedder «Designer»: «Åbn Designer», «Sæt Designer på pause», «Fortsæt Designer», «Designer: feltet».
+- **Kategorier ses:** kategori-mærket på opskriften, i listen (mærke + farvet streg) og på filterknapperne. Navnet står altid.
+- Links er blå (`--link`), ikke røde. Fejl og ulovlige træk bruger `--advarsel`. Tælleren i «Lav retten» er blæk, fremgangslinjen `--hovedhandling`.
+- Ingen løse farveværdier i komponenter i `style.css`. Undtaget: Designerens feltfarver i `tilpas.js` og reserveværdierne på indlæsningsskærmen i `index.html`.
+- Gemte placeringer er bevaret: kortet med madplanens knapper har sit gamle tekst-id som `data-tpid`, og afsnittet om Designers vindueshøjde har sit gamle id. Standardplaceringen for «Tilpas» står under `rediger`.
+- Beslutning: Designerens gemte feltfarver går stadig forud for rollerne (fx «Gem» i mynte, «Luk» i rød). Se status for 4a-3.
+
 ## 2.1.1 · Indlæsningsskærmen ses også, mens style.css hentes
 - Rettet: `style.css` blokerede første tegning, så skærmen var tom, til den var hentet (set med 4 s forsinkelse: kun papirfarve). Nu hentes den uden at blokere (`media="print"`, til den er hentet), og app.js starter først, når den er klar (`CssKlar`), så mål i koden læses fra den rigtige CSS. Fejler hentningen, bruges siden alligevel.
 - Skærmens farver er nu rollerne fra `style.css` (`--papir`, `--blaek`, `--gryde`, `--smor`) med faste reserveværdier, til filen er hentet. Før den er hentet, står teksten i systemskrift.

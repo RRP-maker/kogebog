@@ -99,7 +99,7 @@ const Tilpas = (() => {
   const feltTekster = new Set(['Hvad kan jeg lave?', 'Opskrifter', 'Tips', 'Tilføj med Claude', 'Mere', 'Indstillinger', 'Ny opskrift', 'Nyt tip', ...lager.hent('tpFeltTekster', [])]);
   // Standardværdier: placeringer, størrelser, tekster og farver, som felterne har efter gennemgangen. «Nulstil» går tilbage til dem.
   const STANDARD = {
-    "forside|hvad-skal-vi-lave": {}, "forslag|hvad-kan-jeg-lave": {}, "Ingredienser": {}, "tip-rediger": {}, "tip-slet": {}, // tomme: feltet arver ikke fra teksten (fx «Rediger» på opskriften)
+    "forside|hvad-skal-vi-lave": {}, "forslag|hvad-kan-jeg-lave": {}, "Ingredienser": {}, "tip-rediger": {}, "tip-slet": {}, // tomme: feltet arver ikke fra teksten (fx «Tilpas» på opskriften)
     "Kopiér besked": {"s": 20, "z": "s"},
     "Sæt ind": {"s": 20, "z": "s"},
     "Tips": {"s": 34},
@@ -115,9 +115,9 @@ const Tilpas = (() => {
     "Hvad har du derhjemme?": {"p": [0, -10]},
     "‹ Forside": {"l": true},
     "Du mangler lidt": {"t": "Der mangler"},
-    "Rediger": {"p": [0, -64, 1, 0]}, // helt til højre, på «Tilbage»s række (kant 1 = højre, afstand fra kanten)
-    "tip-alene": {"p": [0, -64, 1, 0]}, // «Tilføj tip» uden «Rediger» ved siden af: helt til højre
-    "Tilføj tip": {"p": [0, -64, 1, 128]}, // lige til venstre for «Rediger» (dennes bredde + mellemrum; nettet runder af til 16 px)
+    "rediger": {"p": [0, -64, 1, 0]}, // «Tilpas» (data-tpid rediger, hed «Rediger» før 2.2.0): helt til højre, på «Tilbage»s række (kant 1 = højre, afstand fra kanten)
+    "tip-alene": {"p": [0, -64, 1, 0]}, // «Tilføj tip» uden «Tilpas» ved siden af: helt til højre
+    "Tilføj tip": {"p": [0, -64, 1, 128]}, // lige til venstre for «Tilpas» (dennes bredde + mellemrum; nettet runder af til 16 px)
     "▶ Lav retten trin for trin": {"t": "Lav retten trin for trin"},
     "slet": {"z": "s", "p": [-106.74, 36.7]},
     "tips|nyt-tip": {"z": "s"},
@@ -242,12 +242,12 @@ const Tilpas = (() => {
       b = document.createElement('button'); b.id = 'tilpas-knap'; b.type = 'button';
       b.addEventListener('click', () => { aktiv = !aktiv; lager.gem('tilpasAktiv', aktiv); if (aktiv) tip(); anvend(); });
       document.getElementById('nav').append(b); // knappen står i navigationen, så længe «Tilpas siden» er slået til under Indstillinger
-      for (const [id, tekst, fkt] of [['tilpas-fortryd', '↶ Fortryd', fortryd], ['tilpas-gentag', 'Gentag ↷', gentag], ['tilpas-ny', '＋ Tilføj felt', palette]]) {
-        const x = document.createElement('button'); x.id = id; x.type = 'button'; x.textContent = tekst; x.addEventListener('click', fkt); document.body.append(x);
+      for (const [id, tekst, fkt, ikon] of [['tilpas-fortryd', 'Fortryd', fortryd, 'fortryd'], ['tilpas-gentag', 'Gentag', gentag, 'gentag'], ['tilpas-ny', '＋ Tilføj felt', palette]]) {
+        const x = document.createElement('button'); x.id = id; x.type = 'button'; if (ikon) { x.innerHTML = Ikoner.svg(ikon); x.setAttribute('aria-label', tekst); x.title = tekst; } else x.textContent = tekst; x.addEventListener('click', fkt); document.body.append(x);
       }
     } else if (!til && b) { b.remove(); ['tilpas-fortryd', 'tilpas-gentag', 'tilpas-ny'].forEach(id => { const x = document.getElementById(id); if (x) x.remove(); }); }
     knapper();
-    if (b) b.innerHTML = `<span>${Ikoner.svg(aktiv ? 'pause' : 'blyant')}</span><span>${aktiv ? 'Pause tilpas' : 'Tilpas igen'}</span>`;
+    if (b) b.innerHTML = `<span>${Ikoner.svg(aktiv ? 'pause' : 'blyant')}</span><span>${aktiv ? 'Sæt Designer på pause' : 'Fortsæt Designer'}</span>`;
   }
   // Kort tip første gang, man tilpasser. Det kan vises igen under Indstillinger.
   const TIP = 'Tryk på et felt for at ændre det. Flyt det med «Flyt op» og «Flyt ned», eller hold fingeren på det og træk. «Tilføj felt» laver et nyt felt, og «Fortryd» tager det sidste tilbage.';
@@ -326,7 +326,7 @@ const Tilpas = (() => {
     } catch (err) { /* tabellen findes ikke endnu: brug det, der er gemt på enheden */ }
   }
   function saet(v) {
-    til = !!v; if (til) { aktiv = false; lager.gem('tilpasAktiv', false); toast('Tilpasningen er på pause. Tryk på «Tilpas igen» for at ændre.'); } lager.gem('tilpasTil', til); anvend();
+    til = !!v; if (til) { aktiv = false; lager.gem('tilpasAktiv', false); toast('Designer er på pause. Tryk på «Fortsæt Designer» for at ændre.'); } lager.gem('tilpasTil', til); anvend();
     const c = document.getElementById('tilpastil'); if (c) c.checked = til;
   }
   const rgbAf = t => (String(t).match(/[\d.]+/g) || []).slice(0, 3).map(Number);
@@ -362,7 +362,7 @@ const Tilpas = (() => {
     const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !(beskyttet.has(k) || beskyttet.has(el.dataset.orgtekst)), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas, css) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${css(c)}" aria-label="${NAVN[c] || c}"></button>`).join('')}</div>`;
-    const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
+    const d = ark(`<div class="tp-top"><h2>Designer: feltet</h2><div class="rakke"><button class="knap gem" type="button" data-tp="gem">Gem</button><button class="knap annuller" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap annuller" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
       ${egenO && egenO.type === 'knap' ? `<label for="tp-link">Hvor fører knappen hen?</label><input type="text" id="tp-link" value="${esc(egenO.link || '')}" autocomplete="off"><p class="lille">En side i appen (fx #/opskrifter) eller en adresse, der starter med https://</p>` : ''}
       ${egenO && egenO.type === 'billede' ? `<label for="tp-url">Billedets adresse</label><input type="url" id="tp-url" value="${esc(egenO.indhold || '')}" autocomplete="off">` : ''}
       ${egenO && egenO.type === 'afstand' ? `<label>Hvor meget luft?</label><div class="rakke venstre">${[1, 2].map(n => `<button type="button" class="chip${String(n) === String(egenO.indhold || 1) ? ' valgt' : ''}" data-rk="${n}">${n} ${n === 1 ? 'række' : 'rækker'}</button>`).join('')}</div>` : ''}
@@ -378,7 +378,7 @@ const Tilpas = (() => {
       <div class="rakke venstre"><button class="knap" type="button" data-tp="egen" aria-pressed="${egen}">Egen farve til dette felt</button>${u ? '<button class="knap" type="button" data-tp="foelg">Følg listen igen</button>' : ''}</div>` : `<p class="lille">Ændringen gælder dette felt og de felter, der hænger sammen med det.</p>`}
       ${egenO && egenO.type !== 'knap' && egenO.type !== 'afstand' ? `<div class="rakke venstre"><button class="knap" type="button" data-tp="ramme" aria-pressed="${ramme}">${ramme ? 'Uden ramme' : 'Med ramme'}</button></div>` : ''}
       ${pladsHtml(el, k)}
-      ${egenO ? `<div class="rakke venstre"><button class="knap fare" type="button" data-tp="sletegen">Slet feltet</button></div>` : ''}
+      ${egenO ? `<div class="rakke venstre"><button class="knap slet" type="button" data-tp="sletegen">${Ikoner.svg('slet')} Slet feltet</button></div>` : ''}
       ${inst ? '' : opsk ? '<p class="lille">Teksten i opskriften kan ændres, men ikke flyttes.</p>' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
       <p class="lille" id="tp-flyttekst">${flytTekst(m)}</p>`}
       ${el.closest('.top') || opsk || inst ? '' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button></div>
@@ -449,7 +449,7 @@ const Tilpas = (() => {
       <label>Tekstfarve</label>${sw(TEKSTFARVER, o0.f, 'f', false, tCss)}<label>Feltets farve</label>${sw(FELTFARVER, o0.b, 'b', true, fCss)}
       <p class="lille tp-advarsel" id="tp-kontrast" role="status" hidden>⚠ Teksten er svær at læse på den farve. Prøv en mørkere.</p>` : ''}
       <div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
-      <div class="rakke">${data ? '' : `<button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button>`}<button class="knap" type="button" data-tp="nulstil">Nulstil plads</button><button class="knap primaer" type="button" data-tp="luk">Luk</button></div>`);
+      <div class="rakke">${data ? '' : `<button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button>`}<button class="knap" type="button" data-tp="nulstil">Nulstil plads</button>${Ikoner.rund('luk', 'Luk', 'data-tp="luk"')}</div>`);
     d.addEventListener('click', e => {
       if (e.target.closest('.ark-bag')) return lukArk();
       const pl = e.target.closest('[data-pl]'); if (pl) { pladsKlik(el, k, pl.dataset.pl); return; }
@@ -632,7 +632,7 @@ const Tilpas = (() => {
   function palette() {
     const d = ark(`<h2>Tilføj felt</h2><p class="lille">Feltet kommer øverst på det, du kan se. Bagefter kan du flytte det.</p>
       <div class="tp-palette">${EGNE.map(([t, n, f]) => `<button type="button" class="knap" data-ny="${t}"><strong>${n}</strong><small>${f}</small></button>`).join('')}</div>
-      <div class="rakke"><button class="knap" type="button" data-tp="luk">Luk</button></div>`);
+      <div class="rakke">${Ikoner.rund('luk', 'Luk', 'data-tp="luk"')}</div>`);
     d.addEventListener('click', e => {
       if (e.target.closest('.ark-bag') || e.target.closest('[data-tp=luk]')) return lukArk();
       const b = e.target.closest('[data-ny]'); if (b) nytFelt(b.dataset.ny);
@@ -650,7 +650,7 @@ const Tilpas = (() => {
       ${type === 'afstand' ? `<label>Hvor meget luft?</label><div class="rakke venstre"><button type="button" class="chip valgt" data-r="1">1 række</button><button type="button" class="chip" data-r="2">2 rækker</button></div>` : ''}
       ${type === 'beholder' ? '<p class="lille">Beholderen er en ramme. Flyt felter ind i den ved at trække dem.</p>' : ''}
       <p class="lille tp-advarsel" id="tp-ny-fejl" role="alert" hidden></p>
-      <div class="rakke"><button class="knap" type="button" data-tp="tilbage">‹ Tilbage</button><button class="knap gron" type="button" data-tp="tilfoej">Tilføj</button></div>`);
+      <div class="rakke"><button class="tilbage" type="button" data-tp="tilbage" aria-label="Tilbage" title="Tilbage">${Ikoner.svg('tilbage')}</button><button class="knap gem" type="button" data-tp="tilfoej">Tilføj</button></div>`);
     let rk = 1;
     const fejl = t => { const f = $('#tp-ny-fejl', d); f.textContent = t; f.hidden = false; };
     const sel = $('#tp-ny-link', d); if (sel) sel.addEventListener('change', () => d.querySelectorAll('.tp-url').forEach(x => { x.hidden = sel.value !== 'ude'; }));
@@ -843,7 +843,7 @@ const Tilpas = (() => {
   document.addEventListener('visibilitychange', hentIgen); addEventListener('focus', hentIgen);
   // Skifter skærmen mellem smal og bred, tegnes siden forfra, så felterne står på deres plads for den bredde
   BREDSK.addEventListener('change', () => { if (Object.values(obj).some(o => o.efter || o.efter_bred || o.type) && typeof route === 'function') route(); });
-  return { saet, klar: () => foersteHent || Promise.resolve(), til: () => til, tipIgen: () => { lager.gem('tilpasTipSet', false); toast('Tippet vises næste gang, du tilpasser.'); }, async nulstil() {
+  return { saet, klar: () => foersteHent || Promise.resolve(), til: () => til, tipIgen: () => { lager.gem('tilpasTipSet', false); toast('Tippet vises næste gang, du åbner Designer.'); }, async nulstil() {
     husk(); data = {}; obj = {}; lager.gem('tilpas', data); lager.gem('objekter', obj); anvend();
     try { await api('tilpasning?noegle=not.is.null', { method: 'DELETE' }); } catch (err) { console.error(err); }
     if (objTabel) try { await api('objekter?id=not.is.null', { method: 'DELETE' }); } catch (err) { console.error(err); }

@@ -50,10 +50,12 @@ async function api(sti, { method = 'GET', body, flet } = {}) {
 
 // ---------- Typer ----------
 const OPSKRIFT_KAT = ['Hovedret', 'Forret', 'Salat', 'Dessert', 'Tilbehør', 'Drikke']; // faste forslag til opskrifters kategori. Man kan altid skrive en ny.
+// Kategoriens farve (style.css, --kat-…). Egne kategorier får «andet». Navnet står altid ved siden af farven.
+const katKl = k => 'kat kat-' + ({ hovedret: 'hovedret', forret: 'forret', salat: 'salat', dessert: 'dessert', 'tilbehør': 'tilbehoer', drikke: 'drikke' }[String(k || '').trim().toLowerCase()] || 'andet');
 const OPSKRIFT_KOEKKEN = ['Dansk', 'Italiensk', 'Asiatisk', 'Spansk', 'Mexicansk', 'Fransk', 'Indisk', 'Amerikansk', 'Græsk', 'Mellemøstlig']; // faste forslag til køkken. Man kan altid skrive et nyt.
 const TYPER = {
   opskrifter: {
-    navn: 'Opskrifter', ny: 'Ny opskrift', rediger: 'Rediger opskrift',
+    navn: 'Opskrifter', ny: 'Ny opskrift', rediger: 'Tilpas opskriften',
     tom: 'Der er ingen opskrifter endnu. Tryk på «Ny opskrift» for at skrive den første.',
     bekraeft: 'Vil du slette opskriften? Den kan ikke hentes tilbage.', slettet: 'Opskriften er slettet',
     felter: [
@@ -70,7 +72,7 @@ const TYPER = {
     ]
   },
   tips: {
-    navn: 'Tips', ny: 'Nyt tip', rediger: 'Rediger tip',
+    navn: 'Tips', ny: 'Nyt tip', rediger: 'Tilpas tippet',
     tom: 'Der er ingen tips endnu. Et tip er et lille råd, fx «Kom salt i vandet, før pastaen».',
     bekraeft: 'Vil du slette tippet? Det kan ikke hentes tilbage.', slettet: 'Tippet er slettet',
     felter: [
@@ -126,7 +128,7 @@ const ik = Ikoner.svg;
 const stjernetekst = n => Ikoner.stjerner(n);
 function chips(r) {
   return [
-    r.kategori && esc(r.kategori),
+    r.kategori && { kl: katKl(r.kategori), t: esc(r.kategori) },
     r.koekken && esc(r.koekken),
     r.svaerhed && `<span aria-label="Sværhed ${r.svaerhed} af 5">Sværhed ${stjernetekst(r.svaerhed)}</span>`,
     r.tid_minutter && `${ik('ur')} ${r.tid_minutter} min`
@@ -162,7 +164,7 @@ function lukArk(straks) {
 function bekraeft(tekst, ja = 'Slet') {
   return new Promise(svar => {
     const d = ark(`<p class="ark-tekst">${esc(tekst)}</p><div class="rakke">
-      <button class="knap" data-svar="0">Behold</button><button class="knap fare" data-svar="1">${esc(ja)}</button></div>`);
+      <button class="knap" data-svar="0">Behold</button><button class="knap ${ja === 'Slet' || ja === 'Ryd' ? 'slet' : ja === 'Nulstil' || ja === 'Fjern' ? 'annuller' : 'hoved'}" data-svar="1">${ja === 'Slet' ? ik('slet') + ' ' : ''}${esc(ja)}</button></div>`);
     d.addEventListener('click', e => {
       const b = e.target.closest('[data-svar]');
       if (b || e.target.closest('.ark-bag')) { lukArk(); svar(!!b && b.dataset.svar === '1'); }
@@ -180,9 +182,9 @@ function spoergDublet(dubletter, antal) {
     const tekst = en ? `«${d0.titel}» findes allerede.` : dubletter.length === 1 ? `«${d0.titel}» findes allerede.` : `${dubletter.length} af opskrifterne findes allerede.`;
     const se = d0.id ? `<a class="knap hel" href="#/opskrifter/${d0.id}" data-svar="se">Se opskriften</a>` : '';
     const d = ark(`<p class="ark-tekst">${esc(tekst)}</p><div class="rakke">${en || dubletter.length === 1 ? se : ''}
-      <button class="knap primaer" data-svar="gem">${en ? 'Gem alligevel' : 'Gem alle'}</button>
+      <button class="knap gem" data-svar="gem">${en ? 'Gem alligevel' : 'Gem alle'}</button>
       ${en ? '' : '<button class="knap" data-svar="spring">Spring over dem</button>'}
-      <button class="knap" data-svar="nej">Annuller</button></div>`);
+      <button class="knap annuller" data-svar="nej">Annuller</button></div>`);
     d.addEventListener('click', e => {
       const b = e.target.closest('[data-svar]');
       if (!b && !e.target.closest('.ark-bag')) return;
@@ -420,11 +422,11 @@ function tilfoejTilHjem() {
   Hjaelper.sig('Læg Kogebog på hjemmeskærmen, så åbner den som en rigtig app:\n1. Tryk på Del-knappen i Safari (firkanten med en pil op).\n2. Rul ned, og tryk på «Føj til hjemmeskærm».\n3. Tryk på «Tilføj» øverst til højre.', { stor: true });
 }
 const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
-  ${chips(r).length ? `<span class="chips">${chips(r).map(c => `<span>${c}</span>`).join('')}</span>` : ''}</a>`;
+  ${chips(r).length ? `<span class="chips">${chips(r).map(c => c.kl ? `<span class="${c.kl}">${c.t}</span>` : `<span>${c}</span>`).join('')}</span>` : ''}</a>`;
 
 // En tæt række i opskriftslisten: navn og en linje med kategori, køkken og tid. Notesbogens linjer skiller rækkerne.
-const opskriftRaekke = (r, fav, valgt) => `<a class="oprk" data-tpid="opskrift-raekke" href="#/opskrifter/${r.id}"${valgt ? ' aria-current="true"' : ''}><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
-  <span>${esc([r.kategori, r.koekken, r.tid_minutter ? r.tid_minutter + ' min' : ''].filter(Boolean).join(' · ') || ' ')}</span></a>`;
+const opskriftRaekke = (r, fav, valgt) => `<a class="oprk${r.kategori ? ' ' + katKl(r.kategori) : ''}" data-tpid="opskrift-raekke" href="#/opskrifter/${r.id}"${valgt ? ' aria-current="true"' : ''}><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
+  <span>${r.kategori ? `<span class="kat-maerke">${esc(r.kategori)}</span> ` : ''}${esc([r.koekken, r.tid_minutter ? r.tid_minutter + ' min' : ''].filter(Boolean).join(' · ') || (r.kategori ? '' : ' '))}</span></a>`;
 
 // ---------- Lister ----------
 let L = {}; // data til den liste, der vises
@@ -478,23 +480,23 @@ async function liste(type, maal = app) {
   // I ruden til venstre er der kun smal plads: ingen «Tilbage» (navigationen findes), én «Importér»-menu og valgfelter i stedet for rækker af chips, der ruller væk
   const hoved = rude && type === 'opskrifter' ? `<h1>${T.navn}</h1>
     <div class="rakke rude-knapper">
-      <a class="knap primaer" href="#/${type}/ny">+ ${T.ny}</a>
+      <a class="knap hoved" href="#/${type}/ny">+ ${T.ny}</a>
       <details class="tilfoej"><summary class="knap" data-tpid="opskrifter-importer">Importér</summary>
         <div class="tilfoej-menu"><a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a><a class="knap" data-tpid="opskrifter-links" href="#/import/links">${ik('gryde')} Importér links</a></div></details>
     </div>
     ${rader.length ? `${soeg}
       <div class="rude-valg" data-r="kat">${kat.length ? valg('valg-kat', 'katValg', 'Kategori', 'Alle kategorier', kat, L.kat) : ''}${koek.length ? valg('valg-koek', 'koekkenValg', 'Køkken', 'Alle køkkener', koek, L.koekken) : ''}</div>
       ${soegChips}
-      <div class="filter" data-tpid="bjaelke-favoritter" role="group" aria-label="Favoritter">${favChip}</div>` : ''}` : `<a class="tilbage" href="#/">‹ Tilbage</a>
+      <div class="filter" data-tpid="bjaelke-favoritter" role="group" aria-label="Favoritter">${favChip}</div>` : ''}` : `${Ikoner.tilbage('#/')}
     <h1>${T.navn}</h1>
     <div class="rakke">
-      <a class="knap primaer" href="#/${type}/ny">+ ${T.ny}</a>
+      <a class="knap hoved" href="#/${type}/ny">+ ${T.ny}</a>
       ${type === 'opskrifter' ? `<a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a><a class="knap" data-tpid="opskrifter-links" href="#/import/links">${ik('gryde')} Importér links</a>` : ''}
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `${soeg}
       ${soegChips}
-      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" role="group" aria-label="Kategori"><button class="chip${L.kat ? '' : ' valgt'}" data-h="kat" data-v="">Alle</button>${favChip}${kat.map(k => `<button class="chip${k === L.kat ? ' valgt' : ''}" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
+      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" role="group" aria-label="Kategori"><button class="chip${L.kat ? '' : ' valgt'}" data-h="kat" data-v="">Alle</button>${favChip}${kat.map(k => `<button class="chip ${katKl(k)}${k === L.kat ? ' valgt' : ''}" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
       ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" role="group" aria-label="Køkken"><button class="chip${L.koekken ? '' : ' valgt'}" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip${k === L.koekken ? ' valgt' : ''}" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}`;
   maal.innerHTML = `${hoved}
     <div id="liste"${type === 'opskrifter' ? ' class="oplist"' : ''}></div>`;
@@ -529,10 +531,10 @@ function tegnListe() {
       ${til ? `<p class="lille">Til: <a href="#/opskrifter/${r.opskrift_id}">${esc(til)}</a></p>` : ''}${knapper('tips', r.id)}</article>`;
   }).join('') : `<p class="tomt">${rader.length ? (L.kunFav && !q && !kat && !koekken ? 'Du har ingen favoritter endnu. Tryk på stjernen i en opskrift.' : 'Ingen opskrifter passer. Prøv et andet ord.') : T.tom}</p>`;
 }
-// Knapperne nederst i et tip-kort: små, side om side. Egne id'er, så de ikke følger opskriftens «Rediger» og «Slet».
+// Knapperne nederst i et tip-kort: små, side om side. Egne id'er, så de ikke følger opskriftens «Tilpas» og «Slet».
 const knapper = (type, id, ekstra = '') => `<div class="rakke skaerm kortknapper">
-  <a class="knap mini" data-tpid="tip-rediger" href="#/${type}/${id}/rediger">${ik('blyant')} Rediger</a>${ekstra}
-  <button class="knap mini fare" data-tpid="tip-slet" data-h="slet" data-v="${type}:${id}">Slet</button></div>`;
+  <a class="knap mini tilpas" data-tpid="tip-rediger" href="#/${type}/${id}/rediger">${ik('blyant')} Tilpas</a>${ekstra}
+  <button class="knap mini slet" data-tpid="tip-slet" data-h="slet" data-v="${type}:${id}">${ik('slet')} Slet</button></div>`;
 
 // ---------- Opskrift ----------
 let S = null; // den opskrift, der vises
@@ -551,13 +553,13 @@ async function opskriftSide(rid, maal = app) {
   S = { r, tips, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
-  maal.innerHTML = `${iRude && !opskriftFra ? `<a class="tilbage direkte skaerm" href="#/opskrifter">‹ Tilbage</a>` : `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>`}
-    ${vaerktoej(`<a class="knap" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
+  maal.innerHTML = `${iRude && !opskriftFra ? `${Ikoner.tilbage('#/opskrifter', 'direkte skaerm')}` : `${Ikoner.tilbage(opskriftFra || '#/opskrifter', 'skaerm')}`}
+    ${vaerktoej(`<a class="knap tilpas" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Tilpas</a>`)}
     <div class="titelrakke opsk-felt" data-tpid="opsk-titel"><h1>${esc(r.titel)}</h1>
       <button id="favknap" data-tpid="favorit" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
-    ${c.length ? `<p class="chips opsk-felt" data-tpid="opsk-chips">${c.map(x => `<span>${x}</span>`).join('')}</p>` : ''}
+    ${c.length ? `<p class="chips opsk-felt" data-tpid="opsk-chips">${c.map(x => x.kl ? `<span class="${x.kl}">${x.t}</span>` : `<span>${x}</span>`).join('')}</p>` : ''}
     ${r.beskrivelse ? `<p class="tekst opsk-felt" data-tpid="opsk-beskrivelse">${esc(r.beskrivelse)}</p>` : ''}
-    <button class="knap primaer stor skaerm" data-h="lav">▶ Lav retten trin for trin</button>
+    <button class="knap hoved stor skaerm" data-h="lav">▶ Lav retten trin for trin</button>
     <div class="opsk-ruder" data-tpid="opsk-ruder"><section class="opsk-felt" data-tpid="opsk-ingredienser">
     <h2 class="opsk">Ingredienser</h2>
     <div class="portioner skaerm" data-tpid="portioner"><div class="stepper" role="group" aria-label="Antal portioner">
@@ -573,7 +575,7 @@ async function opskriftSide(rid, maal = app) {
     ${egne.length ? `<div class="opsk-felt" data-tpid="opsk-tips"><h2 class="opsk">Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}</div>` : ''}
     <div class="rakke skaerm"><a class="knap" data-tpid="opdater-claude" href="#/opdater/${r.id}">${ik('gnist')} Opdater med Claude</a>
       <button class="knap" data-h="print">Print</button></div>
-    <div class="rakke skaerm sletrakke"><button class="knap fare" data-tpid="slet" data-h="slet" data-v="opskrifter:${r.id}">Slet</button></div>`;
+    <div class="rakke skaerm sletrakke"><button class="knap slet" data-tpid="slet" data-h="slet" data-v="opskrifter:${r.id}">${ik('slet')} Slet opskriften</button></div>`;
   tegnIng(); tegnTrin(); tegnStjerner();
   Hjaelper.side([
     { tekst: 'Tryk på stjernen. Så bliver retten en favorit.', maal: 'favorit', bev: 'salto' },
@@ -589,13 +591,13 @@ function tegnIng() {
   const grp = ingGrupper(S.r), f = S.port / (S.r.portioner || S.port);
   $('#portinp').value = S.port; $('#portvis').textContent = S.port === 1 ? 'portion' : 'portioner';
   $('#ing').innerHTML = grp.length ? grp.map(g => (g.navn ? ingOverskrift(g.navn) : '') + g.ing.map(i => `<li><span>${esc(visIng(i, f))}</span></li>`).join('')).join('')
-    : '<li class="lille">Ingen ingredienser endnu. Tryk på «Rediger» for at skrive dem.</li>';
+    : '<li class="lille">Ingen ingredienser endnu. Tryk på «Tilpas» for at skrive dem.</li>';
 }
 function tegnTrin() {
   const trin = trinAf(S.r), b = kendteBegreber;
   $('#trin').innerHTML = trin.length ? `<ol class="trin">${trin.map(t => `<li>${medBegreber(t.t, b)}${
     t.del.length ? `<ul class="deltrin">${t.del.map(d => `<li>${medBegreber(d, b)}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ol>`
-    : '<p class="lille">Der er ingen trin endnu. Tryk på «Rediger» for at skrive dem.</p>';
+    : '<p class="lille">Der er ingen trin endnu. Tryk på «Tilpas» for at skrive dem.</p>';
 }
 function stjerneHtml(stj) {
   const min = (stj.find(s => s.bruger_id === ENHED) || {}).antal || 0;
@@ -654,18 +656,18 @@ function tegnLav() {
   } else {
     midte = `<h1>Velbekomme!</h1><p class="tekst">Du har lavet ${esc(r.titel)}. Hvordan smagte det?</p><div id="stjerner">${stjerneHtml(S.stj)}</div>
       <div class="traek" id="traek">${K.traek ? `<p class="tekst">${esc(K.traek)}</p>` : `<p class="tekst">Skal ingredienserne trækkes fra i «Hvad har du derhjemme?»</p>
-        <button type="button" class="knap felt felt-m primaer" data-tpid="traek-ja" data-h="traekFra">Ja, træk fra</button>
+        <button type="button" class="knap felt felt-m hoved" data-tpid="traek-ja" data-h="traekFra">Ja, træk fra</button>
         <button type="button" class="knap felt felt-m" data-tpid="traek-nej" data-h="traekNej">Nej tak</button>`}</div>`;
     naeste = '';
   }
   app.innerHTML = `<div class="lav">
-    <div class="lav-top"><a class="knap" data-tpid="luk" href="#/opskrifter/${r.id}">× Luk</a>
+    <div class="lav-top"><a class="rund rund-s luk" data-tpid="luk" href="#/opskrifter/${r.id}" aria-label="Luk" title="Luk">${ik('luk')}</a>
       <span>${i === -1 ? 'Før du går i gang' : i < n ? `Trin ${i + 1} af ${n}` : 'Færdig'}</span></div>
     <progress data-tpid="lav-fremgang" max="${n + 1}" value="${i + 1}" aria-label="Hvor langt du er"></progress>
     <div class="lav-midte" data-tpid="lav-trin">${midte}</div>
     <div class="lav-bund">
       <button class="knap stor" data-h="lavTrin" data-v="-1" ${i === -1 ? 'disabled' : ''}>‹ Tilbage</button>
-      ${naeste ? `<button class="knap stor primaer" data-h="lavTrin" data-v="1">${naeste}</button>` : `<a class="knap stor primaer" href="#/opskrifter/${r.id}">Til opskriften</a>`}
+      ${naeste ? `<button class="knap stor hoved" data-h="lavTrin" data-v="1">${naeste}</button>` : `<a class="knap stor hoved" href="#/opskrifter/${r.id}">Til opskriften</a>`}
     </div></div>`;
   tegnUre();
   window.scrollTo(0, 0);
@@ -805,13 +807,13 @@ async function formular(type, rid) {
   if (rid && !r[0]) return info(`Den findes ikke længere.<br><a href="#/${type}">Tilbage</a>`);
   const rad = r[0] || {};
   const tilbage = rid && type !== 'tips' ? `#/${type}/${rid}` : `#/${type}`;
-  app.innerHTML = `<a class="tilbage fortryd" href="${tilbage}">‹ Annuller</a>
+  app.innerHTML = `<a class="tilbage fortryd" href="${tilbage}">Annuller</a>
     ${type === 'opskrifter' ? vaerktoej() : ''}
     <h1>${rid ? T.rediger : T.ny}</h1>
     <form id="form" novalidate>
       ${T.felter.map(f => felt(f, rad, ekstra)).join('')}
       <div id="formfejl"></div>
-      <button class="knap primaer stor formknap" data-tpid="gem" type="submit">Gem</button>
+      <button class="knap gem stor formknap" data-tpid="gem" type="submit">Gem</button>
     </form>`;
   Hjaelper.side(type === 'opskrifter' ? [
     { tekst: 'Start med navnet på retten.', maal: 'navn', bev: 'salto' },
@@ -910,7 +912,7 @@ async function forslagSide() {
   await Katalog.hent().catch(() => {}); // kategorierne bruges til at kende krydderier
   if (id !== visning) return;
   // Brede skærme med «to ruder»: ingredienserne i et kort til venstre, forslagene til højre. Ellers én kolonne, som før.
-  const tilbage = '<a class="tilbage" href="#/">‹ Tilbage</a>', titel = '<h1>Hvad kan jeg lave?</h1>',
+  const tilbage = Ikoner.tilbage('#/'), titel = '<h1>Hvad kan jeg lave?</h1>',
     madplan = rude => `<a class="knap felt felt-m" data-tpid="${rude ? 'madplan-rude' : 'madplan'}" href="#/forslag/madplan">${ik('gryde')} Madplan</a>`, // i ruden står knappen på en anden plads end i én kolonne, så den har sit eget id
     claude = `<div class="rakke to-knapper"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button>
       <button type="button" class="knap" data-tpid="sorter-claude" data-h="sorterAndet">${ik('gnist')} Sortér med Claude</button></div>`,
@@ -1005,20 +1007,20 @@ const lavBesked = () => CLAUDE_BESKED.replace('§KAT§', Katalog.kategorier().jo
 function importSide() {
   claudeBesked = lavBesked();
   Katalog.hent().catch(() => {}); // kategorierne kommer med i beskeden
-  app.innerHTML = `<a class="tilbage" href="#/opskrifter">‹ Tilbage</a><h1>Tilføj med Claude</h1>
+  app.innerHTML = `${Ikoner.tilbage('#/opskrifter')}<h1>Tilføj med Claude</h1>
     <ol class="trin vejledning">
       <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
         <textarea id="egen" data-tpid="egen-tekst" rows="5" data-husk="importEgen" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
-        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-egen-saet" data-h="saetInd" data-v="egen">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="import-egen-fortryd" data-h="fortrydRyd" data-v="egen" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="import-egen-ryd" data-h="rydFelt" data-v="egen">Ryd</button></span></div>
-        <button class="knap primaer stor formknap" data-tpid="kopier-besked" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button></li>
+        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-egen-saet" data-h="saetInd" data-v="egen">Sæt ind</button><span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="import-egen-fortryd" data-h="fortrydRyd" data-v="egen" hidden')}<button type="button" class="knap mini slet" data-tpid="import-egen-ryd" data-h="rydFelt" data-v="egen">Ryd</button></span></div>
+        <button class="knap hoved stor formknap" data-tpid="kopier-besked" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button></li>
       <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
         <div class="rakke venstre"><a class="knap stor" data-tpid="aabn-claude" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
       <li>Kopiér Claudes svar, og sæt det ind her:
         <textarea id="claudesvar" data-tpid="claude-svar" rows="7" data-husk="importSvar" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea>
-        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-svar-saet" data-h="saetInd" data-v="claudesvar">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="import-svar-fortryd" data-h="fortrydRyd" data-v="claudesvar" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="import-svar-ryd" data-h="rydFelt" data-v="claudesvar">Ryd</button></span></div></li>
+        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-svar-saet" data-h="saetInd" data-v="claudesvar">Sæt ind</button><span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="import-svar-fortryd" data-h="fortrydRyd" data-v="claudesvar" hidden')}<button type="button" class="knap mini slet" data-tpid="import-svar-ryd" data-h="rydFelt" data-v="claudesvar">Ryd</button></span></div></li>
     </ol>
     <div id="formfejl"></div>
-    <button class="knap primaer stor formknap" data-h="gemImport">Gem opskriften</button>`;
+    <button class="knap gem stor formknap" data-h="gemImport">Gem opskriften</button>`;
   document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); }); // teksten huskes, til opskriften er gemt
   Hjaelper.side([
     { tekst: 'Sæt din opskrift eller dine links ind her.', maal: 'egen-tekst', bev: 'salto' },
@@ -1109,7 +1111,7 @@ const versionstekst = () => {
   return `Version ${esc(k.version)}${isNaN(d) ? '' : ' · ' + d.toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}`;
 };
 function mereSide() {
-  app.innerHTML = `<a class="tilbage" href="#/">‹ Tilbage</a>
+  app.innerHTML = `${Ikoner.tilbage('#/')}
     <h2>Indstillinger</h2>
     <p class="lille">Udseende</p>
     <div role="radiogroup" data-tpid="udseende" aria-label="Udseende">
@@ -1121,12 +1123,12 @@ function mereSide() {
     <label class="skift"><input type="checkbox" data-tpid="lyde" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
     <label class="skift"><input type="checkbox" id="toruder" ${toRuder() ? 'checked' : ''}> <span>Vis to ruder på brede skærme</span></label>
     <p class="lille">Når du åbner en opskrift: listen til venstre og opskriften til højre.${BRED.matches ? '' : ' Skærmen her er for smal, så det ses kun på en bred skærm (iPad på langs og Mac).'}</p>
-    <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Tilpas siden</span></label>
-    <p class="lille">Flyt, tilføj og skjul felter, og skift tekst og farver. Ændringerne gælder alle, der bruger kogebogen.</p>
-    <button type="button" class="knap" id="tilpastip">Vis tippet om tilpasning igen</button>
-    <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
-    <p class="lille">Hvor højt vinduet til at tilpasse et felt må blive, i procent af skærmen.</p>
-    <div class="stepper" data-tpid="mere-tilpashoejde" role="group" aria-label="Højde på tilpas-vinduet">
+    <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Åbn Designer</span></label>
+    <p class="lille">Designer flytter, tilføjer og skjuler felter og skifter tekst og farver. Ændringerne gælder alle, der bruger kogebogen.</p>
+    <button type="button" class="knap" id="tilpastip">Vis tippet om Designer igen</button>
+    <button class="knap annuller" id="tilpasnul">Nulstil alle tekster</button>
+    <p class="lille" data-tpid="mere|hvor-højt-vinduet-til-at-tilpasse-et-felt-må-blive-i-procent-af-skærmen">Hvor højt Designers vindue må blive, i procent af skærmen.</p>
+    <div class="stepper" data-tpid="mere-tilpashoejde" role="group" aria-label="Højde på Designers vindue">
       <button type="button" class="rund felt felt-s" data-tpid="mere-minus" id="tphned" aria-label="Lavere">−</button>
       <input id="tphoejde" class="felt felt-s" data-tpid="mere-tal" type="text" inputmode="numeric" autocomplete="off" value="${tilpasHoejde()}" aria-label="Højde i procent">
       <button type="button" class="rund felt felt-s" data-tpid="mere-plus" id="tpop" aria-label="Højere">+</button><span class="stepper-enhed">%</span></div>
@@ -1265,7 +1267,7 @@ const H = {
         <input id="b_navn" type="text" value="${esc(valgt)}" autocomplete="off">
         <label for="b_tekst">Forklaring</label><textarea id="b_tekst" rows="4"></textarea>
         <div id="arkfejl"></div>
-        <div class="rakke"><button class="knap" type="button" data-tpid="fortryd" data-h="lukArk">Annuller</button><button class="knap primaer" data-tpid="gem" type="submit">Gem</button></div>
+        <div class="rakke"><button class="knap annuller" type="button" data-tpid="fortryd" data-h="lukArk">Annuller</button><button class="knap gem" data-tpid="gem" type="submit">Gem</button></div>
       </form>`);
     const form = $('#begrebform', d);
     $('.ark-bag', d).addEventListener('click', lukArk);
@@ -1440,7 +1442,7 @@ document.addEventListener('keydown', e => {
   if (nr && !e.shiftKey && ((mod && !e.altKey) || (e.altKey && !mod)) && document.body.dataset.side !== 'lav') { e.preventDefault(); location.hash = STEDER[nr - 1]; return; }
   if (document.body.dataset.side === 'lav' && !mod && !e.altKey && !skriverNu(el)) {
     const paaKnap = el && el.matches && el.matches('button, a[href], summary, label');
-    if (e.key === 'ArrowRight' || (e.key === ' ' && !paaKnap)) { const k = $('.lav-bund .primaer'); if (k) { e.preventDefault(); k.click(); } }
+    if (e.key === 'ArrowRight' || (e.key === ' ' && !paaKnap)) { const k = $('.lav-bund .hoved'); if (k) { e.preventDefault(); k.click(); } }
     else if (e.key === 'ArrowLeft') { const k = $('.lav-bund [data-v="-1"]'); if (k && !k.disabled) { e.preventDefault(); k.click(); } }
   }
 });

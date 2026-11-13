@@ -35,14 +35,14 @@ const LinkImport = (() => {
 
   function side() {
     const gemt = lager.hent('linksFaerdig', []).length;
-    app.innerHTML = `<a class="tilbage" href="#/import">‹ Tilbage</a><h1>Importér links</h1>
+    app.innerHTML = `${Ikoner.tilbage('#/import')}<h1>Importér links</h1>
       <ol class="trin vejledning">
         <li>Sæt dine links ind her. Ét link på hver linje.
           <textarea id="links" data-tpid="links" rows="6" data-husk="linksTekst" placeholder="https://…" aria-label="Links til opskrifter"></textarea>
-          <div class="felt-knapper"><button type="button" class="knap" data-tpid="links-saet" data-h="saetInd" data-v="links">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="links-fortryd" data-h="fortrydRyd" data-v="links" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="links-ryd" data-h="rydFelt" data-v="links">Ryd</button></span></div></li>
+          <div class="felt-knapper"><button type="button" class="knap" data-tpid="links-saet" data-h="saetInd" data-v="links">Sæt ind</button><span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="links-fortryd" data-h="fortrydRyd" data-v="links" hidden')}<button type="button" class="knap mini slet" data-tpid="links-ryd" data-h="rydFelt" data-v="links">Ryd</button></span></div></li>
         <li>Tryk på Start. Jeg henter opskrifterne én ad gangen. Hold siden åben, mens det kører. Stopper du, kan du trykke Start igen, så fortsætter jeg, hvor jeg slap.
           <div class="rakke venstre">
-            <button class="knap primaer stor" data-tpid="links-start" data-h="startLinks">${ik('gnist')} Start</button>
+            <button class="knap hoved stor" data-tpid="links-start" data-h="startLinks">${ik('gnist')} Start</button>
             <button class="knap stor" data-tpid="links-stop" data-h="stopLinks" hidden>Stop</button>
           </div></li>
         <li>Her kan du følge med:

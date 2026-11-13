@@ -86,8 +86,8 @@ const Hjaelper = (() => {
       <button class="h-figur" type="button" aria-label="Hjælperen. Tryk for hjælp.">${SVG}</button>
       <button class="h-skjul" type="button" aria-label="Skjul hjælperen">×</button>`;
     visKnap = document.createElement('button');
-    visKnap.id = 'hjaelper-vis'; visKnap.type = 'button';
-    visKnap.textContent = 'Vis hjælper';
+    visKnap.id = 'hjaelper-vis'; visKnap.type = 'button'; visKnap.className = 'rund hjaelp';
+    visKnap.setAttribute('aria-label', 'Vis hjælper'); visKnap.title = 'Vis hjælper'; visKnap.innerHTML = Ikoner.svg('hjaelp');
     document.body.append(rod, visKnap);
     figur = rod.querySelector('.h-figur'); boble = rod.querySelector('.h-boble'); tekst = boble.querySelector('p'); knapEl = boble.querySelector('.h-knap');
     turEl = boble.querySelector('.h-tur'); talEl = boble.querySelector('.h-tal'); naesteKnap = boble.querySelector('.h-naeste');
