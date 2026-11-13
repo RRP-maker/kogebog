@@ -735,6 +735,18 @@ body.tilpas .tp-afstand { background: repeating-linear-gradient(135deg, rgba(var
 .tp-palette .knap small { font-size: 14px; line-height: 18px; color: var(--blyant); }
 .tp-plads { flex-wrap: wrap; gap: 8px; }
 .sw.ingen { display: inline-grid; place-items: center; background: transparent; border: 1px dashed var(--blyant); color: var(--blaek); font: 20px/1 var(--skrift); }
+/* Designer 4d-2: farver med navn og rolle («Grøn = Gem»), så farven aldrig står alene */
+.tp-farvegruppe { margin: 0; }
+.sw.navn { width: auto; height: 32px; border-radius: 16px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px 0 6px; font: 17px/1 var(--skrift); color: var(--blaek); background: var(--flade); border: 1px solid var(--glaskant); }
+.sw.navn > i { width: 20px; height: 20px; flex: none; border-radius: 50%; border: 1px solid rgba(var(--blaek-rgb), .4); box-sizing: border-box; }
+.sw.navn > i.glas { background: linear-gradient(135deg, var(--smor) 0 34%, var(--himmel) 34% 67%, var(--rosa) 67%); }
+.sw.navn.ingen > i { border: 1px dashed var(--blyant); background: transparent; }
+.tp-flade { border-radius: 8px; padding-inline: 4px; margin-inline: -4px; } /* tekst med feltfarve: luft til siderne uden at flytte teksten fra nettet */
+.tp-pop-tekst { white-space: pre-line; overflow-wrap: anywhere; }
+/* Et af appens popupvinduer er åbent, mens Designer er slået til: bjælken står over vinduet, så Designer kan sættes i gang og på pause. Tilføj virker kun på siden. */
+body.tilpas-menu:has(#ark:not(.tp-ark)) #nav { z-index: 61; }
+body.tilpas-menu #ark:not(.tp-ark) .ark-kort { margin-bottom: var(--nav-b); } /* vinduet står over bjælken, ikke under den */
+body:has(#ark:not(.tp-ark)) #tilpas-ny { display: none; }
 @media (prefers-reduced-motion: reduce) { .traekker { transition: none !important; } }
 
 /* Hvad kan jeg lave: «højst så mange ingredienser må mangle» ved siden af overskriften */

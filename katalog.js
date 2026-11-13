@@ -155,7 +155,7 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
     const ak = kat.find(c => c.navn_norm === 'andet'), andet = (ak && grupper.get(ak.id)) || { navn: IKKE_SORTERET, liste: [] };
     for (const i of ing) (grupper.get(i.kategori_id) || andet).liste.push(i.navn);
     const alle = [...grupper.values(), andet].filter(g => g.liste.length);
-    return alle.length ? `<table class="ing-tabel tekst-s"><thead><tr><th>Kategori</th><th>Ingredienser</th></tr></thead><tbody>${alle.map(g =>
+    return alle.length ? `<table class="ing-tabel tekst-s" data-tpid="ing-tabel"><thead><tr><th>Kategori</th><th>Ingredienser</th></tr></thead><tbody>${alle.map(g =>
       `<tr><th scope="row">${esc(g.navn)}<span>${g.liste.length}</span></th><td>${g.liste.sort((x, y) => x.localeCompare(y, 'da')).map(esc).join(', ')}</td></tr>`).join('')}</tbody></table>`
       : '<p class="tomt">Der er ingen ingredienser i databasen endnu.</p>';
   }

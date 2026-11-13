@@ -2,6 +2,18 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.7.0 · Designer: alle tekster, popupvinduer, tabeller og farver med rolle (opdatering 4d-2)
+- **Alle faste tekster kan vælges:** også mellemoverskrifter, navne over felter, punkter i vejledninger, tabelhoveder og teksterne i appens popupvinduer. Data kan ikke ændres: navne, beskeder med «», fejlbeskeder, opskriftens linjer og tekster med et felt inde i sig.
+- **Tekster, appen selv skifter** (fx en status), skrives ikke længere tilbage til den første tekst. Kun en tekst, du har ændret i Designer, sættes ind.
+- **Feltfarve på alle felter:** også overskrifter og tekster (runde hjørner, teksten står stadig på nettet), kort, tællere og bjælker.
+- **Popupvinduer:** mens Designer er slået til, står bjælken over vinduet, så Designer kan sættes på pause og i gang igen. Tryk på en tekst i vinduet: vinduet gemmes væk, mens feltet tilpasses, og kommer igen bagefter. Tekst og farver kan ændres, men felter i vinduer flyttes ikke. Id'et er `vindue:<overskrift>|<tekst>`. «Tilføj» er skjult, mens et vindue er åbent.
+- **Tabeller** (`data-tpid` `ing-tabel` og `iv-tabel`): tekststørrelse, tekstfarve og feltfarve. Tabelhoveder kan ændres.
+- **Ny knap til et popupvindue:** «Tilføj» → «Knap» → «Hvor fører knappen hen?» → «Et popupvindue», med overskrift og tekst (en tom linje = nyt afsnit). Gemmes i `objekter` som `link: 'popup'` og `indhold` (JSON). Knappens vindue tilpasses på knappen.
+- **Farver vises med rolle:** «Grøn = Gem», «Lysegrøn = Salat» osv., i grupperne Handlinger, Kategorier og Uden fast betydning. De nye feltfarver bruger appens roller (`--gem`, `--kat-salat` …) med tekst fra `--paa-…`, så de følger temaet og har kontrast som rollerne.
+- Ældre feltfarver vises som før. `smoer` og `rod` vises som «Gul = Tilpas» og «Rød = Slet» i Designer og gemmes som rollen, næste gang feltet gemmes (i mørkt tema er rollens gule lysere end den gamle).
+- Beslutning: felter i vinduer flyttes ikke (sidebyggeren arbejder kun i siden).
+- Kopi af `objekter` (50 rækker) før ændringen: `madplan`, række `kopi-objekter-4d2`. Slettes, når Rasmus har sagt god for 2.7.0.
+
 ## 2.6.0 · Billeder (opdatering 4e)
 - **Flere billeder pr. opskrift.** Ét er forsiden (stjernen «Forside» i formularen). Forsiden vises øverst på opskriften og som lille billede foran navnet i listen. De andre billeder af hele retten står i en række under forsiden. Tryk på et billede for at se det stort.
 - **Billeder på trin.** Ved hvert billede vælges «Hører til»: hele retten eller et trin. Trinnets billeder står under trinnet på opskriften og over teksten, når man laver retten trin for trin. Flyttes eller rettes trinnene, følger billedet med (trinnets tekst huskes).

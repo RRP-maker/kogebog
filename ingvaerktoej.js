@@ -191,7 +191,7 @@ ${linjer.join('\n')}
   const flertal = (n, en, flere) => `${n} ${n === 1 ? en : flere}`;
   const tid = t => new Date(t).toLocaleString('da-DK', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
   const del = (noegle, titel, antal, indhold) => antal ? `<details class="iv-del" data-del="${noegle}"${aabne.has(noegle) ? ' open' : ''}><summary>${titel} (${antal})</summary>${indhold}</details>` : '';
-  const tabel = (hoveder, raekker) => `<table class="ing-tabel tekst-s"><thead><tr>${hoveder.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${raekker.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const tabel = (hoveder, raekker) => `<table class="ing-tabel tekst-s" data-tpid="iv-tabel"><thead><tr>${hoveder.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${raekker.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   const visFejl = liste => { $('#iv-fejl').innerHTML = liste.length ? `<div class="fejlboks" role="alert" tabindex="-1">${liste.slice(0, 8).map(esc).join('<br>')}${liste.length > 8 ? `<br>Og ${liste.length - 8} fejl mere.` : ''}</div>` : ''; const b = $('#iv-fejl .fejlboks'); if (b) b.focus(); };
 
   function status() {
