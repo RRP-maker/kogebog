@@ -2,6 +2,10 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.2.1 · «Annuller» skiller sig ud fra glasknapperne
+- Melgrå «Annuller» lignede en almindelig glasknap. Nu er fladen fast og tydeligt mørkere: havremel `#d1c7ad` med kant `#6e6757` i lyst tema (tekst 6,8:1, kant 5,5:1) og mellemgrå `#8d95b3` med mørk tekst i mørkt tema (tekst 6,1:1, kant 5,5:1).
+- Designerens gamle feltfarver er fjernet fra `objekter` (13. nov., efter Rasmus' ja), så knapperne viser rollernes farver. Kun `baggrund` (og `farve: hvid`, hvor den hørte til baggrunden) er sat til tom. Placeringer er urørte. Før: `forside|hvad-kan-jeg-lave` hvid/indigo, `gem` mynte, `opskrifter/:id/lav|start` mynte, `luk` rod, `madplan` smoer, `mp-udskift` rod, `mp-vaelg-ret` mynte, `mere|nulstil-alle-tekster` glas, `tip-rediger` hvid/smoer, `tip-slet` rod.
+
 ## 2.2.0 · Farver med betydning, ens knapper, «Tilpas» og «Designer» (opdatering 4a-3)
 - **Farver i to lag** øverst i `style.css`: rå farver (`--raa-…`, kun i `:root` og det mørke tema) og roller, som komponenter bruger. Handlinger: `--gem` (æblegrøn), `--tilpas` (smørgul), `--slet` (tomatrød), `--annuller` (melgrå), `--hjaelp` (blåbærblå), `--hovedhandling` (blæk). Hver har `--paa-…` (tekst) og `…-kant`. Kategorier: `--kat-hovedret`, `-forret`, `-salat`, `-dessert`, `-tilbehoer`, `-drikke` og `-andet` (egne kategorier). Værdierne er fra farvelisten i 4a-1.
 - **Knapper efter rolle:** klasserne `gem`, `hoved`, `slet`, `annuller`, `tilpas`, `hjaelp` på `.knap` (erstatter `primaer`, `gron`, `fare`). Rød betyder kun, at noget går tabt (Slet, Ryd). Slet har skraldespand og tingens navn («Slet opskriften»). Fjern og Nulstil er melgrå. Melgrå har 2 px kant, og en deaktiveret knap er bleg med stiplet kant, så de ikke ligner hinanden.

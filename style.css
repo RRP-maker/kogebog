@@ -16,7 +16,7 @@
   --raa-aeble: #2a7f3a; --raa-aeble-lys: #8fdc7a; --raa-aeble-moerk: #11240f;
   --raa-smoer: #ffd95a; --raa-smoer-moerk: #946a00;
   --raa-tomat: #cf3a24; --raa-tomat-lys: #ff8a75; --raa-tomat-moerk: #2e0d07;
-  --raa-mel: #ebe6d8; --raa-mel-kant: #7f7a6b; --raa-skifer: #3a4159; --raa-skifer-kant: #8d95b3;
+  --raa-mel: #d1c7ad; --raa-mel-kant: #6e6757; --raa-skifer-kant: #8d95b3; --raa-skifer-moerk: #11152a; /* havremel: tydeligt mørkere end glas og papir (2.2.1) */
   --raa-blaabaer: #5a55c8; --raa-blaabaer-lys: #aeb0ff; --raa-blaabaer-moerk: #15133d;
   --raa-blaek: #22386b; --raa-blaek-lys: #e9edf9; --raa-nat: #1a1f2e; --raa-hvid: #ffffff;
   --raa-sovs: #f3ddd3; --raa-sovs-kant: #9a4b33; --raa-sovs-nat: #4a2c24; --raa-sovs-natkant: #d98a6e;
@@ -892,7 +892,7 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --gem: var(--raa-aeble-lys); --paa-gem: var(--raa-aeble-moerk); --gem-kant: var(--raa-aeble-lys);
   --tilpas: var(--raa-smoer); --paa-tilpas: var(--raa-nat); --tilpas-kant: var(--raa-smoer);
   --slet: var(--raa-tomat-lys); --paa-slet: var(--raa-tomat-moerk); --slet-kant: var(--raa-tomat-lys);
-  --annuller: var(--raa-skifer); --paa-annuller: var(--raa-blaek-lys); --annuller-kant: var(--raa-skifer-kant);
+  --annuller: var(--raa-skifer-kant); --paa-annuller: var(--raa-skifer-moerk); --annuller-kant: var(--raa-skifer-kant); /* fast mellemgrå: hverken klart glas eller hvid hovedknap */
   --hjaelp: var(--raa-blaabaer-lys); --paa-hjaelp: var(--raa-blaabaer-moerk); --hjaelp-kant: var(--raa-blaabaer-lys);
   --hovedhandling: var(--raa-blaek-lys); --paa-hovedhandling: var(--raa-nat); --hovedhandling-kant: var(--raa-blaek-lys);
   --paa-kat: var(--raa-blaek-lys);
