@@ -27,6 +27,7 @@ const Ikoner = (() => {
     fortryd: `<g stroke-width="2"><path d="M9 4 4.5 8.5 9 13"/><path d="M4.5 8.5H14a5.5 5.5 0 0 1 0 11h-3.5"/></g>`,
     gentag: `<g stroke-width="2" transform="matrix(-1 0 0 1 24 0)"><path d="M9 4 4.5 8.5 9 13"/><path d="M4.5 8.5H14a5.5 5.5 0 0 1 0 11h-3.5"/></g>`,
     slet: `<path d="M6 7.5h12l-1 11.5a1.8 1.8 0 0 1-1.8 1.6H8.8A1.8 1.8 0 0 1 7 19z" fill="var(--i1,none)"/><path d="M4 7.5h16M9.5 7.5V5.2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2.3M10 11v6M14 11v6"/>`,
+    fjern: `<path d="M6.5 12h11" stroke-width="2.6"/>`, // Fjern fra en liste (tingen findes stadig). × er kun Luk.
     luk: `<path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke-width="2.2"/>`,
     tilbage: `<path d="M14.5 5.5 8 12l6.5 6.5" stroke-width="2.4"/>`,
     hjaelp: `<path d="M9 9.2a3 3 0 1 1 4.4 2.6c-.9.5-1.4 1.2-1.4 2.2v.6" stroke-width="2.2"/><circle cx="12" cy="18.2" r="1.2" fill="currentColor" stroke="none"/>`,

@@ -2,6 +2,12 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.2.3 · Samme handling, samme form (kriterie 2 færdigt)
+- «Fjern» fra en liste (ingredienslinjer, «Hvad har du derhjemme?», gennemgangen) har nu et minus-ikon på melgrå flade. Før var det ×, som også betyder Luk.
+- «Nulstil plads» i Designer er melgrå som al anden Nulstil.
+- Knappen nederst i «Tjek ingredienserne» er kun grøn (Gem), når den gemmer noget. Står der «Færdig», er den en almindelig hovedknap.
+- Designerens gemte feltfarver blev fjernet i 2.2.1, så rollernes farver gælder overalt.
+
 ## 2.2.2 · Gulerod til hovedknapperne, «Tilføj tip» i blåbær
 - `--hovedhandling` er nu gulerod i stedet for blæk (Rasmus' valg C): lys `#b4530c` med hvid tekst (5,0:1, kant 4,9:1), mørk `#f5a25a` med mørk tekst (8,5:1, kant 8,0:1). Gælder «Lav retten», «+ Ny opskrift», «Generer ny madplan», «Start», «Næste» m.fl. Den skilles nu også fra «valgt» (blæk).
 - «Tilføj tip» bruger `hjaelp` (blåbær): et tip forklarer et ord, og knappen skilles fra den gule «Tilpas» ved siden af.

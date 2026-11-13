@@ -449,7 +449,7 @@ const Tilpas = (() => {
       <label>Tekstfarve</label>${sw(TEKSTFARVER, o0.f, 'f', false, tCss)}<label>Feltets farve</label>${sw(FELTFARVER, o0.b, 'b', true, fCss)}
       <p class="lille tp-advarsel" id="tp-kontrast" role="status" hidden>⚠ Teksten er svær at læse på den farve. Prøv en mørkere.</p>` : ''}
       <div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
-      <div class="rakke">${data ? '' : `<button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button>`}<button class="knap" type="button" data-tp="nulstil">Nulstil plads</button>${Ikoner.rund('luk', 'Luk', 'data-tp="luk"')}</div>`);
+      <div class="rakke">${data ? '' : `<button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button>`}<button class="knap annuller" type="button" data-tp="nulstil">Nulstil plads</button>${Ikoner.rund('luk', 'Luk', 'data-tp="luk"')}</div>`);
     d.addEventListener('click', e => {
       if (e.target.closest('.ark-bag')) return lukArk();
       const pl = e.target.closest('[data-pl]'); if (pl) { pladsKlik(el, k, pl.dataset.pl); return; }

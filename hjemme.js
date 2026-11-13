@@ -53,7 +53,7 @@ const Hjemme = (() => {
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
       <button type="button" class="rund hj-ikon" data-h="hjKat" aria-label="Skift kategori">${ik('tag')}</button>
-      <button type="button" class="rund hj-ikon hj-x" data-h="hjFjern" aria-label="Fjern fra listen">×</button></div>`;
+      <button type="button" class="rund hj-ikon hj-x" data-h="hjFjern" aria-label="Fjern fra listen" title="Fjern fra listen">${Ikoner.svg('fjern')}</button></div>`;
   }
   const LUKKET = new Set(lager.hent('hjLukket', [])); // kategorier, der er foldet sammen
   function tegn() {
@@ -357,7 +357,7 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
         <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" value="${Number(x.maengde) > 0 ? esc(visTal(Number(x.maengde))) : ''}">
         <select class="hj-enh" aria-label="Enhed">${enhHtml(x.enhed)}</select>
         <input class="hj-navn" type="text" autocomplete="off" aria-label="Ingrediens" value="${esc(x.navn)}">
-        <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen">×</button></div>`).join('')}</div>`
+        <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen" title="Fjern fra listen">${Ikoner.svg('fjern')}</button></div>`).join('')}</div>`
         : '<p class="tomt">Alt, Claude fandt, står allerede i dit køkken.</p>'}
       ${har.length ? `<h2>Du har dem allerede <span class="gn-tal">${har.length}</span></h2>
         <small>De bliver ikke tilføjet igen. Sæt kryds, hvis du vil rette mængden til det, Claude så.</small>
@@ -365,10 +365,10 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
           return `<div class="gn-har" data-i="${i}"><div class="gn-navn"><strong>${esc(ing ? ing.navn : x.navn)}</strong>
             <span>Du har: ${esc(mgdTekst(h, d.enhed))}${kan ? `. Claude så: ${esc(mgdTekst(x.maengde, x.enhed))}` : ''}</span></div>
             ${kan ? `<label class="skift"><input type="checkbox" class="gn-ret"${x.ret ? ' checked' : ''}> <span>Ret til ${esc(mgdTekst(x.maengde, x.enhed))}</span></label>` : ''}
-            <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen">×</button></div>`; }).join('')}` : ''}
+            <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen" title="Fjern fra listen">${Ikoner.svg('fjern')}</button></div>`; }).join('')}` : ''}
       <div id="arkfejl"></div>
       <div class="rakke"><button type="button" class="knap annuller" data-tpid="gn-fortryd" data-h="gnFortryd">Annuller</button>
-        <button type="button" class="knap gem" data-tpid="gn-gem" data-h="gnGem">${nye.length ? `Tilføj ${nye.length} ${nye.length === 1 ? 'ting' : 'ting'}` : 'Færdig'}</button></div>`;
+        <button type="button" class="knap ${nye.length ? 'gem' : 'hoved'}" data-tpid="gn-gem" data-h="gnGem">${nye.length ? `Tilføj ${nye.length} ${nye.length === 1 ? 'ting' : 'ting'}` : 'Færdig'}</button></div>`;
   }
   async function gennemgang() {
     const id = visning;

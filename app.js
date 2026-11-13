@@ -680,7 +680,7 @@ function tegnLav() {
 // ---------- Redigering af ingredienser og trin: ét skrivefelt pr. linje ----------
 const ORD_OVERSKRIFT = 'overskrift'; // ordet i knappen, der deler ingredienserne op (fx Sovs, Kødboller)
 function rkHtml(ed, { art = 'ing', niv = 0, tekst = '' } = {}) {
-  const fjern = '<button type="button" class="rk-fjern" data-h="rkFjern" aria-label="Fjern linjen">×</button>';
+  const fjern = '<button type="button" class="rk-fjern" data-h="rkFjern" aria-label="Fjern linjen" title="Fjern linjen">' + Ikoner.svg('fjern') + '</button>';
   if (ed === 'ing') {
     const o = art === 'over';
     return `<div class="rk${o ? ' over' : ''}" data-art="${o ? 'over' : 'ing'}">
