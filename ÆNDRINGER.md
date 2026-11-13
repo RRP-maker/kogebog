@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.0.0 · Sidebygger, fase 5: de gamle placeringer er regnet om
+- Første gang en side vises på en smal (iPhone) og en bred skærm (iPad, Mac), regnes dine gamle pixelplaceringer om til rækkefølge og kant: der, hvor feltet står (efter beskyttelsen mod overlap), bliver dets nye plads. Tekst, størrelse og farver følger med. Placeringer, der gav overlap eller sendte et felt ud af skærmen, bliver til feltets egen plads.
+- Felter, der er låst på skærmen, beholder deres forskydning.
+- Tabellen «tilpasning» røres ikke. Sikkerhedskopi før omregningen: `supabase/sikkerhedskopi/tilpasning-2026-11-13.json` og `.sql` (lægger den tilbage).
+- Beslutning: Omregningen sker i appen, når siden vises, og ikke én gang for alle i databasen. Pladsen afhænger af sidens opbygning og skærmens bredde, og den kendes kun, når siden er tegnet.
+- Beslutning: Gamle nøgler til felter, der ikke findes mere (`mp-dagfelt-…`, `kort:…`), regnes ikke om og bliver liggende i «tilpasning».
+
 ## 1.10.0 · Sidebygger, fase 4: opskriften som beholder
 - Opskriftens dele er datafelter: titel, mærker, beskrivelse, ingredienser, trin, «Hvordan smagte det?», tips og «Vores side». Når du tilpasser, kan de flyttes (også ingredienser og trin ud af de to kolonner), få ramme og farve. Teksten kommer altid fra opskriften og kan ikke ændres her.
 - Linjelængde: løbende tekst i opskriften og trin for trin er højst 640 px (40 kolonner, ca. 70 tegn), så linjerne ikke bliver for lange på iPad og Mac.

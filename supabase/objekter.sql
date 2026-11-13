@@ -14,7 +14,7 @@ create table if not exists objekter (
   pos text,                         -- kun felter, der er låst på skærmen: forskydning i px («dx,dy»), så feltet bliver, hvor det stod
   skabelon_for text,                -- skabelon: listens navn. Ændres den, ændres alle elementer i listen
   undtagelse_for text,              -- undtagelse fra en skabelon: kun farve og baggrund
-  omregnet boolean,                 -- fase 5: placeringen er regnet om fra en gammel pixelplacering
+  omregnet text,                    -- fase 5: den gamle pixelplacering er regnet om («smal», «bred» eller «begge»)
   opdateret timestamptz not null default now()
 );
 alter table objekter enable row level security;

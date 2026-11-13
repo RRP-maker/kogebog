@@ -1,10 +1,8 @@
-// Tilpas siden: når det er slået til, kan man trykke på en knap eller overskrift og ændre teksten og skriftstørrelsen,
-// og holde fingeren på et felt og trække det. Det falder på notesbogens net: 16 px på tværs, og på rækkerne à 32 px op og ned
-// (store felter: top midt mellem to linjer. Små felter på 32 px: kanterne på linjerne. Tekst: på rækken).
-// Kolonner i «tilpasning»: pos («dx,dy», målt ved øverst på siden), felt (størrelsen s/m/l), laast (true: feltet sidder fast på skærmen og følger med,
-// når man ruller. false eller tom: det bliver liggende på sin plads på siden. «Tilføj tip» og «Rediger» sidder som standard fast).
-// Ændringen gælder alle steder, hvor den samme tekst står. Den gemmes i Supabase (tabellen «tilpasning») og dermed på alle enheder.
-// Mangler tabellen, gemmes den kun på denne enhed.
+// Tilpas siden (sidebyggeren): når det er slået til, kan man trykke på et felt og ændre tekst, størrelse og farver, flytte det (op, ned, kant, bredde, eller hold og træk),
+// tilføje egne felter (tekst, knap, billede, afstand, beholder) og slette dem igen. Felterne flyttes i rækkefølge, så de aldrig ligger oven på hinanden.
+// Felter, der er låst på skærmen, svæver over siden og flyttes med pixels.
+// Alt gemmes i Supabase i tabellen «objekter» (eller i «tilpasning» under «obj|nøgle», til tabellen findes) og dermed på alle enheder.
+// De gamle tilpasninger fra før opdatering 2 (tabellen «tilpasning», pixelplaceringer) gælder, til de er regnet om (fase 5, se omregn).
 const Tilpas = (() => {
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret, .mp-rk > span, .hj-fold, .tp-egen'; // tp-egen: dine egne felter. hj-fold: overskrifterne i «Hvad har du derhjemme?» (en liste med skabelon) // de sidste: dagene, retternes felter og tællernes navne på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
@@ -157,8 +155,8 @@ const Tilpas = (() => {
     if (plads(k) && !o.pos) delete r.p; // en ny plads (rækkefølge, kant, bredde) afløser pixelplaceringen. Kun felter, der er låst på skærmen, har en forskydning.
     return r;
   };
-  const NULPLADS = { efter: null, efter_bred: null, kant: null, kant_bred: null, bredde: null, bredde_bred: null, omregnet: true }; // «Nulstil»: tilbage til feltets egen plads
-  const omregnet = k => !!(obj[k] && obj[k].omregnet);
+  const NULPLADS = { efter: null, efter_bred: null, kant: null, kant_bred: null, bredde: null, bredde_bred: null, omregnet: 'begge' }; // «Nulstil»: tilbage til feltets egen plads
+  const omregnet = k => { const v = obj[k] && obj[k].omregnet; return v === true || v === 'begge' || v === (matchMedia('(min-width: 744px)').matches ? 'bred' : 'smal'); }; // den gamle pixelplacering er regnet om for den skærm, man bruger nu
   const undtag = el => el.dataset.tpinst ? obj[el.dataset.org + '#' + el.dataset.tpinst] : null;
 
   const slug = s => String(s).toLowerCase().replace(/[^a-zæøå]+/g, '-').replace(/^-|-$/g, '');
@@ -233,7 +231,8 @@ const Tilpas = (() => {
         flere = true; plac(el, p, fast, el._ign ? 2 : 1); el._ign = 1; if (uheldig(el)) plac(el, p, fast, 2);
       });
     }
-    document.querySelectorAll('[data-tom]').forEach(c => { c.style.display = ''; delete c.dataset.tom; }); // en række med skjulte felter beholder sin plads, så siden ikke kryber sammen
+    document.querySelectorAll('[data-tom]').forEach(c => { c.style.display = ''; delete c.dataset.tom; });
+    if (server) omregnSnart(); // en række med skjulte felter beholder sin plads, så siden ikke kryber sammen
     bjaelke();
   }
   // Knap nederst til højre: sætter tilpasningen på pause, så man kan bladre i appen, og tænder den igen
@@ -614,7 +613,7 @@ const Tilpas = (() => {
       return saetPlads(el, k, { bredde: liste[0][0] }, hvad === 'bredere' ? 'Bredere' : 'Smallere');
     }
     if (hvad === 'kant') { const P = (el._ph || el).parentElement.getBoundingClientRect(), hoejre = pl.kant === 1 || (pl.kant !== 0 && nu.left + nu.width / 2 > P.left + P.width / 2 + 4); return saetPlads(el, k, { kant: hoejre ? 0 : 1 }, hoejre ? 'Til venstre' : 'Til højre'); }
-    if (hvad === 'egenplads') { obj[k] = { ...(obj[k] || {}), omregnet: true }; return saetPlads(el, k, { efter: null, kant: null, bredde: null }, 'Feltet står på sin egen plads igen'); }
+    if (hvad === 'egenplads') { obj[k] = { ...(obj[k] || {}), omregnet: 'begge' }; return saetPlads(el, k, { efter: null, kant: null, bredde: null }, 'Feltet står på sin egen plads igen'); }
   }
   const kanPlaceres = el => !el.dataset.tpinst && !el.matches(FAST) && !el.closest('.top');
   const pladsHtml = (el, k) => kanPlaceres(el) && !(get(k) || {}).m ? `<label>Plads <small>(gælder ${BREDSK.matches ? 'brede skærme: iPad og Mac' : 'smalle skærme: iPhone'})</small></label>
@@ -790,6 +789,47 @@ const Tilpas = (() => {
   let vendTimer;
   const omlaeg = () => { clearTimeout(vendTimer); vendTimer = setTimeout(() => { if (drag && drag.laast) return; anvend(); requestAnimationFrame(anvend); }, 120); };
   addEventListener('resize', omlaeg); addEventListener('orientationchange', omlaeg);  document.addEventListener('DOMContentLoaded', () => { anvend(); hent(); });
+
+  // ---------- Omregning af de gamle placeringer (sidebyggeren, fase 5) ----------
+  // Før opdatering 2 blev en placering gemt som pixels fra feltets egen plads. Første gang en side vises på en smal eller bred skærm,
+  // regnes dine gamle placeringer om: hvor feltet står nu (efter beskyttelsen mod overlap), bliver til en rækkefølge og en kant. Stilen (tekst, farver ...) følger med.
+  // Felter, der er låst på skærmen, beholder deres forskydning. Tabellen «tilpasning» røres ikke (sikkerhedskopi i supabase/sikkerhedskopi).
+  const lagNavn = () => BREDSK.matches ? 'bred' : 'smal';
+  let omregnTimer;
+  const omregnSnart = () => { clearTimeout(omregnTimer); omregnTimer = setTimeout(omregn, 700); };
+  function ordenNu(el) { // hvor feltet står blandt sine naboer lige nu. null = på sin egen plads
+    const node = el._ph || el, P = node.parentElement; if (!P) return null;
+    const cs = getComputedStyle(P), raekke = /flex/.test(cs.display) && !/column/.test(cs.flexDirection), r = el.getBoundingClientRect(), midt = q => raekke ? q.left + q.width / 2 : q.top + q.height / 2;
+    const naboer = [...P.children].filter(x => x !== el && x !== el._ph && !x.classList.contains('plads') && synlig(x) && refAf(x));
+    if (!naboer.length) return null;
+    let foer = null; for (const x of naboer) if (midt(x.getBoundingClientRect()) < midt(r)) foer = x;
+    let nat = node.previousElementSibling; while (nat && !naboer.includes(nat)) nat = nat.previousElementSibling;
+    if (foer === nat) return null;
+    return foer ? refAf(foer) : '^' + refAf(naboer[0]);
+  }
+  function omregn() {
+    if (!server || IGNORER_GEMTE || (drag && drag.laast) || document.getElementById('ark') || !appEl0() || !appEl0().firstElementChild) return;
+    const ln = lagNavn(), s0 = lag(), gjort = [];
+    for (const el of document.querySelectorAll('[data-flyt]')) {
+      const k = el.dataset.flyt;
+      if (!k || gjort.includes(k) || el.classList.contains('plads') || el.dataset.tpinst || el.dataset.egen || omregnet(k)) continue;
+      const egne = gammel(k, x => data[x]); if (!egne) continue; // kun dine egne gamle tilpasninger
+      const g = gammel(k) || {}, o = obj[k] ? { ...obj[k] } : tilRaekke(g);
+      const fast = erFast(el, k);
+      if (fast && g.p && !o.pos) o.pos = g.p.join(','); // låst på skærmen: forskydningen bliver
+      if (!fast && g.p && (el._dx || el._dy) && kanPlaceres(el)) {
+        const e = ordenNu(el), rp = e && plads(e.replace(/^\^|^i:/, ''));
+        if (e && o['efter' + s0] == null && !(rp && rp.efter && rp.efter.replace(/^\^|^i:/, '') === k)) o['efter' + s0] = e; // aldrig to felter, der peger på hinanden
+        const P = (el._ph || el).parentElement, q = el.getBoundingClientRect(), pq = P.getBoundingClientRect();
+        if (el._dx && !/flex|grid/.test(getComputedStyle(P).display) && q.left + q.width / 2 > pq.left + pq.width / 2 && o['kant' + s0] == null) o['kant' + s0] = 1;
+      }
+      o.omregnet = o.omregnet && o.omregnet !== ln ? 'begge' : ln;
+      obj[k] = o; gjort.push(k);
+    }
+    if (!gjort.length) return;
+    lager.gem('objekter', obj); anvend();
+    gjort.forEach(k => skrivObj(k, true));
+  }
   // Henter igen, når appen får fokus (fx efter at have været på en anden enhed), og siger til, hvis noget er ændret
   let sidstHentet = Date.now();
   const hentIgen = async () => {
