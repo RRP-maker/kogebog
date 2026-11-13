@@ -307,14 +307,15 @@ const Tilpas = (() => {
     try {
       const rader = await api('tilpasning?select=*');
       const foer = JSON.stringify([data, obj]);
-      data = {}; const nyObj = {};
+      data = {}; let nyObj = {};
       for (const r of rader) {
         if (r.noegle.startsWith(OBJ)) { try { nyObj[r.noegle.slice(OBJ.length)] = JSON.parse(r.tekst); } catch (e) { /* ødelagt række: springes over */ } continue; }
         const o = Object.fromEntries(Object.entries({ t: r.tekst, s: r.stoerrelse && Number(r.stoerrelse), f: r.farve, b: r.baggrund, x: r.skjult, z: r.felt, l: r.laast, m: r.ikkeflyt, p: r.pos && String(r.pos).split(',').map(Number) }).filter(([, v]) => v));
         if (r.laast === false) o.l = false;
         data[r.noegle] = o;
       }
-      try { for (const r of await api('objekter?select=*')) { const { id, opdateret, ...o } = r; for (const x in o) if (o[x] === null) delete o[x]; nyObj[id] = o; } objTabel = true; }
+      // Findes «objekter», gælder kun den: «obj|»-rækkerne i «tilpasning» er kopieret dertil (supabase/objekter.sql), så et felt, der er fjernet, ikke kommer igen.
+      try { const t = await api('objekter?select=*'); nyObj = {}; for (const r of t) { const { id, opdateret, ...o } = r; for (const x in o) if (o[x] === null) delete o[x]; nyObj[id] = o; } objTabel = true; }
       catch (e) { objTabel = false; } // tabellen findes ikke endnu: rækkerne står i «tilpasning»
       obj = nyObj;
       const aendret = server && JSON.stringify([data, obj]) !== foer;

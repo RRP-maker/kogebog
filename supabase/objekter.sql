@@ -19,3 +19,12 @@ create table if not exists objekter (
 );
 alter table objekter enable row level security;
 drop policy if exists "aaben" on objekter; create policy "aaben" on objekter for all using (true) with check (true);
+grant select, insert, update, delete on objekter to anon, authenticated;
+-- Flyt felterne fra «tilpasning» (obj|…) til «objekter». Rækkerne i «tilpasning» bliver liggende.
+insert into objekter
+select (jsonb_populate_record(null::objekter,
+  (tekst::jsonb) || jsonb_build_object('id', substr(noegle, 5), 'slettet', coalesce((tekst::jsonb->>'slettet')::boolean, false), 'opdateret', now()))).*
+from tilpasning where noegle like 'obj|%' and tekst like '{%'
+on conflict (id) do nothing;
+notify pgrst, 'reload schema';
+select (select count(*) from objekter) as objekter, (select count(*) from tilpasning where noegle like 'obj|%') as obj_i_tilpasning;
