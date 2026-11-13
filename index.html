@@ -8,6 +8,34 @@
   <meta name="apple-mobile-web-app-title" content="Kogebog">
   <title>Kogebog</title>
   <script>try{var v=JSON.parse(localStorage.getItem("kogebog_tema"));document.documentElement.dataset.tema=v==="moerk"||(v!=="lys"&&matchMedia("(prefers-color-scheme: dark)").matches)?"moerk":"lys"}catch(e){}</script>
+  <!-- Indlæsningsskærm: står i HTML'en og har sin egen CSS, så den ses, før style.css og scripts er hentet. Farverne følger temaet; 4a-3 peger dem på rollerne. -->
+  <style>
+    #indlaes { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; text-align: center;
+      background: #fffdf5; color: #22386b; font: 20px/32px "Patrick Hand", "Patrick Hand erstatning", "Chalkboard SE", sans-serif; transition: opacity .18s ease-out; }
+    [data-tema=moerk] #indlaes { background: #1a1f2e; color: #e9edf9; }
+    #indlaes.vaek { opacity: 0; pointer-events: none; }
+    .ind-indhold { display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; animation: ind-ind .25s .2s both; }
+    .ind-gryde { width: 112px; height: 112px; overflow: visible; }
+    .ind-lag { transform-box: fill-box; transform-origin: 50% 100%; animation: ind-lag 1.6s ease-in-out infinite; }
+    .ind-damp { opacity: 0; animation: ind-damp 2.4s ease-out infinite; }
+    .ind-damp:nth-of-type(2) { animation-delay: .8s; }
+    .ind-damp:nth-of-type(3) { animation-delay: 1.6s; }
+    .ind-tekst, .ind-sen { margin: 0; }
+    .ind-sen, .ind-knap { display: none; }
+    #indlaes.sen .ind-tekst { display: none; }
+    #indlaes.sen .ind-sen { display: block; max-width: 22em; }
+    #indlaes.sen .ind-knap { display: inline-block; }
+    .ind-knap { margin-top: 8px; min-height: 48px; padding: 0 24px; border: 2px solid currentColor; border-radius: 24px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+    @keyframes ind-ind { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes ind-lag { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(-3deg); } }
+    @keyframes ind-damp { 0% { opacity: 0; transform: translateY(6px); } 30% { opacity: .85; } 100% { opacity: 0; transform: translateY(-12px); } }
+    @media (prefers-reduced-motion: reduce) {
+      #indlaes { transition: none; }
+      .ind-indhold { animation: none; opacity: 1; }
+      .ind-lag { animation: none; }
+      .ind-damp { animation: none; opacity: .7; }
+    }
+  </style>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="ikon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="ikon-180.png">
@@ -15,11 +43,26 @@
   <link rel="preload" href="skrifter/patrick-hand-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Versionen står kun her. Den bruges til ?v= på filerne, til cachens navn i sw.js og til teksten under Indstillinger. Hæv den (og datoen), når filer ændres. -->
   <script>
-    window.KOGEBOG = { version: '2.0.3', dato: '2026-11-13' };
+    window.KOGEBOG = { version: '2.1.0', dato: '2026-11-13' };
     document.write('<link rel="stylesheet" href="style.css?v=' + KOGEBOG.version + '">');
   </script>
 </head>
 <body>
+  <div id="indlaes" role="status">
+    <div class="ind-indhold">
+      <svg class="ind-gryde" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path class="ind-damp" d="M36 34c-5-5 5-8 0-14"/>
+        <path class="ind-damp" d="M48 32c-5-5 5-8 0-14"/>
+        <path class="ind-damp" d="M60 34c-5-5 5-8 0-14"/>
+        <path d="M22 50h52v14a16 16 0 0 1-16 16H38a16 16 0 0 1-16-16z" fill="#4a9fb5"/>
+        <path d="M22 54H12M74 54h10"/>
+        <g class="ind-lag"><path d="M20 50q28-16 56 0z" fill="#ffd95a"/><circle cx="48" cy="38" r="3.5" fill="#ffd95a"/></g>
+      </svg>
+      <p class="ind-tekst">Åbner Kogebog…</p>
+      <p class="ind-sen">Det tager længere end ventet. Tjek, at du har internet.</p>
+      <button type="button" class="ind-knap">Prøv igen</button>
+    </div>
+  </div>
   <header class="top">
     <div id="toast" role="status"></div>
   </header>
@@ -34,10 +77,22 @@
   </nav>
   <div id="ure" aria-live="polite"></div>
   <main id="app"></main>
-  <script src="config.js"></script>
-  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
   <script>
-    ['ikoner', 'app', 'tilpas', 'katalog', 'hjemme', 'claude-ekstra', 'linkimport', 'madplan', 'hjaelper', 'laerred']
+    // Indlæsningsskærmen: viser sig langsomt-teksten efter 8 sekunder og skjules af app.js, når startsiden står klar (Indlaes.skjul)
+    (function () {
+      var e = document.getElementById('indlaes'), dele = document.querySelectorAll('.top, #nav, #app'), t = setTimeout(function () { e.classList.add('sen'); }, 8000);
+      dele.forEach(function (d) { d.inert = true; });
+      e.querySelector('.ind-knap').addEventListener('click', function () { location.reload(); });
+      window.Indlaes = { skjul: function () {
+        clearTimeout(t); dele.forEach(function (d) { d.inert = false; });
+        if (!e.parentNode) return;
+        e.classList.add('vaek'); setTimeout(function () { e.remove(); }, 220);
+      } };
+    })();
+  </script>
+  <script src="config.js"></script>
+  <script>
+    ['ikoner', 'app', 'tilpas', 'katalog', 'hjemme', 'claude-ekstra', 'linkimport', 'madplan', 'hjaelper']
       .forEach(function (n) { document.write('<script src="' + n + '.js?v=' + KOGEBOG.version + '"><\/script>'); });
   </script>
 </body>

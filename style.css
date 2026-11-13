@@ -84,14 +84,14 @@ p + p { margin-top: 32px; }
 :focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
 
 /* Liquid Glass: gennemsigtige flader med sløring, lyskant og blød skygge. Teksten er altid helt dækkende. */
-.top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
+.top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis, #toast {
   background: var(--glas);
   -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
   border: 1px solid var(--glaskant);
   box-shadow: var(--skygge), var(--glans);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .forklaring, .laerred-ramme, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: var(--flade); }
+  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .forklaring, .lav-bund, .ark-kort, .h-boble, .ur, #hjaelper-vis { background: var(--flade); }
 }
 
 .top {
@@ -313,11 +313,6 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .rk[data-niv="1"] .rk-mark { background: var(--mynte); color: var(--paa-lys); font-size: 14px; }
 .rk[data-niv="1"] .rk-mark::before { content: counter(t) "." counter(d); }
 @media (hover: hover) { .rk-knap:hover { background: rgba(255, 255, 255, .8); } }
-
-.laerred-ramme { border-radius: 22px; padding: 8px; margin: var(--m) 0 var(--pt); display: grid; align-content: center; } /* højden rundes op til hele rækker af app.js */
-.laerred { background-image: radial-gradient(rgba(var(--blaek-rgb), .16) 1px, transparent 1px); background-size: 16px 16px; border-radius: 14px; }
-.laerred { width: 100%; aspect-ratio: 340 / 300; overflow: hidden; pointer-events: none; }
-.laerred.rediger { pointer-events: auto; touch-action: none; outline: 3px dashed var(--tomat); outline-offset: 2px; }
 
 /* Trin for trin */
 body[data-side=lav] .top { display: none; }

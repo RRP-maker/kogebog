@@ -2,6 +2,16 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.1.0 · Indlæsningsskærm og «Vores side» fjernet (opdatering 4a-2)
+- Ved start dækker en indlæsningsskærm hele siden: en gryde med damp og teksten «Åbner Kogebog…». Den står i `index.html` med egen CSS, så den ses, før resten er hentet. Den forsvinder (på 0,18 s), når startsiden er tegnet, de gemte placeringer er sat på plads, og skrifterne er klar, højst 3 sekunder efter. Derfor ses hverken «Henter…», tomme felter eller felter, der hopper på plads.
+- Går det langsomt (8 sekunder), står der «Det tager længere end ventet. Tjek, at du har internet.» med knappen «Prøv igen».
+- Med reduceret bevægelse står gryden stille, og skærmen skifter uden toning.
+- «Vores side» er fjernet fra opskrifterne: lærredet, figurerne og billedknapperne. `laerred.js`, Konva (CDN), CSS, de syv figur-ikoner (`hjerte`, `tomat`, `ost`, `baguette`, `aeg`, `cupcake`, `tommel`) og `Ikoner.billede` er slettet. `laerred` er også taget ud af «Sikkerhedskopi» under Indstillinger. Kamera-ikonet er beholdt til billederne i 4e.
+- Tabellen `laerred` og rækkerne i `objekter`/`tilpasning`, der hørte til «Vores side», slettes i Supabase efter Rasmus' godkendelse. En privat kopi (`laerred_kopi`) ligger i Supabase, til Rasmus har sagt god for resultatet.
+- Beslutning: indlæsningsskærmen venter på hele den første side (ikke kun skelettet), fordi sider som opskriften viser «Henter…», til data er hentet.
+- Beslutning: ingen mindste visningstid. Den toner først ind efter 0,2 s, så en hurtig start ikke blinker.
+- `Tilpas.klar()` er ny (den første hentning af placeringer), og app.js venter på den.
+
 ## 2.0.3 · Knapper i tips og plus/minus
 - Tips: «Rediger» og «Slet» står små og side om side nederst i kortet. De har egne id'er (`tip-rediger`, `tip-slet`), så de ikke længere følger opskriftens «Rediger» (som står øverst til højre) og «Slet».
 - Plus og minus er én pille af glas med −, tallet og + inde i (32 px, på linjerne). Gælder alle steder: portioner, «Du mangler lidt», Madplan og Indstillinger.

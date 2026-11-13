@@ -304,6 +304,7 @@ const Tilpas = (() => {
   }
   function fortryd() { if (!hist.length) return; frem.push(billede()); skift(hist.pop()); toast('Fortrudt'); }
   function gentag() { if (!frem.length) return; hist.push(billede()); skift(frem.pop()); toast('Gentaget'); }
+  let foersteHent; // den første hentning af placeringer: app.js venter på den, før indlæsningsskærmen fjernes
   async function hent() {
     try {
       const rader = await api('tilpasning?select=*');
@@ -790,7 +791,7 @@ const Tilpas = (() => {
   // Vendes skærmen, eller ændres vinduets bredde, sættes alle felter på plads igen (efter at siden har lagt sig om)
   let vendTimer;
   const omlaeg = () => { clearTimeout(vendTimer); vendTimer = setTimeout(() => { if (drag && drag.laast) return; anvend(); requestAnimationFrame(anvend); }, 120); };
-  addEventListener('resize', omlaeg); addEventListener('orientationchange', omlaeg);  document.addEventListener('DOMContentLoaded', () => { anvend(); hent(); });
+  addEventListener('resize', omlaeg); addEventListener('orientationchange', omlaeg);  document.addEventListener('DOMContentLoaded', () => { anvend(); foersteHent = hent(); });
 
   // ---------- Omregning af de gamle placeringer (sidebyggeren, fase 5) ----------
   // Før opdatering 2 blev en placering gemt som pixels fra feltets egen plads. Første gang en side vises på en smal eller bred skærm,
@@ -842,7 +843,7 @@ const Tilpas = (() => {
   document.addEventListener('visibilitychange', hentIgen); addEventListener('focus', hentIgen);
   // Skifter skærmen mellem smal og bred, tegnes siden forfra, så felterne står på deres plads for den bredde
   BREDSK.addEventListener('change', () => { if (Object.values(obj).some(o => o.efter || o.efter_bred || o.type) && typeof route === 'function') route(); });
-  return { saet, til: () => til, tipIgen: () => { lager.gem('tilpasTipSet', false); toast('Tippet vises næste gang, du tilpasser.'); }, async nulstil() {
+  return { saet, klar: () => foersteHent || Promise.resolve(), til: () => til, tipIgen: () => { lager.gem('tilpasTipSet', false); toast('Tippet vises næste gang, du tilpasser.'); }, async nulstil() {
     husk(); data = {}; obj = {}; lager.gem('tilpas', data); lager.gem('objekter', obj); anvend();
     try { await api('tilpasning?noegle=not.is.null', { method: 'DELETE' }); } catch (err) { console.error(err); }
     if (objTabel) try { await api('objekter?id=not.is.null', { method: 'DELETE' }); } catch (err) { console.error(err); }

@@ -541,9 +541,9 @@ async function opskriftSide(rid, maal = app) {
   const id = visning, iRude = maal !== app;
   if (iRude) maal.innerHTML = HENTER; else henter();
   const q = `opskrift_id=eq.${enc(rid)}`;
-  const [rr, tips, fav, stj, lr] = await Promise.all([
+  const [rr, tips, fav, stj] = await Promise.all([
     api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*&order=oprettet.desc'),
-    api(`favoritter?${q}&select=id`), api(`stjerner?${q}&select=antal,bruger_id`), api(`laerred?${q}&select=*&order=oprettet`)
+    api(`favoritter?${q}&select=id`), api(`stjerner?${q}&select=antal,bruger_id`)
   ]);
   if (id !== visning) return;
   const r = rr[0];
@@ -571,24 +571,15 @@ async function opskriftSide(rid, maal = app) {
     <div class="opsk-felt skaerm" data-tpid="opsk-smag"><h2 class="skaerm opsk">Hvordan smagte det?</h2>
     <div id="stjerner" class="skaerm"></div></div>
     ${egne.length ? `<div class="opsk-felt" data-tpid="opsk-tips"><h2 class="opsk">Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}</div>` : ''}
-    <div class="opsk-felt skaerm" data-tpid="opsk-vores"><h2 class="skaerm opsk">Vores side</h2>
-    <p class="lille skaerm opsk">Sæt billeder og figurer på siden, og flyt dem rundt.</p>
-    <div class="laerred-ramme skaerm"><div id="laerred" class="laerred"></div></div>
-    <div id="laerred-knapper" class="rakke skaerm"></div></div>
-    <input id="billedfil" type="file" accept="image/*" hidden>
     <div class="rakke skaerm"><a class="knap" data-tpid="opdater-claude" href="#/opdater/${r.id}">${ik('gnist')} Opdater med Claude</a>
       <button class="knap" data-h="print">Print</button></div>
     <div class="rakke skaerm sletrakke"><button class="knap fare" data-tpid="slet" data-h="slet" data-v="opskrifter:${r.id}">Slet</button></div>`;
-  tegnIng(); tegnTrin(); tegnStjerner(); tegnLaerredKnapper(false);
-  $('#billedfil').addEventListener('change', nytBillede);
-  const lel = $('#laerred');
-  lel.addEventListener('valgt', e => { const k = $('#fjernvalgt'); if (k) k.disabled = !e.detail; });
+  tegnIng(); tegnTrin(); tegnStjerner();
   Hjaelper.side([
     { tekst: 'Tryk på stjernen. Så bliver retten en favorit.', maal: 'favorit', bev: 'salto' },
     { tekst: 'Skal I være flere? Tryk på plus og minus.', maal: 'portioner', bev: 'skridt' },
     { tekst: 'Tryk på et blåt ord. Så forklarer jeg det.', maal: 'begreb', bev: 'dans', valgfri: true },
     { tekst: 'Klar? Tryk her, så går vi trin for trin.', maal: 'opskrifter/:id|lav-retten-trin-for-trin', bev: 'rul' }]);;
-  await Laerred.start(lel, lr, r.id);
 }
 // Knapperne øverst. «Tilføj tip» sidder fast øverst til venstre, mens man ruller. Ekstra knapper kommer til højre.
 const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="button" class="knap"${hoejre ? '' : ' data-tpid="tip-alene"'} data-h="nytBegreb">${ik('paere')} Tilføj tip</button>${hoejre}</div>`;
@@ -614,21 +605,6 @@ function stjerneHtml(stj) {
     <p class="lille">${stj.length ? `Snit: ${visTal(snit)} af 5 (${stj.length} ${stj.length === 1 ? 'vurdering' : 'vurderinger'})` : 'Giv stjerner, når du har lavet retten.'}</p>`;
 }
 function tegnStjerner() { const el = $('#stjerner'); if (el) el.innerHTML = stjerneHtml(S.stj); }
-function tegnLaerredKnapper(rediger) {
-  $('#laerred-knapper').innerHTML = rediger
-    ? `<button class="knap" data-h="vaelgBillede">${ik('kamera')} Billede</button>
-       ${Laerred.FIGURER.map(f => `<button class="rund" data-h="figur" data-v="${f.n}" aria-label="Sæt ${f.t} på siden">${ik(f.n)}</button>`).join('')}
-       <button class="knap fare" id="fjernvalgt" data-h="fjernValgt" disabled>Fjern den valgte</button>
-       <button class="knap primaer" data-h="laerredRediger" data-v="0">Færdig</button>`
-    : `<button class="knap" data-h="laerredRediger" data-v="1">${ik('blyant')} Flyt og tilføj</button>`;
-}
-async function nytBillede(e) {
-  const fil = e.target.files[0]; e.target.value = '';
-  if (!fil) return;
-  try { toast('Gemmer billedet…'); await Laerred.nytBillede(fil); toast('Billedet er sat på siden'); Hjaelper.glad(); }
-  catch (err) { console.error(err); fejlbesked('Billedet blev ikke gemt. Tjek internettet, eller vælg et andet billede.'); }
-}
-
 // ---------- Trin for trin ----------
 let K = null, skaermlaas = null;
 async function holdSkaerm() { try { if (navigator.wakeLock) skaermlaas = await navigator.wakeLock.request('screen'); } catch (e) { /* ikke vigtigt */ } }
@@ -1333,10 +1309,6 @@ const H = {
     if (!ed.querySelector('.rk')) rkIndsaet(ed, null, ed.dataset.ed === 'ing' ? { art: 'ing' } : { niv: 0 }, false);
     else if (naboe) rkFokus(naboe);
   },
-  laerredRediger(el) { const ja = el.dataset.v === '1'; Laerred.saetRediger(ja); tegnLaerredKnapper(ja); if (ja) Hjaelper.sig('Træk i en ting for at flytte den. Tryk på den for at gøre den større eller dreje den.', { nu: true }); },
-  vaelgBillede() { $('#billedfil').click(); },
-  async figur(el) { await Laerred.ny('figur', 'ikon:' + el.dataset.v); },
-  async fjernValgt() { if (await Laerred.fjernValgt()) toast('Fjernet'); },
   print() { window.print(); },
   // Sæt ind: lægger det kopierede i feltet med en retur efter, så næste link kan stå på en ny linje
   rydFelt(el) {
@@ -1406,7 +1378,7 @@ const H = {
     } catch (err) { el.disabled = false; throw err; }
   },
   async eksport() {
-    const tabeller = ['opskrifter', 'tips', 'favoritter', 'stjerner', 'laerred'], data = { hentet: new Date().toISOString() };
+    const tabeller = ['opskrifter', 'tips', 'favoritter', 'stjerner'], data = { hentet: new Date().toISOString() };
     for (const t of tabeller) data[t] = await api(`${t}?select=*`);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
@@ -1493,10 +1465,6 @@ function rasterIgen() {
   cancelAnimationFrame(rasterTimer);
   rasterTimer = requestAnimationFrame(() => {
     const main = document.querySelector('main'), rod = document.documentElement.style, R = RAEKKE();
-    app.querySelectorAll('.laerred-ramme').forEach(el => { // rammen runder op til hele rækker, så resten af siden bliver på linjerne
-      el.style.height = '';
-      el.style.height = Math.ceil(el.getBoundingClientRect().height / R - 0.02) * R + 'px';
-    });
     const m = main.getBoundingClientRect(), cs = getComputedStyle(main), y = m.top + scrollY + parseFloat(cs.paddingTop);
     rod.setProperty('--raster', (((Math.round(y) % R) + R) % R) + 'px');
     rod.setProperty('--kol-x', (m.left + scrollX + parseFloat(cs.paddingLeft)) + 'px'); // kolonnens venstre kant: den røde margen følger den
@@ -1543,7 +1511,15 @@ document.addEventListener('click', e => {
   e.preventDefault(); e.stopPropagation();
   if (m.matches('input, select')) m.focus(); else m.click();
 }, true);
-document.addEventListener('DOMContentLoaded', () => { Hjaelper.start(); route(); });
+// Indlæsningsskærmen (index.html) skjules, når startsiden er tegnet og skrifterne er klar. Har enheden ikke gemt placeringer før, venter den også på dem fra Supabase,
+// så felterne ikke hopper på plads. Højst 3 sekunders ekstra ventetid.
+document.addEventListener('DOMContentLoaded', () => {
+  Hjaelper.start();
+  route()
+    .then(() => Promise.race([Promise.all([lager.hent('objekter', null) ? 0 : Tilpas.klar(), document.fonts && document.fonts.ready]), new Promise(r => setTimeout(r, 3000))]))
+    .then(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))))
+    .then(() => window.Indlaes && Indlaes.skjul());
+});
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=' + (window.KOGEBOG ? KOGEBOG.version : '')).catch(() => {});
 
 // Genindlæs-knappen foroven: tømmer den gemte kopi og henter siden forfra, så et nyt push ses uden at lukke appen

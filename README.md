@@ -4,20 +4,19 @@ En delt kogebog som statisk web app: opskrifter og tips i et kladdehæfte, med h
 
 - **Hosting:** GitHub Pages (branch `main`, mappe `/`).
 - **Database:** Supabase. `config.js` indeholder kun Project URL og den offentlige nøgle.
-- **Kode:** Vanilla HTML, CSS og JavaScript. Konva hentes fra CDN. Ingen build-værktøjer.
+- **Kode:** Vanilla HTML, CSS og JavaScript. Ingen build-værktøjer og ingen biblioteker fra CDN.
 
 | Fil | Indhold |
 |---|---|
-| `index.html` | Sidens skelet |
+| `index.html` | Sidens skelet og indlæsningsskærmen |
 | `style.css` | Notesbog-design |
 | `app.js` | Sider, database, begreber, ure, forslag, import |
 | `hjaelper.js` | Hjælperen og lyde |
 | `katalog.js` | Katalog over ingredienser og kategorier: gem, spørg, sortér med Claude |
 | `hjemme.js` | Listen «Hvad har du derhjemme?» på siden Hvad kan jeg lave? (SQL i `hjemme.sql`) |
-| `laerred.js` | Lærred med billeder og figurer (Konva) |
 | `sw.js`, `manifest.webmanifest` | Installér på hjemmeskærm, læs uden internet |
 
-Tabeller: `opskrifter` (med `koekken`), `tips`, `favoritter`, `stjerner`, `laerred`, `madplan` (én række med valg og plan). Alle har åben læse- og skriveadgang.
+Tabeller: `opskrifter` (med `koekken`), `tips`, `favoritter`, `stjerner`, `madplan` (én række med valg og plan). Alle har åben læse- og skriveadgang.
 
 **Format i databasen (ingen ekstra kolonner):**
 - `opskrifter.ingredienser` er en liste. `{ "g": "Sovs" }` er en overskrift, resten er `{ m, e, n }`.
