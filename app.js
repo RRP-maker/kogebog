@@ -365,7 +365,7 @@ async function route() {
   window.scrollTo(0, 0);
   document.body.dataset.side = c === 'lav' ? 'lav' : (a || 'forside');
   // Navigationen viser, hvor man er
-  const sted = a === 'forslag' && b === 'madplan' ? 'madplan' : ({ opskrifter: 'opskrifter', opdater: 'opskrifter', import: 'opskrifter', tips: 'tips', tipsimport: 'tips', forslag: 'forslag', hjemme: 'forslag', mere: 'mere' })[a] || 'forside';
+  const sted = a === 'forslag' && b === 'madplan' ? 'madplan' : ({ opskrifter: 'opskrifter', opdater: 'opskrifter', import: 'opskrifter', tips: 'tips', tipsimport: 'tips', forslag: 'forslag', hjemme: 'forslag', mere: 'mere', vaerksted: 'mere' })[a] || 'forside';
   document.querySelectorAll('#nav a').forEach(l => { if (l.dataset.nav === sted) l.setAttribute('aria-current', 'page'); else l.removeAttribute('aria-current'); });
   try {
     if (a === 'forslag' && b === 'madplan') return await Madplan.side();
@@ -376,6 +376,7 @@ async function route() {
     if (a === 'opdater' && b) return await ClaudeEkstra.opdaterSide(b);
     if (a === 'tipsimport') return await ClaudeEkstra.tipsSide();
     if (a === 'mere') return mereSide();
+    if (a === 'vaerksted') return await Vaerksted.side();
     if (a === 'hjemme') return await forslagSide();
     if (!TYPER[a]) { document.body.dataset.side = 'forside'; return await forside(); }
     if (b === 'ny') return await formular(a);
@@ -1156,15 +1157,9 @@ function mereSide() {
     <label class="skift"><input type="checkbox" data-tpid="lyde" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
     <div class="kun-bred"><label class="skift"><input type="checkbox" id="toruder" ${toRuder() ? 'checked' : ''}> <span>Vis to ruder</span></label>
     <p class="lille">Når du åbner en opskrift: listen til venstre og opskriften til højre.</p></div>
-    <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Åbn Designer</span></label>
-    <p class="lille">Designer flytter, tilføjer og skjuler felter og skifter tekst og farver. Ændringerne gælder alle, der bruger kogebogen.</p>
-    <button type="button" class="knap" id="tilpastip">Vis tippet om Designer igen</button>
-    <button class="knap annuller" id="tilpasnul">Nulstil alle tekster</button>
-    <p class="lille" data-tpid="mere|hvor-højt-vinduet-til-at-tilpasse-et-felt-må-blive-i-procent-af-skærmen">Hvor højt Designers vindue må blive, i procent af skærmen.</p>
-    <div class="stepper" data-tpid="mere-tilpashoejde" role="group" aria-label="Højde på Designers vindue">
-      <button type="button" class="rund felt felt-s" data-tpid="mere-minus" id="tphned" aria-label="Lavere">−</button>
-      <input id="tphoejde" class="felt felt-s" data-tpid="mere-tal" type="text" inputmode="numeric" autocomplete="off" value="${tilpasHoejde()}" aria-label="Højde i procent">
-      <button type="button" class="rund felt felt-s" data-tpid="mere-plus" id="tpop" aria-label="Højere">+</button><span class="stepper-enhed">%</span></div>
+    <h2>Værkstedet</h2>
+    <p class="lille">Værktøjerne, fx Designer. De er låst med en kode.</p>
+    <a class="knap" data-tpid="vaerksted-link" href="#/vaerksted">${ik('laas')} Åbn Værkstedet</a>
     <h2>Genindlæs</h2>
     <p class="lille">Henter appen forfra, så du får den nyeste version.</p>
     <button type="button" class="knap" id="genstart">${ik('genindlaes')} Genindlæs appen</button>
@@ -1176,13 +1171,6 @@ function mereSide() {
   document.querySelectorAll('input[name=tema]').forEach(r => r.addEventListener('change', e => Tema.saet(e.target.value)));
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
   $('#toruder').addEventListener('change', e => { lager.gem('toRuder', e.target.checked); toast(e.target.checked ? 'To ruder er slået til' : 'To ruder er slået fra'); });
-  $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));
-  $('#tilpastip').addEventListener('click', () => Tilpas.tipIgen());
-  const saetHoejde = n => { const v = Math.max(20, Math.min(90, Math.round(Number(n)) || 33)); lager.gem('tilpasHoejde', v); $('#tphoejde').value = v; };
-  $('#tphned').addEventListener('click', () => saetHoejde(tilpasHoejde() - 5));
-  $('#tpop').addEventListener('click', () => saetHoejde(tilpasHoejde() + 5));
-  $('#tphoejde').addEventListener('change', e => saetHoejde(e.target.value));
-  $('#tilpasnul').addEventListener('click', async () => { if (await bekraeft('Vil du sætte alle tekster og størrelser tilbage?', 'Nulstil')) { Tilpas.nulstil(); toast('Teksterne er nulstillet'); } });
   $('#lydtil').addEventListener('change', e => { Lyd.saet(e.target.checked); Lyd.spil('klik'); });
   Hjaelper.side([
     { tekst: 'Vælg lyst eller mørkt udseende.', maal: 'udseende', bev: 'salto' },

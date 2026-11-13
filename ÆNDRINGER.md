@@ -2,6 +2,16 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.4.0 · Værkstedet med kode (opdatering 4d-1)
+- **Nyt: Værkstedet** (`vaerksted.js`, `#/vaerksted`). Under Indstillinger står nu «Åbn Værkstedet». Her ligger Designer-afsnittet (Åbn Designer, tippet, nulstil tekster, vinduets højde), flyttet fra Indstillinger med uændrede `data-tpid`.
+- **Koden er en spærring mod uheld, ikke sikkerhed.** Første gang vælger man koden i appen (mindst 4 tegn, skrives to gange). Kun et saltet hash (PBKDF2, SHA-256, 200.000 runder) ligger i Supabase, i tabellen `madplan` på rækken `vaerksted-kode`. Koden står ikke i repoet. Ingen SQL-kørsel er nødvendig.
+- **Låst:** oplåsningen ligger i `sessionStorage`, så Værkstedet er låst igen, når appen er lukket. Er Designer tændt uden oplåsning, slukkes den ved start.
+- **«Lås ikke Værkstedet på denne enhed»** (`localStorage`): Værkstedet er åbent uden kode. **«Lås nu»** låser og slår «Lås ikke» fra. **«Behold Designer»** kan kun slås til, når «Lås ikke» er til. Er den til, bliver Designer tændt, også efter «Lås nu». Slås «Lås ikke» fra, slås «Behold» også fra.
+- **Forkert kode:** efter tre forsøg ventetid på 30 sekunder, derefter dobbelt så lang (højst 10 minutter). Ventetiden ligger på enheden og kan omgås, så den er kun en spærring mod uheld.
+- **Fejl** vises som tekst øverst og ved feltet, og fokus flyttes til feltet (`formularer-og-input`). Koden kan indsættes og vises.
+- Glemt kode: slet rækken `vaerksted-kode` i `madplan` (Supabase), så kan en ny vælges. Ingen «Skift kode» endnu.
+- Testet (headless, mock-Supabase, 390 px): opret kode, for kort og ikke ens, genåbning låst, tre forkerte forsøg og ventetid, husket enhed, «Lås nu» med og uden «Behold Designer», ingen JS-fejl. Koden findes ikke i det, der sendes til databasen. Ikke prøvet på iPhone.
+
 ## 2.3.1 · Designer-knappen siger, hvad der sker, og bjælkens farvede knapper ligner de andre knapper
 - Designer-knappen viser nu tilstanden i ord: «Designer er i gang» (palet) og «Designer holder pause» (pauseikon). Før sagde teksten, hvad et tryk gjorde, og det var svært at forstå (Rasmus). Hvad et tryk gør, står i `aria-label` og `title`.
 - Gem, Tilføj tip og Annuller i bjælken har samme flade, kant, skygge og lysskær som de samme knapper i siden. Teksten står stadig under ikonet.
