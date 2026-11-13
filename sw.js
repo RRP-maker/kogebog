@@ -14,7 +14,7 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   const r = e.request;
-  if (r.method !== 'GET' || !r.url.startsWith('http')) return;
+  if (r.method !== 'GET' || !r.url.startsWith('http') || r.url.includes('/storage/v1/')) return; // billeder: browserens egen cache (filnavnene ændres aldrig)
   e.respondWith(
     fetch(r, { cache: 'no-cache' }).then(svar => {
       if (svar.ok || svar.type === 'opaque') { const kopi = svar.clone(); caches.open(LAGER).then(c => c.put(r, kopi)).catch(() => {}); }

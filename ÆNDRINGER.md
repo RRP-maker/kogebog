@@ -2,6 +2,18 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.6.0 · Billeder (opdatering 4e)
+- **Flere billeder pr. opskrift.** Ét er forsiden (stjernen «Forside» i formularen). Forsiden vises øverst på opskriften og som lille billede foran navnet i listen. De andre billeder af hele retten står i en række under forsiden. Tryk på et billede for at se det stort.
+- **Billeder på trin.** Ved hvert billede vælges «Hører til»: hele retten eller et trin. Trinnets billeder står under trinnet på opskriften og over teksten, når man laver retten trin for trin. Flyttes eller rettes trinnene, følger billedet med (trinnets tekst huskes).
+- **Kamera og bibliotek.** «Tag billede» åbner kameraet, «Vælg billeder» åbner biblioteket (flere ad gangen).
+- **Gøres mindre i appen** (`billeder.js`): JPEG, højst 1600 px på den lange led (kvalitet 80 %), og en lille udgave på 400 px til listen. Drejning fra telefonen rettes. Bliver en fil over 1 MB (lagerets grænse), sænkes kvaliteten og målene, til den passer.
+- **Sendes ved «Gem».** «Annuller» kaster nye billeder væk. Slettede billeder slettes først ved «Gem». Går sendingen galt, er opskriften gemt, og «Gem» prøves igen (nye billeder sendes, intet bliver lavet to gange).
+- **Sletning.** En opskrift slettes først efter, at filerne er væk fra lageret (tjekket med en liste bagefter). Fejler det, er intet slettet.
+- **Værkstedet → Billeder → «Tjek lageret»:** antal billeder og filer, plads i alt, og filer uden opskrift (efter en afbrudt «Gem»), som kan slettes.
+- **Kræver én SQL-kørsel:** `supabase/billeder.sql` (tabellen `opskrift_billeder`, lageret `opskrift-billeder`: offentligt, kun JPEG, højst 1 MB pr. fil, åbne regler som resten af appen). Før den er kørt, virker appen som før, og «Gem» med billeder giver en fejlbesked.
+- Service workeren gemmer ikke billeder (browserens egen cache bruges), så lageret på enheden ikke vokser.
+- **Ikke med:** billederne er ikke med i «Hent sikkerhedskopi» (kun tekst og tal).
+
 ## 2.5.0 · Ingredienser som rene data og Ingrediensværktøjet (opdatering 4c)
 - **En ingrediens er kun selve varen.** Hver linje i en opskrift har nu `id` (ingrediensens id i kataloget) og `f` (forberedelse) ved siden af mængde, enhed og navn. Den vises med komma: «2 løg, finthakket». Ingen ny tabel: linjerne ligger stadig i `opskrifter.ingredienser`.
 - **Ved «Gem»** (formularen, «Tilføj med Claude», links og «Opdater med Claude») lægges ingredienserne i kataloget først, og linjen får id og navn derfra (`Katalog.knyt`). «finthakket løg» bliver til «løg» med forberedelsen «finthakket» (`delIng`). I formularen skrives forberedelsen efter et komma. Beskeden til Claude beder om feltet «forberedelse».

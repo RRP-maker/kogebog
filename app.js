@@ -444,8 +444,8 @@ const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><s
   ${chips(r).length ? `<span class="chips">${chips(r).map(c => c.kl ? `<span class="${c.kl}">${c.t}</span>` : `<span>${c}</span>`).join('')}</span>` : ''}</a>`;
 
 // En tæt række i opskriftslisten: navn og en linje med kategori, køkken og tid. Notesbogens linjer skiller rækkerne.
-const opskriftRaekke = (r, fav, valgt) => `<a class="oprk${r.kategori ? ' ' + katKl(r.kategori) : ''}" data-tpid="opskrift-raekke" href="#/opskrifter/${r.id}"${valgt ? ' aria-current="true"' : ''}><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
-  <span>${r.kategori ? `<span class="kat-maerke">${esc(r.kategori)}</span> ` : ''}${esc([r.koekken, r.tid_minutter ? r.tid_minutter + ' min' : ''].filter(Boolean).join(' · ') || (r.kategori ? '' : ' '))}</span></a>`;
+const opskriftRaekke = (r, fav, valgt, bil) => `<a class="oprk${r.kategori ? ' ' + katKl(r.kategori) : ''}${bil ? ' med-bil' : ''}" data-tpid="opskrift-raekke" href="#/opskrifter/${r.id}"${valgt ? ' aria-current="true"' : ''}>${bil ? Billeder.miniature(bil) : ''}<div class="oprk-tekst"><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
+  <span>${r.kategori ? `<span class="kat-maerke">${esc(r.kategori)}</span> ` : ''}${esc([r.koekken, r.tid_minutter ? r.tid_minutter + ' min' : ''].filter(Boolean).join(' · ') || (r.kategori ? '' : ' '))}</span></div></a>`;
 
 // ---------- Lister ----------
 let L = {}; // data til den liste, der vises
@@ -481,13 +481,14 @@ async function ruderSide(rid) {
 async function liste(type, maal = app) {
   const id = visning, T = TYPER[type];
   if (maal === app) henter(); else maal.innerHTML = HENTER;
-  const [rader, ekstra] = await Promise.all([
+  const [rader, ekstra, bil] = await Promise.all([
     api(`${type}?select=*&order=${type === 'opskrifter' ? 'titel' : 'oprettet.desc'}`),
-    type === 'tips' ? api('opskrifter?select=id,titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : []
+    type === 'tips' ? api('opskrifter?select=id,titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : [],
+    type === 'opskrifter' ? Billeder.hentForsider() : {}
   ]);
   if (id !== visning) return;
   const fil = type === 'opskrifter' && FIL ? FIL : {}, rude = maal !== app;
-  L = { type, rader, q: fil.q || '', kat: fil.kat || '', koekken: fil.koekken || '', kunFav: !!fil.kunFav, valgt: '', soeg: SOEG[lager.hent('soegtype', 'begge')] ? lager.hent('soegtype', 'begge') : 'begge', navne: {}, fav: new Set() };
+  L = { type, rader, q: fil.q || '', kat: fil.kat || '', koekken: fil.koekken || '', kunFav: !!fil.kunFav, valgt: '', soeg: SOEG[lager.hent('soegtype', 'begge')] ? lager.hent('soegtype', 'begge') : 'begge', navne: {}, fav: new Set(), bil };
   if (type === 'tips') L.navne = Object.fromEntries(ekstra.map(o => [o.id, o.titel]));
   if (type === 'opskrifter') L.fav = new Set(ekstra.map(f => f.opskrift_id));
   const unik = n => [...new Set(rader.map(r => r[n]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da')), kat = unik('kategori'), koek = unik('koekken');
@@ -544,7 +545,7 @@ function tegnListe() {
   $('#liste').innerHTML = vis.length ? vis.map(r => {
     if (type === 'opskrifter') {
       const b = (r.titel || '').trim().charAt(0).toLocaleUpperCase('da'), ny = !q && b !== bogstav; bogstav = b;
-      return (ny ? `<h3 class="oplist-bogstav">${esc(b)}</h3>` : '') + opskriftRaekke(r, L.fav.has(r.id), r.id === L.valgt);
+      return (ny ? `<h3 class="oplist-bogstav">${esc(b)}</h3>` : '') + opskriftRaekke(r, L.fav.has(r.id), r.id === L.valgt, L.bil[r.id]);
     }
     const til = L.navne[r.opskrift_id];
     return `<article class="kort" data-tpid="tip-kort" id="tip-${r.id}">${r.titel ? `<strong>${esc(r.titel)}</strong>` : ''}<p class="tekst">${esc(r.tekst)}</p>
@@ -563,14 +564,14 @@ async function opskriftSide(rid, maal = app) {
   const id = visning, iRude = maal !== app;
   if (iRude) maal.innerHTML = HENTER; else henter();
   const q = `opskrift_id=eq.${enc(rid)}`;
-  const [rr, tips, fav, stj] = await Promise.all([
+  const [rr, tips, fav, stj, bil] = await Promise.all([
     api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*&order=oprettet.desc'),
-    api(`favoritter?${q}&select=id`), api(`stjerner?${q}&select=antal,bruger_id`)
+    api(`favoritter?${q}&select=id`), api(`stjerner?${q}&select=antal,bruger_id`), Billeder.hentFor(rid)
   ]);
   if (id !== visning) return;
   const r = rr[0];
   if (!r) { if (maal !== app) maal.innerHTML = '<p class="tomt">Opskriften findes ikke længere. Vælg en anden i listen.</p>'; else info('Opskriften findes ikke længere.<br><a href="#/opskrifter">Tilbage til Opskrifter</a>'); return; }
-  S = { r, tips, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
+  S = { r, tips, fav: fav.length > 0, stj, bil, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
   maal.innerHTML = `${iRude ? rudeLuk() : Ikoner.tilbage(opskriftFra || '#/opskrifter', 'skaerm')}
@@ -579,6 +580,7 @@ async function opskriftSide(rid, maal = app) {
       <button id="favknap" data-tpid="favorit" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
     ${c.length ? `<p class="chips opsk-felt" data-tpid="opsk-chips">${c.map(x => x.kl ? `<span class="${x.kl}">${x.t}</span>` : `<span>${x}</span>`).join('')}</p>` : ''}
     ${r.beskrivelse ? `<p class="tekst opsk-felt" data-tpid="opsk-beskrivelse">${esc(r.beskrivelse)}</p>` : ''}
+    ${Billeder.toppen(bil, r.titel)}
     <button class="knap hoved stor skaerm" data-h="lav">▶ Lav retten trin for trin</button>
     <div class="opsk-ruder" data-tpid="opsk-ruder"><section class="opsk-felt" data-tpid="opsk-ingredienser">
     <h2 class="opsk">Ingredienser</h2>
@@ -617,8 +619,8 @@ function tegnIng() {
 }
 function tegnTrin() {
   const trin = trinAf(S.r), b = kendteBegreber;
-  $('#trin').innerHTML = trin.length ? `<ol class="trin">${trin.map(t => `<li>${medBegreber(t.t, b)}${
-    t.del.length ? `<ul class="deltrin">${t.del.map(d => `<li>${medBegreber(d, b)}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ol>`
+  $('#trin').innerHTML = trin.length ? `<ol class="trin">${trin.map((t, i) => `<li>${medBegreber(t.t, b)}${
+    t.del.length ? `<ul class="deltrin">${t.del.map(d => `<li>${medBegreber(d, b)}</li>`).join('')}</ul>` : ''}${Billeder.trinHtml(S.bil || [], i)}</li>`).join('')}</ol>`
     : '<p class="lille">Der er ingen trin endnu. Tryk på «Tilpas» for at skrive dem.</p>';
 }
 function stjerneHtml(stj) {
@@ -637,12 +639,12 @@ async function lavSide(rid) {
   const id = visning;
   henter();
   const q = `opskrift_id=eq.${enc(rid)}`;
-  const [rr, tips, stj] = await Promise.all([api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*'), api(`stjerner?${q}&select=antal,bruger_id`)]);
+  const [rr, tips, stj, bil] = await Promise.all([api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*'), api(`stjerner?${q}&select=antal,bruger_id`), Billeder.hentFor(rid)]);
   if (id !== visning) return;
   const r = rr[0];
   if (!r) return info('Opskriften findes ikke længere.<br><a href="#/opskrifter">Tilbage til Opskrifter</a>');
   kendteBegreber = begreberAf(tips);
-  K = { r, trin: trinAf(r), i: -1, port: portValg[rid] || r.portioner || 4, talt: false, afkr: {} };
+  K = { r, bil, trin: trinAf(r), i: -1, port: portValg[rid] || r.portioner || 4, talt: false, afkr: {} };
   S = { r, tips, stj, port: K.port, fav: false };
   holdSkaerm();
   tegnLav();
@@ -672,7 +674,7 @@ function tegnLav() {
   } else if (i < n) {
     const t = trin[i], navn = `${r.titel}, trin ${i + 1}`;
     // Trinnet og dets deltrin står på samme side. Deltrin kan man sætte flueben ved, og de kan have eget ur.
-    midte = `<p class="lav-trin">${medBegreber(t.t, kendteBegreber)}</p>${urKnap(t.t, navn, true)}
+    midte = `${Billeder.trinHtml(K.bil, i)}<p class="lav-trin">${medBegreber(t.t, kendteBegreber)}</p>${urKnap(t.t, navn, true)}
       ${t.del.length ? `<ul class="ing tjek lav-del">${t.del.map((d, j) => `<li><label><input type="checkbox" data-del="${i}:${j}" ${K.afkr[i + ':' + j] ? 'checked' : ''}> <span>${medBegreber(d, kendteBegreber)}</span></label>${urKnap(d, `${navn}.${j + 1}`)}</li>`).join('')}</ul>` : ''}`;
     if (i === n - 1) naeste = `Færdig ${ik('tjek')}`;
   } else {
@@ -858,12 +860,15 @@ async function formular(type, rid) {
   if (id !== visning) return;
   if (rid && !r[0]) return info(`Den findes ikke længere.<br><a href="#/${type}">Tilbage</a>`);
   const rad = r[0] || {};
+  const bilRader = type === 'opskrifter' && rid ? await Billeder.hentFor(rid) : [];
+  if (id !== visning) return;
   const tilbage = rid && type !== 'tips' ? `#/${type}/${rid}` : `#/${type}`;
   app.innerHTML = `<h1>${rid ? T.rediger : T.ny}</h1>
     <form id="form" novalidate>
       ${T.felter.map(f => felt(f, rad, ekstra)).join('')}
       <div id="formfejl"></div>
-    </form>`; // Gem, Annuller, Tilføj tip, Fortryd og Gentag står i navigationsbjælken (opdatering 4b)
+    </form>
+    ${type === 'opskrifter' ? '<section id="bil-ed" class="edfelt bil-ed" data-tpid="ed-billeder" aria-labelledby="bil-h"></section>' : ''}`; // Gem, Annuller, Tilføj tip, Fortryd og Gentag står i navigationsbjælken (opdatering 4b)
   const hist = navTilpas({ tilbage, tip: type === 'opskrifter' });
   Hjaelper.side(type === 'opskrifter' ? [
     { tekst: 'Start med navnet på retten.', maal: 'navn', bev: 'salto' },
@@ -875,6 +880,9 @@ async function formular(type, rid) {
   const form = $('#form');
   form.querySelectorAll('.rk-tekst').forEach(rkVokser);
   hist.start(form);
+  const trinNu = () => trinAf({ fremgangsmaade: laesTrinEd($('#ed_fremgangsmaade', form)) }).map(t => t.t);
+  const bil = type === 'opskrifter' ? Billeder.formular($('#bil-ed'), bilRader, trinNu) : null; // billederne sendes først ved «Gem» (ligger uden for formularen, så Fortryd ikke rører dem)
+  if (bil) { let bt; const trinAendret = () => { clearTimeout(bt); bt = setTimeout(bil.trinNu, 300); }; form.addEventListener('input', trinAendret); form.addEventListener('click', trinAendret); }
   form.addEventListener('input', e => { if (e.target.classList.contains('rk-tekst')) rkInput(e.target); });
   form.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.isComposing && e.target.classList.contains('rk-tekst')) { e.preventDefault(); rkEnter(e.target.closest('.rk')); }
@@ -896,6 +904,7 @@ async function formular(type, rid) {
       }, 700);
     });
   }
+  let ret = rid; // opskriftens id: nyt efter første «Gem»
   const visFejl = tekst => { $('#formfejl').innerHTML = `<div class="fejlboks">${tekst}</div>`; };
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -912,11 +921,22 @@ async function formular(type, rid) {
     knap.disabled = true; kt.textContent = 'Gemmer…';
     try {
       if (type === 'opskrifter') data.ingredienser = await Katalog.knyt(data.ingredienser, valg); // hver linje får ingrediensens id fra kataloget
-      const res = rid
-        ? await api(`${type}?id=eq.${enc(rid)}`, { method: 'PATCH', body: data })
+      const res = ret
+        ? await api(`${type}?id=eq.${enc(ret)}`, { method: 'PATCH', body: data })
         : await api(type, { method: 'POST', body: data });
+      if (!ret) ret = res[0].id; // gik billederne galt, rettes opskriften ved næste «Gem» i stedet for at blive lavet igen
+      if (bil && bil.aendret()) {
+        kt.textContent = 'Gemmer billeder…';
+        try { await Billeder.gem(bil, ret, trinAf({ fremgangsmaade: data.fremgangsmaade }).map(t => t.t)); }
+        catch (err) {
+          console.error(err);
+          visFejl('Opskriften er gemt, men billederne blev ikke sendt. Tjek internettet, og tryk på «Gem» igen.');
+          knap.disabled = false; kt.textContent = 'Gem'; return;
+        }
+      }
+      if (bil) bil.frigiv();
       toast('Gemt'); Hjaelper.glad('Gemt!');
-      location.hash = type === 'tips' ? '#/tips' : `#/${type}/${rid || res[0].id}`;
+      location.hash = type === 'tips' ? '#/tips' : `#/${type}/${ret}`;
     } catch (err) {
       console.error(err);
       visFejl('Det blev ikke gemt. Tjek internettet, og tryk på «Gem» igen.');
@@ -1216,6 +1236,9 @@ const H = {
   async slet(el) {
     const [type, id] = el.dataset.v.split(':');
     if (!await bekraeft(TYPER[type].bekraeft)) return;
+    if (type === 'opskrifter' && (await Billeder.hentFor(id)).length) { // først filerne i lageret, så opskriften. Fejler det, er intet slettet.
+      try { await Billeder.sletFor(id); } catch (err) { console.error(err); return fejlbesked('Billederne kunne ikke slettes, så opskriften er ikke slettet. Tjek internettet, og prøv igen.'); }
+    }
     await api(`${type}?id=eq.${enc(id)}`, { method: 'DELETE' });
     toast(TYPER[type].slettet);
     app.innerHTML = ''; // også listen i to ruder hentes forfra

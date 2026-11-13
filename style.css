@@ -1078,13 +1078,13 @@ body.tilpas-menu[data-side=lav] #nav .nav-knap { flex-direction: column; gap: 0;
 /* Tæt liste: to tekstrækker pr. opskrift (navn + kategori, køkken og tid). Notesbogens linjer skiller dem, så der er ingen kort. */
 #liste.oplist { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 32px; }
 .oprk { display: block; min-width: 0; min-height: 64px; margin: 0 -8px; padding: 0 8px; border-radius: 12px; color: inherit; text-decoration: none; touch-action: manipulation; }
-.oprk strong, .oprk > span { display: block; line-height: 32px; overflow-wrap: anywhere; } /* hele navnet vises: brækker i hele linjer à 32 px, så rækkerne bliver på linjerne */
+.oprk strong, .oprk > span, .oprk-tekst > span { display: block; line-height: 32px; overflow-wrap: anywhere; } /* hele navnet vises: brækker i hele linjer à 32 px, så rækkerne bliver på linjerne */
 .oprk strong { font: 24px/32px var(--hoved); font-weight: 400; }
-.oprk > span { font-size: 17px; color: var(--blyant); }
+.oprk > span, .oprk-tekst > span { font-size: 17px; color: var(--blyant); }
 .oprk .ikon { width: 20px; height: 20px; vertical-align: -.12em; }
 .oprk:active { background: rgba(var(--blaek-rgb), .08); }
 .oprk[aria-current] { background: var(--valgt); color: var(--paa-valgt); }
-.oprk[aria-current] > span { color: inherit; }
+.oprk[aria-current] > span, .oprk[aria-current] .oprk-tekst > span { color: inherit; }
 @media (hover: hover) { .oprk:hover:not([aria-current]) { background: rgba(var(--blaek-rgb), .06); } }
 .oplist-bogstav { grid-column: 1 / -1; margin: 32px 0 0; font: 24px/32px var(--hoved); font-weight: 400; color: var(--gryde-mork); }
 .oplist-bogstav:first-child { margin-top: 0; }
@@ -1161,3 +1161,31 @@ body.rude-fuld .ruder > .rude-liste { display: none; }
 /* Indstillingen «Vis to ruder» ses kun, hvor to ruder kan være der (samme grænse som BRED i app.js) */
 @media (max-width: 1023px) { .kun-bred { display: none; } }
 @media print { .rude-liste { display: none; } .ruder { display: block; } }
+
+/* ---------- Billeder (opdatering 4e) ---------- */
+.oprk.med-bil { display: flex; align-items: center; gap: 12px; } /* listen: lille billede foran navnet. Rækken er stadig 64 px. */
+.oprk-tekst { min-width: 0; flex: 1; }
+.oprk-bil { flex: none; width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: var(--felt-bg); box-shadow: 0 0 0 1px var(--glaskant); }
+div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px + række 88 px + mellemrum 8 px = 10 rækker */
+.bil-knap { display: block; padding: 0; border: 0; border-radius: 16px; overflow: hidden; background: var(--felt-bg); cursor: zoom-in; box-shadow: 0 0 0 1px var(--glaskant); }
+.bil-knap img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bil-knap.bil-stor { width: 100%; height: 224px; }
+.bil-raekke { display: flex; gap: 8px; overflow-x: auto; }
+.bil-knap.bil-lille { flex: none; width: 88px; height: 88px; }
+.bil-trin { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; } /* under trinnet: 128 px + 2 x 16 px = 5 rækker */
+.bil-trin .bil-knap { width: 160px; max-width: 100%; height: 128px; }
+.lav-midte .bil-trin { margin: 0 0 32px; }
+.lav-midte .bil-trin .bil-knap { width: 100%; height: 192px; }
+#bil-stor { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 16px; background: rgba(var(--blaek-rgb), .88); cursor: zoom-out; }
+#bil-stor img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px; }
+#bil-stor .rund { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; }
+/* I formularen */
+.bil-ed { display: flex; flex-direction: column; margin-top: 20px; } /* efter formularen står nettet 12 px forskudt: 20 px rykker afsnittet på linjerne */
+.bil-status { margin: 0; min-height: 32px; }
+.bil-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.bil { display: flex; align-items: flex-start; gap: 12px; margin: var(--m) 0 var(--pt); min-height: 128px; }
+.bil > img { flex: none; width: 96px; height: 96px; object-fit: cover; border-radius: 12px; background: var(--felt-bg); box-shadow: 0 0 0 1px var(--glaskant); }
+.bil-side { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bil-side select { width: 100%; }
+.bil-side .chip { align-self: flex-start; }
+@media print { .bil-knapper, .bil-ed { display: none; } .bil-knap { box-shadow: none; } }

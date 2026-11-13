@@ -100,6 +100,10 @@ const Vaerksted = (() => {
       <h2>Ingredienser</h2>
       <p class="lille">Ryd op i ingredienserne: læg dubletter sammen, og flyt ord som «finthakket» fra navnet til linjen i opskriften.</p>
       <a class="knap" data-tpid="vaerksted-ingredienser" href="#/vaerksted/ingredienser">${ik('gulerod')} Åbn Ingrediensværktøjet</a>
+      <h2>Billeder</h2>
+      <p class="lille">Se, hvor meget plads billederne fylder, og slet filer, der ikke hører til en opskrift.</p>
+      <button type="button" class="knap" id="bil-tjek">${ik('kamera')} Tjek lageret</button>
+      <div id="bil-svar" aria-live="polite"></div>
       <h2>Lås</h2>
       <label class="skift"><input type="checkbox" id="vk-husk" ${husk() ? 'checked' : ''}> <span>Lås ikke Værkstedet på denne enhed</span></label>
       <p class="lille">Så skal du ikke skrive koden hver gang. Slå det kun til på din egen telefon eller computer.</p>
@@ -138,6 +142,25 @@ const Vaerksted = (() => {
         [f0, f1, f2].forEach(f => { f.value = ''; }); toast('Den nye kode er gemt');
       } catch (err) { console.error(err); visFejl(f0, 'Det virkede ikke lige nu. Tjek internettet, og prøv igen.'); }
     });
+    const bilSvar = $('#bil-svar');
+    const bilTjek = async () => {
+      bilSvar.innerHTML = '<p class="lille">Tjekker…</p>';
+      try {
+        const g = await Billeder.gennemgang();
+        bilSvar.innerHTML = `<p class="tekst">${g.billeder} ${g.billeder === 1 ? 'billede' : 'billeder'} i opskrifterne. ${g.filer} filer i lageret, ${Billeder.kb(g.bytes)} i alt.</p>
+          ${g.udenFil ? `<p class="tekst">${g.udenFil} ${g.udenFil === 1 ? 'billede mangler' : 'billeder mangler'} sin fil.</p>` : ''}
+          ${g.uden.length ? `<p class="tekst">${g.uden.length} ${g.uden.length === 1 ? 'fil hører' : 'filer hører'} ikke til nogen opskrift (${Billeder.kb(g.udenBytes)}).</p>
+            <button type="button" class="knap slet" id="bil-ryd">${ik('slet')} Slet ${g.uden.length === 1 ? 'filen' : 'filerne'}</button>`
+            : '<p class="tekst">Ingen filer uden opskrift.</p>'}`;
+        const r = $('#bil-ryd');
+        if (r) r.addEventListener('click', async () => {
+          if (!await bekraeft(`Vil du slette ${g.uden.length} ${g.uden.length === 1 ? 'fil' : 'filer'} uden opskrift? De kan ikke hentes tilbage.`)) return;
+          r.disabled = true;
+          try { await Billeder.ryd(g.uden); toast('Filerne er slettet'); bilTjek(); } catch (err) { console.error(err); r.disabled = false; fejlbesked('Filerne blev ikke slettet. Tjek internettet, og prøv igen.'); }
+        });
+      } catch (err) { console.error(err); bilSvar.innerHTML = '<p class="fejlboks">Lageret kunne ikke tjekkes. Er billedlageret sat op? Tjek internettet, og prøv igen.</p>'; }
+    };
+    $('#bil-tjek').addEventListener('click', bilTjek);
     $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));
     $('#tilpastip').addEventListener('click', () => Tilpas.tipIgen());
     const saetHoejde = n => { const v = Math.max(20, Math.min(90, Math.round(Number(n)) || 33)); lager.gem('tilpasHoejde', v); $('#tphoejde').value = v; };
