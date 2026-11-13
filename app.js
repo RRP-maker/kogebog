@@ -552,28 +552,28 @@ async function opskriftSide(rid, maal = app) {
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
   maal.innerHTML = `${iRude && !opskriftFra ? `<a class="tilbage direkte skaerm" href="#/opskrifter">‹ Tilbage</a>` : `<a class="tilbage skaerm" href="${opskriftFra || '#/opskrifter'}">‹ Tilbage</a>`}
     ${vaerktoej(`<a class="knap" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Rediger</a>`)}
-    <div class="titelrakke"><h1>${esc(r.titel)}</h1>
+    <div class="titelrakke opsk-felt" data-tpid="opsk-titel"><h1>${esc(r.titel)}</h1>
       <button id="favknap" data-tpid="favorit" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
-    ${c.length ? `<p class="chips">${c.map(x => `<span>${x}</span>`).join('')}</p>` : ''}
-    ${r.beskrivelse ? `<p class="tekst">${esc(r.beskrivelse)}</p>` : ''}
+    ${c.length ? `<p class="chips opsk-felt" data-tpid="opsk-chips">${c.map(x => `<span>${x}</span>`).join('')}</p>` : ''}
+    ${r.beskrivelse ? `<p class="tekst opsk-felt" data-tpid="opsk-beskrivelse">${esc(r.beskrivelse)}</p>` : ''}
     <button class="knap primaer stor skaerm" data-h="lav">▶ Lav retten trin for trin</button>
-    <div class="opsk-ruder"><section>
+    <div class="opsk-ruder" data-tpid="opsk-ruder"><section class="opsk-felt" data-tpid="opsk-ingredienser">
     <h2 class="opsk">Ingredienser</h2>
     <div class="portioner skaerm" data-tpid="portioner"><div class="stepper" role="group" aria-label="Antal portioner">
       <button type="button" class="rund felt felt-s" data-h="port" data-v="-1" aria-label="Færre portioner">−</button>
       <input id="portinp" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="" aria-label="Antal portioner">
       <button type="button" class="rund felt felt-s" data-h="port" data-v="1" aria-label="Flere portioner">+</button></div>
       <small id="portvis"></small></div>
-    <ul class="ing" id="ing"></ul></section><section>
+    <ul class="ing" id="ing"></ul></section><section class="opsk-felt" data-tpid="opsk-trin">
     <h2 class="opsk">Sådan gør du</h2>
     <div id="trin"></div></section></div>
-    <h2 class="skaerm opsk">Hvordan smagte det?</h2>
-    <div id="stjerner" class="skaerm"></div>
-    ${egne.length ? `<h2 class="opsk">Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}` : ''}
-    <h2 class="skaerm opsk">Vores side</h2>
+    <div class="opsk-felt skaerm" data-tpid="opsk-smag"><h2 class="skaerm opsk">Hvordan smagte det?</h2>
+    <div id="stjerner" class="skaerm"></div></div>
+    ${egne.length ? `<div class="opsk-felt" data-tpid="opsk-tips"><h2 class="opsk">Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}</div>` : ''}
+    <div class="opsk-felt skaerm" data-tpid="opsk-vores"><h2 class="skaerm opsk">Vores side</h2>
     <p class="lille skaerm opsk">Sæt billeder og figurer på siden, og flyt dem rundt.</p>
     <div class="laerred-ramme skaerm"><div id="laerred" class="laerred"></div></div>
-    <div id="laerred-knapper" class="rakke skaerm"></div>
+    <div id="laerred-knapper" class="rakke skaerm"></div></div>
     <input id="billedfil" type="file" accept="image/*" hidden>
     <div class="rakke skaerm"><a class="knap" data-tpid="opdater-claude" href="#/opdater/${r.id}">${ik('gnist')} Opdater med Claude</a>
       <button class="knap" data-h="print">Print</button></div>

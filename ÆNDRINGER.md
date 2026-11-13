@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.10.0 · Sidebygger, fase 4: opskriften som beholder
+- Opskriftens dele er datafelter: titel, mærker, beskrivelse, ingredienser, trin, «Hvordan smagte det?», tips og «Vores side». Når du tilpasser, kan de flyttes (også ingredienser og trin ud af de to kolonner), få ramme og farve. Teksten kommer altid fra opskriften og kan ikke ændres her.
+- Linjelængde: løbende tekst i opskriften og trin for trin er højst 640 px (40 kolonner, ca. 70 tegn), så linjerne ikke bliver for lange på iPad og Mac.
+- `CLAUDE.md` og skabelonen er opdateret: opskriftens dele kan tilpasses, felter flyttes i rækkefølge, lister har skabelon, og Grydelil peger på nøgler.
+
 ## 1.9.0 · Sidebygger, fase 3: flyt, tilføj og slet
 - Felter flyttes i rækkefølge i stedet for med pixels: «↑ Flyt op», «↓ Flyt ned», «Smallere», «Bredere» (tredjedel, halv, hel, i hele kolonner), «Til den anden side» og «Egen plads» i vinduet, når du trykker på et felt. Feltet flyttes i koden, så tastatur og skærmlæser følger med, og to felter kan aldrig ligge oven på hinanden.
 - Træk: hold fingeren på et felt, så vises de steder, det kan lande, som streger. Den nærmeste er markeret med «Her». Slipper du et andet sted, bliver feltet, hvor det var. Siden ruller med mod kanten.

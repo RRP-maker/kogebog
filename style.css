@@ -707,6 +707,7 @@ body.tilpas .tp-afstand { background: repeating-linear-gradient(135deg, rgba(var
 .tp-palette .knap { flex-direction: column; align-items: flex-start; height: auto; min-height: 64px; padding: 8px 14px; text-align: left; white-space: normal; }
 .tp-palette .knap small { font-size: 14px; line-height: 18px; color: var(--blyant); }
 .tp-plads { flex-wrap: wrap; gap: 8px; }
+.sw.ingen { display: inline-grid; place-items: center; background: transparent; border: 1px dashed var(--blyant); color: var(--blaek); font: 20px/1 var(--skrift); }
 @media (prefers-reduced-motion: reduce) { .traekker { transition: none !important; } }
 
 /* Hvad kan jeg lave: «højst så mange ingredienser må mangle» ved siden af overskriften */
@@ -1034,6 +1035,10 @@ body.ruder-vist main { --maxb: 1248px; max-width: 1248px; }
 .rude-valg select { min-width: 0; margin: var(--m) 0 var(--pt); font-size: 17px; padding: 14px 28px 14px 10px; background-position: calc(100% - 15px) 50%, calc(100% - 8px) 50%; }
 /* En opskrift: ingredienser til venstre og trin til højre, når ruden er bred nok (mindst ca. 720 px) */
 .opsk-ruder, .opsk-ruder > section { display: flex; flex-direction: column; min-width: 0; }
+/* Opskriftens dele er datafelter (sidebyggeren, fase 4): de kan flyttes, få ramme og farve, men teksten kommer fra opskriften */
+div.opsk-felt { display: flex; flex-direction: column; min-width: 0; }
+/* Linjelængde: løbende tekst i opskriften højst 40 kolonner (640 px, ca. 70 tegn), så den er let at læse på iPad og Mac */
+.opsk-felt.tekst, .opsk-felt .tekst, #trin, .lav-trin, .lav-del { max-width: 640px; }
 @media (min-width: 1154px) and (pointer: coarse), (min-width: 1362px) {
   body.ruder-vist .opsk-ruder { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 0 32px; align-items: start; }
 }

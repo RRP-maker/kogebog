@@ -9,7 +9,7 @@ const Tilpas = (() => {
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret, .mp-rk > span, .hj-fold, .tp-egen'; // tp-egen: dine egne felter. hj-fold: overskrifterne i «Hvad har du derhjemme?» (en liste med skabelon) // de sidste: dagene, retternes felter og tællernes navne på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
-  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', DELE = '.mp-valg .rund, .mp-valg .mp-inp, .filter .chip', TRIN = '.mp-valg .stepper, .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT;
+  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', DELE = '.mp-valg .rund, .mp-valg .mp-inp, .filter .chip', TRIN = '.mp-valg .stepper, .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT + ', .opsk-felt'; // opsk-felt: opskriftens dele (datafelter)
   // Tæller på Madplan («−», skrivefelt, «+») og bjælker med mærker (kategorier, køkkener, søgning): delene kan tilpasses hver for sig (DELE), men et tryk-og-træk flytter hele tælleren eller bjælken (TRIN). // opskrifter kan ikke tilpasses
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
@@ -205,6 +205,7 @@ const Tilpas = (() => {
     { // rækkefølge, kant og bredde (to gange, så felter, der peger på hinanden, også lander rigtigt)
       const alle = [...document.querySelectorAll(FLYT + ', .opsk-felt')].filter(el => !el.classList.contains('plads') && !el.closest('#ark'));
       for (let i = 0; i < 2; i++) alle.forEach(el => { if (drag && drag.laast && drag.el === el) return; const k = noegle(el); placer(el, k && kanPlaceres(el) ? plads(k) : null); });
+      document.querySelectorAll('.opsk-felt').forEach(el => { const o = get(el.dataset.tpid) || {}; el.style.color = tCss(o.f); el.style.background = o.b === 'glas' ? 'var(--glas)' : fCss(o.b); el.classList.toggle('tp-ramme', !!(o.r || o.b)); }); // datafelter: farve og ramme
     }
     document.querySelectorAll(FLYT).forEach(el => { // felternes plads
       if (el.classList.contains('plads')) return;
@@ -437,16 +438,25 @@ const Tilpas = (() => {
     setTimeout(() => { const t = $('#tp-tekst', d); if (t) t.select(); }, 50);
   }
   function aabnKort(el) {
-    const k = el.dataset.flyt, l = erFast(el, k), m = !!(get(k) || {}).m;
-    const d = ark(`<h2>Flyt felt</h2><p class="lille">${flytTekst(m)} Det falder på notesbogens net.</p>
-      <p class="lille">${l ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.'}</p>
+    const k = el.dataset.flyt, l = erFast(el, k), o0 = get(k) || {}, m = !!o0.m, data = el.matches('.opsk-felt');
+    const sw = (liste, v, n, glas, css) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${n}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}<button type="button" class="sw ingen${!v ? ' valgt' : ''}" data-${n}="" aria-label="Ingen (appens egen)">×</button>${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${n}="${c}" style="background:${css(c)}" aria-label="${NAVN[c] || c}"></button>`).join('')}</div>`;
+    const d = ark(`<h2>${data ? 'Opskriftens felt' : 'Flyt felt'}</h2><p class="lille">${data ? 'Feltet kan flyttes og få ramme og farve. Teksten kommer fra opskriften.' : flytTekst(m) + ' Det falder på notesbogens net.'}</p>
+      ${data ? '' : `<p class="lille">${l ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.'}</p>`}
       ${pladsHtml(el, k)}
-      ${el.matches('.opsk-felt') ? `<div class="rakke venstre"><button class="knap" type="button" data-tp="ramme">${(get(k) || {}).r ? 'Uden ramme' : 'Med ramme'}</button></div>` : ''}
+      ${data ? `<div class="rakke venstre"><button class="knap" type="button" data-tp="ramme">${o0.r ? 'Uden ramme' : 'Med ramme'}</button></div>
+      <label>Tekstfarve</label>${sw(TEKSTFARVER, o0.f, 'f', false, tCss)}<label>Feltets farve</label>${sw(FELTFARVER, o0.b, 'b', true, fCss)}
+      <p class="lille tp-advarsel" id="tp-kontrast" role="status" hidden>⚠ Teksten er svær at læse på den farve. Prøv en mørkere.</p>` : ''}
       <div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
-      <div class="rakke"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button><button class="knap" type="button" data-tp="nulstil">Nulstil plads</button><button class="knap primaer" type="button" data-tp="luk">Luk</button></div>`);
+      <div class="rakke">${data ? '' : `<button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button>`}<button class="knap" type="button" data-tp="nulstil">Nulstil plads</button><button class="knap primaer" type="button" data-tp="luk">Luk</button></div>`);
     d.addEventListener('click', e => {
       if (e.target.closest('.ark-bag')) return lukArk();
       const pl = e.target.closest('[data-pl]'); if (pl) { pladsKlik(el, k, pl.dataset.pl); return; }
+      const c = e.target.closest('.sw'); if (c) { // datafelter: farven gemmes med det samme
+        const n = 'f' in c.dataset ? 'f' : 'b', o = { ...(get(k) || {}) }; if (c.dataset[n]) o[n] = c.dataset[n]; else delete o[n];
+        c.parentElement.querySelectorAll('.sw').forEach(x => x.classList.toggle('valgt', x === c));
+        const t = $('#tp-kontrast', d); if (t) t.hidden = !(o.f || o.b) || !daarligKontrast(el, o.f || '', o.b || '', { f: '', b: '' }, 20);
+        husk(); gem(k, o, true); return;
+      }
       const a = e.target.closest('[data-tp]'); if (!a) return;
       lukArk(); const o = get(k) || {};
       if (a.dataset.tp === 'ramme') { gem(k, o, false, { ramme: !o.r }); return; }
@@ -574,7 +584,7 @@ const Tilpas = (() => {
     if (besked) toast(besked);
     await skrivObj(k, true);
   }
-  const forbudt = x => !x || x.matches('#app, main, .ruder, .rude-liste, .rude-indhold, .opsk-ruder') || !appEl0() || !appEl0().contains(x) || x === appEl0();
+  const forbudt = x => !x || x.matches('#app, main, .ruder, .rude-liste, .rude-indhold') || !appEl0() || !appEl0().contains(x) || x === appEl0();
   const foerRef = n => { const r = refAf(n); if (r) return '^' + r; const p = n.previousElementSibling, pr = refAf(p); return pr ? pr : null; };
   const efterRef = n => { const r = refAf(n); if (r) return r; const x = n.nextElementSibling, xr = refAf(x); return xr ? '^' + xr : null; };
   function naboSted(el, ret) { // ret −1: op, 1: ned. Giver den nye «efter», eller null
