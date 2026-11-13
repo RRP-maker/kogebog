@@ -13,6 +13,7 @@ En delt kogebog som statisk web app: opskrifter og tips i et kladdehæfte, med h
 | `app.js` | Sider, database, begreber, ure, forslag, import |
 | `hjaelper.js` | Hjælperen og lyde |
 | `katalog.js` | Katalog over ingredienser og kategorier: gem, spørg, sortér med Claude |
+| `ingvaerktoej.js` | Ingrediensværktøjet i Værkstedet: ryd op i kataloget med forhåndsvisning, kopi og gendan (SQL i `supabase/ingredienser.sql`) |
 | `hjemme.js` | Listen «Hvad har du derhjemme?» på siden Hvad kan jeg lave? (SQL i `hjemme.sql`) |
 | `sw.js`, `manifest.webmanifest` | Installér på hjemmeskærm, læs uden internet |
 

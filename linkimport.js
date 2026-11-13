@@ -88,8 +88,8 @@ const LinkImport = (() => {
       if (!buf.length) return;
       const b = buf.splice(0);
       const gem = async dele => {
+        for (const x of dele) x.r.data.ingredienser = await Katalog.knyt(x.r.data.ingredienser, {}, x.r.kat); // hver linje får ingrediensens id
         await api('opskrifter', { method: 'POST', body: dele.map(x => x.r.data) });
-        try { await Katalog.laeg(dele.flatMap(x => ingAf(x.r.data).map(i => i.n)), {}, Object.assign({}, ...dele.map(x => x.r.kat))); } catch (e) { console.error(e); }
         dele.forEach(x => { klar.add(x.url); tael.gemt++; });
       };
       try { await gem(b); }

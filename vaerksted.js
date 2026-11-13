@@ -1,4 +1,4 @@
-// Værkstedet (opdatering 4d-1): en kode, der spærrer Designer (og senere Ingrediensværktøjet) mod uheld.
+// Værkstedet (opdatering 4d-1): en kode, der spærrer Designer og Ingrediensværktøjet (ingvaerktoej.js) mod uheld.
 // Det er kun en spærring: tabellerne er åbne, og ventetiden efter forkerte forsøg ligger i appen. Rigtig sikkerhed kommer med login.
 // Koden står aldrig i koden. Kun et saltet hash (PBKDF2) ligger i Supabase: tabellen «madplan», rækken «vaerksted-kode».
 // Låst/oplåst: oplåsningen ligger i sessionStorage (forsvinder, når appen lukkes). «Lås ikke på denne enhed» og «Behold Designer» ligger i localStorage (lager).
@@ -97,6 +97,9 @@ const Vaerksted = (() => {
         <button type="button" class="rund felt felt-s" data-tpid="mere-minus" id="tphned" aria-label="Lavere">−</button>
         <input id="tphoejde" class="felt felt-s" data-tpid="mere-tal" type="text" inputmode="numeric" autocomplete="off" value="${tilpasHoejde()}" aria-label="Højde i procent">
         <button type="button" class="rund felt felt-s" data-tpid="mere-plus" id="tpop" aria-label="Højere">+</button><span class="stepper-enhed">%</span></div>
+      <h2>Ingredienser</h2>
+      <p class="lille">Ryd op i ingredienserne: læg dubletter sammen, og flyt ord som «finthakket» fra navnet til linjen i opskriften.</p>
+      <a class="knap" data-tpid="vaerksted-ingredienser" href="#/vaerksted/ingredienser">${ik('gulerod')} Åbn Ingrediensværktøjet</a>
       <h2>Lås</h2>
       <label class="skift"><input type="checkbox" id="vk-husk" ${husk() ? 'checked' : ''}> <span>Lås ikke Værkstedet på denne enhed</span></label>
       <p class="lille">Så skal du ikke skrive koden hver gang. Slå det kun til på din egen telefon eller computer.</p>
@@ -158,11 +161,11 @@ const Vaerksted = (() => {
     });
   }
 
-  async function side() {
-    if (oplaast()) { ssSaet(true); return oplaastSide(); }
+  async function side(under) { // under: «ingredienser» = Ingrediensværktøjet. Det ses kun, når Værkstedet er låst op.
+    if (oplaast()) { ssSaet(true); return under === 'ingredienser' ? IngVaerktoej.side() : oplaastSide(); }
     app.innerHTML = `${Ikoner.tilbage('#/mere')}<h2>Værkstedet</h2><p class="lille">Henter…</p>`;
     const rk = await hentRaekke();
-    if (location.hash === '#/vaerksted') laastSide(rk); // man kan have forladt siden, mens koden blev hentet
+    if (location.hash.startsWith('#/vaerksted')) laastSide(rk); // man kan have forladt siden, mens koden blev hentet
   }
   haandhaev();
   return { side, oplaast, maaDesigner, haandhaev };

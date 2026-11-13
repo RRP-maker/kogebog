@@ -54,8 +54,26 @@ const Katalog = (() => {
       if (fund) { if (!fund.kategori_id && k) opdat.push([fund.id, k]); continue; }
       nye.push({ navn: n, navn_norm: n, kategori_id: k || gaet(n) || null });
     }
-    if (nye.length) await api('ingredienser?on_conflict=navn_norm', { method: 'POST', flet: 'ignorer', body: nye });
+    if (nye.length) ing.push(...await api('ingredienser?on_conflict=navn_norm', { method: 'POST', flet: 'ignorer', body: nye })); // de nye huskes med deres id
     for (const [id, k] of opdat) await api(`ingredienser?id=eq.${enc(id)}`, { method: 'PATCH', body: { kategori_id: k } });
+  }
+  // Navnet, en linje står under i kataloget: selve varen («finthakket løg» står under «løg»)
+  const noegle = navn => rens(simpel(navn)) || norm(String(navn).replace(/[(),;]/g, ' '));
+  // Ved «Gem» (opdatering 4c): lægger ingredienserne i kataloget og giver hver linje ingrediensens id og navn derfra.
+  // Tilberedningen («finthakket») flyttes fra navnet til linjens forberedelse (f). En linje uden navn falder væk.
+  async function knyt(liste, valg = {}, claude = {}) {
+    const dele = liste.map(x => 'g' in x ? null : { ...delIng(x.n), k: noegle(x.n) });
+    await laeg(dele.filter(d => d && d.k).map(d => d.k), valg, claude);
+    if (dele.some(d => d && d.k && !ing.some(i => i.navn_norm === d.k))) await hent(); // en anden enhed lagde den ind samtidig
+    return liste.map((x, nr) => {
+      const d = dele[nr];
+      if (!d) return x;
+      if (!d.k) return null;
+      const i = ing.find(c => c.navn_norm === d.k);
+      if (!i) throw new Error('Ingrediensen kom ikke i kataloget: ' + x.n);
+      const f = [d.f, x.f].filter(Boolean).join(', ');
+      return { m: x.m, e: x.e, n: i.navn, id: i.id, ...(f && { f }) };
+    }).filter(Boolean);
   }
   const kategorier = () => sorteret().map(katNavn);
   // Er ingrediensen et krydderi? Kategorien kommer fra kataloget. Ukendte ingredienser tæller ikke som krydderier.
@@ -161,44 +179,27 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
     async katGem() {
       const svar = laesKat($('#katsvar').value);
       if (!svar || !Object.keys(svar).length) { $('#arkfejl').innerHTML = '<div class="fejlboks">Svaret kan ikke læses. Kopiér hele Claudes svar, og prøv igen.</div>'; return; }
-      let sat = 0, rettet = 0, fejlede = 0;
+      // Navne og kategorier rettes med samme funktion som Ingrediensværktøjet: alt eller intet, med en sikkerhedskopi først,
+      // og opskrifternes linjer følger med. Får to ingredienser samme navn, lægges de sammen.
+      const ret = [];
       for (const i of andre) {
         const r = svar[i.navn_norm];
         if (!r) continue;
-        try { // én fejl stopper ikke resten
-
-        const kid = r.kat && (modus === 'alle' || ikkeSorteret(i)) ? katId(r.kat) : null; // «Ret alle kategorier» må også ændre en kategori, der er sat
-        if (r.rettet) r.rettet = rens(simpel(r.rettet)); // navnet gøres simpelt, også hvis Claude glemmer det
-        if (r.rettet && r.rettet !== i.navn_norm) {
-          const fund = ing.find(x => x.navn_norm === r.rettet && x.id !== i.id);
-          if (fund) { // det rettede navn findes: ingredienserne lægges sammen
-            const hos = await api(`hjemme?ingrediens_id=eq.${enc(i.id)}&select=id`);
-            if (hos.length) {
-              const har = await api(`hjemme?ingrediens_id=eq.${enc(fund.id)}&select=id`);
-              if (har.length) await api(`hjemme?ingrediens_id=eq.${enc(i.id)}`, { method: 'DELETE' });
-              else await api(`hjemme?ingrediens_id=eq.${enc(i.id)}`, { method: 'PATCH', body: { ingrediens_id: fund.id } });
-            }
-            if (!fund.kategori_id && kid) await api(`ingredienser?id=eq.${enc(fund.id)}`, { method: 'PATCH', body: { kategori_id: kid } });
-            await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'DELETE' });
-            ing = ing.filter(x => x.id !== i.id);
-            if (!fund.kategori_id && kid) fund.kategori_id = kid;
-          } else {
-            await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: kid ? { navn: r.rettet, navn_norm: r.rettet, kategori_id: kid } : { navn: r.rettet, navn_norm: r.rettet } });
-            i.navn = i.navn_norm = r.rettet; if (kid) i.kategori_id = kid; // husk det nye navn: får en senere ingrediens samme navn, lægges de sammen
-          }
-          rettet++; if (kid) sat++;
-          continue;
-        }
-        if (!kid || kid === i.kategori_id) continue;
-        await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: kid } }); sat++; i.kategori_id = kid;
-        } catch (e) { console.error(i.navn, e); fejlede++; }
+        const navn = r.rettet ? rens(simpel(r.rettet)) : '', e = { id: i.id }; // navnet gøres simpelt, også hvis Claude glemmer det
+        if (navn && navn !== i.navn_norm) e.navn = navn;
+        if (r.kat && katId(r.kat) && (modus === 'alle' || ikkeSorteret(i))) e.kategori = r.kat; // «Ret alle kategorier» må også ændre en kategori, der er sat
+        if (e.navn || e.kategori) ret.push(e);
       }
+      let o;
+      try { o = await IngVaerktoej.ret({ ingredienser: ret }, 'før «Sortér og ret»'); }
+      catch (e) { console.error(e); $('#arkfejl').innerHTML = `<div class="fejlboks">${esc(e.vis || 'Det blev ikke gemt, og intet er ændret. Tjek internettet, og prøv igen.')}</div>`; return; }
+      const sat = o.kategori, rettet = o.omdoebt.length + o.sammen.reduce((n, g) => n + g.fra.length, 0);
       lager.gem('katSvar', '');
       lukArk();
-      const dele = [sat && `${sat} sorteret`, rettet && `${rettet} navne rettet`, fejlede && `${fejlede} kunne ikke gemmes`].filter(Boolean);
+      const dele = [sat && `${sat} sorteret`, rettet && `${rettet} navne rettet`].filter(Boolean);
       toast(dele.length ? dele.join(', ') : 'Ingen af svarene passede');
       if (efterSortering) efterSortering();
     }
   });
-  return { hent, rens, spoerg, laeg, kategorier, sorterAndet, laesKat, erKrydderi };
+  return { hent, rens, noegle, spoerg, knyt, kategorier, sorterAndet, laesKat, erKrydderi };
 })();

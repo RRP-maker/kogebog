@@ -66,7 +66,7 @@ const TYPER = {
       { n: 'svaerhed', l: 'Sværhed', t: 'valg', valg: [[1, '1 · Meget let'], [2, '2 · Let'], [3, '3 · Middel'], [4, '4 · Svær'], [5, '5 · Meget svær']] },
       { n: 'portioner', l: 'Antal portioner', t: 'number' },
       { n: 'tid_minutter', l: 'Tid i minutter', t: 'number' },
-      { n: 'ingredienser', l: 'Ingredienser', t: 'ingredienser', hint: 'Én ingrediens i hvert felt. Skriv mængden først, fx «2 dl mælk». Tryk på «overskrift» for at sætte en overskrift over en ingrediens, fx Sovs eller Kødboller.' },
+      { n: 'ingredienser', l: 'Ingredienser', t: 'ingredienser', hint: 'Én ingrediens i hvert felt. Skriv mængden først, fx «2 dl mælk». Skal den hakkes eller skæres, så skriv det efter et komma, fx «2 løg, finthakket». Tryk på «overskrift» for at sætte en overskrift over en ingrediens, fx Sovs eller Kødboller.' },
       { n: 'fremgangsmaade', l: 'Trin', t: 'trin', hint: 'Ét trin i hvert felt. Tryk på «deltrin» for at lave små skridt under et trin. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' },
       { n: 'skjul_forslag', l: 'Foreslå ikke denne ret i «Hvad kan jeg lave?»', t: 'tjek', hint: 'Sæt kryds, hvis retten ikke skal dukke op som forslag.' }
     ]
@@ -195,7 +195,7 @@ function spoergDublet(dubletter, antal) {
 }
 
 // ---------- Ingredienser: mængde, enhed, navn ----------
-const ENHEDER = ['g', 'kg', 'ml', 'cl', 'dl', 'l', 'tsk', 'spsk', 'stk', 'knsp', 'nip', 'dåse', 'dåser', 'fed', 'bundt', 'pk', 'pakke', 'pakker', 'skive', 'skiver', 'håndfuld', 'glas', 'kop', 'kopper', 'pose', 'poser', 'bakke', 'bakker'];
+const ENHEDER = ['g', 'kg', 'ml', 'cl', 'dl', 'l', 'tsk', 'spsk', 'stk', 'knsp', 'nip', 'dåse', 'dåser', 'fed', 'bundt', 'pk', 'pakke', 'pakker', 'skive', 'skiver', 'håndfuld', 'glas', 'kop', 'kopper', 'pose', 'poser', 'bakke', 'bakker', 'stængel', 'stængler', 'knivspids', 'shot'];
 const BROEK = { '½': 0.5, '¼': 0.25, '¾': 0.75, '1/2': 0.5, '1/4': 0.25, '3/4': 0.75 };
 function tal(v) {
   if (typeof v === 'number') return isFinite(v) ? v : null;
@@ -210,7 +210,7 @@ function tal(v) {
 // Rigtige produkter som «hakkede tomater» og «hakket svinekød» beholdes.
 const FORKORT = [[/\bfinthakk\b/gi, 'finthakket'], [/\bgrofthakk\b/gi, 'grofthakket'], [/\bhakk\b/gi, 'hakket'], [/\brev\b/gi, 'revet'], [/\bskr\b/gi, 'skrællet']];
 const PRODUKT = /^(hakkede|flåede|knuste|pillede|hele|tørrede) tomater\b|^hakket (okse|svine|kalve|lamme|kylling|kalkun|and|blandet )?\s?kød$|^hakket (okse|svine|kalve|lamme|kylling|kalkun)kød$/i;
-const TILBEREDT = /\b(finthakket|grofthakket|hakket|hakkede|revet|revne|skåret|skårne|snittet|snittede|pillet|pillede|skrællet|skrællede|presset|pressede|knust|knuste|smuldret|smuldrede|fint|groft)\b/gi;
+const TILBEREDT = /\b(finthakket|finthakkede|grofthakket|grofthakkede|hakket|hakkede|revet|revne|skåret|skårne|snittet|snittede|pillet|pillede|skrællet|skrællede|presset|pressede|knust|knuste|smuldret|smuldrede|fint|groft)\b/gi;
 function simpel(navn) {
   let n = String(navn).trim();
   FORKORT.forEach(([r, t]) => { n = n.replace(r, t); });
@@ -218,23 +218,40 @@ function simpel(navn) {
   let s = n.replace(/\([^)]*\)/g, ' ').replace(/,.*$/, ' ').replace(/\b(skåret|skårne|snittet|snittede|i tern|i skiver|i tynde|i strimler|i både|i stykker|i bidder)\b.*$/i, ' ').replace(TILBEREDT, ' ').replace(/\s+/g, ' ').trim();
   return s || n;
 }
+// Deler et navn i selve varen og forberedelsen: «finthakket løg» bliver til { n: 'løg', f: 'finthakket' } (opdatering 4c).
+// Varen findes med «simpel». Det, der blev taget væk, er forberedelsen.
+function delIng(navn) {
+  let n = String(navn).trim();
+  FORKORT.forEach(([r, t]) => { n = n.replace(r, t); });
+  const s = simpel(n);
+  if (s === n) return { n, f: '' };
+  const pudset = t => t.replace(/[()]/g, ' ').replace(/\s+/g, ' ').replace(/^[\s,;.:]+|[\s,;.:]+$/g, '');
+  const i = n.toLowerCase().indexOf(s.toLowerCase()), ord = s.toLowerCase().split(' ');
+  return { n: s, f: i >= 0 ? [n.slice(0, i), n.slice(i + s.length)].map(pudset).filter(Boolean).join(', ')
+    : pudset(n.split(/\s+/).filter(o => !ord.includes(o.toLowerCase())).join(' ')) };
+}
+// En linje er mængde, enhed og navn. Det efter første komma er forberedelsen: «2 løg, finthakket» (et komma i en parentes tæller ikke).
 function parseIng(linje) {
   const s = String(linje).trim().replace(/^[-•*]\s*/, '');
   const m = s.match(/^(\d+\/\d+|\d+(?:[.,]\d+)?|[½¼¾])\s*(.*)$/);
-  if (!m || !m[2]) return { m: null, e: '', n: s };
-  const ord = m[2].split(/\s+/);
+  const rest = m && m[2] ? m[2] : s, d = rest.match(/^((?:[^,(]|\([^)]*\))+),\s*(.*)$/);
+  const tekst = d && d[1].trim() ? d[1].trim() : rest, f = d && d[1].trim() ? d[2].trim() : '';
+  if (!m || !m[2]) return { m: null, e: '', n: tekst, ...(f && { f }) };
+  const ord = tekst.split(/\s+/);
   let e = '';
   if (ord.length > 1 && ENHEDER.includes(ord[0].toLowerCase().replace(/\.$/, ''))) e = ord.shift().replace(/\.$/, '');
-  return { m: tal(m[1]), e, n: ord.join(' ') };
+  return { m: tal(m[1]), e, n: ord.join(' '), ...(f && { f }) };
 }
 function normIng(x) {
   if (typeof x === 'string') return parseIng(x);
   if (!x || typeof x !== 'object') return null;
   const n = String(x.n ?? x.navn ?? x.name ?? '').trim();
   if (!n) return null;
-  return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n };
+  const f = String(x.f ?? x.forberedelse ?? x.tilberedning ?? '').trim(), id = typeof x.id === 'string' ? x.id : '';
+  return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n, ...(f && { f }), ...(id && { id }) };
 }
 // ingredienser gemmes som en liste. Et element { g: "Sovs" } er en overskrift, resten er ingredienser.
+// En ingrediens er { m: mængde, e: enhed, n: navn, id: ingrediensens id i kataloget, f: forberedelse }. «id» og «n» sættes ved «Gem» (Katalog.knyt).
 // (Ældre kode ignorerer overskrifterne, så de gør ingen skade.)
 function ingListe(r) {
   return (Array.isArray(r.ingredienser) ? r.ingredienser : []).map(x =>
@@ -265,7 +282,7 @@ function visTal(n) {
   const d = n >= 100 ? 0 : n >= 1 ? 1 : 2;
   return String(Math.round(n * 10 ** d) / 10 ** d).replace('.', ',');
 }
-const visIng = (i, faktor = 1) => [i.m != null ? visTal(i.m * faktor) : '', i.e, i.n].filter(Boolean).join(' ');
+const visIng = (i, faktor = 1) => [i.m != null ? visTal(i.m * faktor) : '', i.e, i.n].filter(Boolean).join(' ') + (i.f ? ', ' + i.f : ''); // «2 løg, finthakket»
 
 // ---------- Begreber: ord i en opskrift, der har et tip ----------
 function begreberAf(tips) {
@@ -376,7 +393,7 @@ async function route() {
     if (a === 'opdater' && b) return await ClaudeEkstra.opdaterSide(b);
     if (a === 'tipsimport') return await ClaudeEkstra.tipsSide();
     if (a === 'mere') return mereSide();
-    if (a === 'vaerksted') return await Vaerksted.side();
+    if (a === 'vaerksted') return await Vaerksted.side(b);
     if (a === 'hjemme') return await forslagSide();
     if (!TYPER[a]) { document.body.dataset.side = 'forside'; return await forside(); }
     if (b === 'ny') return await formular(a);
@@ -894,10 +911,10 @@ async function formular(type, rid) {
     const knap = $('#nav-gem'), kt = knap.lastElementChild;
     knap.disabled = true; kt.textContent = 'Gemmer…';
     try {
+      if (type === 'opskrifter') data.ingredienser = await Katalog.knyt(data.ingredienser, valg); // hver linje får ingrediensens id fra kataloget
       const res = rid
         ? await api(`${type}?id=eq.${enc(rid)}`, { method: 'PATCH', body: data })
         : await api(type, { method: 'POST', body: data });
-      if (type === 'opskrifter') { try { await Katalog.laeg(ingAf(data).map(i => i.n), valg); } catch (err) { console.error(err); } }
       toast('Gemt'); Hjaelper.glad('Gemt!');
       location.hash = type === 'tips' ? '#/tips' : `#/${type}/${rid || res[0].id}`;
     } catch (err) {
@@ -999,6 +1016,7 @@ Regler:
 - Har retten flere dele, fx sovs og kødboller, så del ingredienserne op i grupper med en overskrift. Har den kun én del, så brug én gruppe med "overskrift": null.
 - Mængder skal være tal, fx 2,5 dl skrives som 2.5. Mangler der en mængde (fx "salt"), så udelad "mængde" og "enhed".
 - Skriv ingen forkortelser i navne. Skriv "hakket", ikke "hakk", og "revet", ikke "rev".
+- En ingrediens' "navn" er kun selve varen, fx "løg". Skal den hakkes, rives eller skæres, så skriv det i "forberedelse", fx "finthakket". Er det et produkt, man køber sådan, så behold navnet, fx "hakkede tomater".
 - Giv retten en "kategori" på øverste niveau. Brug præcis en af disse: ${OPSKRIFT_KAT.join(', ')}.
 - Giv retten et "køkken" på øverste niveau. Brug en af disse: ${OPSKRIFT_KOEKKEN.join(', ')}. Passer ingen, så skriv et andet kort navn, fx "Thai".
 - Giv hver ingrediens en "kategori". Brug præcis en af disse: §KAT§. Passer ingen, så skriv "Ikke sorteret".
@@ -1014,7 +1032,7 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
   "ingredienser": [
     { "overskrift": "Kødboller", "varer": [
       { "mængde": 500, "enhed": "g", "navn": "hakket svinekød", "kategori": "Kød" },
-      { "mængde": 1, "enhed": "stk", "navn": "løg", "kategori": "Grøntsager" } ] },
+      { "mængde": 1, "enhed": "stk", "navn": "løg", "forberedelse": "finthakket", "kategori": "Grøntsager" } ] },
     { "overskrift": "Sovs", "varer": [
       { "mængde": 2.5, "enhed": "dl", "navn": "fløde", "kategori": "Mejeri og æg" },
       { "navn": "salt", "kategori": "Krydderier" } ] }
@@ -1392,8 +1410,8 @@ const H = {
       }
       let sidste;
       for (const r of alle) {
+        r.data.ingredienser = await Katalog.knyt(r.data.ingredienser, {}, r.kat); // ingredienserne lægges i kataloget med Claudes kategorier
         [sidste] = await api('opskrifter', { method: 'POST', body: r.data });
-        try { await Katalog.laeg(ingAf(r.data).map(i => i.n), {}, r.kat); } catch (e) { console.error(e); } // ingredienserne med Claudes kategorier
       }
       lager.gem('importEgen', ''); lager.gem('importSvar', ''); // opskriften er gemt, så felterne tømmes
       const flere = alle.length > 1;

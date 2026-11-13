@@ -86,8 +86,8 @@ const ClaudeEkstra = (() => {
       el.disabled = true;
       try {
         lager.gem('opdatFoer', { id: r.id, data: Object.fromEntries(FELTER.map(k => [k, r[k] ?? null])) }); // så man kan fortryde
+        ny.ingredienser = await Katalog.knyt(ny.ingredienser, {}, svar.kat); // hver linje får ingrediensens id
         await api(`opskrifter?id=eq.${enc(r.id)}`, { method: 'PATCH', body: ny });
-        try { await Katalog.laeg(ingAf(ny).map(i => i.n), {}, svar.kat); } catch (e) { console.error(e); }
         lager.gem('opdaterEgen', ''); lager.gem('opdaterEgenSvar', '');
         toast('Opskriften er opdateret'); Hjaelper.glad('Opskriften er opdateret!');
         location.hash = `#/opskrifter/${r.id}`;

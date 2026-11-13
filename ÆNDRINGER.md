@@ -2,6 +2,18 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.5.0 · Ingredienser som rene data og Ingrediensværktøjet (opdatering 4c)
+- **En ingrediens er kun selve varen.** Hver linje i en opskrift har nu `id` (ingrediensens id i kataloget) og `f` (forberedelse) ved siden af mængde, enhed og navn. Den vises med komma: «2 løg, finthakket». Ingen ny tabel: linjerne ligger stadig i `opskrifter.ingredienser`.
+- **Ved «Gem»** (formularen, «Tilføj med Claude», links og «Opdater med Claude») lægges ingredienserne i kataloget først, og linjen får id og navn derfra (`Katalog.knyt`). «finthakket løg» bliver til «løg» med forberedelsen «finthakket» (`delIng`). I formularen skrives forberedelsen efter et komma. Beskeden til Claude beder om feltet «forberedelse».
+- **Nyt: Ingrediensværktøjet** i Værkstedet (`ingvaerktoej.js`, `#/vaerksted/ingredienser`): kopiér listen til Claude, sæt rettelserne ind, se forhåndsvisningen (lægges sammen, nyt navn, slettes, nye, linjer før og efter), afgør tvivl med Ja eller Nej, og gem. To ingredienser med samme navn lægges sammen, og «Derhjemme» flytter med.
+- **Alt eller intet.** Rettelsen regnes ud i appen (`beregn`) og køres som én databasefunktion, `ingrediens_ret`, der først gemmer en kopi i `ingrediens_backup`. Fejler noget, er intet ændret. Funktionen stopper også, hvis en linje ikke peger på en ingrediens, eller hvis kataloget er ændret siden forhåndsvisningen.
+- **Sikkerhedskopier** står nederst i værktøjet: «Gendan» (gemmer først det nuværende som en ny kopi) og «Slet kopien».
+- **«Sortér og ret med Claude»** bruger nu samme funktion, så opskrifternes linjer følger med, når et navn rettes eller to ingredienser lægges sammen. Før kunne en sammenlægning stoppe halvvejs.
+- Nye enheder i linjer: stængel, stængler, knivspids og shot. «finthakkede» og «grofthakkede» regnes som tilberedning.
+- **Kræver én SQL-kørsel:** `supabase/ingredienser.sql` (kun tilføjelser, kan køres flere gange).
+- Rettelserne til det nuværende katalog ligger i `supabase/rettelser/ingredienser-2026-11-13.json`.
+- Testet: SQL i lokal Postgres 16 (ret, gendan sammenlignet med før på alle rækker, tilbagerulning ved fejl, kørt som anon). Headless med mock-Supabase, 390 px lyst og 1180 px mørkt: låst uden kode, eksport, fejl, tvivl, gem, gendan, formular, import og «Sortér og ret». Appens egen pakke er kørt mod Postgres. Ikke prøvet på iPhone, og skærmlæser er ikke testet.
+
 ## 2.4.1 · Skift kode
 - Under «Lås» i Værkstedet står nu «Skift kode»: nuværende kode, ny kode to gange. Den nuværende kode tjekkes først og tæller med i ventetiden ved forkerte forsøg. Det nye hash erstatter det gamle i `madplan`.
 - Glemt kode: slet stadig rækken `vaerksted-kode` i `madplan` i Supabase.
