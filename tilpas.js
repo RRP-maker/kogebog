@@ -6,7 +6,7 @@
 // Ændringen gælder alle steder, hvor den samme tekst står. Den gemmes i Supabase (tabellen «tilpasning») og dermed på alle enheder.
 // Mangler tabellen, gemmes den kun på denne enhed.
 const Tilpas = (() => {
-  const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret, .mp-rk > span'; // de sidste: dagene, retternes felter og tællernes navne på Madplan
+  const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret, .mp-rk > span, .hj-fold'; // hj-fold: overskrifterne i «Hvad har du derhjemme?» (en liste med skabelon) // de sidste: dagene, retternes felter og tællernes navne på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
   const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', DELE = '.mp-valg .rund, .mp-valg .mp-inp, .filter .chip', TRIN = '.mp-valg .stepper, .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT;
@@ -128,14 +128,38 @@ const Tilpas = (() => {
   // Under opdatering 3 blev de gemte placeringer ignoreret (true). Opdateringen er færdig, så de gælder igen. Placeringer, der giver overlap eller sender et felt ud af skærmen, ignoreres stadig (se uheldig).
   const IGNORER_GEMTE = false;
   const D = k => !IGNORER_GEMTE && data[k] !== undefined ? data[k] : STANDARD[k];
-  const get = k => {
-    if (D(k) !== undefined) return D(k);
-    if (arv[k] === undefined || D(arv[k]) === undefined) return undefined;
+  const gammel = (k, d = D) => { // tilpasninger fra før sidebyggeren (tabellen «tilpasning») og STANDARD
+    if (d(k) !== undefined) return d(k);
+    if (arv[k] === undefined || d(arv[k]) === undefined) return undefined;
     if (arvFelt[k] === false && feltTekster.has(arv[k])) return undefined; // gamle tilpasninger på teksten tilhører knappen
-    return D(arv[k]);
+    return d(arv[k]);
   };
+  const stdAf = k => gammel(k, x => STANDARD[x]); // kun appens egne standardværdier
+  // ---------- Sidebyggerens felter (opdatering 2) ----------
+  // Et felt, der er ændret efter opdatering 2, har en række i «objekter» med hele sin stil (tekst, størrelse, farver ...) og sin plads.
+  // Findes tabellen ikke endnu, gemmes rækken i «tilpasning» under nøglen «obj|id» (felterne som JSON i kolonnen tekst). Ældre versioner af appen ser ikke de nøgler.
+  // Undtagelser fra en skabelon (en liste) har nøglen «skabelon#element» og må kun have farve og baggrund.
+  const OBJ = 'obj|';
+  let obj = lager.hent('objekter', {}), objTabel = null; // objTabel: true = «objekter» findes, false = brug «tilpasning»
+  const stilAf = o => {
+    const r = {};
+    if (o.tekst) r.t = o.tekst; if (o.stoerrelse) r.s = Number(o.stoerrelse); if (o.farve) r.f = o.farve; if (o.baggrund) r.b = o.baggrund;
+    if (o.skjult) r.x = true; if (o.felt) r.z = o.felt; if (o.laast === true || o.laast === false) r.l = o.laast; if (o.ikkeflyt) r.m = true; if (o.ramme) r.r = true;
+    if (o.pos) r.p = String(o.pos).split(',').map(Number);
+    return r;
+  };
+  const get = k => {
+    const o = obj[k];
+    if (!o || o.undtagelse_for) return gammel(k);
+    const r = stilAf(o), g = gammel(k) || {};
+    if (!r.p && g.p && !omregnet(k)) r.p = g.p; // en gammel pixelplacering gælder, til den er regnet om (fase 5)
+    else if (!r.p && omregnet(k) && (stdAf(k) || {}).p) r.p = stdAf(k).p; // appens egne standardplaceringer gælder altid
+    return r;
+  };
+  const NULPLADS = { efter: null, efter_bred: null, kant: null, kant_bred: null, bredde: null, bredde_bred: null, omregnet: true }; // «Nulstil»: tilbage til feltets egen plads
+  const omregnet = k => !!(obj[k] && obj[k].omregnet);
+  const undtag = el => el.dataset.tpinst ? obj[el.dataset.org + '#' + el.dataset.tpinst] : null;
 
-  const tomb = k => arv[k] !== undefined && data[arv[k]] !== undefined; // en nulstillet tilpasning huskes, så den gamle ikke dukker op igen
   const slug = s => String(s).toLowerCase().replace(/[^a-zæøå]+/g, '-').replace(/^-|-$/g, '');
   const sideNavn = () => (location.hash || '#/').replace(/^#\/?/, '').split('/').filter(Boolean).map(s => /\d/.test(s) ? ':id' : s).join('/') || 'forside';
   const idAf = (el, tekst) => el.dataset.tpid || (el.matches('.tilbage') ? 'tilbage' + (el.classList.contains('fortryd') ? '-fortryd' : '') : sideNavn() + '|' + slug(tekst));
@@ -144,7 +168,9 @@ const Tilpas = (() => {
   // Kun faste tekster kan ændres: ikke opskrifternes navne, tal og ure
   const egnet = (el, k) => k && !/\d/.test(k) && !el.closest('#ark, #tilpas-gruppe, #tilpas-knap, #tilpas-forlad, #tilpas-fortryd, #tilpas-gentag, .titelrakke, .h-boble, .tekst, .kort[href^="#/opskrifter"], .koebsforslag') && !(el.matches('p, small') && el.firstElementChild);
 
-  function anvend() {
+  let iGang = false;
+  function anvend() { iGang = true; try { anvend0(); } finally { vagt.takeRecords(); iGang = false; } }
+  function anvend0() {
     document.body.classList.toggle('tilpas', til && aktiv);
     document.body.classList.toggle('tilpas-menu', til);
     const ryd = []; // beskyttede tekster, der står som skjulte: flaget fjernes
@@ -158,7 +184,9 @@ const Tilpas = (() => {
       if (k !== leg) { arv[k] = leg; arvFelt[k] = el.matches('.knap, .tilbage, .fane'); }
       if (el.matches('.knap, .tilbage, .fane') && leg && !feltTekster.has(leg)) { feltTekster.add(leg); lager.gem('tpFeltTekster', [...feltTekster]); }
       if (document.body.dataset.side === 'forside' && !(beskyttet.has(k) && beskyttet.has(leg))) { beskyttet.add(k); beskyttet.add(leg); lager.gem('tpForside', [...beskyttet]); }
-      const o = get(k) || {}, ny = o.t || leg, n = noder(el);
+      const u = undtag(el), o = { ...(get(k) || {}) }, ny = (!el.dataset.tpinst && o.t) || leg, n = noder(el); // i en liste kommer teksten fra listen, ikke fra skabelonen
+      if (u) { if (u.farve) o.f = u.farve; if (u.baggrund) o.b = u.baggrund; } // undtagelse: dette felt har sin egen farve
+      el.toggleAttribute('data-tpegen', !!u);
       if (n.length && tekstAf(el) !== ny) { n[0].nodeValue = ny; n.slice(1).forEach(x => { x.nodeValue = ''; }); }
       if (!el.dataset.fs) el.dataset.fs = parseFloat(getComputedStyle(el).fontSize);
       el.style.fontSize = o.s ? pxAf(o.s) + 'px' : ''; el.classList.toggle('tp-staerst', !!o.s && pxAf(o.s) === 34); // de fire størrelser er faste skriftstørrelser i hele appen
@@ -188,7 +216,7 @@ const Tilpas = (() => {
       if (el.matches('.knap, .tilbage, .fane') && o.z) el.dataset.fs = o.z; else delete el.dataset.fs;
       el._ign = 0; plac(el, p, fast);
       el.toggleAttribute('data-laast', fast);
-      el.toggleAttribute('data-ikkeflyt', !!o.m || el.matches(FAST));
+      el.toggleAttribute('data-ikkeflyt', !!o.m || el.matches(FAST) || !!el.dataset.tpinst); // et element i en liste flytter med listen, aldrig for sig selv
     });
     for (let runde = 0, flere = true; flere && runde < 3; runde++) { flere = false; // først når alle står på plads: ingen må ende uden for skærmen eller oven på et andet felt. Et felt, der flyttes tilbage, kan ramme et andet, så der tjekkes igen.
       document.querySelectorAll('[data-flyt]').forEach(el => {
@@ -224,42 +252,61 @@ const Tilpas = (() => {
     if (u) { u.disabled = !hist.length; u.style.display = aktiv ? '' : 'none'; } // kun når tilpasningen ikke er på pause
     if (g) { g.disabled = !frem.length; g.style.display = aktiv ? '' : 'none'; }
   }
-  function husk() { hist.push(kopi(data)); if (hist.length > 50) hist.shift(); frem = []; knapper(); }
-  async function skriv(k, ny, stille) {
+  const billede = () => kopi({ data, obj });
+  function husk() { hist.push(billede()); if (hist.length > 50) hist.shift(); frem = []; knapper(); }
+  // Gem i «objekter» (eller i «tilpasning» under «obj|id», hvis tabellen mangler). Rækken har altid hele feltets stil, så de gamle tilpasninger ikke blandes ind.
+  async function skrivObj(k, stille) {
+    const o = obj[k];
     try {
-      if (Object.keys(ny).length || data[k] !== undefined) {
-        const rad = { noegle: k, tekst: ny.t || null, stoerrelse: ny.s || null, farve: ny.f || null, baggrund: ny.b || null };
-        const url = 'tilpasning?on_conflict=noegle', pos = ny.p ? ny.p.join(',') : null, lst = ny.l === undefined ? null : !!ny.l;
-        const trin = [{ skjult: !!ny.x, pos, felt: ny.z || null, laast: lst, ikkeflyt: !!ny.m }, { skjult: !!ny.x, pos, felt: ny.z || null, laast: lst }, { skjult: !!ny.x, pos }, { skjult: !!ny.x }, {}];
-        let ok = -1;
-        for (let i = 0; i < trin.length && ok < 0; i++) { try { await api(url, { method: 'POST', flet: true, body: { ...rad, ...trin[i] } }); ok = i; } catch (e) { if (i === trin.length - 1) throw e; } }
-        if (ok > 0) toast('Gemt på denne enhed. Databasen mangler en kolonne (' + ['', 'ikkeflyt', 'felt, laast', 'pos', 'skjult'][ok] + ').');
-      } else await api(`tilpasning?noegle=eq.${enc(k)}`, { method: 'DELETE' });
+      if (objTabel !== false) {
+        try {
+          if (o) await api('objekter?on_conflict=id', { method: 'POST', flet: true, body: { id: k, ...o, opdateret: new Date().toISOString() } });
+          else await api(`objekter?id=eq.${enc(k)}`, { method: 'DELETE' });
+          objTabel = true;
+        } catch (e) { if (objTabel === true || !/404|42P01|PGRST205|does not exist|schema cache/i.test(String(e.message))) throw e; objTabel = false; }
+      }
+      if (objTabel === false) {
+        if (o) await api('tilpasning?on_conflict=noegle', { method: 'POST', flet: true, body: { noegle: OBJ + k, tekst: JSON.stringify(o) } });
+        else await api(`tilpasning?noegle=eq.${enc(OBJ + k)}`, { method: 'DELETE' });
+      }
       if (!stille) toast('Gemt');
-    } catch (err) { console.error(err); toast('Gemt på denne enhed. Databasen mangler tabellen «tilpasning».'); }
+    } catch (err) { console.error(err); fejlbesked('Ændringen er kun gemt på denne enhed. Der er ikke forbindelse til databasen. Prøv igen senere.'); }
   }
-  async function gem(k, ny, stille) {
+  const STILNOEGLER = ['tekst', 'stoerrelse', 'farve', 'baggrund', 'skjult', 'felt', 'laast', 'ikkeflyt', 'pos'];
+  const tilRaekke = ny => ({ tekst: ny.t || null, stoerrelse: ny.s || null, farve: ny.f || null, baggrund: ny.b || null, skjult: !!ny.x, felt: ny.z || null, laast: ny.l === undefined ? null : !!ny.l, ikkeflyt: !!ny.m, pos: ny.p && ny.l ? ny.p.join(',') : null });
+  // ny: feltets stil i den korte form (t, s, f, b, x, z, l, m, p). Pladsen (rækkefølge, kant, bredde) beholdes.
+  async function gem(k, ny, stille, plads) {
     if (!stille) husk();
-    if (Object.keys(ny).length) data[k] = ny; else if (tomb(k)) data[k] = {}; else delete data[k];
-    lager.gem('tilpas', data); anvend();
-    await skriv(k, ny, stille);
+    const o = { ...(obj[k] || {}) };
+    if (ny) Object.assign(o, tilRaekke(ny));
+    if (plads) Object.assign(o, plads);
+    obj[k] = o; lager.gem('objekter', obj); anvend();
+    await skrivObj(k, stille);
   }
-  async function skift(nyData) { // fortryd/gentag: sæt tilpasningerne tilbage og ret databasen, hvor noget er anderledes
-    const foer = data; data = nyData; lager.gem('tilpas', data); anvend(); knapper();
-    for (const k of new Set([...Object.keys(foer), ...Object.keys(data)])) if (JSON.stringify(foer[k] || null) !== JSON.stringify(data[k] || null)) await skriv(k, data[k] || {}, true);
+  async function fjernObj(k, stille) { if (!stille) husk(); delete obj[k]; lager.gem('objekter', obj); anvend(); await skrivObj(k, stille); }
+  async function skift(ny) { // fortryd/gentag: sæt tilpasningerne tilbage og ret databasen, hvor noget er anderledes
+    const foer = obj; data = ny.data; obj = ny.obj; lager.gem('tilpas', data); lager.gem('objekter', obj); anvend(); knapper();
+    for (const k of new Set([...Object.keys(foer), ...Object.keys(obj)])) if (JSON.stringify(foer[k] || null) !== JSON.stringify(obj[k] || null)) await skrivObj(k, true);
   }
-  function fortryd() { if (!hist.length) return; frem.push(kopi(data)); skift(hist.pop()); toast('Fortrudt'); }
-  function gentag() { if (!frem.length) return; hist.push(kopi(data)); skift(frem.pop()); toast('Gentaget'); }
+  function fortryd() { if (!hist.length) return; frem.push(billede()); skift(hist.pop()); toast('Fortrudt'); }
+  function gentag() { if (!frem.length) return; hist.push(billede()); skift(frem.pop()); toast('Gentaget'); }
   async function hent() {
     try {
       const rader = await api('tilpasning?select=*');
-      data = {};
+      const foer = JSON.stringify([data, obj]);
+      data = {}; const nyObj = {};
       for (const r of rader) {
+        if (r.noegle.startsWith(OBJ)) { try { nyObj[r.noegle.slice(OBJ.length)] = JSON.parse(r.tekst); } catch (e) { /* ødelagt række: springes over */ } continue; }
         const o = Object.fromEntries(Object.entries({ t: r.tekst, s: r.stoerrelse && Number(r.stoerrelse), f: r.farve, b: r.baggrund, x: r.skjult, z: r.felt, l: r.laast, m: r.ikkeflyt, p: r.pos && String(r.pos).split(',').map(Number) }).filter(([, v]) => v));
         if (r.laast === false) o.l = false;
         data[r.noegle] = o;
       }
-      server = true; lager.gem('tilpas', data); anvend();
+      try { for (const r of await api('objekter?select=*')) { const { id, opdateret, ...o } = r; for (const x in o) if (o[x] === null) delete o[x]; nyObj[id] = o; } objTabel = true; }
+      catch (e) { objTabel = false; } // tabellen findes ikke endnu: rækkerne står i «tilpasning»
+      obj = nyObj;
+      const aendret = server && JSON.stringify([data, obj]) !== foer;
+      server = true; lager.gem('tilpas', data); lager.gem('objekter', obj); anvend();
+      return aendret;
     } catch (err) { /* tabellen findes ikke endnu: brug det, der er gemt på enheden */ }
   }
   function saet(v) {
@@ -270,6 +317,19 @@ const Tilpas = (() => {
   const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   const probe = css => { const e = document.createElement('span'); e.style.color = css; document.body.appendChild(e); const r = rgbAf(getComputedStyle(e).color); e.remove(); return r; };
   const naermest = (liste, rgb, css) => liste.reduce((bst, c) => { const d = probe(css(c)).reduce((sum, v, i) => sum + (v - rgb[i]) ** 2, 0); return d < bst[0] ? [d, c] : bst; }, [Infinity, ''])[1];
+  // Kontrast mellem tekst og felt (WCAG): under 4,5:1 (3:1 for stor tekst) er teksten svær at læse. Glas og felter uden farve måles mod baggrunden bag dem.
+  const lys = ([r, g, b]) => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+  const kontrast = (a, b) => { const x = lys(a), y = lys(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  function bagved(el) { // den første faste baggrundsfarve bag feltet
+    for (let x = el.parentElement; x; x = x.parentElement) { const c = getComputedStyle(x).backgroundColor, v = rgbAf(c), a = (String(c).match(/[\d.]+/g) || [])[3]; if (v.length === 3 && (a === undefined || Number(a) > .9)) return v; }
+    return probe('var(--papir, #fffdf5)');
+  }
+  function daarligKontrast(el, f, b, std, px) {
+    const f0 = el.style.color; el.style.color = ''; const egen = rgbAf(getComputedStyle(el).color); el.style.color = f0;
+    const tekst = f !== std.f ? probe(tCss(f)) : b !== std.b && FELT_TEKST[b] ? probe(FELT_TEKST[b]) : egen;
+    const bag = b && b !== 'glas' && FELT_CSS[b] ? probe(FELT_CSS[b]) : bagved(el);
+    return kontrast(tekst, bag) < (px >= 24 ? 3 : 4.5);
+  }
   // Elementets egne farver (uden ændringer), som den farveknap der svarer til dem. Gennemsigtigt eller hvidt glas er knappen «glas».
   function standardFarver(el) {
     const f0 = el.style.color, b0 = el.style.background; el.style.color = ''; el.style.background = '';
@@ -280,37 +340,51 @@ const Tilpas = (() => {
   }
   const flytTekst = v => v ? 'Feltet kan ikke flyttes. Du kan stadig ændre tekst og farve.' : 'Du flytter feltet ved at holde fingeren på det og trække.';
   function aabn(el) {
-    const k = el.dataset.org, o = get(k) || {}, felt = el.matches('.knap, .tilbage, .fane'), farvefelt = felt || el.matches('.rund, .mp-inp, .chip, .mp-dagfelt, .mp-ret'), nat = naturligZ(el), std = standardFarver(el);
-    const opsk = el.matches(FAST);
+    const k = el.dataset.org, o = get(k) || {}, felt = el.matches('.knap, .tilbage, .fane'), farvefelt = felt || el.matches('.rund, .mp-inp, .chip, .mp-dagfelt, .mp-ret, .hj-fold'), nat = naturligZ(el), std = standardFarver(el);
+    const opsk = el.matches(FAST), inst = el.dataset.tpinst, u = inst ? undtag(el) : null; let egen = !!u; // inst: feltet er et element i en liste (skabelon)
     const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !(beskyttet.has(k) || beskyttet.has(el.dataset.orgtekst)), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
     const laasTekst = v => v ? 'Feltet sidder fast på skærmen og følger med, når du ruller.' : 'Feltet bliver liggende på sin plads, når du ruller.';
     const sw = (liste, v, nøgle, glas, css) => `<div class="farver">${glas ? `<button type="button" class="sw glas${v === 'glas' ? ' valgt' : ''}" data-${nøgle}="glas" aria-label="Gennemsigtigt glas"></button>` : ''}${liste.map(c => `<button type="button" class="sw${c === v ? ' valgt' : ''}" data-${nøgle}="${c}" style="background:${css(c)}" aria-label="${NAVN[c] || c}"></button>`).join('')}</div>`;
     const d = ark(`<div class="tp-top"><h2>Tilpas felt</h2><div class="rakke"><button class="knap gron" type="button" data-tp="gem">Gem</button><button class="knap primaer" type="button" data-tp="nulstil">Nulstil</button>${kanSkjule ? `<button class="knap fare" type="button" data-tp="skjul">${x ? 'Vis igen' : 'Skjul'}</button>` : ''}</div></div>
-      ${el.matches('.mp-dagfelt, .mp-ret') ? '' : `<label for="tp-tekst">Tekst</label>
+      ${el.matches('.mp-dagfelt, .mp-ret') || inst ? '' : `<label for="tp-tekst">Tekst</label>
       <input type="text" id="tp-tekst" value="${esc(o.t || el.dataset.orgtekst || '')}" maxlength="200" autocomplete="off">`}
       <label>Tekststørrelse</label>
       <div class="rakke venstre">${STR.map(([v, n]) => `<button class="chip${v === st ? ' valgt' : ''}" type="button" data-st="${v}">${n}</button>`).join('')}</div>
       ${felt ? `<label>Feltets størrelse</label><div class="rakke venstre">${FELTSTR.map(([v, n]) => `<button class="chip${v === z ? ' valgt' : ''}" type="button" data-fz="${v}">${n}</button>`).join('')}</div>` : ''}
       <label>Tekstfarve</label>${sw(TEKSTFARVER, f, 'f', false, tCss)}
       ${farvefelt ? `<label>Feltets farve</label>${sw(FELTFARVER, b, 'b', true, fCss)}` : ''}
-      <p class="lille">Ændringen gælder dette felt og de felter, der hænger sammen med det.</p>
-      ${opsk ? '<p class="lille">Teksten i opskriften kan ændres, men ikke flyttes.</p>' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
+      <p class="lille tp-advarsel" id="tp-kontrast" role="status" hidden>${Ikoner.svg('advarsel') || '⚠'} Teksten er svær at læse på den farve. Prøv en mørkere.</p>
+      ${inst ? `<p class="lille" id="tp-listetekst"></p>
+      <div class="rakke venstre"><button class="knap" type="button" data-tp="egen" aria-pressed="${egen}">Egen farve til dette felt</button>${u ? '<button class="knap" type="button" data-tp="foelg">Følg listen igen</button>' : ''}</div>` : `<p class="lille">Ændringen gælder dette felt og de felter, der hænger sammen med det.</p>`}
+      ${inst ? '' : opsk ? '<p class="lille">Teksten i opskriften kan ændres, men ikke flyttes.</p>' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="flyt">${m ? 'Kan flyttes igen' : 'Kan ikke flyttes'}</button></div>
       <p class="lille" id="tp-flyttekst">${flytTekst(m)}</p>`}
-      ${el.closest('.top') || opsk ? '' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button></div>
+      ${el.closest('.top') || opsk || inst ? '' : `<div class="rakke venstre"><button class="knap" type="button" data-tp="laas">${Ikoner.svg(l ? 'laasop' : 'laas')} ${l ? 'Lås op' : 'Lås på skærmen'}</button></div>
       <p class="lille" id="tp-laastekst">${laasTekst(l)}</p>`}
 `);
+    if (u) { f = u.farve || f; b = u.baggrund || b; d.querySelectorAll('.sw').forEach(x => x.classList.toggle('valgt', ('f' in x.dataset ? x.dataset.f === f : x.dataset.b === b))); }
+    const listeTekst = () => { const t = $('#tp-listetekst', d); if (!t) return; t.textContent = egen ? 'Farverne gælder kun dette felt. Resten følger listen.' : 'Ændringen gælder alle felter i listen.'; d.querySelectorAll('[data-st], [data-fz]').forEach(x => { x.disabled = egen; }); };
+    const kontrastTjek = () => { const t = $('#tp-kontrast', d); if (t) t.hidden = !daarligKontrast(el, f, b, std, st); };
+    listeTekst(); kontrastTjek();
     { const h = Math.max(20, Math.min(90, Number(lager.hent('tilpasHoejde', 33)) || 33)); $('.ark-kort', d).style.maxHeight = `min(max(${h}dvh, var(--ark-min, 280px)), calc(100dvh - 16px))`; } // vinduets højde i procent af skærmen (sættes under Mere), dog mindst --ark-min (280 px, på iPad 480 px), så det kan bruges på en vendt telefon
     d.addEventListener('click', e => {
       const s = e.target.closest('[data-st]'), a = e.target.closest('[data-tp]'), c = e.target.closest('.sw'), fz = e.target.closest('[data-fz]');
       if (fz) { z = fz.dataset.fz; d.querySelectorAll('[data-fz]').forEach(x => x.classList.toggle('valgt', x === fz)); return; }
       if (a && a.dataset.tp === 'flyt') { m = !m; a.textContent = m ? 'Kan flyttes igen' : 'Kan ikke flyttes'; $('#tp-flyttekst', d).textContent = flytTekst(m); return; }
       if (a && a.dataset.tp === 'laas') { l = !l; a.innerHTML = Ikoner.svg(l ? 'laasop' : 'laas') + (l ? ' Lås op' : ' Lås på skærmen'); $('#tp-laastekst', d).textContent = laasTekst(l); return; }
-      if (c) { const n = 'f' in c.dataset ? 'f' : 'b'; if (n === 'f') f = c.dataset.f; else b = c.dataset.b; c.parentElement.querySelectorAll('.sw').forEach(x => x.classList.toggle('valgt', x === c)); return; }
-      if (s) { st = Number(s.dataset.st); d.querySelectorAll('[data-st]').forEach(x => x.classList.toggle('valgt', x === s)); return; }
+      if (c) { const n = 'f' in c.dataset ? 'f' : 'b'; if (n === 'f') f = c.dataset.f; else b = c.dataset.b; c.parentElement.querySelectorAll('.sw').forEach(x => x.classList.toggle('valgt', x === c)); kontrastTjek(); return; }
+      if (s) { st = Number(s.dataset.st); d.querySelectorAll('[data-st]').forEach(x => x.classList.toggle('valgt', x === s)); kontrastTjek(); return; }
+      if (a && a.dataset.tp === 'egen') { egen = !egen; a.setAttribute('aria-pressed', egen); listeTekst(); return; }
+      if (a && a.dataset.tp === 'foelg') { lukArk(); fjernObj(k + '#' + inst); toast('Feltet følger listen igen'); return; }
       if (e.target.closest('.ark-bag')) return lukArk();
       if (!a) return;
+      if (inst && egen && a.dataset.tp === 'gem') { // undtagelse: kun farve og baggrund
+        const uk = k + '#' + inst, r = { undtagelse_for: k, farve: f !== std.f ? f : null, baggrund: farvefelt && b !== std.b ? b : null };
+        lukArk(); if (!r.farve && !r.baggrund) return fjernObj(uk);
+        husk(); obj[uk] = r; lager.gem('objekter', obj); anvend(); skrivObj(uk); return;
+      }
+      if (a.dataset.tp === 'nulstil') { lukArk(); gem(k, { ...(stdAf(k) || {}), p: undefined }, false, NULPLADS); return; }
       let ny = {};
-      if (a.dataset.tp !== 'nulstil') {
+      {
         if (a.dataset.tp === 'skjul') x = !x;
         if (x) ny.x = true;
         const t = $('#tp-tekst', d) ? $('#tp-tekst', d).value.trim() : ''; // dagene og deres felter har ingen tekst, der kan rettes
@@ -327,7 +401,7 @@ const Tilpas = (() => {
       }
       lukArk(); gem(k, ny);
     });
-    setTimeout(() => $('#tp-tekst', d).select(), 50);
+    setTimeout(() => { const t = $('#tp-tekst', d); if (t) t.select(); }, 50);
   }
   function aabnKort(el) {
     const k = el.dataset.flyt, l = erFast(el, k), m = !!(get(k) || {}).m;
@@ -430,13 +504,21 @@ const Tilpas = (() => {
   if (appEl) appEl.addEventListener('animationend', e => { if (e.animationName === 'sideind') igen(); });
   if (window.ResizeObserver) new ResizeObserver(igen).observe(document.querySelector('main')); // indholdet kan lægge sig om uden at DOM'en ændres (skrifttyper, billeder): placeringerne sættes igen
   if (document.fonts) document.fonts.ready.then(igen);
-  new MutationObserver(igen).observe(document.body, { childList: true, subtree: true });
+  // Tilpasseren kører kun, når siden faktisk har fået nyt indhold: ikke ved beskeder, ure, Grydelil eller dens egne ændringer (pladsholdere, flytninger)
+  const UDEN = '#toast, #ure, #hjaelper, #hjaelper-vis, #gitter, #tp-pladser, .h-boble, #tilpas-fortryd, #tilpas-gentag, #tilpas-ny, #nav';
+  const nyt = n => n.nodeType === 1 && !n.classList.contains('plads') && !n.matches(UDEN) && !n.closest(UDEN);
+  const vagt = new MutationObserver(recs => {
+    if (iGang) return;
+    for (const r of recs) { const t = r.target.nodeType === 1 ? r.target : r.target.parentElement; if (t && t.closest && t.closest(UDEN)) continue; if ([...r.addedNodes, ...r.removedNodes].some(nyt)) return igen(); }
+  });
+  vagt.observe(document.body, { childList: true, subtree: true });
   // Vendes skærmen, eller ændres vinduets bredde, sættes alle felter på plads igen (efter at siden har lagt sig om)
   let vendTimer;
   const omlaeg = () => { clearTimeout(vendTimer); vendTimer = setTimeout(() => { if (drag && drag.laast) return; anvend(); requestAnimationFrame(anvend); }, 120); };
   addEventListener('resize', omlaeg); addEventListener('orientationchange', omlaeg);  document.addEventListener('DOMContentLoaded', () => { anvend(); hent(); });
   return { saet, til: () => til, async nulstil() {
-    husk(); data = {}; lager.gem('tilpas', data); anvend();
+    husk(); data = {}; obj = {}; lager.gem('tilpas', data); lager.gem('objekter', obj); anvend();
     try { await api('tilpasning?noegle=not.is.null', { method: 'DELETE' }); } catch (err) { console.error(err); }
+    if (objTabel) try { await api('objekter?id=not.is.null', { method: 'DELETE' }); } catch (err) { console.error(err); }
   } };
 })();

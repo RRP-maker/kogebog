@@ -71,7 +71,7 @@ const Hjemme = (() => {
       const rader = D.hj.filter(h => kid(h) === g.id).sort((x, y) => navn(x).localeCompare(navn(y), 'da'));
       if (!rader.length) return '';
       const gid = g.id || 'ingen', luk = LUKKET.has(gid) && !(fokus && rader.some(h => h.id === fokus.id));
-      return `<h3 class="hj-grp tekst-l"><button type="button" class="hj-fold" data-h="hjFold" data-v="${gid}" aria-expanded="${!luk}">${esc(g.navn)} <small>${rader.length}</small></button></h3>${luk ? '' : `<div class="hj-gruppe${rader.length % 2 ? ' ulige' : ''}">${rader.map(raekke).join('')}</div>`}`;
+      return `<h3 class="hj-grp tekst-l"><button type="button" class="hj-fold" data-tpid="hj-grp" data-tpinst="${gid}" data-h="hjFold" data-v="${gid}" aria-expanded="${!luk}">${esc(g.navn)} <small>${rader.length}</small></button></h3>${luk ? '' : `<div class="hj-gruppe${rader.length % 2 ? ' ulige' : ''}">${rader.map(raekke).join('')}</div>`}`;
     }).join('');
     el.innerHTML = html ? LABELS + html : '<p class="tomt">Der står ikke noget endnu. Skriv den første ting i feltet ovenfor.</p>';
     if (fokus) { const x = el.querySelector(`.hj-rk[data-id="${fokus.id}"] .${fokus.k}`); if (x) x.focus(); }

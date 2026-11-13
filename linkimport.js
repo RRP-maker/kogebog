@@ -38,7 +38,7 @@ const LinkImport = (() => {
     app.innerHTML = `<a class="tilbage" href="#/import">‹ Tilbage</a><h1>Importér links</h1>
       <ol class="trin vejledning">
         <li>Sæt dine links ind her. Ét link på hver linje.
-          <textarea id="links" rows="6" data-husk="linksTekst" placeholder="https://…" aria-label="Links til opskrifter"></textarea>
+          <textarea id="links" data-tpid="links" rows="6" data-husk="linksTekst" placeholder="https://…" aria-label="Links til opskrifter"></textarea>
           <div class="felt-knapper"><button type="button" class="knap" data-tpid="links-saet" data-h="saetInd" data-v="links">Sæt ind</button><span class="hoejre"><button type="button" class="knap mini" data-tpid="links-fortryd" data-h="fortrydRyd" data-v="links" hidden>Fortryd</button><button type="button" class="knap mini fare" data-tpid="links-ryd" data-h="rydFelt" data-v="links">Ryd</button></span></div></li>
         <li>Tryk på Start. Jeg henter opskrifterne én ad gangen. Hold siden åben, mens det kører. Stopper du, kan du trykke Start igen, så fortsætter jeg, hvor jeg slap.
           <div class="rakke venstre">
@@ -46,7 +46,7 @@ const LinkImport = (() => {
             <button class="knap stor" data-tpid="links-stop" data-h="stopLinks" hidden>Stop</button>
           </div></li>
         <li>Her kan du følge med:
-          <p class="tekst-m" id="status">Intet er startet endnu.</p>
+          <p class="tekst-m" data-tpid="link-status" id="status">Intet er startet endnu.</p>
           <div class="felt felt-s importbar" role="progressbar" aria-label="Fremdrift" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="barfyld"></i></div>
           <div id="fejlomraade"></div></li>
       </ol>
@@ -55,9 +55,9 @@ const LinkImport = (() => {
       <button class="knap" data-tpid="links-forfra" data-h="startForfra">Start forfra med alle links</button>` : ''}`;
     document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); });
     Hjaelper.side([
-      { tekst: 'Sæt alle dine links ind her. Ét på hver linje.', maal: '#links', bev: 'salto' },
-      { tekst: 'Tryk på Start. Så henter jeg opskrifterne for dig.', maal: '[data-h=startLinks]', bev: 'skridt' },
-      { tekst: 'Her ser du, hvor langt jeg er.', maal: '#status', bev: 'dans' }]);
+      { tekst: 'Sæt alle dine links ind her. Ét på hver linje.', maal: 'links', bev: 'salto' },
+      { tekst: 'Tryk på Start. Så henter jeg opskrifterne for dig.', maal: 'links-start', bev: 'skridt' },
+      { tekst: 'Her ser du, hvor langt jeg er.', maal: 'link-status', bev: 'dans' }]);
   }
 
   async function koer(el) {

@@ -7,23 +7,23 @@ const ClaudeEkstra = (() => {
     app.innerHTML = `<a class="tilbage" href="${tilbage}">‹ Tilbage</a><h1>${esc(titel)}</h1>
       <ol class="trin vejledning">
         <li>${tekst1}
-          ${udenEgen ? '' : `<textarea id="egen" rows="5" data-husk="${husk}" placeholder="Skriv her" aria-label="Din besked"></textarea>
+          ${udenEgen ? '' : `<textarea id="egen" data-tpid="egen-tekst" rows="5" data-husk="${husk}" placeholder="Skriv her" aria-label="Din besked"></textarea>
           ${felter(pre + '-egen', 'egen')}`}
           <button class="knap primaer stor formknap" data-tpid="${pre}-kopier" data-h="${kopierH}">${ik('gnist')} Kopiér besked</button></li>
         <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt.
           <div class="rakke venstre"><a class="knap stor" data-tpid="aabn-claude" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
         <li>Kopiér Claudes svar, og sæt det ind her:
-          <textarea id="claudesvar" rows="7" data-husk="${husk}Svar" placeholder="${plads}" aria-label="Claudes svar"></textarea>
+          <textarea id="claudesvar" data-tpid="claude-svar" rows="7" data-husk="${husk}Svar" placeholder="${plads}" aria-label="Claudes svar"></textarea>
           ${felter(pre + '-svar', 'claudesvar')}</li>
       </ol>
       <div id="formfejl"></div>
       <button class="knap primaer stor formknap" data-tpid="${pre}-gem" data-h="${gemH}">${gemTekst}</button>${ekstra}`;
     document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); });
     Hjaelper.side([
-      ...(udenEgen ? [] : [{ tekst: 'Skriv her, hvad Claude skal gøre.', maal: '#egen', bev: 'salto' }]),
-      { tekst: 'Tryk her. Så kopierer jeg en besked til Claude.', maal: `[data-h=${kopierH}]`, bev: 'skridt' },
-      { tekst: 'Åbn Claude, og sæt beskeden ind.', maal: '#aabnClaude', bev: 'dans' },
-      { tekst: 'Sæt Claudes svar ind her. Tryk så på knappen nederst.', maal: '#claudesvar', bev: 'rul' }]);
+      ...(udenEgen ? [] : [{ tekst: 'Skriv her, hvad Claude skal gøre.', maal: 'egen-tekst', bev: 'salto' }]),
+      { tekst: 'Tryk her. Så kopierer jeg en besked til Claude.', maal: `${pre}-kopier`, bev: 'skridt' },
+      { tekst: 'Åbn Claude, og sæt beskeden ind.', maal: 'aabn-claude', bev: 'dans' },
+      { tekst: 'Sæt Claudes svar ind her. Tryk så på knappen nederst.', maal: 'claude-svar', bev: 'rul' }]);
   };
   async function kopierTil(besked) {
     const ok = await kopier(besked), kodet = encodeURIComponent(besked);

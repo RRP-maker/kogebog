@@ -78,14 +78,14 @@ const Madplan = (() => {
   }
   const manglerTekst = x => x.mangler.length ? 'Mangler: ' + x.mangler.join(', ') : 'Du har det hele';
   function slotHtml(d, i, s) {
-    if (!d.paa[s]) return `<div class="kort mp-ret mp-av tekst-m" data-tpid="mp-ret-${s}"><strong>${NAVN[s]}</strong><span>Er ikke med</span><div class="rakke"></div></div>`;
+    if (!d.paa[s]) return `<div class="kort mp-ret mp-av tekst-m" data-tpid="mp-ret-${s}" data-tpinst="${DAGORD[i]}"><strong>${NAVN[s]}</strong><span>Er ikke med</span><div class="rakke"></div></div>`;
     const x = d[s] ? P.get(d[s]) : null, info = x ? NAVN[s] + ' · ' + manglerTekst(x) : NAVN[s];
-    return `<div class="kort mp-ret tekst-m" data-tpid="mp-ret-${s}"><strong>${x ? `<a href="#/opskrifter/${x.r.id}" title="${esc(x.r.titel)}">${esc(x.r.titel)}</a>` : d[s] ? 'Retten findes ikke mere' : 'Ingen ret endnu'}</strong>
+    return `<div class="kort mp-ret tekst-m" data-tpid="mp-ret-${s}" data-tpinst="${DAGORD[i]}"><strong>${x ? `<a href="#/opskrifter/${x.r.id}" title="${esc(x.r.titel)}">${esc(x.r.titel)}</a>` : d[s] ? 'Retten findes ikke mere' : 'Ingen ret endnu'}</strong>
       <span title="${esc(info)}">${esc(info)}</span>
       <div class="rakke"><button type="button" class="knap mini" data-tpid="${d[s] ? 'mp-udskift' : 'mp-vaelg-ret'}" data-h="mpUdskift" data-v="${i}:${s}">${d[s] ? 'Udskift' : 'Vælg ret'}</button></div></div>`;
   }
   const DAGORD = ['en', 'to', 'tre', 'fire', 'fem', 'seks', 'syv', 'otte', 'ni', 'ti', 'elleve', 'tolv', 'tretten', 'fjorten']; // id'er har ingen tal
-  const dagHtml = (d, i) => `<section class="kort mp-dagfelt tekst-l" data-tpid="mp-dagfelt-${DAGORD[i]}"><h3 class="tekst-l">Dag ${i + 1}</h3>
+  const dagHtml = (d, i) => `<section class="kort mp-dagfelt tekst-l" data-tpid="mp-dag" data-tpinst="${DAGORD[i]}"><h3 class="tekst-l">Dag ${i + 1}</h3>
       <div class="mp-dagchips" role="group" aria-label="Dag ${i + 1}">${SLOTS.map(s => `<button type="button" class="chip${d.paa[s] ? ' valgt' : ''}" data-tpid="mp-dag-${s}" data-h="mpDagSlot" data-v="${i}:${s}" aria-pressed="${!!d.paa[s]}">${NAVN[s]}</button>`).join('')}</div>
       ${SLOTS.map(s => slotHtml(d, i, s)).join('')}</section>`;
   function tegn() {
@@ -147,15 +147,15 @@ const Madplan = (() => {
         <div class="mp-b"><h2>Hvad skal med hver dag?</h2>
           <div class="filter mp-alle" id="mp-alle" data-tpid="bjaelke-madplan"></div>
           <small>Tryk for at slå hovedret, salat eller tilbehør til eller fra på alle dage. Under hver dag kan du vælge selv.</small>
-          <div class="mp-valg">${Object.keys(VALG).map(raekke).join('')}</div></div>
+          <div class="mp-valg" data-tpid="mp-valg">${Object.keys(VALG).map(raekke).join('')}</div></div>
       </section>
       <div id="mp-plan"></div>`;
     tegn();
     Hjaelper.side([
-      { tekst: 'Tryk på «Generer ny madplan», så vælger jeg retterne.', maal: '[data-h=mpGenerer]', bev: 'salto' },
-      { tekst: 'Slå hovedret, salat og tilbehør til eller fra her. Eller vælg for hver dag.', maal: '.mp-alle', bev: 'skridt' },
-      { tekst: 'Vælg, hvor mange dage og hvor meget der må mangle eller købes.', maal: '.mp-valg', bev: 'hop' },
-      { tekst: 'Passer en ret ikke? Tryk på «Udskift», og vælg en anden.', maal: '.mp-ret .knap', bev: 'dans', valgfri: true }]);
+      { tekst: 'Tryk på «Generer ny madplan», så vælger jeg retterne.', maal: 'mp-generer', bev: 'salto' },
+      { tekst: 'Slå hovedret, salat og tilbehør til eller fra her. Eller vælg for hver dag.', maal: 'bjaelke-madplan', bev: 'skridt' },
+      { tekst: 'Vælg, hvor mange dage og hvor meget der må mangle eller købes.', maal: 'mp-valg', bev: 'hop' },
+      { tekst: 'Passer en ret ikke? Tryk på «Udskift», og vælg en anden.', maal: ['mp-udskift', 'mp-vaelg-ret'], bev: 'dans', valgfri: true }]);
   }
   const saet = (k, v) => {
     const ny = Math.max(VALG[k][2], Math.min(VALG[k][3], Math.round(Number(v)) || 0));

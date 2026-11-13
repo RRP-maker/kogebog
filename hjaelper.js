@@ -395,6 +395,14 @@ const Hjaelper = (() => {
     sidsteBev = b; return b;
   }
 
+  // Et trin peger på et felts id (data-tpid, eller tilpasserens nøgle data-flyt). Det første synlige felt med id'et bruges. En liste af id'er giver det første, der findes.
+  function find(maal) {
+    for (const m of [].concat(maal)) {
+      const q = `[data-flyt="${CSS.escape(m)}"], [data-tpid="${CSS.escape(m)}"]`;
+      for (const e of document.querySelectorAll(q)) if (!e.classList.contains('plads') && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden') return e;
+    }
+    return null;
+  }
   async function startTur() { sidsteBev = '';
     koe = []; stop();
     tur = { id: ++turId, trin: sideTekst, i: -1 };
@@ -404,8 +412,8 @@ const Hjaelper = (() => {
     const t = tur; if (!t) return;
     if (i >= t.trin.length) return slutTur();
     const id = t.id, s = t.trin[i];
-    const el = s.maal ? document.querySelector(s.maal) : null;
-    if (s.valgfri && !el) return trinTur(i + 1);
+    const el = s.maal ? find(s.maal) : null;
+    if (s.maal && !el) return trinTur(i + 1); // feltet er skjult, slettet eller væk: trinnet springes over
     t.i = i; flytter = true; stop(); markerFjern();
     if (el) { // rul emnet ind midt på skærmen
       const r = el.getBoundingClientRect();

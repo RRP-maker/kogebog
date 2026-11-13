@@ -671,6 +671,10 @@ input.felt, select.felt { padding: 0 12px; }
 body.tilpas [data-ikkeflyt] { outline-style: solid; outline-color: var(--blyant); cursor: pointer; }
 body.tilpas [data-ikkeflyt][data-laast] { outline-color: var(--tomat); }
 .traekker.ulovlig { outline: 3px solid var(--tomat) !important; outline-offset: 3px; opacity: .75; }
+/* Sidebyggeren (opdatering 2): et element i en liste med egen farve får en prik og teksten «egen farve» (ikke kun farve) */
+body.tilpas [data-tpegen] { position: relative; }
+body.tilpas [data-tpegen]::after { content: "● egen farve"; position: absolute; top: -10px; right: 8px; z-index: 2; padding: 0 6px; border-radius: 8px; background: var(--tomat-mork); color: #fff; font: 12px/18px var(--skrift); pointer-events: none; }
+.tp-advarsel { color: var(--fejl-tekst); background: var(--fejl-bg); border-left: 4px solid var(--tomat); padding-left: 8px; }
 
 /* Hvad kan jeg lave: «højst så mange ingredienser må mangle» ved siden af overskriften */
 .mangler-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 32px 0 0; }

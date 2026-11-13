@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.8.0 · Sidebygger, fase 2: felter og skabeloner
+- Ny model for felterne: et felt, du ændrer, får en række med hele sin stil (og senere sin plads) i tabellen «objekter». Findes tabellen ikke endnu, gemmes rækken i «tilpasning» under nøglen «obj|…». Dine gamle tilpasninger gælder stadig, til feltet ændres. SQL til tabellen: `supabase/objekter.sql`.
+- Lister har en skabelon: overskrifterne i «Hvad har du derhjemme?», dagene på Madplan og retterne i dagene. Ændrer du én overskrift (størrelse, farve), ændres alle. «Egen farve til dette felt» giver ét felt en anden farve. Det vises med «● egen farve», når du tilpasser, og «Følg listen igen» fjerner det. Plads, størrelse og tekst følger altid listen.
+- Kontrast: vælger du en tekst- og feltfarve, der er svær at læse (under 4,5:1, eller 3:1 for stor tekst), står der «Teksten er svær at læse på den farve. Prøv en mørkere.»
+- Tilpasseren kører kun, når siden får nyt indhold, ikke ved beskeder, ure og Grydelil.
+- Grydelil peger på felternes id (data-tpid eller tilpasserens nøgle) i stedet for CSS-klasser. Er et felt skjult eller væk, springes trinnet over.
+- Beslutning: Dagene på Madplan har fået ét fælles id (`mp-dag`). Deres gamle gemte forskydninger (`mp-dagfelt-en` …) gælder ikke længere. Det var dem, der lagde Dag 1 og Dag 3 oven på hinanden.
+- Beslutning: Pladsen gemmes i «objekter» (rækkefølge, kant og bredde for smal og bred skærm) og ikke i en ny kolonne `pos_bred` på «tilpasning». Så kan «pos» blive, som den er, og en ældre version af appen virker stadig.
+
 ## 1.7.1 · Opdatering 3 er færdig
 - Dine gemte placeringer i tilpasseren gælder igen (`IGNORER_GEMTE = false`). En placering, der ville lægge et felt oven på et andet eller uden for skærmen, ignoreres stadig. Nu tjekkes det igen, når et felt er flyttet tilbage, så to flyttede felter (fx «Sæt ind» og «Ryd» på import) ikke kan ende oven på hinanden.
 - Kontrast: dæmpet tekst i mørkt tema er lidt lysere (blyant), og «Er ikke med» på Madplan er mindre dæmpet.
