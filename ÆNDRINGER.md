@@ -7,6 +7,10 @@ Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrive
 - Findes «objekter», læser appen kun felterne derfra. Ellers kunne et felt, der var fjernet i «objekter», komme igen fra den gamle kopi.
 - Git-tags `v1.0.0` til `v2.0.0` er lavet, men kunne ikke skubbes fra sessionen.
 
+## 2.0.1 · Tabellen «objekter» er i brug
+- Felterne gemmes nu i «objekter» (du har oprettet tabellen, og rækkerne fra «tilpasning» er flyttet med).
+- Rettet: «Fortryd» efter en flytning ryddede ikke pladsen i tabellen, så den kom igen efter genindlæsning. Nu sendes alle kolonner, også de tomme.
+
 ## 2.0.0 · Sidebygger, fase 5: de gamle placeringer er regnet om
 - Første gang en side vises på en smal (iPhone) og en bred skærm (iPad, Mac), regnes dine gamle pixelplaceringer om til rækkefølge og kant: der, hvor feltet står (efter beskyttelsen mod overlap), bliver dets nye plads. Tekst, størrelse og farver følger med. Placeringer, der gav overlap eller sendte et felt ud af skærmen, bliver til feltets egen plads.
 - Felter, der er låst på skærmen, beholder deres forskydning.

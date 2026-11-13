@@ -273,7 +273,7 @@ const Tilpas = (() => {
     try {
       if (objTabel !== false) {
         try {
-          if (o) await api('objekter?on_conflict=id', { method: 'POST', flet: true, body: { id: k, ...o, opdateret: new Date().toISOString() } });
+          if (o) await api('objekter?on_conflict=id', { method: 'POST', flet: true, body: { ...Object.fromEntries(KOLONNER.map(c => [c, null])), slettet: false, ...o, id: k, opdateret: new Date().toISOString() } }); // alle kolonner sendes, så en fjernet værdi (fx efter fortryd) også ryddes i tabellen
           else await api(`objekter?id=eq.${enc(k)}`, { method: 'DELETE' });
           objTabel = true;
         } catch (e) { if (objTabel === true || !/404|42P01|PGRST205|does not exist|schema cache/i.test(String(e.message))) throw e; objTabel = false; }
@@ -285,6 +285,7 @@ const Tilpas = (() => {
       if (!stille) toast('Gemt');
     } catch (err) { console.error(err); fejlbesked('Ændringen er kun gemt på denne enhed. Der er ikke forbindelse til databasen. Prøv igen senere.'); }
   }
+  const KOLONNER = ['side', 'efter', 'efter_bred', 'kant', 'kant_bred', 'bredde', 'bredde_bred', 'type', 'indhold', 'link', 'tekst', 'stoerrelse', 'farve', 'baggrund', 'felt', 'ramme', 'laast', 'ikkeflyt', 'skjult', 'pos', 'skabelon_for', 'undtagelse_for', 'omregnet'];
   const STILNOEGLER = ['tekst', 'stoerrelse', 'farve', 'baggrund', 'skjult', 'felt', 'laast', 'ikkeflyt', 'pos'];
   const tilRaekke = ny => ({ tekst: ny.t || null, stoerrelse: ny.s || null, farve: ny.f || null, baggrund: ny.b || null, skjult: !!ny.x, felt: ny.z || null, laast: ny.l === undefined ? null : !!ny.l, ikkeflyt: !!ny.m, pos: ny.p && ny.l ? ny.p.join(',') : null });
   // ny: feltets stil i den korte form (t, s, f, b, x, z, l, m, p). Pladsen (rækkefølge, kant, bredde) beholdes.
