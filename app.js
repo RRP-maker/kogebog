@@ -529,9 +529,10 @@ function tegnListe() {
       ${til ? `<p class="lille">Til: <a href="#/opskrifter/${r.opskrift_id}">${esc(til)}</a></p>` : ''}${knapper('tips', r.id)}</article>`;
   }).join('') : `<p class="tomt">${rader.length ? (L.kunFav && !q && !kat && !koekken ? 'Du har ingen favoritter endnu. Tryk på stjernen i en opskrift.' : 'Ingen opskrifter passer. Prøv et andet ord.') : T.tom}</p>`;
 }
-const knapper = (type, id, ekstra = '') => `<div class="rakke skaerm">
-  <a class="knap" data-tpid="rediger" href="#/${type}/${id}/rediger">Rediger</a>${ekstra}
-  <button class="knap fare" data-tpid="slet" data-h="slet" data-v="${type}:${id}">Slet</button></div>`;
+// Knapperne nederst i et tip-kort: små, side om side. Egne id'er, så de ikke følger opskriftens «Rediger» og «Slet».
+const knapper = (type, id, ekstra = '') => `<div class="rakke skaerm kortknapper">
+  <a class="knap mini" data-tpid="tip-rediger" href="#/${type}/${id}/rediger">${ik('blyant')} Rediger</a>${ekstra}
+  <button class="knap mini fare" data-tpid="tip-slet" data-h="slet" data-v="${type}:${id}">Slet</button></div>`;
 
 // ---------- Opskrift ----------
 let S = null; // den opskrift, der vises
@@ -1149,10 +1150,10 @@ function mereSide() {
     <button type="button" class="knap" id="tilpastip">Vis tippet om tilpasning igen</button>
     <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
     <p class="lille">Hvor højt vinduet til at tilpasse et felt må blive, i procent af skærmen.</p>
-    <div class="stepper" role="group" aria-label="Højde på tilpas-vinduet">
-      <button type="button" class="rund felt felt-s" id="tphned" aria-label="Lavere">−</button>
-      <input id="tphoejde" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="${tilpasHoejde()}" aria-label="Højde i procent">
-      <button type="button" class="rund felt felt-s" id="tpop" aria-label="Højere">+</button> <span>%</span></div>
+    <div class="stepper" data-tpid="mere-tilpashoejde" role="group" aria-label="Højde på tilpas-vinduet">
+      <button type="button" class="rund felt felt-s" data-tpid="mere-minus" id="tphned" aria-label="Lavere">−</button>
+      <input id="tphoejde" class="felt felt-s" data-tpid="mere-tal" type="text" inputmode="numeric" autocomplete="off" value="${tilpasHoejde()}" aria-label="Højde i procent">
+      <button type="button" class="rund felt felt-s" data-tpid="mere-plus" id="tpop" aria-label="Højere">+</button><span class="stepper-enhed">%</span></div>
     <h2>Genindlæs</h2>
     <p class="lille">Henter appen forfra, så du får den nyeste version.</p>
     <button type="button" class="knap" id="genstart">${ik('genindlaes')} Genindlæs appen</button>

@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.0.3 · Knapper i tips og plus/minus
+- Tips: «Rediger» og «Slet» står små og side om side nederst i kortet. De har egne id'er (`tip-rediger`, `tip-slet`), så de ikke længere følger opskriftens «Rediger» (som står øverst til højre) og «Slet».
+- Plus og minus er én pille af glas med −, tallet og + inde i (32 px, på linjerne). Gælder alle steder: portioner, «Du mangler lidt», Madplan og Indstillinger.
+- Plus og minus under Indstillinger kan tilpasses: hele pillen kan flyttes, og −, tallet og + kan få farve hver for sig, som på Madplan.
+
 ## 2.0.2 · Fortryd rydder også i «objekter»
 - Tabellen «objekter» er oprettet og i brug: appen gemmer der (tjekket live).
 - Rettet: «Fortryd» efter en flytning ryddede ikke pladsen i tabellen, så den kom igen efter genindlæsning. Nu sendes alle kolonner, også de tomme.

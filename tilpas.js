@@ -7,7 +7,7 @@ const Tilpas = (() => {
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret, .mp-rk > span, .hj-fold, .tp-egen'; // tp-egen: dine egne felter. hj-fold: overskrifterne i «Hvad har du derhjemme?» (en liste med skabelon) // de sidste: dagene, retternes felter og tællernes navne på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
   const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
-  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', DELE = '.mp-valg .rund, .mp-valg .mp-inp, .filter .chip', TRIN = '.mp-valg .stepper, .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT + ', .opsk-felt'; // opsk-felt: opskriftens dele (datafelter)
+  const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', DELE = '.stepper[data-tpid] .rund, .stepper[data-tpid] input, .filter .chip', TRIN = '.stepper[data-tpid], .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT + ', .opsk-felt'; // opsk-felt: opskriftens dele (datafelter)
   // Tæller på Madplan («−», skrivefelt, «+») og bjælker med mærker (kategorier, køkkener, søgning): delene kan tilpasses hver for sig (DELE), men et tryk-og-træk flytter hele tælleren eller bjælken (TRIN). // opskrifter kan ikke tilpasses
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner
   const naturligZ = el => el.matches('.fane') ? 'l' : el.matches('.tilbage, .vaerktoej .knap') ? 's' : 'm';
@@ -99,7 +99,7 @@ const Tilpas = (() => {
   const feltTekster = new Set(['Hvad kan jeg lave?', 'Opskrifter', 'Tips', 'Tilføj med Claude', 'Mere', 'Indstillinger', 'Ny opskrift', 'Nyt tip', ...lager.hent('tpFeltTekster', [])]);
   // Standardværdier: placeringer, størrelser, tekster og farver, som felterne har efter gennemgangen. «Nulstil» går tilbage til dem.
   const STANDARD = {
-    "forside|hvad-skal-vi-lave": {}, "forslag|hvad-kan-jeg-lave": {}, "Ingredienser": {}, // tomme: feltet arver ikke fra teksten
+    "forside|hvad-skal-vi-lave": {}, "forslag|hvad-kan-jeg-lave": {}, "Ingredienser": {}, "tip-rediger": {}, "tip-slet": {}, // tomme: feltet arver ikke fra teksten (fx «Rediger» på opskriften)
     "Kopiér besked": {"s": 20, "z": "s"},
     "Sæt ind": {"s": 20, "z": "s"},
     "Tips": {"s": 34},
@@ -355,7 +355,7 @@ const Tilpas = (() => {
   }
   const flytTekst = v => v ? 'Feltet kan ikke flyttes. Du kan stadig ændre tekst og farve.' : 'Du flytter feltet ved at holde fingeren på det og trække.';
   function aabn(el) {
-    const k = el.dataset.org, o = get(k) || {}, felt = el.matches('.knap, .tilbage, .fane'), farvefelt = felt || el.matches('.rund, .mp-inp, .chip, .mp-dagfelt, .mp-ret, .hj-fold'), nat = naturligZ(el), std = standardFarver(el);
+    const k = el.dataset.org, o = get(k) || {}, felt = el.matches('.knap, .tilbage, .fane'), farvefelt = felt || el.matches('.rund, .stepper input, .chip, .mp-dagfelt, .mp-ret, .hj-fold'), nat = naturligZ(el), std = standardFarver(el);
     const egenO = el.dataset.egen ? obj[el.dataset.egen] : null; let rk = egenO ? Number(egenO.indhold) || 1 : 1, ramme = !!o.r;
     const opsk = el.matches(FAST), inst = el.dataset.tpinst, u = inst ? undtag(el) : null; let egen = !!u; // inst: feltet er et element i en liste (skabelon)
     const st0 = o.s ? pxAf(o.s) : naermestStr(parseFloat(el.dataset.fs) || 20); let st = st0, f = o.f || std.f, b = o.b || std.b, kanSkjule = !(beskyttet.has(k) || beskyttet.has(el.dataset.orgtekst)), x = !!o.x && kanSkjule, z = o.z || nat, foer = erFast(el, k), l = foer, m = !!o.m;
