@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.1.1 · Indlæsningsskærmen ses også, mens style.css hentes
+- Rettet: `style.css` blokerede første tegning, så skærmen var tom, til den var hentet (set med 4 s forsinkelse: kun papirfarve). Nu hentes den uden at blokere (`media="print"`, til den er hentet), og app.js starter først, når den er klar (`CssKlar`), så mål i koden læses fra den rigtige CSS. Fejler hentningen, bruges siden alligevel.
+- Skærmens farver er nu rollerne fra `style.css` (`--papir`, `--blaek`, `--gryde`, `--smor`) med faste reserveværdier, til filen er hentet. Før den er hentet, står teksten i systemskrift.
+- Målt: opskriftssiden har de samme afvigelser fra rækker og kolonner som før 2.1.0 (390 og 1440 px). Efter den fjernede sektion står «Opdater med Claude», «Print» og «Slet» uændret.
+
 ## 2.1.0 · Indlæsningsskærm og «Vores side» fjernet (opdatering 4a-2)
 - Ved start dækker en indlæsningsskærm hele siden: en gryde med damp og teksten «Åbner Kogebog…». Den står i `index.html` med egen CSS, så den ses, før resten er hentet. Den forsvinder (på 0,18 s), når startsiden er tegnet, de gemte placeringer er sat på plads, og skrifterne er klar, højst 3 sekunder efter. Derfor ses hverken «Henter…», tomme felter eller felter, der hopper på plads.
 - Går det langsomt (8 sekunder), står der «Det tager længere end ventet. Tjek, at du har internet.» med knappen «Prøv igen».

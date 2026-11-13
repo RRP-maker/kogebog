@@ -1514,8 +1514,8 @@ document.addEventListener('click', e => {
 // Indlæsningsskærmen (index.html) skjules, når startsiden er tegnet og skrifterne er klar. Har enheden ikke gemt placeringer før, venter den også på dem fra Supabase,
 // så felterne ikke hopper på plads. Højst 3 sekunders ekstra ventetid.
 document.addEventListener('DOMContentLoaded', () => {
-  Hjaelper.start();
-  route()
+  (window.CssKlar || Promise.resolve()) // style.css er ikke blokerende (index.html): appen starter, når den er hentet, så målene kan læses
+    .then(() => { Hjaelper.start(); return route(); })
     .then(() => Promise.race([Promise.all([lager.hent('objekter', null) ? 0 : Tilpas.klar(), document.fonts && document.fonts.ready]), new Promise(r => setTimeout(r, 3000))]))
     .then(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))))
     .then(() => window.Indlaes && Indlaes.skjul());

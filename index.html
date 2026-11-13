@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-title" content="Kogebog">
   <title>Kogebog</title>
   <script>try{var v=JSON.parse(localStorage.getItem("kogebog_tema"));document.documentElement.dataset.tema=v==="moerk"||(v!=="lys"&&matchMedia("(prefers-color-scheme: dark)").matches)?"moerk":"lys"}catch(e){}</script>
-  <!-- Indlæsningsskærm: står i HTML'en og har sin egen CSS, så den ses, før style.css og scripts er hentet. Farverne følger temaet; 4a-3 peger dem på rollerne. -->
+  <!-- Indlæsningsskærm: står i HTML'en og har sin egen CSS, så den ses, før style.css og scripts er hentet. Farverne er rollerne fra style.css (--papir, --blaek, --gryde, --smor) med faste reserveværdier, til style.css er hentet. -->
   <style>
     #indlaes { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; text-align: center;
-      background: #fffdf5; color: #22386b; font: 20px/32px "Patrick Hand", "Patrick Hand erstatning", "Chalkboard SE", sans-serif; transition: opacity .18s ease-out; }
-    [data-tema=moerk] #indlaes { background: #1a1f2e; color: #e9edf9; }
+      background: var(--papir, #fffdf5); color: var(--blaek, #22386b); font: 20px/32px "Patrick Hand", "Patrick Hand erstatning", "Chalkboard SE", sans-serif; transition: opacity .18s ease-out; }
+    [data-tema=moerk] #indlaes { background: var(--papir, #1a1f2e); color: var(--blaek, #e9edf9); }
     #indlaes.vaek { opacity: 0; pointer-events: none; }
     .ind-indhold { display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; animation: ind-ind .25s .2s both; }
     .ind-gryde { width: 112px; height: 112px; overflow: visible; }
@@ -43,8 +43,10 @@
   <link rel="preload" href="skrifter/patrick-hand-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Versionen står kun her. Den bruges til ?v= på filerne, til cachens navn i sw.js og til teksten under Indstillinger. Hæv den (og datoen), når filer ændres. -->
   <script>
-    window.KOGEBOG = { version: '2.1.0', dato: '2026-11-13' };
-    document.write('<link rel="stylesheet" href="style.css?v=' + KOGEBOG.version + '">');
+    window.KOGEBOG = { version: '2.1.1', dato: '2026-11-13' };
+    // style.css hentes uden at blokere første tegning (media=print, til den er hentet), så indlæsningsskærmen ses med det samme. app.js starter, når CssKlar er opfyldt.
+    window.CssKlar = new Promise(function (r) { window.CssOK = r; });
+    document.write('<link rel="stylesheet" href="style.css?v=' + KOGEBOG.version + '" media="print" onload="this.media=\'all\';CssOK()" onerror="this.media=\'all\';CssOK()">');
   </script>
 </head>
 <body>
@@ -54,9 +56,9 @@
         <path class="ind-damp" d="M36 34c-5-5 5-8 0-14"/>
         <path class="ind-damp" d="M48 32c-5-5 5-8 0-14"/>
         <path class="ind-damp" d="M60 34c-5-5 5-8 0-14"/>
-        <path d="M22 50h52v14a16 16 0 0 1-16 16H38a16 16 0 0 1-16-16z" fill="#4a9fb5"/>
+        <path d="M22 50h52v14a16 16 0 0 1-16 16H38a16 16 0 0 1-16-16z" fill="var(--gryde, #4a9fb5)"/>
         <path d="M22 54H12M74 54h10"/>
-        <g class="ind-lag"><path d="M20 50q28-16 56 0z" fill="#ffd95a"/><circle cx="48" cy="38" r="3.5" fill="#ffd95a"/></g>
+        <g class="ind-lag"><path d="M20 50q28-16 56 0z" fill="var(--smor, #ffd95a)"/><circle cx="48" cy="38" r="3.5" fill="var(--smor, #ffd95a)"/></g>
       </svg>
       <p class="ind-tekst">Åbner Kogebog…</p>
       <p class="ind-sen">Det tager længere end ventet. Tjek, at du har internet.</p>
