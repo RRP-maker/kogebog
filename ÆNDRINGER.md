@@ -2,6 +2,10 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.4.1 · Skift kode
+- Under «Lås» i Værkstedet står nu «Skift kode»: nuværende kode, ny kode to gange. Den nuværende kode tjekkes først og tæller med i ventetiden ved forkerte forsøg. Det nye hash erstatter det gamle i `madplan`.
+- Glemt kode: slet stadig rækken `vaerksted-kode` i `madplan` i Supabase.
+
 ## 2.4.0 · Værkstedet med kode (opdatering 4d-1)
 - **Nyt: Værkstedet** (`vaerksted.js`, `#/vaerksted`). Under Indstillinger står nu «Åbn Værkstedet». Her ligger Designer-afsnittet (Åbn Designer, tippet, nulstil tekster, vinduets højde), flyttet fra Indstillinger med uændrede `data-tpid`.
 - **Koden er en spærring mod uheld, ikke sikkerhed.** Første gang vælger man koden i appen (mindst 4 tegn, skrives to gange). Kun et saltet hash (PBKDF2, SHA-256, 200.000 runder) ligger i Supabase, i tabellen `madplan` på rækken `vaerksted-kode`. Koden står ikke i repoet. Ingen SQL-kørsel er nødvendig.

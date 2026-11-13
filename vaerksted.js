@@ -21,6 +21,7 @@ const Vaerksted = (() => {
     const nogle = await crypto.subtle.importKey('raw', new TextEncoder().encode(kode), 'PBKDF2', false, ['deriveBits']);
     return tilB64(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: iter }, nogle, 256));
   }
+  const nyData = async kode => { const salt = crypto.getRandomValues(new Uint8Array(16)); return { salt: tilB64(salt), hash: await afled(kode, salt, ITER), iter: ITER }; };
   const hentRaekke = async () => (await api(`madplan?id=eq.${RAEKKE_ID}&select=data`))[0]?.data || null;
 
   // Ventetid efter forkerte forsøg: 30 sekunder efter tre, derefter dobbelt så lang (højst 10 minutter). Huskes på enheden.
@@ -66,9 +67,8 @@ const Vaerksted = (() => {
         if (ny) {
           if (kode.length < MIN) return visFejl(f1, `Koden skal være mindst ${MIN} tegn.`);
           if (kode !== f2.value) return visFejl(f2, 'De to koder er ikke ens. Skriv den samme kode igen.');
-          const salt = crypto.getRandomValues(new Uint8Array(16)), hash = await afled(kode, salt, ITER);
           // «ignorer»: findes en kode allerede (sat på en anden enhed i mellemtiden), overskrives den ikke
-          const sat = await api('madplan?on_conflict=id', { method: 'POST', flet: 'ignorer', body: { id: RAEKKE_ID, data: { salt: tilB64(salt), hash, iter: ITER }, opdateret: new Date().toISOString() } });
+          const sat = await api('madplan?on_conflict=id', { method: 'POST', flet: 'ignorer', body: { id: RAEKKE_ID, data: await nyData(kode), opdateret: new Date().toISOString() } });
           if (!sat.length) { toast('Der er allerede valgt en kode. Skriv den.'); return route(); }
           ssSaet(true); toast('Koden er gemt. Værkstedet er åbent.'); return route();
         }
@@ -102,7 +102,39 @@ const Vaerksted = (() => {
       <p class="lille">Så skal du ikke skrive koden hver gang. Slå det kun til på din egen telefon eller computer.</p>
       <label class="skift"><input type="checkbox" id="vk-behold" ${behold() ? 'checked' : ''} ${husk() || behold() ? '' : 'disabled'}> <span>Behold Designer</span></label>
       <p class="lille" id="vk-behold-tekst">${husk() || behold() ? 'Designer bliver tændt, også når du låser Værkstedet.' : 'Kan kun slås til, når Værkstedet ikke låses på denne enhed.'}</p>
-      <button type="button" class="knap" id="vk-laas">${ik('laas')} Lås nu</button>`;
+      <button type="button" class="knap" id="vk-laas">${ik('laas')} Lås nu</button>
+      <h2>Skift kode</h2>
+      ${fejlBoks}
+      <form id="vk-skift" novalidate>
+        <label for="vk0" class="lille">Nuværende kode</label>
+        <input id="vk0" class="vk-kode felt felt-m" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false">
+        <label for="vk1" class="lille">Ny kode (mindst ${MIN} tegn)</label>
+        <input id="vk1" class="vk-kode felt felt-m" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false">
+        <label for="vk2" class="lille">Skriv den nye kode igen</label>
+        <input id="vk2" class="vk-kode felt felt-m" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+        ${visKode}
+        <button type="submit" class="knap gem">${ik('tjek')} Gem den nye kode</button>
+      </form>`;
+    vis();
+    $('#vk-skift').addEventListener('submit', async e => {
+      e.preventDefault(); nulstilFejl();
+      const f0 = $('#vk0'), f1 = $('#vk1'), f2 = $('#vk2');
+      if (!f0.value) return visFejl(f0, 'Skriv den nuværende kode.');
+      if (f1.value.length < MIN) return visFejl(f1, `Den nye kode skal være mindst ${MIN} tegn.`);
+      if (f1.value !== f2.value) return visFejl(f2, 'De to nye koder er ikke ens. Skriv den samme kode igen.');
+      const v = ventSek();
+      if (v) return visFejl(f0, `Du har prøvet for mange gange. Vent ${v} sekunder, og prøv igen.`);
+      try {
+        const rk = await hentRaekke();
+        if (rk && await afled(f0.value, fraB64(rk.salt), rk.iter) !== rk.hash) {
+          forkert(); const w = ventSek();
+          return visFejl(f0, w ? `Den nuværende kode passer ikke. Vent ${w} sekunder, og prøv igen.` : 'Den nuværende kode passer ikke. Prøv igen.');
+        }
+        ryd();
+        await api('madplan?on_conflict=id', { method: 'POST', flet: true, body: { id: RAEKKE_ID, data: await nyData(f1.value), opdateret: new Date().toISOString() } });
+        [f0, f1, f2].forEach(f => { f.value = ''; }); toast('Den nye kode er gemt');
+      } catch (err) { console.error(err); visFejl(f0, 'Det virkede ikke lige nu. Tjek internettet, og prøv igen.'); }
+    });
     $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));
     $('#tilpastip').addEventListener('click', () => Tilpas.tipIgen());
     const saetHoejde = n => { const v = Math.max(20, Math.min(90, Math.round(Number(n)) || 33)); lager.gem('tilpasHoejde', v); $('#tphoejde').value = v; };
