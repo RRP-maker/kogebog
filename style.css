@@ -18,6 +18,7 @@
   --raa-tomat: #cf3a24; --raa-tomat-lys: #ff8a75; --raa-tomat-moerk: #2e0d07;
   --raa-mel: #d1c7ad; --raa-mel-kant: #6e6757; --raa-skifer-kant: #8d95b3; --raa-skifer-moerk: #11152a; /* havremel: tydeligt mørkere end glas og papir (2.2.1) */
   --raa-blaabaer: #5a55c8; --raa-blaabaer-lys: #aeb0ff; --raa-blaabaer-moerk: #15133d;
+  --raa-gulerod-staerk: #b4530c; --raa-gulerod-lys: #f5a25a; --raa-gulerod-moerk: #2b1404;
   --raa-blaek: #22386b; --raa-blaek-lys: #e9edf9; --raa-nat: #1a1f2e; --raa-hvid: #ffffff;
   --raa-sovs: #f3ddd3; --raa-sovs-kant: #9a4b33; --raa-sovs-nat: #4a2c24; --raa-sovs-natkant: #d98a6e;
   --raa-gulerod: #ffe2c7; --raa-gulerod-kant: #b85a10; --raa-gulerod-nat: #4d3319; --raa-gulerod-natkant: #f0a35c;
@@ -32,7 +33,7 @@
   --slet: var(--raa-tomat); --paa-slet: var(--raa-hvid); --slet-kant: var(--raa-tomat);
   --annuller: var(--raa-mel); --paa-annuller: var(--raa-blaek); --annuller-kant: var(--raa-mel-kant);
   --hjaelp: var(--raa-blaabaer); --paa-hjaelp: var(--raa-hvid); --hjaelp-kant: var(--raa-blaabaer);
-  --hovedhandling: var(--raa-blaek); --paa-hovedhandling: var(--raa-hvid); --hovedhandling-kant: var(--raa-blaek); /* hovedhandling, der ikke gemmer (fx «Lav retten») */
+  --hovedhandling: var(--raa-gulerod-staerk); --paa-hovedhandling: var(--raa-hvid); --hovedhandling-kant: var(--raa-gulerod-staerk); /* hovedhandling, der ikke gemmer (fx «Lav retten»): gulerod (2.2.2) */
   /* Opskrifternes kategorier: kun som svag flade + kant, og navnet står der altid */
   --paa-kat: var(--raa-blaek);
   --kat-hovedret: var(--raa-sovs); --kat-hovedret-kant: var(--raa-sovs-kant);
@@ -894,7 +895,7 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --slet: var(--raa-tomat-lys); --paa-slet: var(--raa-tomat-moerk); --slet-kant: var(--raa-tomat-lys);
   --annuller: var(--raa-skifer-kant); --paa-annuller: var(--raa-skifer-moerk); --annuller-kant: var(--raa-skifer-kant); /* fast mellemgrå: hverken klart glas eller hvid hovedknap */
   --hjaelp: var(--raa-blaabaer-lys); --paa-hjaelp: var(--raa-blaabaer-moerk); --hjaelp-kant: var(--raa-blaabaer-lys);
-  --hovedhandling: var(--raa-blaek-lys); --paa-hovedhandling: var(--raa-nat); --hovedhandling-kant: var(--raa-blaek-lys);
+  --hovedhandling: var(--raa-gulerod-lys); --paa-hovedhandling: var(--raa-gulerod-moerk); --hovedhandling-kant: var(--raa-gulerod-lys);
   --paa-kat: var(--raa-blaek-lys);
   --kat-hovedret: var(--raa-sovs-nat); --kat-hovedret-kant: var(--raa-sovs-natkant);
   --kat-forret: var(--raa-gulerod-nat); --kat-forret-kant: var(--raa-gulerod-natkant);

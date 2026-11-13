@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.2.2 · Gulerod til hovedknapperne, «Tilføj tip» i blåbær
+- `--hovedhandling` er nu gulerod i stedet for blæk (Rasmus' valg C): lys `#b4530c` med hvid tekst (5,0:1, kant 4,9:1), mørk `#f5a25a` med mørk tekst (8,5:1, kant 8,0:1). Gælder «Lav retten», «+ Ny opskrift», «Generer ny madplan», «Start», «Næste» m.fl. Den skilles nu også fra «valgt» (blæk).
+- «Tilføj tip» bruger `hjaelp` (blåbær): et tip forklarer et ord, og knappen skilles fra den gule «Tilpas» ved siden af.
+- Forbehold: gulerod og tomatrød (Slet) ligger tæt ved rød-grøn farveblindhed. Teksten og skraldespanden bærer forskellen, og Slet står aldrig ved siden af en hovedknap.
+
 ## 2.2.1 · «Annuller» skiller sig ud fra glasknapperne
 - Melgrå «Annuller» lignede en almindelig glasknap. Nu er fladen fast og tydeligt mørkere: havremel `#d1c7ad` med kant `#6e6757` i lyst tema (tekst 6,8:1, kant 5,5:1) og mellemgrå `#8d95b3` med mørk tekst i mørkt tema (tekst 6,1:1, kant 5,5:1).
 - Designerens gamle feltfarver er fjernet fra `objekter` (13. nov., efter Rasmus' ja), så knapperne viser rollernes farver. Kun `baggrund` (og `farve: hvid`, hvor den hørte til baggrunden) er sat til tom. Placeringer er urørte. Før: `forside|hvad-kan-jeg-lave` hvid/indigo, `gem` mynte, `opskrifter/:id/lav|start` mynte, `luk` rod, `madplan` smoer, `mp-udskift` rod, `mp-vaelg-ret` mynte, `mere|nulstil-alle-tekster` glas, `tip-rediger` hvid/smoer, `tip-slet` rod.
