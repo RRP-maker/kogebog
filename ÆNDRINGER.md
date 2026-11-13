@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.7.1 · Opdatering 3 er færdig
+- Dine gemte placeringer i tilpasseren gælder igen (`IGNORER_GEMTE = false`). En placering, der ville lægge et felt oven på et andet eller uden for skærmen, ignoreres stadig. Nu tjekkes det igen, når et felt er flyttet tilbage, så to flyttede felter (fx «Sæt ind» og «Ryd» på import) ikke kan ende oven på hinanden.
+- Kontrast: dæmpet tekst i mørkt tema er lidt lysere (blyant), og «Er ikke med» på Madplan er mindre dæmpet.
+- Beslutning: Gennemgangen af dine placeringer sammen med dig er erstattet af omregningen i opdatering 2 (fase 5), hvor de gamle pixelplaceringer bliver til rækkefølge og kant.
+
 ## 1.7.0 · Mac: tastatur og mus (fase 3d)
 - Tastatur: Escape lukker det øverste (menu, vindue, forklaring, Grydelils boble eller rundvisning). `/` eller ⌘K (Ctrl+K) søger i opskrifterne (eller i tips, når man er der). ⌘1–5 går til Opskrifter, Tips, Hvad kan jeg lave?, Madplan og Indstillinger. I browseren tager Chrome selv ⌘1–5, så ⌥1–5 virker også.
 - Trin for trin: → eller mellemrum er «Næste», ← er «Tilbage».

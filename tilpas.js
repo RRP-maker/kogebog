@@ -125,8 +125,8 @@ const Tilpas = (() => {
     "tips|nyt-tip": {"z": "s"},
     "forside|hvad-kan-jeg-lave": {"s": 34, "b": "himmel", "z": "l"}
   };
-  // Midlertidigt under opdatering 3: dine gemte placeringer i databasen ignoreres, kun STANDARD gælder. Sæt til false, når opdateringen er færdig.
-  const IGNORER_GEMTE = true;
+  // Under opdatering 3 blev de gemte placeringer ignoreret (true). Opdateringen er færdig, så de gælder igen. Placeringer, der giver overlap eller sender et felt ud af skærmen, ignoreres stadig (se uheldig).
+  const IGNORER_GEMTE = false;
   const D = k => !IGNORER_GEMTE && data[k] !== undefined ? data[k] : STANDARD[k];
   const get = k => {
     if (D(k) !== undefined) return D(k);
@@ -186,17 +186,19 @@ const Tilpas = (() => {
       if (k) el.dataset.flyt = k; else delete el.dataset.flyt;
       const fast = !el.matches(FAST) && !!k && erFast(el, k), o = (k && get(k)) || {};
       if (el.matches('.knap, .tilbage, .fane') && o.z) el.dataset.fs = o.z; else delete el.dataset.fs;
-      plac(el, p, fast);
+      el._ign = 0; plac(el, p, fast);
       el.toggleAttribute('data-laast', fast);
       el.toggleAttribute('data-ikkeflyt', !!o.m || el.matches(FAST));
     });
-    document.querySelectorAll('[data-flyt]').forEach(el => { // først når alle står på plads: ingen må ende uden for skærmen eller oven på et andet felt
-      if (el.classList.contains('plads') || (drag && drag.laast && drag.el === el)) return;
-      const p = !el.matches(FAST) && get(el.dataset.flyt) && get(el.dataset.flyt).p;
-      if (!p || !uheldig(el)) return;
-      const fast = el.hasAttribute('data-laast');
-      plac(el, p, fast, 1); if (uheldig(el)) plac(el, p, fast, 2);
-    });
+    for (let runde = 0, flere = true; flere && runde < 3; runde++) { flere = false; // først når alle står på plads: ingen må ende uden for skærmen eller oven på et andet felt. Et felt, der flyttes tilbage, kan ramme et andet, så der tjekkes igen.
+      document.querySelectorAll('[data-flyt]').forEach(el => {
+        if (el.classList.contains('plads') || (drag && drag.laast && drag.el === el)) return;
+        const p = !el.matches(FAST) && get(el.dataset.flyt) && get(el.dataset.flyt).p;
+        if (!p || !uheldig(el)) return;
+        const fast = el.hasAttribute('data-laast');
+        flere = true; plac(el, p, fast, el._ign ? 2 : 1); el._ign = 1; if (uheldig(el)) plac(el, p, fast, 2);
+      });
+    }
     document.querySelectorAll('[data-tom]').forEach(c => { c.style.display = ''; delete c.dataset.tom; }); // en række med skjulte felter beholder sin plads, så siden ikke kryber sammen
     bjaelke();
   }
