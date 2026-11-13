@@ -135,18 +135,26 @@ function chips(r) {
 const linjer = t => String(t || '').split('\n').map(s => s.trim().replace(/^(\d+[.)]|[-•*])\s+/, '')).filter(Boolean);
 
 // Ark: lille vindue nedefra. Bruges til bekræftelse og til at oprette tip på stedet.
+// Med tastatur: fokus flytter ind i vinduet, Tab bliver i det, og når det lukkes, kommer fokus tilbage, hvor det var.
+let arkFoer = null, medTastatur = false; // på touch flytter fokus kun, når man bruger tastatur, så skærmtastaturet ikke dukker op af sig selv
+addEventListener('keydown', e => { if (e.key === 'Tab' || e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') medTastatur = true; }, true);
+addEventListener('pointerdown', () => { medTastatur = false; }, true);
 function ark(html) {
+  const foer = $('#ark') ? arkFoer : document.activeElement;
   lukArk(true);
   const d = document.createElement('div');
   d.id = 'ark';
   d.innerHTML = `<div class="ark-bag"></div><div class="ark-kort" role="dialog" aria-modal="true">${html}</div>`;
   document.body.append(d);
+  arkFoer = foer;
+  if (medTastatur || !matchMedia('(pointer: coarse)').matches) setTimeout(() => { if (d.isConnected && !d.contains(document.activeElement)) { const f = d.querySelector('.ark-kort input:not([type=hidden]), .ark-kort textarea, .ark-kort select, .ark-kort button, .ark-kort a[href]'); if (f) f.focus({ preventScroll: true }); } }, 60);
   return d;
 }
 // Vinduet glider ned og toner ud. «straks» fjerner det med det samme, fx når et nyt vindue afløser det.
 function lukArk(straks) {
   const a = $('#ark');
   if (!a) return;
+  if (straks !== true && a.contains(document.activeElement) && arkFoer && arkFoer.isConnected && arkFoer !== document.body) arkFoer.focus({ preventScroll: true });
   if (straks === true || matchMedia('(prefers-reduced-motion: reduce)').matches) { a.remove(); return; }
   a.removeAttribute('id'); a.classList.add('ark-ud');
   setTimeout(() => a.remove(), 260);
@@ -1418,7 +1426,48 @@ document.addEventListener('change', e => {
 document.addEventListener('click', e => { // «Importér»-menuen lukkes, når man trykker et andet sted
   document.querySelectorAll('details.tilfoej[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; });
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('details.tilfoej[open]').forEach(d => { d.open = false; d.querySelector('summary').focus(); }); });
+// ---------- Tastatur (Mac, og iPad med tastatur) ----------
+// Escape lukker det øverste: menu, vindue, forklaring, Grydelil. / eller ⌘K søger. ⌘1–5 (eller ⌥1–5 i browseren) går til de fem steder.
+// Trin for trin: → eller mellemrum er Næste, ← er Tilbage.
+const skriverNu = el => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+const STEDER = ['#/opskrifter', '#/tips', '#/forslag', '#/forslag/madplan', '#/mere'];
+function fokusSoeg(forsoeg = 0) {
+  const s = $('#soeg');
+  if (s) { s.focus(); s.select(); return; }
+  if (forsoeg === 0 && !/^#\/(opskrifter|tips)$/.test(location.hash)) location.hash = /^#\/tips/.test(location.hash) ? '#/tips' : '#/opskrifter';
+  if (forsoeg < 30) setTimeout(() => fokusSoeg(forsoeg + 1), 100);
+}
+document.addEventListener('keydown', e => {
+  if (e.defaultPrevented || e.isComposing) return;
+  const mod = e.metaKey || e.ctrlKey, el = document.activeElement;
+  if (e.key === 'Escape') {
+    const menu = document.querySelector('details.tilfoej[open]');
+    if (menu) { menu.open = false; menu.querySelector('summary').focus(); return; }
+    const a = $('#ark');
+    if (a) { e.preventDefault(); const bag = a.querySelector('.ark-bag'); if (bag) bag.click(); else lukArk(); return; }
+    if ($('.forklaring')) { lukForklaring(); return; }
+    if (window.Hjaelper && Hjaelper.luk && Hjaelper.luk()) return;
+    if (skriverNu(el) && !(el.type === 'search' && el.value)) el.blur();
+    return;
+  }
+  if (e.key === 'Tab' && $('#ark')) { // Tab bliver i vinduet
+    const f = [...$('#ark').querySelectorAll('.ark-kort a[href], .ark-kort button:not(:disabled), .ark-kort input:not([type=hidden]):not(:disabled), .ark-kort select, .ark-kort textarea')].filter(x => x.offsetParent);
+    if (!f.length) return;
+    const i = f.indexOf(el);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && (i === -1 || i === f.length - 1)) { e.preventDefault(); f[0].focus(); }
+    return;
+  }
+  if ($('#ark')) return;
+  if ((mod && !e.altKey && e.key.toLowerCase() === 'k') || (e.key === '/' && !mod && !e.altKey && !skriverNu(el))) { e.preventDefault(); fokusSoeg(); return; }
+  const nr = /^Digit[1-5]$/.test(e.code) ? Number(e.code.slice(5)) : 0;
+  if (nr && !e.shiftKey && ((mod && !e.altKey) || (e.altKey && !mod)) && document.body.dataset.side !== 'lav') { e.preventDefault(); location.hash = STEDER[nr - 1]; return; }
+  if (document.body.dataset.side === 'lav' && !mod && !e.altKey && !skriverNu(el)) {
+    const paaKnap = el && el.matches && el.matches('button, a[href], summary, label');
+    if (e.key === 'ArrowRight' || (e.key === ' ' && !paaKnap)) { const k = $('.lav-bund .primaer'); if (k) { e.preventDefault(); k.click(); } }
+    else if (e.key === 'ArrowLeft') { const k = $('.lav-bund [data-v="-1"]'); if (k && !k.disabled) { e.preventDefault(); k.click(); } }
+  }
+});
 document.addEventListener('click', async e => {
   const tb = e.target.closest('a.tilbage:not(.fortryd):not(.direkte)');
   if (tb) { // gå til den side, man kom fra. Rediger- og ny-sider springes over.

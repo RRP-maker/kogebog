@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.7.0 · Mac: tastatur og mus (fase 3d)
+- Tastatur: Escape lukker det øverste (menu, vindue, forklaring, Grydelils boble eller rundvisning). `/` eller ⌘K (Ctrl+K) søger i opskrifterne (eller i tips, når man er der). ⌘1–5 går til Opskrifter, Tips, Hvad kan jeg lave?, Madplan og Indstillinger. I browseren tager Chrome selv ⌘1–5, så ⌥1–5 virker også.
+- Trin for trin: → eller mellemrum er «Næste», ← er «Tilbage».
+- Vinduer (ark): fokus flytter ind i vinduet, Tab bliver i det, og fokus kommer tilbage til knappen, man kom fra. På touch flytter fokus kun, når man bruger tastatur, så skærmtastaturet ikke dukker op af sig selv.
+- Mac (bred skærm med mus): intet fast nederst over indholdet. Grydelil og «Vis hjælper» står nederst i sidebjælken, og boblen åbner mod højre. Trin for trin har knapperne i siden under trinnet.
+- Beslutning: Tryk-flade på 48 px gælder kun touch (fra 1.2.0). Med mus er felterne som før.
+
 ## 1.6.1 · Gemte placeringer ignoreres under opdatering 3
 - Tilpasserens gemte placeringer (tabellen «tilpasning») ignoreres, til opdatering 3 er færdig. Kun STANDARD i `tilpas.js` gælder (`IGNORER_GEMTE`). Databasen er urørt. Sæt `IGNORER_GEMTE = false`, når opdateringen er færdig.
 - Madplan: valgene står i et kort (handlinger til venstre, dagvalg og tal til højre fra 744 px). Dagene står i kolonner under.

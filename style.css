@@ -906,6 +906,14 @@ body[data-side=lav] #nav { display: none; }
   .lav-bund { left: calc(var(--nav-l) + 10px); }
   #tilpas-fortryd { left: calc(var(--nav-l) + 10px); } #tilpas-gentag { left: calc(var(--nav-l) + 122px); }
   #nav #tilpas-knap { margin-top: auto; }
+  /* Intet fast nederst over indholdet: Grydelil og «Vis hjælper» hviler nederst i sidebjælken, og trin for trin har knapperne i siden (piletasterne virker også) */
+  body:not([data-side=lav]) #hjaelper, body:not([data-side=lav]) #hjaelper-vis { right: auto; left: 24px; bottom: 16px; }
+  body.tilpas-menu:not([data-side=lav]) #hjaelper, body.tilpas-menu:not([data-side=lav]) #hjaelper-vis { bottom: 80px; }
+  body:not([data-side=lav]) .h-boble { right: auto; left: 4px; border-radius: 22px 22px 22px 6px; transform-origin: 0 100%; }
+  body[data-side=lav] main { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  .lav-bund { position: static; margin: var(--m) 0 var(--pt); max-width: 704px; }
+  #app.sideud .lav > .lav-bund { animation: sideud .12s ease-in both; }
+  #app.sideind .lav > .lav-bund { animation: sideind .34s var(--ud) both; }
 }
 
 /* Lav højde (telefon på langs): navigationen står i siden, intet sidder fast, og hjælperen er skjult */

@@ -183,7 +183,9 @@ const Hjaelper = (() => {
   function placerBoble(tur) {
     boble.style.translate = '0 0';
     if (!tur) return;
-    const w = Math.min(270, innerWidth - 24), venstre = rod.getBoundingClientRect().right - 4 - w;
+    const w = Math.min(270, innerWidth - 24), r = rod.getBoundingClientRect();
+    if (getComputedStyle(boble).right === 'auto') { const hoejre = r.left + 4 + w; if (hoejre > innerWidth - 8) boble.style.translate = `${innerWidth - 8 - hoejre}px 0`; return; } // Mac: Grydelil hviler til venstre, og boblen går mod højre
+    const venstre = r.right - 4 - w;
     if (venstre < 8) boble.style.translate = `${8 - venstre}px 0`;
   }
   function plan(el) { // hvor skal Grydelil stå, så skeen når emnet, og boblen ikke dækker det?
@@ -446,5 +448,5 @@ const Hjaelper = (() => {
       sig('Tryk på mig, så viser jeg dig rundt på siden. Tryk på krydset, hvis jeg skal gemme mig.');
     }
   }
-  return { start, sig, glad, vis, skjult, stille: () => { koe = []; if (rod) stop(); }, side: t => { sideTekst = t || ''; if (rod && (tur || offX || offY)) stopTur(false); } };
+  return { start, sig, glad, vis, skjult, luk: () => { if (tur) { stopTur(true); return true; } if (rod && !boble.hidden) { koe = []; stop(); return true; } return false; }, stille: () => { koe = []; if (rod) stop(); }, side: t => { sideTekst = t || ''; if (rod && (tur || offX || offY)) stopTur(false); } };
 })();
