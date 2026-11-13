@@ -2,6 +2,18 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 1.9.0 · Sidebygger, fase 3: flyt, tilføj og slet
+- Felter flyttes i rækkefølge i stedet for med pixels: «↑ Flyt op», «↓ Flyt ned», «Smallere», «Bredere» (tredjedel, halv, hel, i hele kolonner), «Til den anden side» og «Egen plads» i vinduet, når du trykker på et felt. Feltet flyttes i koden, så tastatur og skærmlæser følger med, og to felter kan aldrig ligge oven på hinanden.
+- Træk: hold fingeren på et felt, så vises de steder, det kan lande, som streger. Den nærmeste er markeret med «Her». Slipper du et andet sted, bliver feltet, hvor det var. Siden ruller med mod kanten.
+- To pladser pr. felt: smal (iPhone, under 744 px) og bred (iPad og Mac). Flytter du på en bred skærm, ændres kun den brede plads. Har den brede ingen plads, bruges den smalle.
+- «＋ Tilføj felt» (når du tilpasser): tekst, knap (til en side i appen eller en adresse på nettet), billede (fra en adresse), afstand (1 eller 2 rækker) og beholder (en ramme). Feltet kommer øverst på det, du kan se. Dine egne felter slettes med «Slet feltet», og beskeden har «Fortryd». Appens egne felter kan skjules, men ikke slettes.
+- «Med ramme»/«Uden ramme» på dine egne felter.
+- Fortryd og gentag gælder også flytninger, nye og slettede felter. Fortryder du en flytning, går feltet tilbage til sin plads.
+- Appen henter tilpasningerne igen, når den får fokus, og siger til, hvis en anden enhed har ændret noget.
+- Tip første gang, du tilpasser. Det kan vises igen under Indstillinger («Vis tippet om tilpasning igen»).
+- Animationer: et felt glider til sin nye plads på 200 ms (ikke med reduceret bevægelse).
+- Beslutning: Felter, der er låst på skærmen, flyttes stadig med pixels (de svæver over siden). Alle andre bruger rækkefølgen.
+
 ## 1.8.0 · Sidebygger, fase 2: felter og skabeloner
 - Ny model for felterne: et felt, du ændrer, får en række med hele sin stil (og senere sin plads) i tabellen «objekter». Findes tabellen ikke endnu, gemmes rækken i «tilpasning» under nøglen «obj|…». Dine gamle tilpasninger gælder stadig, til feltet ændres. SQL til tabellen: `supabase/objekter.sql`.
 - Lister har en skabelon: overskrifterne i «Hvad har du derhjemme?», dagene på Madplan og retterne i dagene. Ændrer du én overskrift (størrelse, farve), ændres alle. «Egen farve til dette felt» giver ét felt en anden farve. Det vises med «● egen farve», når du tilpasser, og «Følg listen igen» fjerner det. Plads, størrelse og tekst følger altid listen.

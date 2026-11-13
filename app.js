@@ -1145,6 +1145,8 @@ function mereSide() {
     <label class="skift"><input type="checkbox" id="toruder" ${toRuder() ? 'checked' : ''}> <span>Vis to ruder på brede skærme</span></label>
     <p class="lille">Når du åbner en opskrift: listen til venstre og opskriften til højre.${BRED.matches ? '' : ' Skærmen her er for smal, så det ses kun på en bred skærm (iPad på langs og Mac).'}</p>
     <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Tilpas siden</span></label>
+    <p class="lille">Flyt, tilføj og skjul felter, og skift tekst og farver. Ændringerne gælder alle, der bruger kogebogen.</p>
+    <button type="button" class="knap" id="tilpastip">Vis tippet om tilpasning igen</button>
     <button class="knap fare" id="tilpasnul">Nulstil alle tekster</button>
     <p class="lille">Hvor højt vinduet til at tilpasse et felt må blive, i procent af skærmen.</p>
     <div class="stepper" role="group" aria-label="Højde på tilpas-vinduet">
@@ -1163,6 +1165,7 @@ function mereSide() {
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
   $('#toruder').addEventListener('change', e => { lager.gem('toRuder', e.target.checked); toast(e.target.checked ? 'To ruder er slået til' : 'To ruder er slået fra'); });
   $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));
+  $('#tilpastip').addEventListener('click', () => Tilpas.tipIgen());
   const saetHoejde = n => { const v = Math.max(20, Math.min(90, Math.round(Number(n)) || 33)); lager.gem('tilpasHoejde', v); $('#tphoejde').value = v; };
   $('#tphned').addEventListener('click', () => saetHoejde(tilpasHoejde() - 5));
   $('#tpop').addEventListener('click', () => saetHoejde(tilpasHoejde() + 5));
