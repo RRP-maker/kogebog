@@ -19,3 +19,4 @@ Gælder alt, jeg indsætter. Designer (`tilpas.js`, hed før «tilpasseren») er
 - **Farver:** komponenter bruger kun roller fra `:root` i `style.css` (`--gem`, `--tilpas`, `--slet`, `--annuller`, `--hjaelp`, `--hovedhandling`, `--kat-…`, med `--paa-…` og `…-kant`), aldrig `--raa-…` eller hex. En ny rolle får lys og mørk værdi og målt kontrast (tekst 4,5:1, kant 3:1).
 - **Knapper:** `.knap` + én rolle (`gem`, `hoved`, `slet`, `annuller`, `tilpas`, `hjaelp`) eller ingen (glas). Rød kun når noget går tabt. Tilbage, Luk, Fortryd og Gentag er runde (`Ikoner.tilbage`, `Ikoner.rund`) med `aria-label`.
 - **Ord:** «Tilpas» = ændre indhold. «Designer» = layoutværktøjet. «Rediger» bruges ikke.
+- **Navigationsbjælken** har fire tilstande (normal, Designer i gang, Designer på pause, Tilpas). Knapper til en tilstand er `.nav-knap` i `#nav` med ikon og lille tekst. Formularens Gem, Annuller, Tilføj tip, Fortryd og Gentag står kun i bjælken (`navTilpas` i `app.js`), ikke i siden.

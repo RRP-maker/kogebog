@@ -610,7 +610,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 body.tilpas [data-org], body.tilpas [data-flyt] { outline: 2px dashed var(--gryde-mork); outline-offset: 3px; cursor: pointer; }
 body.tilpas [data-laast] { outline: 2px solid var(--advarsel); }
 .plads { opacity: 0; } /* usynlig kopi, der holder pladsen, når et felt er fastlåst på skærmen */
-#nav #tilpas-knap { font-family: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+#nav .nav-knap { font-family: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
 body.tilpas #nav #tilpas-knap { background: var(--gul); color: var(--paa-lys); }
 body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjaelper-vis { bottom: calc(160px + var(--nav-b) + env(safe-area-inset-bottom)); }
 .ark-kort .rakke.venstre { justify-content: flex-start; }
@@ -696,16 +696,7 @@ input.felt, select.felt { padding: 0 12px; }
 .tekst-l { font-size: 24px; line-height: 32px; }
 .tekst-xl { font-size: 29px; line-height: 32px; }
 
-/* Tilpas: fortryd/gentag, glas-farveknap, felter der ikke kan flyttes, og forbudt sted */
-#tilpas-fortryd, #tilpas-gentag {
-  position: fixed; bottom: calc(10px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; /* runde med buede pile (4a) */
-  font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
-  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
-}
-#tilpas-fortryd { left: max(10px, env(safe-area-inset-left)); }
-#tilpas-gentag { left: calc(max(10px, env(safe-area-inset-left)) + 58px); }
-#tilpas-fortryd .ikon, #tilpas-gentag .ikon { width: 24px; height: 24px; }
-#tilpas-fortryd:disabled, #tilpas-gentag:disabled { opacity: .4; cursor: default; border-style: dashed; border-color: var(--blyant); }
+/* Designer: glas-farveknap, felter der ikke kan flyttes, og forbudt sted */
 .sw.glas { position: relative; overflow: hidden; border: 1px solid var(--glaskant); background: linear-gradient(135deg, var(--smor) 0 34%, var(--himmel) 34% 67%, var(--rosa) 67%); }
 .sw.glas::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--glas); -webkit-backdrop-filter: blur(3px) saturate(1.8); backdrop-filter: blur(3px) saturate(1.8); box-shadow: var(--glans); }
 .sw.glas::after { content: ""; position: absolute; left: 20%; top: 12%; width: 46%; height: 22%; border-radius: 50%; background: rgba(var(--lys-rgb), .85); transform: rotate(-30deg); }
@@ -739,11 +730,6 @@ body.tilpas .tp-afstand { background: repeating-linear-gradient(135deg, rgba(var
 #tp-pladser i { position: absolute; height: 2px; border-radius: 1px; background: rgba(var(--blaek-rgb), .25); }
 #tp-markoer { position: absolute; height: 4px; border-radius: 2px; background: var(--hjaelp); box-shadow: 0 0 0 2px rgba(var(--lys-rgb), .7); }
 #tp-markoer::before { content: "Her"; position: absolute; left: 0; top: -22px; padding: 0 6px; border-radius: 8px; background: var(--hjaelp); color: var(--paa-hjaelp); font: 13px/20px var(--skrift); }
-#tilpas-ny {
-  position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: calc(68px + var(--nav-b) + env(safe-area-inset-bottom)); z-index: 50; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; /* runde med buede pile (4a) */
-  font: 18px/1 var(--skrift); color: var(--blaek); cursor: pointer; touch-action: manipulation;
-  background: var(--glas); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
-}
 .tp-palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(144px, 1fr)); gap: 8px; margin: var(--m) 0 var(--pt); }
 .tp-palette .knap { flex-direction: column; align-items: flex-start; height: auto; min-height: 64px; padding: 8px 14px; text-align: left; white-space: normal; }
 .tp-palette .knap small { font-size: 14px; line-height: 18px; color: var(--blyant); }
@@ -980,7 +966,6 @@ form > .knap.stor.formknap, main > .knap.stor.formknap, .vejledning .knap.formkn
   main { padding-bottom: calc(112px + var(--nav-b) + env(safe-area-inset-bottom)); }
   body[data-side=lav] main { padding-bottom: calc(150px + var(--nav-b) + env(safe-area-inset-bottom)); }
   .h-boble { max-height: 60vh; }
-  #tilpas-fortryd, #tilpas-gentag { width: 44px; } #tilpas-fortryd, #tilpas-gentag, #tilpas-ny { height: 44px; }
 }
 
 /* Importér links: fremdriftsbjælke (højden kommer fra felt-s) */
@@ -1001,13 +986,28 @@ html { scroll-padding-top: 64px; }
   background: var(--glas); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #nav { background: var(--flade); } }
-#nav a, #nav #tilpas-knap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; height: 56px; border-radius: 26px; font-size: 12px; line-height: 13px; text-align: center; text-decoration: none; color: var(--blaek); touch-action: manipulation; transition: background-color .16s, transform .16s var(--ud); }
-#nav a > span:first-child, #tilpas-knap > span:first-child { display: grid; }
-#nav a .ikon, #nav #tilpas-knap .ikon { width: 26px; height: 26px; vertical-align: 0; }
+#nav a, #nav .nav-knap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; height: 56px; border-radius: 26px; font-size: 12px; line-height: 13px; text-align: center; text-decoration: none; color: var(--blaek); touch-action: manipulation; transition: background-color .16s, transform .16s var(--ud); }
+#nav a > span:first-child, #nav .nav-knap > span:first-child { display: grid; }
+#nav a .ikon, #nav .nav-knap .ikon { width: 26px; height: 26px; vertical-align: 0; }
 #nav a:active { transform: scale(.95); }
 #nav a[aria-current=page] { background: var(--valgt); color: var(--paa-valgt); }
 #nav .nav-hjem { display: none; }
 @media (hover: hover) { #nav a:hover:not([aria-current=page]) { background: var(--flade-hover); } }
+/* Bjælkens fire tilstande (opdatering 4b). Normal: navigationen. Designer i gang (body.tilpas): Fortryd, Gentag, Tilføj og Designer. Designer på pause: navigationen og Designer-knappen.
+   Tilpas (body.tilpas-form, formularen): Fortryd, Gentag, Gem, Tilføj tip og Annuller. Designer i gang går forud. */
+#nav .nav-designer, #nav .nav-tilpas { display: none; }
+body.tilpas #nav > a:not(.nav-knap), body.tilpas-form #nav > a:not(.nav-knap) { display: none !important; }
+body.tilpas #nav .nav-designer { display: flex; }
+body.tilpas-form:not(.tilpas) #nav .nav-tilpas { display: flex; }
+#nav .nav-knap:active:not(:disabled) { transform: scale(.95); }
+#nav .nav-knap:disabled { opacity: .45; cursor: default; }
+#nav .nav-knap:disabled .ikon { stroke-dasharray: 2 2.2; }
+#nav .nav-knap:focus-visible { outline: 3px solid var(--hjaelp); outline-offset: -3px; }
+@media (hover: hover) { #nav .nav-knap:hover:not(:disabled):not(.gem):not(.annuller):not(.hjaelp) { background: var(--flade-hover); } }
+#nav .nav-knap.gem { background: var(--gem); color: var(--paa-gem); box-shadow: inset 0 0 0 1px var(--gem-kant); }
+#nav .nav-knap.annuller { background: var(--annuller); color: var(--paa-annuller); box-shadow: inset 0 0 0 2px var(--annuller-kant); }
+#nav .nav-knap.hjaelp { background: var(--hjaelp); color: var(--paa-hjaelp); box-shadow: inset 0 0 0 1px var(--hjaelp-kant); }
+#nav .nav-knap.gem .ikon, #nav .nav-knap.annuller .ikon, #nav .nav-knap.hjaelp .ikon { --i1: none; }
 body[data-side=lav] { --nav-b: 0px; --nav-l: 0px; }
 body[data-side=lav] #nav { display: none; }
 
@@ -1016,11 +1016,10 @@ body[data-side=lav] #nav { display: none; }
   :root { --nav-b: 0px; --nav-l: 208px; }
   body { padding-left: var(--nav-l); }
   #nav { left: 0; right: auto; top: 0; bottom: 0; width: var(--nav-l); max-width: none; height: auto; box-sizing: border-box; margin: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 16px 10px; border-radius: 0; border-width: 0 1px 0 0; }
-  #nav a, #nav #tilpas-knap { flex-direction: row; justify-content: flex-start; gap: 10px; height: 48px; flex: none; padding: 0 12px; border-radius: 16px; font-size: 18px; line-height: 22px; text-align: left; }
+  #nav a, #nav .nav-knap { flex-direction: row; justify-content: flex-start; gap: 10px; height: 48px; flex: none; padding: 0 12px; border-radius: 16px; font-size: 18px; line-height: 22px; text-align: left; }
   #nav .nav-hjem { display: flex; height: 64px; font: 28px/32px var(--hoved); }
   .top { left: calc(var(--nav-l) + 10px); }
   .lav-bund { left: calc(var(--nav-l) + 10px); }
-  #tilpas-fortryd { left: calc(var(--nav-l) + 10px); } #tilpas-gentag { left: calc(var(--nav-l) + 68px); } #tilpas-ny { left: calc(var(--nav-l) + 10px); }
   #nav #tilpas-knap { margin-top: auto; }
   /* Intet fast nederst over indholdet: Grydelil og «Vis hjælper» hviler nederst i sidebjælken, og trin for trin har knapperne i siden (piletasterne virker også) */
   body:not([data-side=lav]) #hjaelper, body:not([data-side=lav]) #hjaelper-vis { right: auto; left: 24px; bottom: 16px; }
@@ -1036,11 +1035,12 @@ body[data-side=lav] #nav { display: none; }
 @media (max-height: 520px) and (pointer: coarse), (max-height: 520px) and (max-width: 1023px) {
   :root { --nav-b: 0px; }
   #nav { position: static; margin: calc(8px + env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); height: 48px; max-width: none; }
-  #nav a, #nav #tilpas-knap { flex-direction: row; gap: 6px; height: 40px; font-size: 14px; line-height: 15px; text-align: left; }
-  #nav a .ikon, #nav #tilpas-knap .ikon { width: 22px; height: 22px; }
+  #nav a, #nav .nav-knap { flex-direction: row; gap: 6px; height: 40px; font-size: 14px; line-height: 15px; text-align: left; }
+  #nav a .ikon, #nav .nav-knap .ikon { width: 22px; height: 22px; }
   main { padding-top: 32px; }
   #hjaelper, #hjaelper-vis { display: none !important; }
   html { scroll-padding: 16px 0; }
+  body.tilpas-form #nav, body.tilpas #nav { position: sticky; top: calc(8px + env(safe-area-inset-top)); z-index: 36; } /* Gem og Fortryd må ikke rulle væk */
 }
 /* iPhone på højkant: bjælken sidder lavere, tæt på hjemmestregen. Det, der sidder fast over den, følger med. */
 @media (max-width: 600px) and (orientation: portrait) {
@@ -1050,7 +1050,8 @@ body[data-side=lav] #nav { display: none; }
 /* Trin for trin har ingen navigation. Er tilpasseren slået til, står kun dens knap der, over knapperne nederst. */
 body.tilpas-menu[data-side=lav] #nav { display: grid; position: fixed; left: auto; top: auto; right: max(10px, env(safe-area-inset-right)); bottom: calc(100px + env(safe-area-inset-bottom)); width: 84px; height: 64px; margin: 0; padding: 0 6px; border-width: 1px; border-radius: 32px; }
 body.tilpas-menu[data-side=lav] #nav a { display: none; }
-body.tilpas-menu[data-side=lav] #nav #tilpas-knap { flex-direction: column; gap: 0; height: 56px; margin: 0; padding: 0; font-size: 12px; line-height: 13px; text-align: center; justify-content: center; }
+body.tilpas.tilpas-menu[data-side=lav] #nav { width: auto; left: max(10px, env(safe-area-inset-left)); grid-auto-columns: minmax(0, 1fr); }
+body.tilpas-menu[data-side=lav] #nav .nav-knap { flex-direction: column; gap: 0; height: 56px; margin: 0; padding: 0; font-size: 12px; line-height: 13px; text-align: center; justify-content: center; }
 @media print { #nav { display: none !important; } }
 
 /* ---------- Opskrifter og en opskrift (opdatering 3b) ---------- */
@@ -1132,4 +1133,11 @@ div.opsk-felt { display: flex; flex-direction: column; min-width: 0; }
 .hj-fold::after { content: ""; flex: none; width: 8px; height: 8px; margin: -4px 4px 0 auto; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform .16s var(--ud); }
 .hj-fold[aria-expanded=false]::after { margin-top: 0; transform: rotate(-45deg); }
 .hj-fold small { font-size: 12px; opacity: .7; }
+/* To ruder (opdatering 4b): Luk og fuld skærm øverst på den store side. Fuld skærm skjuler listen, til man trykker igen eller lukker opskriften. */
+.rude-luk { display: flex; gap: 8px; align-self: flex-start; }
+.rude-luk .rund-s { top: calc(var(--l0) - 32px); }
+body.rude-fuld .ruder { grid-template-columns: minmax(0, 1fr); }
+body.rude-fuld .ruder > .rude-liste { display: none; }
+/* Indstillingen «Vis to ruder» ses kun, hvor to ruder kan være der (samme grænse som BRED i app.js) */
+@media (max-width: 1023px) { .kun-bred { display: none; } }
 @media print { .rude-liste { display: none; } .ruder { display: block; } }

@@ -345,7 +345,7 @@ async function route() {
   const id = ++visning;
   const nuHash = location.hash || '#/';
   if (spor[spor.length - 2] === nuHash) spor.pop(); else if (spor[spor.length - 1] !== nuHash) spor.push(nuHash);
-  lukArk(); lukForklaring(); slipSkaerm(); sidsteValg = '';
+  lukArk(); lukForklaring(); slipSkaerm(); sidsteValg = ''; navTilpas(null);
   Hjaelper.side(null);
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
@@ -355,6 +355,7 @@ async function route() {
   // To ruder (brede skærme, indstilling): kun når en opskrift er valgt. Listen til venstre bliver stående, og kun opskriften til højre skiftes
   const iRuder = ruderAktiv() && a === 'opskrifter' && !!b && b !== 'ny' && !c, iForslag = ruderAktiv() && (a === 'forslag' || a === 'hjemme') && !b, bliv = iRuder && !!app.querySelector('.ruder');
   document.body.classList.toggle('ruder-vist', iRuder || iForslag);
+  if (!iRuder) rudeFuld = false; document.body.classList.toggle('rude-fuld', iRuder && rudeFuld); // fuld skærm er midlertidig: slukker, når man lukker opskriften
   if (!bliv && !foerste && app.firstChild) {
     app.classList.remove('sideind'); app.classList.add('sideud');
     await new Promise(r => setTimeout(r, 120));
@@ -436,6 +437,7 @@ const SOEG = { begge: ['Begge', 'Søg i navne og ingredienser'], navn: ['Navn', 
 const BRED = matchMedia('(min-width: 1024px)');
 const toRuder = () => { const v = lager.hent('toRuder', null); return v === null ? matchMedia('(hover: hover) and (pointer: fine)').matches : !!v; };
 const ruderAktiv = () => toRuder() && BRED.matches;
+let rudeFuld = false; // to ruder: opskriften fylder hele bredden, og listen er skjult (knappen ved siden af Luk)
 const iOpskrifter = () => /^#\/opskrifter(\/(?!ny$)[^/]+)?$/.test(location.hash);
 BRED.addEventListener('change', () => { if (toRuder() && (iOpskrifter() || /^#\/(forslag|hjemme)\/?$/.test(location.hash))) route(); });
 const HENTER = '<p class="tomt">Henter…</p>';
@@ -553,7 +555,7 @@ async function opskriftSide(rid, maal = app) {
   S = { r, tips, fav: fav.length > 0, stj, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips);
   const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
-  maal.innerHTML = `${iRude && !opskriftFra ? `${Ikoner.tilbage('#/opskrifter', 'direkte skaerm')}` : `${Ikoner.tilbage(opskriftFra || '#/opskrifter', 'skaerm')}`}
+  maal.innerHTML = `${iRude ? rudeLuk() : Ikoner.tilbage(opskriftFra || '#/opskrifter', 'skaerm')}
     ${vaerktoej(`<a class="knap tilpas" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Tilpas</a>`)}
     <div class="titelrakke opsk-felt" data-tpid="opsk-titel"><h1>${esc(r.titel)}</h1>
       <button id="favknap" data-tpid="favorit" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
@@ -583,6 +585,8 @@ async function opskriftSide(rid, maal = app) {
     { tekst: 'Tryk på et blåt ord. Så forklarer jeg det.', maal: 'begreb', bev: 'dans', valgfri: true },
     { tekst: 'Klar? Tryk her, så går vi trin for trin.', maal: 'opskrifter/:id|lav-retten-trin-for-trin', bev: 'rul' }]);;
 }
+// To ruder: den store side til højre har Luk (listen alene) og fuld skærm (skjuler listen midlertidigt) i stedet for Tilbage
+const rudeLuk = () => `<div class="rude-luk skaerm"><a class="tilbage luk direkte" data-tpid="rude-luk" href="#/opskrifter" aria-label="Luk" title="Luk">${ik('luk')}</a>${Ikoner.rund(rudeFuld ? 'lilleskaerm' : 'fuldskaerm', rudeFuld ? 'Vis listen igen' : 'Fuld skærm', `data-tpid="rude-fuld" data-h="rudeFuld" aria-pressed="${rudeFuld}"`)}</div>`;
 // Knapperne øverst. «Tilføj tip» sidder fast øverst til venstre, mens man ruller. Ekstra knapper kommer til højre.
 const vaerktoej = (hoejre = '') => `<div class="vaerktoej skaerm"><button type="button" class="knap hjaelp"${hoejre ? '' : ' data-tpid="tip-alene"'} data-h="nytBegreb">${ik('paere')} Tilføj tip</button>${hoejre}</div>`;
 // Overskrift (fx «Sovs») i en liste af ingredienser
@@ -796,6 +800,36 @@ function laesFelter(form, felter, visFejl) {
   }
   return data;
 }
+// Bjælken i tilstanden Tilpas (opdatering 4b): Fortryd, Gentag, Gem, Tilføj tip og Annuller erstatter navigationen, mens formularen er åben.
+// null rydder tilstanden (ved hvert sideskift). Fortryd og Gentag tager formularens indhold tilbage: én skridt pr. pause i skrivningen eller pr. tilføjet eller fjernet linje.
+function navTilpas(v) {
+  const nav = $('#nav');
+  nav.querySelectorAll('.nav-tilpas').forEach(x => x.remove());
+  document.body.classList.toggle('tilpas-form', !!v);
+  if (!v) return null;
+  const knap = (ikon, tekst, attr, kl = '', tag = 'button') => `<${tag} class="nav-knap nav-tilpas${kl ? ' ' + kl : ''}" ${tag === 'button' && !/type=/.test(attr) ? 'type="button" ' : ''}${attr}><span>${ik(ikon)}</span><span>${tekst}</span></${tag}>`;
+  const mark = document.getElementById('tilpas-fortryd') || null; // Designers knapper står efter
+  const html = knap('fortryd', 'Fortryd', 'id="nav-fortryd" aria-label="Fortryd" disabled') + knap('gentag', 'Gentag', 'id="nav-gentag" aria-label="Gentag" disabled')
+    + knap('tjek', 'Gem', 'id="nav-gem" data-tpid="nav-gem" type="submit" form="form"', 'gem')
+    + (v.tip ? knap('paere', 'Tilføj tip', 'data-h="nytBegreb"', 'hjaelp') : '')
+    + knap('annuller', 'Annuller', `href="${v.tilbage}"`, 'annuller', 'a');
+  if (mark) mark.insertAdjacentHTML('beforebegin', html); else nav.insertAdjacentHTML('beforeend', html);
+  let form, foer = [], efter = [], sidst = null, timer = 0, iGang = false;
+  const u = $('#nav-fortryd'), g = $('#nav-gentag');
+  const billede = () => ({ html: form.innerHTML, v: [...form.elements].map(e => e.type === 'checkbox' || e.type === 'radio' ? e.checked : e.value) });
+  const opdater = () => { u.disabled = !foer.length; g.disabled = !efter.length; };
+  const lagre = () => { clearTimeout(timer); timer = 0; if (!iGang && form.isConnected) sidst = billede(); };
+  const aendret = () => { if (iGang) return; if (!timer && sidst) { foer.push(sidst); if (foer.length > 50) foer.shift(); efter = []; opdater(); } clearTimeout(timer); timer = setTimeout(lagre, 700); };
+  const saet = b => {
+    iGang = true; form.innerHTML = b.html;
+    [...form.elements].forEach((e, i) => { if (e.type === 'checkbox' || e.type === 'radio') e.checked = b.v[i]; else if (b.v[i] !== undefined) e.value = b.v[i]; });
+    form.querySelectorAll('.rk-tekst').forEach(rkVokser); vagt.takeRecords(); iGang = false; sidst = billede(); opdater();
+  };
+  const vagt = new MutationObserver(aendret); // linjer, der tilføjes eller fjernes. Tekstfelter melder change, når man trykker væk: det tæller ikke som en ny ændring.
+  u.addEventListener('click', () => { if (timer) lagre(); if (!foer.length) return; efter.push(billede()); saet(foer.pop()); toast('Fortrudt'); });
+  g.addEventListener('click', () => { if (!efter.length) return; foer.push(billede()); saet(efter.pop()); toast('Gentaget'); });
+  return { start(f) { form = f; sidst = billede(); f.addEventListener('input', aendret); f.addEventListener('change', e => { if (e.target.matches('select, [type=checkbox], [type=radio]')) aendret(); }); vagt.observe(f, { childList: true, subtree: true }); } };
+}
 async function formular(type, rid) {
   const id = visning, T = TYPER[type];
   henter();
@@ -807,23 +841,22 @@ async function formular(type, rid) {
   if (rid && !r[0]) return info(`Den findes ikke længere.<br><a href="#/${type}">Tilbage</a>`);
   const rad = r[0] || {};
   const tilbage = rid && type !== 'tips' ? `#/${type}/${rid}` : `#/${type}`;
-  app.innerHTML = `<a class="tilbage fortryd" href="${tilbage}">Annuller</a>
-    ${type === 'opskrifter' ? vaerktoej() : ''}
-    <h1>${rid ? T.rediger : T.ny}</h1>
+  app.innerHTML = `<h1>${rid ? T.rediger : T.ny}</h1>
     <form id="form" novalidate>
       ${T.felter.map(f => felt(f, rad, ekstra)).join('')}
       <div id="formfejl"></div>
-      <button class="knap gem stor formknap" data-tpid="gem" type="submit">Gem</button>
-    </form>`;
+    </form>`; // Gem, Annuller, Tilføj tip, Fortryd og Gentag står i navigationsbjælken (opdatering 4b)
+  const hist = navTilpas({ tilbage, tip: type === 'opskrifter' });
   Hjaelper.side(type === 'opskrifter' ? [
     { tekst: 'Start med navnet på retten.', maal: 'navn', bev: 'salto' },
     { tekst: 'Skriv én ingrediens i hvert felt. Tryk på retur for et nyt felt.', maal: 'ed-ingredienser', bev: 'skridt', valgfri: true },
     { tekst: 'Skriv ét trin i hvert felt. Korte trin er lettest at følge.', maal: 'ed-trin', bev: 'dans', valgfri: true },
-    { tekst: 'Tryk på Gem, når du er færdig.', maal: 'gem', bev: 'rul' }] : [
+    { tekst: 'Tryk på Gem, når du er færdig.', maal: 'nav-gem', bev: 'rul' }] : [
     { tekst: 'Giv tippet et navn. Står navnet i en opskrift, bliver ordet et link.', maal: 'navn', bev: 'salto' },
-    { tekst: 'Tryk på Gem, når du er færdig.', maal: 'gem', bev: 'rul' }]);
+    { tekst: 'Tryk på Gem, når du er færdig.', maal: 'nav-gem', bev: 'rul' }]);
   const form = $('#form');
   form.querySelectorAll('.rk-tekst').forEach(rkVokser);
+  hist.start(form);
   form.addEventListener('input', e => { if (e.target.classList.contains('rk-tekst')) rkInput(e.target); });
   form.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.isComposing && e.target.classList.contains('rk-tekst')) { e.preventDefault(); rkEnter(e.target.closest('.rk')); }
@@ -857,8 +890,8 @@ async function formular(type, rid) {
     }
     let valg = {};
     if (type === 'opskrifter') { try { valg = await Katalog.spoerg(ingAf(data).map(i => i.n)); } catch (err) { console.error(err); } } // spørger om kategorier til nye ingredienser
-    const knap = form.querySelector('button[type=submit]');
-    knap.disabled = true; knap.textContent = 'Gemmer…';
+    const knap = $('#nav-gem'), kt = knap.lastElementChild;
+    knap.disabled = true; kt.textContent = 'Gemmer…';
     try {
       const res = rid
         ? await api(`${type}?id=eq.${enc(rid)}`, { method: 'PATCH', body: data })
@@ -869,7 +902,7 @@ async function formular(type, rid) {
     } catch (err) {
       console.error(err);
       visFejl('Det blev ikke gemt. Tjek internettet, og tryk på «Gem» igen.');
-      knap.disabled = false; knap.textContent = 'Gem';
+      knap.disabled = false; kt.textContent = 'Gem';
     }
   });
 }
@@ -1121,8 +1154,8 @@ function mereSide() {
     </div>
     <label class="skift"><input type="checkbox" data-tpid="vis-hjaelper" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" data-tpid="lyde" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
-    <label class="skift"><input type="checkbox" id="toruder" ${toRuder() ? 'checked' : ''}> <span>Vis to ruder på brede skærme</span></label>
-    <p class="lille">Når du åbner en opskrift: listen til venstre og opskriften til højre.${BRED.matches ? '' : ' Skærmen her er for smal, så det ses kun på en bred skærm (iPad på langs og Mac).'}</p>
+    <div class="kun-bred"><label class="skift"><input type="checkbox" id="toruder" ${toRuder() ? 'checked' : ''}> <span>Vis to ruder</span></label>
+    <p class="lille">Når du åbner en opskrift: listen til venstre og opskriften til højre.</p></div>
     <label class="skift"><input type="checkbox" id="tilpastil" ${Tilpas.til() ? 'checked' : ''}> <span>Åbn Designer</span></label>
     <p class="lille">Designer flytter, tilføjer og skjuler felter og skifter tekst og farver. Ændringerne gælder alle, der bruger kogebogen.</p>
     <button type="button" class="knap" id="tilpastip">Vis tippet om Designer igen</button>
@@ -1167,6 +1200,7 @@ document.addEventListener('select', e => {
   if (typeof t.selectionStart === 'number' && t.selectionEnd > t.selectionStart) sidsteValg = t.value.slice(t.selectionStart, t.selectionEnd).trim();
 }, true);
 const H = {
+  rudeFuld() { rudeFuld = !rudeFuld; document.body.classList.toggle('rude-fuld', rudeFuld); const l = $('.rude-luk'); if (l) l.outerHTML = rudeLuk(); rasterIgen(); $('.rude-luk .rund')?.focus(); },
   igen: () => route(),
   sorterAndet: () => Katalog.sorterAndet(visHjemme),
   vaelgKat(el) { const f = $('#f_' + (el.dataset.f || 'kategori')); if (!f) return; f.value = el.dataset.v; markerKat(); },

@@ -31,6 +31,12 @@ const Ikoner = (() => {
     luk: `<path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke-width="2.2"/>`,
     tilbage: `<path d="M14.5 5.5 8 12l6.5 6.5" stroke-width="2.4"/>`,
     hjaelp: `<path d="M9 9.2a3 3 0 1 1 4.4 2.6c-.9.5-1.4 1.2-1.4 2.2v.6" stroke-width="2.2"/><circle cx="12" cy="18.2" r="1.2" fill="currentColor" stroke="none"/>`,
+    // Navigationsbjælkens tilstande (opdatering 4b): Tilføj, Annuller, Designer, fuld og lille skærm
+    plus: `<path d="M12 5.5v13M5.5 12h13" stroke-width="2.4"/>`,
+    annuller: `<circle cx="12" cy="12" r="7.5" fill="var(--i1,none)"/><path d="M6.8 17.2 17.2 6.8" stroke-width="2"/>`,
+    designer: `<path d="M12 3.8c-4.7 0-8.3 3.4-8.3 7.8 0 4 3.1 7.6 6.8 7.6 1.4 0 1.9-.8 1.6-1.9-.4-1.4.4-2.6 1.9-2.6h2c2.4 0 4.3-1.4 4.3-4C20.3 6.6 16.8 3.8 12 3.8z" fill="var(--i1,var(--ik-smoer))"/><circle cx="8" cy="11" r="1.3" fill="var(--i2,var(--ik-rosa))"/><circle cx="11" cy="7.6" r="1.3" fill="var(--i2,var(--ik-mynte))"/><circle cx="15.4" cy="8.3" r="1.3" fill="var(--i2,var(--ik-himmel))"/>`,
+    fuldskaerm: `<path d="M4.5 9.5v-5h5M14.5 4.5h5v5M19.5 14.5v5h-5M9.5 19.5h-5v-5" stroke-width="2"/>`,
+    lilleskaerm: `<path d="M9.5 4.5v5h-5M19.5 9.5h-5v-5M14.5 19.5v-5h5M4.5 14.5h5v5" stroke-width="2"/>`,
     deltrin:`<path d="M6 5v8a2 2 0 0 0 2 2h10M14.5 11.5 18 15l-3.5 3.5"/>`,
   };
 

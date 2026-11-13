@@ -2,6 +2,17 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.3.0 · Navigationsbjælkens fire tilstande og to ruder med Luk (opdatering 4b)
+- **Bjælken skifter efter, hvad man gør.** Normal: navigationen. **Tilpas** (formularen til en opskrift eller et tip): Fortryd, Gentag, Gem (grøn), Tilføj tip (blåbær, kun opskrifter) og Annuller (melgrå). De stod før i siden («Annuller» øverst, «Tilføj tip» fast foroven, «Gem» nederst) og er flyttet, så der kun er ét af hver. **Designer i gang:** Fortryd, Gentag, Tilføj og Designer-knappen («Sæt på pause») i stedet for navigationen. **Designer på pause:** navigationen og Designer-knappen med pauseikon («Fortsæt Designer»).
+- **Fortryd og Gentag i formularen** er nye: ét skridt pr. pause i skrivningen (0,7 s) eller pr. tilføjet eller fjernet linje, højst 50.
+- Designerens Fortryd, Gentag og «Tilføj felt» svævede før over siden. Nu står de i bjælken, også på Mac (sidebjælken) og på trin for trin-siden.
+- Alle knapper i bjælken har ikon og lille tekst, også Fortryd og Gentag (bjælkens egen regel). De runde knapper i siderne er stadig uden tekst.
+- Telefon på langs: bjælken står i siden og bliver nu hængende foroven, mens formularen eller Designer er åben, så Gem ikke ruller væk.
+- **To ruder:** På den store side til højre er «Tilbage» blevet til **Luk** (×, viser listen alene). Ved siden af er **Fuld skærm**, der skjuler listen. I fuld skærm står Luk stadig, og knappen bliver til «Vis listen igen». Fuld skærm glemmes, når opskriften lukkes. Siden «Hvad kan jeg lave?» i to ruder har stadig Tilbage, fordi den ikke er en åbnet ting.
+- Indstillingen «Vis to ruder» ses kun på skærme, der er brede nok (mindst 1024 px).
+- Nye ikoner: plus, annuller (cirkel med streg), designer (palet), fuld og lille skærm.
+- Målt (headless, mock-data): 390 px: fem knapper à 70 × 56 px uden overlap. Med Designer på pause i formularen: seks à 58 × 56 px. 1440 px (sidebjælke) og 1180 px (iPad på langs): ingen JS-fejl.
+
 ## 2.2.3 · Samme handling, samme form (kriterie 2 færdigt)
 - «Fjern» fra en liste (ingredienslinjer, «Hvad har du derhjemme?», gennemgangen) har nu et minus-ikon på melgrå flade. Før var det ×, som også betyder Luk.
 - «Nulstil plads» i Designer er melgrå som al anden Nulstil.

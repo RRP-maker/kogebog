@@ -235,19 +235,19 @@ const Tilpas = (() => {
     if (server) omregnSnart(); // en række med skjulte felter beholder sin plads, så siden ikke kryber sammen
     bjaelke();
   }
-  // Knap nederst til højre: sætter tilpasningen på pause, så man kan bladre i appen, og tænder den igen
+  // Navigationsbjælken (opdatering 4b): når Designer er i gang, står Fortryd, Gentag, Tilføj og Designer-knappen i bjælken i stedet for navigationen.
+  // På pause: navigationen og Designer-knappen med pauseikon. Ikonet viser tilstanden, teksten siger, hvad et tryk gør.
+  const navKnap = (id, ikon, tekst, fkt) => { const x = document.createElement('button'); x.id = id; x.type = 'button'; x.className = 'nav-knap nav-designer'; x.innerHTML = `<span>${Ikoner.svg(ikon)}</span><span>${tekst}</span>`; x.addEventListener('click', fkt); return x; };
   function bjaelke() {
     let b = document.getElementById('tilpas-knap');
+    const nav = document.getElementById('nav');
     if (til && !b) {
-      b = document.createElement('button'); b.id = 'tilpas-knap'; b.type = 'button';
+      b = document.createElement('button'); b.id = 'tilpas-knap'; b.type = 'button'; b.className = 'nav-knap';
       b.addEventListener('click', () => { aktiv = !aktiv; lager.gem('tilpasAktiv', aktiv); if (aktiv) tip(); anvend(); });
-      document.getElementById('nav').append(b); // knappen står i navigationen, så længe «Tilpas siden» er slået til under Indstillinger
-      for (const [id, tekst, fkt, ikon] of [['tilpas-fortryd', 'Fortryd', fortryd, 'fortryd'], ['tilpas-gentag', 'Gentag', gentag, 'gentag'], ['tilpas-ny', '＋ Tilføj felt', palette]]) {
-        const x = document.createElement('button'); x.id = id; x.type = 'button'; if (ikon) { x.innerHTML = Ikoner.svg(ikon); x.setAttribute('aria-label', tekst); x.title = tekst; } else x.textContent = tekst; x.addEventListener('click', fkt); document.body.append(x);
-      }
+      nav.append(navKnap('tilpas-fortryd', 'fortryd', 'Fortryd', fortryd), navKnap('tilpas-gentag', 'gentag', 'Gentag', gentag), navKnap('tilpas-ny', 'plus', 'Tilføj', palette), b); // knapperne står i navigationen, så længe «Åbn Designer» er slået til under Indstillinger
     } else if (!til && b) { b.remove(); ['tilpas-fortryd', 'tilpas-gentag', 'tilpas-ny'].forEach(id => { const x = document.getElementById(id); if (x) x.remove(); }); }
     knapper();
-    if (b) b.innerHTML = `<span>${Ikoner.svg(aktiv ? 'pause' : 'blyant')}</span><span>${aktiv ? 'Sæt Designer på pause' : 'Fortsæt Designer'}</span>`;
+    if (b) { b.innerHTML = `<span>${Ikoner.svg(aktiv ? 'designer' : 'pause')}</span><span>${aktiv ? 'Sæt på pause' : 'Fortsæt Designer'}</span>`; b.setAttribute('aria-label', aktiv ? 'Designer er i gang. Sæt Designer på pause' : 'Designer er på pause. Fortsæt Designer'); }
   }
   // Kort tip første gang, man tilpasser. Det kan vises igen under Indstillinger.
   const TIP = 'Tryk på et felt for at ændre det. Flyt det med «Flyt op» og «Flyt ned», eller hold fingeren på det og træk. «Tilføj felt» laver et nyt felt, og «Fortryd» tager det sidste tilbage.';
@@ -261,9 +261,8 @@ const Tilpas = (() => {
   const kopi = d => JSON.parse(JSON.stringify(d));
   function knapper() {
     const u = document.getElementById('tilpas-fortryd'), g = document.getElementById('tilpas-gentag');
-    if (u) { u.disabled = !hist.length; u.style.display = aktiv ? '' : 'none'; } // kun når tilpasningen ikke er på pause
-    if (g) { g.disabled = !frem.length; g.style.display = aktiv ? '' : 'none'; }
-    const n = document.getElementById('tilpas-ny'); if (n) n.style.display = aktiv ? '' : 'none';
+    if (u) u.disabled = !hist.length; // ses kun, når Designer ikke er på pause (body.tilpas, se style.css)
+    if (g) g.disabled = !frem.length;
   }
   const billede = () => kopi({ data, obj });
   function husk() { hist.push(billede()); if (hist.length > 50) hist.shift(); frem = []; knapper(); }
