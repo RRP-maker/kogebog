@@ -12,7 +12,7 @@ Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrive
 - Går det langsomt (8 sekunder), står der «Det tager længere end ventet. Tjek, at du har internet.» med knappen «Prøv igen».
 - Med reduceret bevægelse står gryden stille, og skærmen skifter uden toning.
 - «Vores side» er fjernet fra opskrifterne: lærredet, figurerne og billedknapperne. `laerred.js`, Konva (CDN), CSS, de syv figur-ikoner (`hjerte`, `tomat`, `ost`, `baguette`, `aeg`, `cupcake`, `tommel`) og `Ikoner.billede` er slettet. `laerred` er også taget ud af «Sikkerhedskopi» under Indstillinger. Kamera-ikonet er beholdt til billederne i 4e.
-- Tabellen `laerred` og rækkerne i `objekter`/`tilpasning`, der hørte til «Vores side», slettes i Supabase efter Rasmus' godkendelse. En privat kopi (`laerred_kopi`) ligger i Supabase, til Rasmus har sagt god for resultatet.
+- Tabellen `laerred` er slettet i Supabase (13. nov., efter Rasmus' godkendelse). Den havde 0 rækker, så der er ingen kopi. Ingen rækker i `objekter`/`tilpasning` hørte til «Vores side». Kolonnerne var `id uuid`, `opskrift_id uuid`, `slags`, `indhold`, `x`, `y`, `skala`, `rotation`, `oprettet`, med adgangsreglen `alle_kan_alt`.
 - Beslutning: indlæsningsskærmen venter på hele den første side (ikke kun skelettet), fordi sider som opskriften viser «Henter…», til data er hentet.
 - Beslutning: ingen mindste visningstid. Den toner først ind efter 0,2 s, så en hurtig start ikke blinker.
 - `Tilpas.klar()` er ny (den første hentning af placeringer), og app.js venter på den.
