@@ -2,6 +2,12 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.3.1 · Designer-knappen siger, hvad der sker, og bjælkens farvede knapper ligner de andre knapper
+- Designer-knappen viser nu tilstanden i ord: «Designer er i gang» (palet) og «Designer holder pause» (pauseikon). Før sagde teksten, hvad et tryk gjorde, og det var svært at forstå (Rasmus). Hvad et tryk gør, står i `aria-label` og `title`.
+- Gem, Tilføj tip og Annuller i bjælken har samme flade, kant, skygge og lysskær som de samme knapper i siden. Teksten står stadig under ikonet.
+- Valg af kategori eller køkken med forslagsknapperne tæller nu som en ændring, som Fortryd kan tage tilbage.
+- Testet (headless, 390 px): vælg kategori, ny linje med tekst og fjern en linje. Fortryd tager de tre ændringer tilbage én ad gangen, og Gentag lægger dem på igen. Retur laver stadig en ny linje efter Fortryd.
+
 ## 2.3.0 · Navigationsbjælkens fire tilstande og to ruder med Luk (opdatering 4b)
 - **Bjælken skifter efter, hvad man gør.** Normal: navigationen. **Tilpas** (formularen til en opskrift eller et tip): Fortryd, Gentag, Gem (grøn), Tilføj tip (blåbær, kun opskrifter) og Annuller (melgrå). De stod før i siden («Annuller» øverst, «Tilføj tip» fast foroven, «Gem» nederst) og er flyttet, så der kun er ét af hver. **Designer i gang:** Fortryd, Gentag, Tilføj og Designer-knappen («Sæt på pause») i stedet for navigationen. **Designer på pause:** navigationen og Designer-knappen med pauseikon («Fortsæt Designer»).
 - **Fortryd og Gentag i formularen** er nye: ét skridt pr. pause i skrivningen (0,7 s) eller pr. tilføjet eller fjernet linje, højst 50.

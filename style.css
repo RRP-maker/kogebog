@@ -1004,9 +1004,18 @@ body.tilpas-form:not(.tilpas) #nav .nav-tilpas { display: flex; }
 #nav .nav-knap:disabled .ikon { stroke-dasharray: 2 2.2; }
 #nav .nav-knap:focus-visible { outline: 3px solid var(--hjaelp); outline-offset: -3px; }
 @media (hover: hover) { #nav .nav-knap:hover:not(:disabled):not(.gem):not(.annuller):not(.hjaelp) { background: var(--flade-hover); } }
-#nav .nav-knap.gem { background: var(--gem); color: var(--paa-gem); box-shadow: inset 0 0 0 1px var(--gem-kant); }
-#nav .nav-knap.annuller { background: var(--annuller); color: var(--paa-annuller); box-shadow: inset 0 0 0 2px var(--annuller-kant); }
-#nav .nav-knap.hjaelp { background: var(--hjaelp); color: var(--paa-hjaelp); box-shadow: inset 0 0 0 1px var(--hjaelp-kant); }
+/* Gem, Annuller og Tilføj tip ser ud som de samme knapper i siden (rolle, kant, skygge og lysskær), bare med teksten under ikonet */
+#nav .nav-knap.gem { --r: var(--gem); --r-paa: var(--paa-gem); --r-kant: var(--gem-kant); }
+#nav .nav-knap.annuller { --r: var(--annuller); --r-paa: var(--paa-annuller); --r-kant: var(--annuller-kant); }
+#nav .nav-knap.hjaelp { --r: var(--hjaelp); --r-paa: var(--paa-hjaelp); --r-kant: var(--hjaelp-kant); }
+#nav .nav-knap:is(.gem, .annuller, .hjaelp) {
+  position: relative; isolation: isolate; overflow: hidden; box-sizing: border-box; height: 54px; margin: 1px 2px;
+  background: var(--r); color: var(--r-paa); border: 1px solid var(--r-kant);
+  box-shadow: var(--skygge), inset 1.5px 1.5px 1px rgba(var(--lys-rgb), .45), inset 0 -1.5px 1px rgba(var(--lys-rgb), .15);
+}
+#nav .nav-knap.annuller { border-width: 2px; }
+#nav .nav-knap:is(.gem, .annuller, .hjaelp)::before { content: ""; position: absolute; z-index: -1; inset: 0 0 45% 0; border-radius: inherit; background: linear-gradient(rgba(var(--lys-rgb), .26), rgba(var(--lys-rgb), 0)); pointer-events: none; }
+@media (hover: hover) { #nav .nav-knap:is(.gem, .annuller, .hjaelp):hover:not(:disabled) { background: color-mix(in srgb, var(--r) 86%, var(--blaek)); } }
 #nav .nav-knap.gem .ikon, #nav .nav-knap.annuller .ikon, #nav .nav-knap.hjaelp .ikon { --i1: none; }
 body[data-side=lav] { --nav-b: 0px; --nav-l: 0px; }
 body[data-side=lav] #nav { display: none; }

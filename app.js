@@ -1203,7 +1203,7 @@ const H = {
   rudeFuld() { rudeFuld = !rudeFuld; document.body.classList.toggle('rude-fuld', rudeFuld); const l = $('.rude-luk'); if (l) l.outerHTML = rudeLuk(); rasterIgen(); $('.rude-luk .rund')?.focus(); },
   igen: () => route(),
   sorterAndet: () => Katalog.sorterAndet(visHjemme),
-  vaelgKat(el) { const f = $('#f_' + (el.dataset.f || 'kategori')); if (!f) return; f.value = el.dataset.v; markerKat(); },
+  vaelgKat(el) { const f = $('#f_' + (el.dataset.f || 'kategori')); if (!f) return; f.value = el.dataset.v; markerKat(); f.dispatchEvent(new Event('input', { bubbles: true })); }, // input: så Fortryd i bjælken ser valget
   visFlere: () => { visNaesten += 20; tegnForslag(); },
   maksNed: () => saetMaks(maksMangler() - 1),
   maksOp: () => saetMaks(maksMangler() + 1),

@@ -247,7 +247,7 @@ const Tilpas = (() => {
       nav.append(navKnap('tilpas-fortryd', 'fortryd', 'Fortryd', fortryd), navKnap('tilpas-gentag', 'gentag', 'Gentag', gentag), navKnap('tilpas-ny', 'plus', 'Tilføj', palette), b); // knapperne står i navigationen, så længe «Åbn Designer» er slået til under Indstillinger
     } else if (!til && b) { b.remove(); ['tilpas-fortryd', 'tilpas-gentag', 'tilpas-ny'].forEach(id => { const x = document.getElementById(id); if (x) x.remove(); }); }
     knapper();
-    if (b) { b.innerHTML = `<span>${Ikoner.svg(aktiv ? 'designer' : 'pause')}</span><span>${aktiv ? 'Sæt på pause' : 'Fortsæt Designer'}</span>`; b.setAttribute('aria-label', aktiv ? 'Designer er i gang. Sæt Designer på pause' : 'Designer er på pause. Fortsæt Designer'); }
+    if (b) { b.innerHTML = `<span>${Ikoner.svg(aktiv ? 'designer' : 'pause')}</span><span>${aktiv ? 'Designer er i gang' : 'Designer holder pause'}</span>`; b.setAttribute('aria-label', aktiv ? 'Designer er i gang. Tryk for at holde pause' : 'Designer holder pause. Tryk for at fortsætte'); b.title = aktiv ? 'Tryk for at holde pause' : 'Tryk for at fortsætte'; }
   }
   // Kort tip første gang, man tilpasser. Det kan vises igen under Indstillinger.
   const TIP = 'Tryk på et felt for at ændre det. Flyt det med «Flyt op» og «Flyt ned», eller hold fingeren på det og træk. «Tilføj felt» laver et nyt felt, og «Fortryd» tager det sidste tilbage.';
@@ -325,7 +325,7 @@ const Tilpas = (() => {
     } catch (err) { /* tabellen findes ikke endnu: brug det, der er gemt på enheden */ }
   }
   function saet(v) {
-    til = !!v; if (til) { aktiv = false; lager.gem('tilpasAktiv', false); toast('Designer er på pause. Tryk på «Fortsæt Designer» for at ændre.'); } lager.gem('tilpasTil', til); anvend();
+    til = !!v; if (til) { aktiv = false; lager.gem('tilpasAktiv', false); toast('Designer holder pause. Tryk på «Designer holder pause» nederst for at fortsætte.'); } lager.gem('tilpasTil', til); anvend();
     const c = document.getElementById('tilpastil'); if (c) c.checked = til;
   }
   const rgbAf = t => (String(t).match(/[\d.]+/g) || []).slice(0, 3).map(Number);
