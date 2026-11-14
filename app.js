@@ -59,6 +59,7 @@ const TYPER = {
     tom: 'Der er ingen opskrifter endnu. Tryk på «Ny opskrift» for at skrive den første.',
     bekraeft: 'Vil du slette opskriften? Den kan ikke hentes tilbage.', slettet: 'Opskriften er slettet',
     felter: [
+      { n: 'kilde', l: 'Hvor kommer opskriften fra?', t: 'kilde', hint: 'Skift, hvis den er sat forkert.' },
       { n: 'titel', l: 'Navn', t: 'text', kraevet: true },
       { n: 'beskrivelse', l: 'Kort beskrivelse', t: 'textarea', rows: 2 },
       { n: 'kategori', l: 'Kategori', t: 'kategori', hint: 'Vælg en af forslagene, eller skriv en ny.' },
@@ -125,11 +126,14 @@ function fejl(e) {
     <button class="knap" data-h="igen">Prøv igen</button>`;
 }
 const ik = Ikoner.svg;
+const KILDER = { egen: 'Min egen opskrift', importeret: 'Importeret opskrift' }; // mærket på en opskrift (kolonnen `kilde`)
+const kildeAf = r => r && r.kilde === 'importeret' ? 'importeret' : 'egen';
 const stjernetekst = n => Ikoner.stjerner(n);
 function chips(r) {
   return [
     r.kategori && { kl: katKl(r.kategori), t: esc(r.kategori) },
     r.koekken && esc(r.koekken),
+    r.kilde && { kl: 'kilde-maerke', t: `${ik(kildeAf(r) === 'egen' ? 'blyant' : 'hent')} ${KILDER[kildeAf(r)]}` },
     r.svaerhed && `<span aria-label="Sværhed ${r.svaerhed} af 5">Sværhed ${stjernetekst(r.svaerhed)}</span>`,
     r.tid_minutter && `${ik('ur')} ${r.tid_minutter} min`
   ].filter(Boolean);
@@ -444,11 +448,13 @@ const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><s
 
 // En tæt række i opskriftslisten: navn og en linje med kategori, køkken og tid. Notesbogens linjer skiller rækkerne.
 const opskriftRaekke = (r, fav, valgt, bil) => `<a class="oprk${r.kategori ? ' ' + katKl(r.kategori) : ''}${bil ? ' med-bil' : ''}" data-tpid="opskrift-raekke" href="#/opskrifter/${r.id}"${valgt ? ' aria-current="true"' : ''}>${bil ? Billeder.miniature(bil) : ''}<div class="oprk-tekst"><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
-  <span>${r.kategori ? `<span class="kat-maerke">${esc(r.kategori)}</span> ` : ''}${esc([r.koekken, r.tid_minutter ? r.tid_minutter + ' min' : ''].filter(Boolean).join(' · ') || (r.kategori ? '' : ' '))}</span></div></a>`;
+  <span>${r.kategori ? `<span class="kat-maerke">${esc(r.kategori)}</span> ` : ''}${esc([!L.kunEgne && r.kilde ? KILDER[kildeAf(r)] : '', r.koekken, r.tid_minutter ? r.tid_minutter + ' min' : ''].filter(Boolean).join(' · ') || (r.kategori ? '' : ' '))}</span></div></a>`;
 
 // ---------- Lister ----------
 let L = {}; // data til den liste, der vises
 let FIL = null; // opskriftslistens søgning og filtre, så de overlever skiftet mellem listen alene og to ruder
+// «Mine egne»-knappen over søgefeltet: tændt som standard hver gang listen åbnes, medmindre man har slået det fra under Indstillinger
+const egneStandard = () => lager.hent('egneStandard', true) !== false;
 const SOEG = { begge: ['Begge', 'Søg i navne og ingredienser'], navn: ['Navn', 'Søg i navne'], ing: ['Ingredienser', 'Søg i ingredienser'] };
 // To ruder: en indstilling under Indstillinger, gemt på enheden. Standard: slået til med mus (Mac), fra med touch. Virker kun på brede skærme.
 const BRED = matchMedia('(min-width: 1024px)');
@@ -487,7 +493,7 @@ async function liste(type, maal = app) {
   ]);
   if (id !== visning) return;
   const fil = type === 'opskrifter' && FIL ? FIL : {}, rude = maal !== app;
-  L = { type, rader, q: fil.q || '', kat: fil.kat || '', koekken: fil.koekken || '', kunFav: !!fil.kunFav, valgt: '', soeg: SOEG[lager.hent('soegtype', 'begge')] ? lager.hent('soegtype', 'begge') : 'begge', navne: {}, fav: new Set(), bil };
+  L = { type, rader, q: fil.q || '', kat: fil.kat || '', koekken: fil.koekken || '', kunFav: !!fil.kunFav, kunEgne: fil.kunEgne ?? egneStandard(), valgt: '', soeg: SOEG[lager.hent('soegtype', 'begge')] ? lager.hent('soegtype', 'begge') : 'begge', navne: {}, fav: new Set(), bil };
   if (type === 'tips') L.navne = Object.fromEntries(ekstra.map(o => [o.id, o.titel]));
   if (type === 'opskrifter') L.fav = new Set(ekstra.map(f => f.opskrift_id));
   const unik = n => [...new Set(rader.map(r => r[n]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da')), kat = unik('kategori'), koek = unik('koekken');
@@ -496,7 +502,9 @@ async function liste(type, maal = app) {
   const valg = (id, h, navn, alle, liste, nu) => `<select id="${id}" data-hs="${h}" aria-label="${navn}"><option value="">${alle}</option>${liste.map(k => `<option${k === nu ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select>`;
   const soegChips = `<div class="filter soegtype" data-tpid="bjaelke-soeg" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>`;
   const favChip = `<button type="button" class="chip${L.kunFav ? ' valgt' : ''}" data-tpid="kun-favoritter" data-h="kunFav" aria-pressed="${L.kunFav}">${ik('stjerne')} Favoritter</button>`;
-  const soeg = `<input id="soeg" data-tpid="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off" value="${esc(fil.qr || '')}">`;
+  const egneChip = `<div class="filter filter-egne" data-tpid="bjaelke-egne" role="group" aria-label="Mine egne"><button type="button" class="chip${L.kunEgne ? ' valgt' : ''}" data-tpid="kun-egne" data-h="kunEgne" aria-pressed="${L.kunEgne}">${ik('blyant')} Mine egne</button></div>`;
+  // Søgefeltet og «Begge / Navn / Ingredienser» hænger sammen i ét felt: valgene sidder lige under søgefeltet
+  const soeg = `${egneChip}<div class="soegblok"><input id="soeg" data-tpid="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off" value="${esc(fil.qr || '')}">${soegChips}</div>`;
   // I ruden til venstre er der kun smal plads: ingen «Tilbage» (navigationen findes), én «Importér»-menu og valgfelter i stedet for rækker af chips, der ruller væk
   const hoved = rude && type === 'opskrifter' ? `<h1>${T.navn}</h1>
     <div class="rakke rude-knapper">
@@ -505,7 +513,6 @@ async function liste(type, maal = app) {
     </div>
     ${rader.length ? `${soeg}
       <div class="rude-valg" data-r="kat">${kat.length ? valg('valg-kat', 'katValg', 'Kategori', 'Alle kategorier', kat, L.kat) : ''}${koek.length ? valg('valg-koek', 'koekkenValg', 'Køkken', 'Alle køkkener', koek, L.koekken) : ''}</div>
-      ${soegChips}
       <div class="filter" data-tpid="bjaelke-favoritter" role="group" aria-label="Favoritter">${favChip}</div>` : ''}` : `${Ikoner.tilbage('#/')}
     <h1>${T.navn}</h1>
     <div class="rakke">
@@ -514,7 +521,6 @@ async function liste(type, maal = app) {
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `${soeg}
-      ${soegChips}
       ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" role="group" aria-label="Kategori"><button class="chip${L.kat ? '' : ' valgt'}" data-h="kat" data-v="">Alle</button>${favChip}${kat.map(k => `<button class="chip ${katKl(k)}${k === L.kat ? ' valgt' : ''}" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
       ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" role="group" aria-label="Køkken"><button class="chip${L.koekken ? '' : ' valgt'}" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip${k === L.koekken ? ' valgt' : ''}" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}`;
   maal.innerHTML = `${hoved}
@@ -534,9 +540,9 @@ async function liste(type, maal = app) {
 }
 function tegnListe() {
   const { type, rader, q, kat, koekken, soeg } = L, T = TYPER[type];
-  if (type === 'opskrifter') FIL = { q, qr: ($('#soeg') || {}).value || '', kat, koekken, kunFav: L.kunFav };
+  if (type === 'opskrifter') FIL = { q, qr: ($('#soeg') || {}).value || '', kat, koekken, kunFav: L.kunFav, kunEgne: L.kunEgne };
   const iNavn = r => (r.titel || '').toLowerCase().includes(q), iIng = r => ingAf(r).some(i => i.n.toLowerCase().includes(q));
-  const vis = rader.filter(r => (!kat || r.kategori === kat) && (!koekken || r.koekken === koekken) && (!L.kunFav || L.fav.has(r.id)) &&
+  const vis = rader.filter(r => (!kat || r.kategori === kat) && (!koekken || r.koekken === koekken) && (!L.kunFav || L.fav.has(r.id)) && (type !== 'opskrifter' || !L.kunEgne || kildeAf(r) === 'egen') &&
     (!q || (type !== 'opskrifter' || soeg === 'navn' ? iNavn(r) : soeg === 'ing' ? iIng(r) : iNavn(r) || iIng(r))));
   let bogstav = ''; // bogstav-overskrifter, når listen står i alfabetisk orden uden søgning
   $('#liste').innerHTML = vis.length ? vis.map(r => {
@@ -547,7 +553,7 @@ function tegnListe() {
     const til = L.navne[r.opskrift_id];
     return `<article class="kort" data-tpid="tip-kort" id="tip-${r.id}">${r.titel ? `<strong>${esc(r.titel)}</strong>` : ''}<p class="tekst">${esc(r.tekst)}</p>
       ${til ? `<p class="lille">Til: <a href="#/opskrifter/${r.opskrift_id}">${esc(til)}</a></p>` : ''}${knapper('tips', r.id)}</article>`;
-  }).join('') : `<p class="tomt">${rader.length ? (L.kunFav && !q && !kat && !koekken ? 'Du har ingen favoritter endnu. Tryk på stjernen i en opskrift.' : 'Ingen opskrifter passer. Prøv et andet ord.') : T.tom}</p>`;
+  }).join('') : `<p class="tomt">${rader.length ? (L.kunFav && !q && !kat && !koekken ? 'Du har ingen favoritter endnu. Tryk på stjernen i en opskrift.' : type === 'opskrifter' && L.kunEgne && rader.some(r => kildeAf(r) === 'importeret') ? 'Ingen af dine egne opskrifter passer. Tryk på «Mine egne» for at se de importerede også.' : 'Ingen opskrifter passer. Prøv et andet ord.') : T.tom}</p>`;
 }
 // Knapperne nederst i et tip-kort: små, side om side. Egne id'er, så de ikke følger opskriftens «Tilpas» og «Slet».
 const knapper = (type, id, ekstra = '') => `<div class="rakke skaerm kortknapper">
@@ -785,6 +791,9 @@ function felt(f, rad, ekstra) {
   const m = `id="f_${f.n}"${f.n === 'titel' ? ' data-tpid="navn"' : ''} name="${f.n}"` + (f.kraevet ? ' required' : '');
   let input;
   if (f.t === 'ingredienser' || f.t === 'trin') return edFelt(f, rad);
+  if (f.t === 'kilde') return `<fieldset class="kilde-valg" data-tpid="kilde-valg"><legend>${f.l}</legend>
+    <div class="filter-gruppe">${Object.entries(KILDER).map(([k, t]) => `<label class="chip" data-tpid="kilde-${k}"><input type="radio" name="kilde" value="${k}"${kildeAf(rad) === k ? ' checked' : ''}><span>${t.replace(' opskrift', '')}</span></label>`).join('')}</div>
+    <small>${f.hint}</small></fieldset>`;
   if (f.t === 'tjek') return `<label class="skift tjekfelt" for="f_${f.n}"><input id="f_${f.n}" name="${f.n}" type="checkbox"${v ? ' checked' : ''}> <span>${f.l}</span></label>
     ${f.hint ? `<small>${f.hint}</small>` : ''}`;
   if (f.t === 'textarea') input = `<textarea ${m} rows="${f.rows || 4}">${esc(v)}</textarea>`;
@@ -807,6 +816,7 @@ function laesFelter(form, felter, visFejl) {
     if (f.t === 'ingredienser') { data[f.n] = laesIngEd($('#ed_' + f.n, form)); continue; }
     if (f.t === 'trin') { data[f.n] = laesTrinEd($('#ed_' + f.n, form)); continue; }
     if (f.t === 'tjek') { data[f.n] = form.elements[f.n].checked; continue; }
+    if (f.t === 'kilde') { const k = form.querySelector('input[name=kilde]:checked'); data[f.n] = k ? k.value : 'egen'; continue; }
     const el = form.elements[f.n], v = el.value.trim();
     if (f.kraevet && !v) { visFejl(`Skriv noget i feltet «${f.l}».`); el.focus(); return null; }
     if (f.t === 'number' || f.t === 'valg') {
@@ -833,19 +843,22 @@ function navTilpas(v) {
   if (mark) mark.insertAdjacentHTML('beforebegin', html); else nav.insertAdjacentHTML('beforeend', html);
   let form, foer = [], efter = [], sidst = null, timer = 0, iGang = false;
   const u = $('#nav-fortryd'), g = $('#nav-gentag');
-  const billede = () => ({ html: form.innerHTML, v: [...form.elements].map(e => e.type === 'checkbox' || e.type === 'radio' ? e.checked : e.value) });
+  const BIL = '#bil-ed'; // billedsektionen ligger i formularen, men Fortryd rører den ikke
+  const elementer = () => [...form.elements].filter(e => !e.closest(BIL));
+  const billede = () => { const k = form.cloneNode(true), b = k.querySelector(BIL); if (b) b.innerHTML = ''; return { html: k.innerHTML, v: elementer().map(e => e.type === 'checkbox' || e.type === 'radio' ? e.checked : e.value) }; };
   const opdater = () => { u.disabled = !foer.length; g.disabled = !efter.length; };
   const lagre = () => { clearTimeout(timer); timer = 0; if (!iGang && form.isConnected) sidst = billede(); };
   const aendret = () => { if (iGang) return; if (!timer && sidst) { foer.push(sidst); if (foer.length > 50) foer.shift(); efter = []; opdater(); } clearTimeout(timer); timer = setTimeout(lagre, 700); };
   const saet = b => {
-    iGang = true; form.innerHTML = b.html;
-    [...form.elements].forEach((e, i) => { if (e.type === 'checkbox' || e.type === 'radio') e.checked = b.v[i]; else if (b.v[i] !== undefined) e.value = b.v[i]; });
+    iGang = true; const bil = form.querySelector(BIL); form.innerHTML = b.html;
+    const sted = form.querySelector(BIL); if (bil && sted) sted.replaceWith(bil);
+    elementer().forEach((e, i) => { if (e.type === 'checkbox' || e.type === 'radio') e.checked = b.v[i]; else if (b.v[i] !== undefined) e.value = b.v[i]; });
     form.querySelectorAll('.rk-tekst').forEach(rkVokser); vagt.takeRecords(); iGang = false; sidst = billede(); opdater();
   };
-  const vagt = new MutationObserver(aendret); // linjer, der tilføjes eller fjernes. Tekstfelter melder change, når man trykker væk: det tæller ikke som en ny ændring.
+  const vagt = new MutationObserver(r => { if (r.some(x => !x.target.closest(BIL))) aendret(); }); // linjer, der tilføjes eller fjernes. Tekstfelter melder change, når man trykker væk: det tæller ikke som en ny ændring.
   u.addEventListener('click', () => { if (timer) lagre(); if (!foer.length) return; efter.push(billede()); saet(foer.pop()); toast('Fortrudt'); });
   g.addEventListener('click', () => { if (!efter.length) return; foer.push(billede()); saet(efter.pop()); toast('Gentaget'); });
-  return { start(f) { form = f; sidst = billede(); f.addEventListener('input', aendret); f.addEventListener('change', e => { if (e.target.matches('select, [type=checkbox], [type=radio]')) aendret(); }); vagt.observe(f, { childList: true, subtree: true }); } };
+  return { start(f) { form = f; sidst = billede(); f.addEventListener('input', e => { if (!e.target.closest(BIL)) aendret(); }); f.addEventListener('change', e => { if (e.target.matches('select, [type=checkbox], [type=radio]') && !e.target.closest(BIL)) aendret(); }); vagt.observe(f, { childList: true, subtree: true }); } };
 }
 async function formular(type, rid) {
   const id = visning, T = TYPER[type];
@@ -862,10 +875,9 @@ async function formular(type, rid) {
   const tilbage = rid && type !== 'tips' ? `#/${type}/${rid}` : `#/${type}`;
   app.innerHTML = `<h1>${rid ? T.rediger : T.ny}</h1>
     <form id="form" novalidate>
-      ${T.felter.map(f => felt(f, rad, ekstra)).join('')}
+      ${T.felter.map(f => felt(f, rad, ekstra) + (type === 'opskrifter' && f.n === 'titel' ? '<section id="bil-ed" class="edfelt bil-ed" data-tpid="ed-billeder" aria-labelledby="bil-h"></section>' : '')).join('')}
       <div id="formfejl"></div>
-    </form>
-    ${type === 'opskrifter' ? '<section id="bil-ed" class="edfelt bil-ed" data-tpid="ed-billeder" aria-labelledby="bil-h"></section>' : ''}`; // Gem, Annuller, Tilføj tip, Fortryd og Gentag står i navigationsbjælken (opdatering 4b)
+    </form>`; // Billederne står under Navn, men uden for Fortryd (se navTilpas). Gem, Annuller, Tilføj tip, Fortryd og Gentag står i navigationsbjælken (opdatering 4b)
   const hist = navTilpas({ tilbage, tip: type === 'opskrifter' });
   Hjaelper.side(type === 'opskrifter' ? [
     { tekst: 'Start med navnet på retten.', maal: 'navn', bev: 'salto' },
@@ -1166,6 +1178,8 @@ function mereSide() {
     </div>
     <label class="skift"><input type="checkbox" data-tpid="vis-hjaelper" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" data-tpid="lyde" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
+    <label class="skift"><input type="checkbox" data-tpid="egne-standard" id="egnestd" ${egneStandard() ? 'checked' : ''}> <span>Vis kun mine egne opskrifter som standard</span></label>
+    <p class="lille">Knappen «Mine egne» over søgefeltet er tændt, hver gang du åbner opskrifterne. Slå fra, hvis de importerede også skal vises.</p>
     <div class="kun-bred"><label class="skift"><input type="checkbox" id="toruder" ${toRuder() ? 'checked' : ''}> <span>Vis to ruder</span></label>
     <p class="lille">Når du åbner en opskrift: listen til venstre og opskriften til højre.</p></div>
     <h2>Værkstedet</h2>
@@ -1182,6 +1196,7 @@ function mereSide() {
   document.querySelectorAll('input[name=tema]').forEach(r => r.addEventListener('change', e => Tema.saet(e.target.value)));
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
   $('#toruder').addEventListener('change', e => { lager.gem('toRuder', e.target.checked); toast(e.target.checked ? 'To ruder er slået til' : 'To ruder er slået fra'); });
+  $('#egnestd').addEventListener('change', e => { lager.gem('egneStandard', e.target.checked); toast(e.target.checked ? 'Kun dine egne vises som standard' : 'Alle opskrifter vises som standard'); });
   $('#lydtil').addEventListener('change', e => { Lyd.saet(e.target.checked); Lyd.spil('klik'); });
   Hjaelper.side([
     { tekst: 'Vælg lyst eller mørkt udseende.', maal: 'udseende', bev: 'salto' },
@@ -1219,6 +1234,7 @@ const H = {
   },
   katValg(el) { L.kat = el.value; tegnListe(); },
   koekkenValg(el) { L.koekken = el.value; tegnListe(); },
+  kunEgne(el) { L.kunEgne = !L.kunEgne; el.classList.toggle('valgt', L.kunEgne); el.setAttribute('aria-pressed', L.kunEgne); tegnListe(); },
   kunFav(el) { L.kunFav = !L.kunFav; el.classList.toggle('valgt', L.kunFav); el.setAttribute('aria-pressed', L.kunFav); tegnListe(); },
   kat(el) {
     L.kat = el.dataset.v;

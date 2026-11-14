@@ -2,6 +2,14 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.9.0 · Mærker på opskrifter, kameraknap og søgeblok
+- **Mærke på opskrifter** (`kilde`: `egen` eller `importeret`, `supabase/kilde.sql`, kørt i Supabase). «Importér opskrift» gemmer som importeret, formularen som min egen. Øverst i formularen (også ved Tilpas) kan det skiftes. Mærket står blandt kategori og køkken på opskriften. Alle gamle opskrifter blev «min egen».
+- **«Mine egne»** over søgefeltet: tændt = kun egne, slukket = alle. Tændt som standard, hver gang listen åbnes, medmindre man slår «Vis kun mine egne opskrifter som standard» fra under Indstillinger (`egneStandard`). Mærket vises i rækken, når alle vises.
+- **Billeder** hører nu til under Navn i formularen. Tilføj er en rund kameraknap uden tekst; den åbner et valg: «Tag billede» eller «Vælg fra enheden». Sektionen ligger inde i formularen, men Fortryd og Gentag rører den ikke (`#bil-ed` springes over i `navTilpas`).
+- **Søgefeltet og Begge / Navn / Ingredienser** er ét sammenhængende felt (`.soegblok`).
+- Beslutning: kolonnen er `text` med `check`, ikke en enum, så en ny værdi kan tilføjes uden at ændre typen.
+- Ikke prøvet: iPhone (kamera og filvalg), skærmlæser.
+
 ## 2.8.1 · Import fra hjemmeside uden JSON-LD
 - `tekstTilOpskrift`: trinene stopper ved sidens knapper, tips, forslag og kommentarer (fx «Føj til indkøbsseddel», «Tip til opskriften»). Navnet tages fra sidens titel (uden « | Sidenavn»), og menu- og tilbudslinjer som «Tilmeld Premium» springes over. Testet med valdemarsro.dk/kyllingefrikadeller: 9 ingredienser og 3 trin i stedet for en side fuld af uvedkommende tekst.
 

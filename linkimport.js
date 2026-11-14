@@ -141,7 +141,7 @@ const LinkImport = (() => {
       const o = findNavn(await api('opskrifter?select=id,titel'), r.data.titel);
       if (o && !(await spoergDublet([{ ...o, titel: r.data.titel }], 1))) return;
       r.data.ingredienser = await Katalog.knyt(r.data.ingredienser, {}, r.kat);
-      const [ny] = await api('opskrifter', { method: 'POST', body: r.data });
+      const [ny] = await api('opskrifter', { method: 'POST', body: { ...r.data, kilde: 'importeret' } });
       lager.gem('importTekst', '');
       toast('Opskriften er gemt. Tjek, at alt står rigtigt'); Hjaelper.glad('Opskriften er gemt!');
       location.hash = '#/opskrifter/' + ny.id;
@@ -179,7 +179,7 @@ const LinkImport = (() => {
       const b = buf.splice(0);
       const gem = async dele => {
         for (const x of dele) x.r.data.ingredienser = await Katalog.knyt(x.r.data.ingredienser, {}, x.r.kat); // hver linje får ingrediensens id
-        const rader = await api('opskrifter', { method: 'POST', body: dele.map(x => x.r.data) });
+        const rader = await api('opskrifter', { method: 'POST', body: dele.map(x => ({ ...x.r.data, kilde: 'importeret' })) });
         dele.forEach((x, n) => { klar.add(x.url); tael.gemt++; x.id = rader[n] && rader[n].id; sidsteId = x.id || sidsteId; });
         for (const x of dele) if (x.r.billede && x.id) { try { await hentBillede(x.r.billede, x.id); } catch (e) { console.error(e); tael.udenBillede++; } } // opskriften er gemt, også hvis billedet fejler
       };

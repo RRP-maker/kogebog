@@ -97,10 +97,13 @@ const Billeder = (() => {
   function tegn(el, st, trinTekster) {
     const valg = (b) => `<option value="">Hele retten</option>${trinTekster.map((t, i) => `<option value="${i}"${b.trin === i ? ' selected' : ''}>Trin ${i + 1}: ${esc(t.length > 28 ? t.slice(0, 27) + '…' : t)}</option>`).join('')}`;
     el.innerHTML = `<h3 class="ed-titel" id="bil-h">Billeder</h3>
-      <small>Tag et billede, eller vælg dem fra telefonen. De bliver gjort mindre, så de fylder lidt. De sendes, når du trykker på Gem.</small>
-      <div class="rakke bil-knapper">
-        <button type="button" class="knap" data-bil="kamera">${ik('kamera')} Tag billede</button>
-        <button type="button" class="knap" data-bil="vaelg">${ik('plus')} Vælg billeder</button>
+      <small>Tryk på kameraet for at tage et billede eller vælge fra enheden. De bliver gjort mindre og sendes, når du trykker på Gem.</small>
+      <div class="bil-tilfoej">
+        ${Ikoner.rund('kamera', 'Tilføj billede', 'data-tpid="bil-tilfoej" data-bil="aabn" aria-haspopup="menu" aria-expanded="false"', 'bil-rund')}
+        <div class="bil-menu" role="menu" hidden>
+          <button type="button" class="knap" role="menuitem" data-tpid="bil-tag" data-bil="kamera">${ik('kamera')} Tag billede</button>
+          <button type="button" class="knap" role="menuitem" data-tpid="bil-vaelg" data-bil="vaelg">${ik('plus')} Vælg fra enheden</button>
+        </div>
       </div>
       <input type="file" id="bil-kamera" accept="image/*" capture="environment" hidden>
       <input type="file" id="bil-vaelg" accept="image/*" multiple hidden>
@@ -135,11 +138,20 @@ const Billeder = (() => {
       }
       status(''); rul();
     }
+    // Valget «Tag billede» / «Vælg fra enheden» under kameraknappen. Lukker ved valg, Esc og tryk udenfor.
+    const menu = aaben => {
+      const m = $('.bil-menu', el), k = $('.bil-rund', el); if (!m) return;
+      m.hidden = !aaben; k.setAttribute('aria-expanded', aaben);
+      if (aaben) m.querySelector('button').focus({ preventScroll: true });
+    };
+    el.addEventListener('keydown', e => { const m = $('.bil-menu', el); if (e.key === 'Escape' && m && !m.hidden) { e.stopPropagation(); menu(false); $('.bil-rund', el).focus(); } });
+    document.addEventListener('click', e => { if (el.isConnected && !e.target.closest('.bil-tilfoej')) menu(false); });
     el.addEventListener('click', e => {
       const b = e.target.closest('[data-bil]'); if (!b) return;
       const li = b.closest('.bil'), post = li && st.liste.find(x => x.k === li.dataset.k);
-      if (b.dataset.bil === 'kamera') $('#bil-kamera', el).click();
-      else if (b.dataset.bil === 'vaelg') $('#bil-vaelg', el).click();
+      if (b.dataset.bil === 'aabn') menu(!$('.bil-menu', el).hidden ? false : true);
+      else if (b.dataset.bil === 'kamera') { menu(false); $('#bil-kamera', el).click(); }
+      else if (b.dataset.bil === 'vaelg') { menu(false); $('#bil-vaelg', el).click(); }
       else if (b.dataset.bil === 'forside' && post) { st.liste.forEach(x => { x.forside = x === post; }); rul(); }
       else if (b.dataset.bil === 'slet' && post) {
         st.liste = st.liste.filter(x => x !== post); if (post.rad) st.fjern.push(post.rad); if (post.blob) URL.revokeObjectURL(post.src);
