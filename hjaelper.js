@@ -70,7 +70,7 @@ const Hjaelper = (() => {
   </svg>`;
 
   let rod, figur, boble, tekst, knapEl, visKnap;
-  let koe = [], aktiv = null, skrivTimer, ventTimer, sideTekst = '', gaest = false, gaestA = null; // gaest: skjult Grydelil, der kun kigger forbi for at forklare et tip
+  let koe = [], aktiv = null, skrivTimer, ventTimer, sideTekst = '', er = false, kommer = false, gaar = false, epoke = 0; // er: Grydelil er i gang. Ellers er han der ikke, og kun ?-knappen står. epoke tælles op ved nulstil, så gamle animationer stopper.
   let turEl, talEl, naesteKnap, tur = null, turId = 0, offX = 0, offY = 0, flytter = false, bevNr = 0, anims = [];
   const rolig = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const vent = ms => new Promise(r => setTimeout(r, ms));
@@ -94,28 +94,27 @@ const Hjaelper = (() => {
     boble.querySelector('.h-tilbage').addEventListener('click', e => { e.stopPropagation(); if (tur && !flytter && tur.i > 0) trinTur(tur.i - 1); });
     naesteKnap.addEventListener('click', e => { e.stopPropagation(); videre(); });
     knapEl.addEventListener('click', e => { e.stopPropagation(); const k = aktiv && aktiv.knap; if (!k) return; stop(); if (k.href) location.hash = k.href; });
-    figur.addEventListener('click', () => {
-      if (flytter) return;
-      if (tur || aktiv) videre(); else if (Array.isArray(sideTekst)) startTur(); else if (sideTekst) sig(sideTekst);
-    });
+    figur.addEventListener('click', () => { if (!flytter && (tur || aktiv)) videre(); });
     boble.addEventListener('click', videre);
-    rod.querySelector('.h-skjul').addEventListener('click', () => vis(false));
+    rod.querySelector('.h-skjul').addEventListener('click', () => { koe = []; if (tur) stopTur(true); else stop(); }); // sender ham væk
     visKnap.addEventListener('click', kastKnap);
     saetTilstand('hvile'); opdater();
   }
-  function opdater() { rod.hidden = skjult(); visKnap.hidden = !skjult(); }
-  function vis(ja) {
+  function opdater() { rod.hidden = !er; visKnap.hidden = skjult() || er; } // enten er Grydelil i gang, eller også står ?-knappen
+  function vis(ja) { // «Vis hjælperen» under Indstillinger: slået fra er der hverken Grydelil eller ?-knap
     lager.gem('hjaelper_skjult', !ja);
-    if (!ja) { koe = []; stopTur(false); stop(); }
-    opdater();
+    if (!ja) nulstil(); else opdater();
   }
   function saetTilstand(t) { rod.dataset.tilstand = t; }
 
-  function stop() {
+  function stopSkjult() {
     clearInterval(skrivTimer); clearTimeout(ventTimer);
     if (aktiv && aktiv.peg) aktiv.peg.classList.remove('udpeget');
     aktiv = null; boble.hidden = true; saetTilstand('hvile');
-    if (gaest && !koe.length) gaestVaek();
+  }
+  function stop() { // er der ikke flere beskeder, og ingen tur, går Grydelil
+    stopSkjult();
+    if (er && !koe.length && !tur && !kommer && !gaar && !flytter) afgaa();
   }
   function naeste() {
     stop();
@@ -131,8 +130,8 @@ const Hjaelper = (() => {
     turEl.hidden = true;
     placerBoble(!!n.tur);
     if (n.peg && document.contains(n.peg)) {
-      const m = n.peg.getBoundingClientRect(), f = figur.getBoundingClientRect();
-      const dx = (m.left + m.width / 2) - (f.left + f.width * 0.22), dy = (m.top + m.height / 2) - (f.top + f.height * 0.63);
+      const m = n.peg.getBoundingClientRect(), f = figur.getBoundingClientRect(), ox = n.tur ? 0 : offX, oy = n.tur ? 0 : offY; // uden for turen står han på sin plads
+      const dx = (m.left + m.width / 2) - (f.left - ox + f.width * 0.22), dy = (m.top + m.height / 2) - (f.top - oy + f.height * 0.63);
       let v = Math.atan2(dx, -dy) * 180 / Math.PI;
       if (v > 80) v -= 360; // peger skråt ned til venstre
       v = Math.max(-175, Math.min(70, v));
@@ -174,85 +173,74 @@ const Hjaelper = (() => {
 
   // sig('tekst', { peg: element, glad: true, nu: true, stor: true, knap: { tekst, href } })
   function sig(t, valg = {}) {
-    if (!rod || !t || (skjult() && !valg.hurtig)) return;
-    const nyGaest = skjult() && !gaest;
-    if (nyGaest) gaestIn();
+    if (!rod || !t || (skjult() && !valg.hurtig)) return; // slået fra under Indstillinger: kun tips kommer stadig
+    if (gaar) nulstil(); // han var på vej væk: begynd forfra
     if (tur && !valg.tur) stopTur(false); // en vigtig besked afbryder rundvisningen
     if (valg.nu) koe = [];
-    koe.push({ tekst: String(t), peg: valg.peg || null, hurtig: !!valg.hurtig, glad: !!valg.glad, stor: !!valg.stor, knap: valg.knap || null, tur: !!valg.tur, under: !!valg.under, nr: valg.nr, af: valg.af });
-    if (!aktiv || valg.nu) naeste();
-    if (nyGaest) gaestFly();
+    koe.push({ tekst: String(t), peg: valg.peg || null, hurtig: !!valg.hurtig, bliv: !!valg.bliv, glad: !!valg.glad, stor: !!valg.stor, knap: valg.knap || null, tur: !!valg.tur, under: !!valg.under, nr: valg.nr, af: valg.af });
+    if (!er) ind(); // han kommer flyvende, og først bagefter står beskeden frem
+    else if (!kommer && (!aktiv || valg.nu)) naeste();
   }
-  function glad(t) { if (tur) stopTur(false); if (t) sig(t, { glad: true, nu: true }); else if (rod && !skjult()) { saetTilstand('glad'); Lyd.spil('glad'); setTimeout(() => { if (!aktiv) saetTilstand('hvile'); }, 1100); } }
+  // bliv: beskeden overlever et sideskift (fx «Gemt!», der kommer, lige før siden skifter)
+  function glad(t) { if (t) sig(t, { glad: true, nu: true, bliv: true }); }
 
-  // Et tip, mens Grydelil er skjult: han kommer flyvende op fra hjørnet, forklarer og flyver ned i hjørnet igen. Hurtigt: ca. 0,2 sekund hver vej.
-  let gaestKf = null; // hvor hjørnet er uden for skærmen: { dx, dy, s }
-  function hjoerne() { // s = 1: Grydelil bor til højre (telefon), -1: til venstre (sidebjælke)
-    const f = figur.getBoundingClientRect(), s = f.left + f.width / 2 > innerWidth / 2 ? 1 : -1;
-    return { s, dx: s > 0 ? innerWidth - f.left + 10 : -(f.right + 10), dy: innerHeight - f.top + 10 };
+  // ---------- Ind og ud: Grydelil er enten i gang eller der ikke. Han kommer flyvende som en raket ud af hjørnet og flyver tilbage. ----------
+  function hjoerne() { // hvor hjørnet uden for skærmen er, som forskydning fra hvilestedet. s = 1: han bor til højre (telefon), -1: til venstre (sidebjælke)
+    const f = figur.getBoundingClientRect(), l = f.left - offX, t = f.top - offY, s = l + f.width / 2 > innerWidth / 2 ? 1 : -1;
+    return { s, dx: s > 0 ? innerWidth - l + 10 : -(l + f.width + 10), dy: innerHeight - t + 10 };
   }
-  function gaestIn() {
-    gaest = true; if (gaestA) gaestA.cancel(); gaestA = null;
-    rod.hidden = false; visKnap.hidden = true; gaestKf = hjoerne();
+  function placerHjoerne() { // han står klar uden for skærmen
+    er = true; gaar = false; rod.hidden = false;
+    const h = hjoerne(); offX = h.dx; offY = h.dy; rod.style.transform = `translate(${offX}px, ${offY}px)`;
   }
-  function gaestFly() { // startes efter, at boblen er placeret, så pegevinklen regnes fra hvilestedet
-    if (rolig() || !gaestKf) return;
-    const { dx, dy, s } = gaestKf;
-    rod.animate([{ transform: `translate(${dx}px, ${dy}px) rotate(${-s * 40}deg)` }, { transform: 'none' }], { duration: 230, easing: 'cubic-bezier(.2,.8,.3,1.08)' });
+  async function ind() { // hurtig raket ind (til tips og beskeder)
+    const ep = epoke; kommer = true; visKnap.hidden = true; placerHjoerne();
+    await flyt(0, 0, 'raket', false, true);
+    if (ep !== epoke) return;
+    kommer = false;
+    if (!aktiv && koe.length) naeste();
   }
-  function gaestVaek() {
-    gaest = false;
-    if (rolig() || !gaestKf) return opdater();
-    const { dx, dy, s } = gaestKf;
-    gaestA = rod.animate([{ transform: 'none' }, { transform: `translate(${dx}px, ${dy}px) rotate(${s * 40}deg)` }], { duration: 190, easing: 'ease-in', fill: 'forwards' });
-    const a = gaestA;
-    a.finished.then(() => { if (!gaest) opdater(); a.cancel(); }, () => {});
+  async function afgaa() { // hurtig raket tilbage til hjørnet
+    const ep = epoke; gaar = true; koe = []; stopSkjult(); markerFjern();
+    const h = hjoerne();
+    await flyt(h.dx, h.dy, 'raket', false, true);
+    if (ep !== epoke) return;
+    hvile();
+  }
+  function hvile() { stopAnim(); offX = offY = 0; rod.style.transform = ''; er = false; gaar = false; saetTilstand('hvile'); opdater(); }
+  // Sidesskifte og andre afbrydelser: alt stoppes, og både Grydelil og ?-knappen står, som de skal
+  function nulstil() {
+    epoke++; ++bevNr; tur = null; koe = []; flytter = false; kommer = false; gaar = false; er = false;
+    clearInterval(skrivTimer); clearTimeout(ventTimer); aktiv = null;
+    anims = []; rod.getAnimations({ subtree: true }).forEach(a => a.cancel()); visKnap.getAnimations().forEach(a => a.cancel());
+    document.querySelectorAll('.h-armind, .h-skyggeflyv, .h-partikel').forEach(e => e.remove());
+    document.querySelectorAll('.udpeget').forEach(e => e.classList.remove('udpeget'));
+    skyg = null; rod.classList.remove('skridt', 'iluften', 'hurtig'); nulBen(); figur.querySelector('svg').style.transform = '';
+    offX = offY = 0; rod.style.transform = ''; boble.hidden = true; boble.style.translate = ''; markerFjern(); saetTilstand('hvile');
+    opdater();
+  }
+  // ?-knappen: Grydelil kommer flyvende ud af hjørnet og direkte op til første trin i gennemgangen. Bolden (?) bliver sparket væk, når han letter.
+  function boldVaek() {
+    if (visKnap.hidden) return;
+    const ep = epoke, v = visKnap.getBoundingClientRect(), cx = v.left + v.width / 2, s = cx > innerWidth / 2 ? 1 : -1, bane = (s > 0 ? innerWidth - cx : cx) + 70;
+    if (rolig()) { visKnap.hidden = true; return; }
+    const a = visKnap.animate([{ transform: 'none' }, { transform: `translate(${s * bane * .5}px, -150px) rotate(${s * 360}deg)`, offset: .45 }, { transform: `translate(${s * bane}px, 120px) rotate(${s * 720}deg)` }], { duration: 520, delay: 120, easing: 'ease-in', fill: 'both' });
+    a.finished.then(() => { if (ep === epoke) { visKnap.hidden = true; a.cancel(); } }, () => {});
+  }
+  function kastKnap() {
+    if (er || flytter || skjult()) return;
+    if (Array.isArray(sideTekst)) startTur(); else sig(sideTekst || 'Hej! Tryk på ?, når du vil have hjælp.');
   }
 
-  // ---------- ?-knappen er en bold: Grydelil kommer flyvende fra hjørnet, rammer den, så den flyver ud af skærmen, og går så direkte i gang med turen ----------
-  async function kastKnap() {
-    if (flytter) return;
-    flytter = true; lager.gem('hjaelper_skjult', false); gaest = false; koe = []; stop();
-    rod.hidden = false; // ?-knappen bliver stående, mens bolden rammes
-    const mit = ++bevNr;
-    if (!rolig()) await kast(mit);
-    flytter = false; opdater(); stopAnim();
-    if (mit !== bevNr) return; // afbrudt af en ny side
-    if (Array.isArray(sideTekst)) startTur(); else sig(sideTekst || 'Hej igen! Tryk på mig, så viser jeg dig rundt.');
-  }
-  async function kast(mit) {
-    const v = visKnap.getBoundingClientRect(), { s, dx, dy } = hjoerne(), svg = figur.querySelector('svg'), D = 1200, N = 72;
-    const bane = (s > 0 ? innerWidth - (v.left + v.width / 2) : v.left + v.width / 2) + 70; // så langt, før bolden er ude af skærmen
-    const P1 = [-s * 70, -70], P2 = [-s * 34, -4]; // toppen af flyvningen, og stedet hvor han rammer bolden fra siden
-    const rk = [], sk = [], bk = [];
-    for (let i = 0; i <= N; i++) {
-      const t = i / N, u1 = seg(t, 0, .34), u2 = seg(t, .34, .5), u3 = seg(t, .5, .84);
-      let x, y, r;
-      if (t < .34) { x = dx + (P1[0] - dx) * (1 - (1 - u1) ** 2); y = dy + (P1[1] - dy) * (1 - (1 - u1) ** 3); r = -s * 360 * io(u1); }
-      else if (t < .5) { x = P1[0] + (P2[0] - P1[0]) * u2 * u2; y = P1[1] + (P2[1] - P1[1]) * u2 * u2; r = -s * 360 + s * 16 * u2; }
-      else { const e = 1 - (1 - u3) ** 3; x = P2[0] * (1 - e); y = P2[1] * (1 - e); r = -s * 360 + s * 16 * (1 - e); }
-      const hit = Math.max(0, 1 - Math.abs(t - .5) / .05), lan = Math.max(0, 1 - Math.abs(t - .84) / .06);
-      const sx = 1 + .25 * hit + .2 * lan, sy = 1 - .25 * hit - .25 * lan;
-      rk.push({ transform: `translate(${x}px, ${y}px)` });
-      sk.push({ transform: `translateY(${(1 - sy) * 30}px) rotate(${r}deg) scale(${sx}, ${sy})` });
-      const w = Math.max(0, (t - .5) / .5);
-      bk.push({ transform: `translate(${s * bane * w}px, ${-330 * w + 520 * w * w}px) rotate(${s * 720 * w}deg)` });
-    }
-    saetTilstand('flyv'); rod.classList.add('iluften'); // skyggen i tegningen skjules, mens han flyver
-    setTimeout(() => { if (mit === bevNr) Lyd.spil('hop'); }, D * .08);
-    setTimeout(() => { if (mit === bevNr) { Lyd.spil('bump'); partikler(v.left + v.width / 2, v.top + v.height / 2, 'stjerne'); } }, D * .5);
-    setTimeout(() => { if (mit === bevNr) { Lyd.spil('bump'); const [a, b] = fodpunkt(); partikler(a, b, 'stoev'); } }, D * .84);
-    await Promise.all([anim(rod, rk, { duration: D, easing: 'linear' }), anim(svg, sk, { duration: D, easing: 'linear' }), anim(visKnap, bk, { duration: D, easing: 'linear' })]);
-  }
   // Slut på turen: Grydelil hopper ud af skærmen (til siden, hvor han bor), og en arm med en hånd rækker ind og sætter ?-knappen på plads
   async function afsted() {
+    const ep = epoke;
     const f = figur.getBoundingClientRect(), hjem = f.left - offX, venstre = hjem + f.width / 2 < innerWidth / 2;
     await flyt(venstre ? -(hjem + f.width + 16) : innerWidth - hjem + 16, 0, 'hop', true);
-    stopAnim(); offX = offY = 0; rod.style.transform = ''; saetTilstand('hvile');
-    lager.gem('hjaelper_skjult', true);
-    if (rolig()) return opdater();
+    if (ep !== epoke) return;
+    hvile(); // ?-knappen står nu igen
+    if (rolig()) return;
     // Knappen starter uden for skærmen, i hånden på armen. Armen sænker den på plads, slipper og trækker sig tilbage.
-    visKnap.hidden = false; rod.hidden = true;
     const v = visKnap.getBoundingClientRect(), cx = v.left + v.width / 2, s = cx > innerWidth / 2 ? 1 : -1, X = s * ((s > 0 ? innerWidth - cx : cx) + 40), D = 1000;
     const arm = document.createElement('div');
     arm.className = 'h-armind'; arm.style.cssText = `left:${v.left}px;top:${v.top}px;width:${v.width}px;height:${v.height}px`;
@@ -262,7 +250,7 @@ const Hjaelper = (() => {
     Lyd.spil('hop'); setTimeout(() => Lyd.spil('bump'), D * .68);
     const kn = visKnap.animate([...ind, { transform: 'translate(0px, 0px)' }], { duration: D });
     const am = arm.animate([...ind, { transform: `translate(${X}px, -34px)` }], { duration: D, fill: 'forwards' });
-    await am.finished.catch(() => {}); arm.remove(); opdater();
+    await am.finished.catch(() => {}); arm.remove();
   }
 
   // ---------- Rundvisning: Grydelil hopper hen til emnet og peger ----------
@@ -321,13 +309,13 @@ const Hjaelper = (() => {
   }
   function fodpunkt() { const r = figur.getBoundingClientRect(); return [r.left + r.width / 2, r.bottom - 6]; }
 
-  async function flyt(nx, ny, navn, ud = false) {
+  async function flyt(nx, ny, navn, ud = false, hurtig = false) {
     const mit = ++bevNr, fx = offX, fy = offY, dx = nx - fx, dy = ny - fy, dist = Math.hypot(dx, dy), ret = dx < 0 ? -1 : 1;
     const sat = () => { stopAnim(); offX = nx; offY = ny; rod.style.transform = nx || ny ? `translate(${nx}px, ${ny}px)` : ''; };
     if (rolig() || dist < 6) { sat(); return; }
     const svg = figur.querySelector('svg'), top0 = figur.getBoundingClientRect().top - fy;
     if (navn === 'skridt') return skridt(mit, fx, fy, dx, dy, dist, ret, sat);
-    if (navn === 'raket') return raket(mit, fx, fy, dx, dy, dist, ret, sat, svg);
+    if (navn === 'raket') return raket(mit, fx, fy, dx, dy, dist, ret, sat, svg, hurtig);
     const D = { salto: 1500, dans: 2000, skridt: 1500, rul: 1700, hop: 1300 }[navn] || 1300;
     const d = Math.round(D + Math.min(400, dist * .5));
     // én funktion pr. bevægelse: t (0-1) → position (bevægelse frem, løft) og kropsform (drej, bred, høj)
@@ -417,8 +405,8 @@ const Hjaelper = (() => {
   }
   // Raket: drejer låget væk fra målet, ryster og flyver af sted på røgen. Han flyver lidt for højt, vender sig om i luften
   // og daler blødt ned på plads.
-  function raket(mit, fx, fy, dx, dy, dist, ret, sat, svg) {
-    const vinkel = Math.atan2(-dx, dy) * 180 / Math.PI, d = Math.round(Math.max(2300, Math.min(3000, 1900 + dist * 1.4)));
+  function raket(mit, fx, fy, dx, dy, dist, ret, sat, svg, hurtig) {
+    const vinkel = Math.atan2(-dx, dy) * 180 / Math.PI, d = hurtig ? 520 : Math.round(Math.max(2300, Math.min(3000, 1900 + dist * 1.4)));
     const hul = rod.querySelector('.h-hul'), top0 = figur.getBoundingClientRect().top - fy;
     const H = Math.max(0, Math.min(80, top0 + fy + dy - 16)); // hvor meget for højt han flyver (aldrig ud af skærmen)
     const ox = fx + dx, oy = fy + dy - H, slutVinkel = Math.round(vinkel / 360) * 360 + (vinkel >= 0 ? 360 : -360); // vender med en ekstra omgang
@@ -476,6 +464,7 @@ const Hjaelper = (() => {
   // Bevægelsen passer til turens længde: korte ture små hop, lange ture raket. Samme bevægelse to gange i træk undgås.
   let sidsteBev = '';
   function vaelg(dx, dy, foerste) {
+    if (foerste === 'tvang') { sidsteBev = 'raket'; return 'raket'; } // første trin: altid raket ud af hjørnet
     const l = Math.hypot(dx, dy), vandret = Math.abs(dx) > Math.abs(dy);
     if (foerste && l >= 200 && -dy > Math.abs(dx)) { sidsteBev = 'raket'; return 'raket'; } // raket: kun første tur, og kun opad
     const muligt = l < 70 ? ['hop'] : l < 150 ? ['skridt', 'hop'] : l < 240 ? (vandret ? ['rul', 'dans'] : ['dans', 'salto']) : ['salto', 'dans'];
@@ -492,7 +481,8 @@ const Hjaelper = (() => {
     return null;
   }
   async function startTur() { sidsteBev = '';
-    koe = []; stop();
+    koe = []; stopSkjult();
+    placerHjoerne(); // han står klar uden for skærmen og letter som en raket
     tur = { id: ++turId, trin: sideTekst, i: -1 };
     trinTur(0);
   }
@@ -512,8 +502,9 @@ const Hjaelper = (() => {
       }
     }
     const p = el ? plan(el) : null, f = figur.getBoundingClientRect();
-    const nx = p ? p.x - (f.left - offX) : (el ? 0 : offX), ny = p ? p.y - (f.top - offY) : (el ? 0 : offY);
-    const bev = vaelg(nx - offX, ny - offY, i === 0 && !offX && !offY);
+    const nx = p ? p.x - (f.left - offX) : (el || i === 0 ? 0 : offX), ny = p ? p.y - (f.top - offY) : (el || i === 0 ? 0 : offY);
+    const bev = vaelg(nx - offX, ny - offY, i === 0 ? 'tvang' : false);
+    if (i === 0) boldVaek();
     await flyt(nx, ny, bev);
     if (!tur || tur.id !== id) return;
     if (bev === 'dans') { saetTilstand('dans'); await vent(1440); if (!tur || tur.id !== id) return; }
@@ -523,16 +514,14 @@ const Hjaelper = (() => {
   }
   function naesteTur() { if (tur && !flytter) trinTur(tur.i + 1); }
   async function slutTur() {
-    tur = null; stop(); markerFjern(); flytter = true;
+    stopSkjult(); tur = null; markerFjern(); flytter = true;
     await afsted();
     flytter = false;
   }
   async function stopTur(animer) {
-    tur = null; ++bevNr; stopAnim(); markerFjern(); stop(); flytter = false;
+    tur = null; ++bevNr; stopAnim(); markerFjern(); stopSkjult(); flytter = false;
     if (rod) rod.classList.remove('skridt');
-    if (!offX && !offY) return;
-    if (animer) { flytter = true; await flyt(0, 0, vaelg(-offX, -offY)); flytter = false; }
-    else { offX = offY = 0; rod.style.transform = ''; saetTilstand('hvile'); }
+    if (animer) afgaa(); else { offX = offY = 0; rod.style.transform = ''; saetTilstand('hvile'); }
   }
 
   function start() {
@@ -541,8 +530,8 @@ const Hjaelper = (() => {
       lager.gem('intro_set', true);
       sig('Hej! Jeg hedder Grydelil. Jeg hjælper dig i køkkenet.');
       sig('Tryk på Opskrifter for at finde en ret. Blå ord i en opskrift kan du trykke på, så forklarer jeg dem.');
-      sig('Tryk på mig, så viser jeg dig rundt på siden. Tryk på krydset, hvis jeg skal gemme mig.');
+      sig('Tryk på ?, så viser jeg dig rundt på siden.');
     }
   }
-  return { start, sig, glad, vis, skjult, luk: () => { if (tur) { stopTur(true); return true; } if (rod && !boble.hidden) { koe = []; stop(); return true; } return false; }, stille: () => { koe = []; if (rod) stop(); }, side: t => { sideTekst = t || ''; if (rod && (tur || offX || offY)) stopTur(false); } };
+  return { start, sig, glad, vis, skjult, luk: () => { if (tur) { stopTur(true); return true; } if (rod && er) { koe = []; stop(); return true; } return false; }, stille: () => { koe = []; if (rod) stop(); }, side: t => { sideTekst = t || ''; if (rod && !(er && aktiv && aktiv.bliv && !tur && !flytter && !kommer && !gaar)) nulstil(); } }; // et sideskift nulstiller alt, der er i gang
 })();

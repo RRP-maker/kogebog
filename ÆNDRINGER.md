@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.12.0 · Grydelil er enten i gang eller der ikke
+- **Ingen hvileplads:** Grydelil står ikke længere ved siden af ?-knappen. Enten er han i gang (tur, tip eller besked), eller også er han der ikke, og kun ?-knappen står.
+- **?-knappen:** Grydelil letter som en raket direkte ud af hjørnet og op til første trin i gennemgangen. Bolden (?) bliver sparket væk, når han letter. Ét tryk på ? startes kun, når han ikke er i gang.
+- **Tips og beskeder:** han flyver ind som en raket (ca. 0,5 s), siger det, og flyver tilbage til hjørnet. Det gælder også velkomsten og «Gemt!». Tips virker også, når hjælperen er slået fra under Indstillinger.
+- **Sideskift:** alt, der er i gang (flyvning, tur, arm, bold, besked), stoppes og nulstilles, så Grydelil og ? står rigtigt. Undtagelse: en «Gemt!»-besked, der står, lige før siden skifter.
+- **Krydset** sender Grydelil væk i stedet for at slå ham fra. «Vis hjælperen» under Indstillinger slår ham og ?-knappen til og fra.
+- Hjælperens glæde uden tekst (efter stjerner og hjemmeliste) er fjernet, fordi han ikke står der.
+- Ikke prøvet på iPhone eller iPad.
+
 ## 2.11.1 · Grydelil flyver ind og rammer bolden
 - **?-knappen:** Grydelil kommer flyvende (med en salto) fra det nederste hjørne, rammer knappen, så den flyver ud af skærmen, og lander på sin plads. Så starter turen.
 - **Slut på turen:** efter hoppet ud af skærmen rækker en arm med en hånd ind og sænker ?-knappen på plads, slipper og trækker sig tilbage.
