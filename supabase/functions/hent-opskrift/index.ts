@@ -130,7 +130,7 @@ function trinListe(v: unknown): string[] {
       ud.push(...dele); return;
     }
     if (Array.isArray(x)) { x.forEach(gaa); return; }
-    if (Array.isArray(x.itemListElement)) { gaa(x.itemListElement); return; } // HowToSection
+    if (Array.isArray(x.itemListElement)) { const navn = rens(x.name ?? ''); if (navn) ud.push('# ' + navn); gaa(x.itemListElement); return; } // HowToSection: navnet sendes som «# Navn» før trinene
     const t = rens(x.text ?? x.name ?? '');
     if (t) ud.push(t);
   };

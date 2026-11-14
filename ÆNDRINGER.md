@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.10.1 · Import: overskrifter i trin fra hjemmesider
+- Mellemoverskrifter på hjemmesider bliver `overskrift` på det første trin under dem (kort linje uden punktum i teksten, eller en `HowToSection` i sidens JSON-LD). Står der kun én overskrift, og den står først, udelades den.
+- Sider med JSON-LD får nu også kategori (første mærke), køkken (første ord, «Grækenland» bliver «Græsk»), sværhed (skøn) og kortere navn («Broccolisalat – Klassisk opskrift…» bliver «Broccolisalat»). Lange trin deles i trin og deltrin som for tekst.
+- Ingredienser: «1 1/2 dl», «1 - 2 stk.», «ds.» og «Saften af ½ citron» læses rigtigt. En lang bisætning efter komma er ikke forberedelse og fjernes.
+- **Funktionen `hent-opskrift` er ændret** (sender `# Navn` før trinene i en `HowToSection`). Den skal lægges ind i Supabase igen. Appen virker også uden, men så mangler overskrifterne på sider med JSON-LD.
+- Testet uden for appen mod 26 gemte sider (16 tekstsider og 10 JSON-LD-sider): ingen anmærkninger i tjekket.
+
 ## 2.10.0 · Overskrifter i trin
 - Trin kan deles op med overskrifter, fx «Kødboller», «Sovs» og «Servering». En overskrift gælder for trinnet under den og de næste, til der kommer en ny.
 - **Opskriften:** overskriften står over sin gruppe af trin. Numrene fortsætter hele vejen (1, 2, 3 ...). **Trin for trin:** overskriften står lille over trinnet, og «Trin 3 af 5» tæller kun trin. **Tilpas:** knappen «overskrift» på et trin sætter en overskrift over det (samme knap som ved ingredienser). På smal skærm har trinnets knapper en linje for sig.

@@ -27,7 +27,12 @@ const LinkImport = (() => {
   const BROEK_T = { '½': 0.5, '¼': 0.25, '¾': 0.75 };
   // «1 ½ kg kartofler» -> «1.5 kg kartofler», «salt og friskkværnet peber» -> to linjer, «(eller anden pasta)» væk
   const ingLinjer = l => {
-    const t = renIng(l.replace(/^(\d+)\s*([½¼¾])/, (m, a, b) => String(Number(a) + BROEK_T[b])));
+    const t = renIng(String(l).trim().replace(/^(\d+)\s*([½¼¾])/, (m, a, b) => String(Number(a) + BROEK_T[b])) // «1 ½»
+      .replace(/^(\d+)\s+(\d+)\/(\d+)(?=\s)/, (m, a, b, c) => String(Number(a) + b / c)) // «1 1/2»
+      .replace(/^(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)(?=\s)/, '$2') // «1 - 2 stk.» -> 2
+      .replace(/^([\d.,½¼¾/]+)\s+ds\.?(?=\s)/i, '$1 dåse'));
+    const sa = t.match(/^saft(?:en)? af\s+(?:[¼½¾\d./]+\s*-\s*)?([¼½¾\d./]+)\s+(.+)$/i); if (sa) return ingLinjer(`${BROEK_T[sa[1]] ?? sa[1]} ${sa[2]}, saften`); // «Saften af ¼ - ½ citron»
+    const c = t.match(/^(.*?\S),\s*(.*)$/); if (c && (c[2].length > 40 || /^[-–]/.test(c[2]))) return ingLinjer(c[1]); // lang bisætning: ikke forberedelse
     const g = t.match(/^(.*?\S),\s*(\S+)$/); if (g && g[1].toLowerCase().includes(g[2].toLowerCase())) return [g[1]]; // «teriyakisauce, sauce»
     const sp = t.match(/^(salt)\s+og\s+(.*peber.*)$/i);
     return sp ? [sp[1].toLowerCase(), sp[2]] : [t];
@@ -35,17 +40,26 @@ const LinkImport = (() => {
   // Korte linjer uden slutpunktum («Mangosalsa», «Anret salaten») er overskrifter: de bliver et trin, og linjerne under bliver deltrin
   const trinOverskrift = t => t.length <= 45 && t.split(/\s+/).length <= 5 && !/[.!?:,;]$/.test(t) && /^[A-ZÆØÅ]/.test(t);
   const saetninger = t => t.split(/(?<=[.!?])\s+(?=[A-ZÆØÅ])/).map(x => x.trim()).filter(Boolean);
-  // Flere sætninger i ét trin: den første sætning er trinnet, resten er deltrin. Under en overskrift bliver hver sætning et deltrin.
-  function trinMedDele(trin) {
-    const ud = [];
-    trin.forEach((t, i) => {
-      const dele = saetninger(t), sidste = ud[ud.length - 1];
-      if (trinOverskrift(t) && trin[i + 1] && !trinOverskrift(trin[i + 1])) ud.push({ tekst: t, deltrin: [], overskrift: true });
-      else if (sidste && typeof sidste === 'object' && sidste.overskrift) sidste.deltrin.push(...dele);
-      else ud.push(dele.length > 1 ? { tekst: dele[0], deltrin: dele.slice(1) } : t);
-    });
-    return ud.map(x => (x && x.overskrift ? { tekst: x.tekst, deltrin: x.deltrin } : x));
+  // poster: [{ h: «Sovs» }, { t: «trinnets tekst» }, …]. En overskrift hører til det trin, der kommer lige efter, og gælder til næste overskrift.
+  // Flere sætninger i ét trin: første sætning er trinnet, resten er deltrin. Står der kun én overskrift, og den står først, er retten ikke delt op, og den udelades.
+  function byggTrin(poster) {
+    const antal = poster.filter(x => x.h).length, foerst = poster.findIndex(x => x.h);
+    const ud = []; let over = null;
+    for (const x of poster) {
+      if (x.h) { over = String(x.h).replace(/[:：]+$/, '').trim(); continue; }
+      const dele = saetninger(x.t), o = { tekst: dele[0] || x.t, deltrin: dele.slice(1) };
+      if (over && !(antal === 1 && foerst === 0)) o.overskrift = over;
+      over = null;
+      ud.push(o.overskrift || o.deltrin.length ? o : o.tekst);
+    }
+    return ud;
   }
+  // Korte linjer uden slutpunktum («Mangosalsa», «Anret salaten») er overskrifter
+  const trinMedDele = trin => byggTrin(trin.map((t, i) => trinOverskrift(t) && trin[i + 1] && !trinOverskrift(trin[i + 1]) ? { h: t } : { t }));
+  // Funktionen sender «# Navn» før trinene i en HowToSection
+  const trinFraFunktion = liste => byggTrin((liste || []).map(t => /^#\s+/.test(t) ? { h: t.replace(/^#\s+/, '') } : { t }));
+  const svaerhedAf = (antalVarer, tid) => Math.min(4, 1 + (antalVarer > 8) + (antalVarer > 14) + ((tid || 30) > 60)); // et skøn, der kan rettes
+  const pænNavn = n => String(n || '').split(/\s+[-–—|]\s+|\s+I\s+(?=[a-zæøå])/)[0].trim();
   function tekstTilOpskrift(tekst, titel) {
     const linjer = String(tekst || '').replace(/\r/g, '')
       .replace(/[ \t]+(?=(?:ingredienser|ingredients|fremgangsmåde|sådan gør du|instructions|method|directions)\s*:)/gi, '\n') // overskrifter midt i en linje (opslag uden linjeskift)
@@ -92,7 +106,7 @@ const LinkImport = (() => {
     const kategori = (KAT_ORD.find(([re]) => maerker.some(m => re.test(m))) || KAT_ORD.find(([re]) => !maerker.length && re.test(navn.toLowerCase())) || [])[1] || null;
     const koekken = (maerker.map(m => OPSKRIFT_KOEKKEN.find(k => k.toLowerCase() === m)).find(Boolean)) || (KOEKKEN_ORD.find(([re]) => re.test(navn.toLowerCase())) || [])[1] || null;
     const antalVarer = ud.reduce((n, x) => n + (typeof x === 'string' ? 1 : x.varer.length), 0);
-    const svaerhed = Math.min(4, 1 + (antalVarer > 8) + (antalVarer > 14) + ((tid || 30) > 60)); // et skøn, der kan rettes
+    const svaerhed = svaerhedAf(antalVarer, tid);
     return { j: { navn, kategori, 'køkken': koekken, 'sværhed': svaerhed, portioner: port ? Number(port[1]) : null, tid, ingredienser: ud, trin: trinUd } };
   }
 
@@ -102,7 +116,11 @@ const LinkImport = (() => {
   const KOEKKEN = { danish: 'Dansk', italian: 'Italiensk', asian: 'Asiatisk', chinese: 'Asiatisk', thai: 'Asiatisk', japanese: 'Asiatisk', korean: 'Asiatisk', vietnamese: 'Asiatisk',
     spanish: 'Spansk', mexican: 'Mexicansk', french: 'Fransk', indian: 'Indisk', american: 'Amerikansk', greek: 'Græsk', 'middle eastern': 'Mellemøstlig', lebanese: 'Mellemøstlig', turkish: 'Mellemøstlig' };
   const mapKat = t => { const s = String(t || ''); const fast = OPSKRIFT_KAT.find(k => k.toLowerCase() === s.toLowerCase()); if (fast) return fast; const m = KAT.find(([re]) => re.test(s)); return m ? m[1] : null; };
-  const mapKoekken = t => { const s = String(t || '').trim().toLowerCase(); const fast = OPSKRIFT_KOEKKEN.find(k => k.toLowerCase() === s); return fast || KOEKKEN[s] || (s ? s.charAt(0).toUpperCase() + s.slice(1) : null); };
+  const LAND = { grækenland: 'Græsk', italien: 'Italiensk', frankrig: 'Fransk', spanien: 'Spansk', mexico: 'Mexicansk', indien: 'Indisk', danmark: 'Dansk', usa: 'Amerikansk', amerika: 'Amerikansk', libanon: 'Mellemøstlig', tyrkiet: 'Mellemøstlig' };
+  const mapKoekken = t => { // «Dansk, Sydamerikansk» -> første; «Grækenland» -> Græsk
+    const s = String(t || '').split(',')[0].trim().toLowerCase(), fast = OPSKRIFT_KOEKKEN.find(k => k.toLowerCase() === s);
+    return fast || KOEKKEN[s] || LAND[s] || (s ? s.charAt(0).toUpperCase() + s.slice(1) : null);
+  };
 
   // «hakket kalv (med 10 % fedt)» -> «hakket kalv»: parenteser står ikke i ingrediensnavne, og navnet bruges til at finde kategori
   const renIng = t => { const u = String(t).replace(/\s*\([^)]*\)/g, '').replace(/\s{2,}/g, ' ').replace(/[\s,;:]+$/, '').trim(); return u || String(t); };
@@ -129,7 +147,8 @@ const LinkImport = (() => {
       r = laesEn(t.j);
     } else {
       const d = j.data;
-      r = laesEn({ navn: d.navn, kategori: mapKat(d.kategori), koekken: mapKoekken(d.koekken), portioner: d.portioner, tid: d.tid, ingredienser: d.ingredienser.map(renIng), trin: d.trin });
+      const ingr = d.ingredienser.flatMap(ingLinjer);
+      r = laesEn({ navn: pænNavn(d.navn), kategori: mapKat(d.kategori), koekken: mapKoekken(d.koekken), svaerhed: svaerhedAf(ingr.length, d.tid), portioner: d.portioner, tid: d.tid, ingredienser: ingr, trin: trinFraFunktion(d.trin) });
     }
     if (r.fejl) throw new Error('Opskriften mangler navn, ingredienser eller trin.');
     r.billede = !socialt(url) && (j.data || j.tekst).billede || null; // billedet følger kun med fra hjemmesider
