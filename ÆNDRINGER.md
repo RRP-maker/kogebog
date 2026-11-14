@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.15.0 · Styr på ingredienser, fase 3: flytning af data
+Kun data og databasefunktionen. Kørt 14. nov. med kopi først (`ingrediens_ret`).
+- **Frisk og tørret er egne varer** under et fællesnavn: frisk basilikum, frisk dild, frisk og stødt koriander, frisk og tørret oregano, tørret rosmarin, frisk og tørret timian. Frisk står under Grøntsager, tørret og stødt under Krydderier. 21 linjer i 15 opskrifter er flyttet. «blade» regnes som frisk.
+- **«Derhjemme»:** de fem urter står nu som frisk basilikum, stødt koriander, tørret oregano, tørret rosmarin og tørret timian.
+- **86 regler** fra de gamle navne, der blev lagt sammen eller omdøbt 14. nov. (fx «kyllingefilet» → kyllingebryst, «sort peber» → peber, sort). Ikke regler: navne med «og» eller «eller», «gris» og «bønner».
+- `ingrediens_ret` kan nu flytte rækker i «Derhjemme», lave regler og tjekke, at ingen række i «Derhjemme» er tabt. «Eller»-linjer godtages i kontrollen.
+- Script: `supabase/rettelser/flytning-2026-11-14.js` (valgene står øverst).
+- Målt live: 372 linjer, 0 uden vare. 84 rækker i «Derhjemme» før og efter. «Gendan» giver de samme data som før, og «Gendan» igen de samme som efter.
+
 ## 2.14.0 · Styr på ingredienser, fase 2: læsning på id
 Data er uændrede. Appen sammenligner nu varer på id fra kataloget i stedet for tekst.
 - **Navnet kommer fra kataloget** (`Katalog.navn`). Kopien på linjen bruges kun, hvis kataloget ikke er hentet.
