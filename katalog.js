@@ -1,7 +1,7 @@
 // Kataloget over ingredienser (tabellerne «ingredienser» og «ingrediens_kategorier» i Supabase).
 // Opskrifter lægger deres ingredienser her. Kategorien kommer fra kataloget, fra Claude eller fra dig. I appen hedder både «ingen kategori» og den rigtige kategori «Andet» (til det, der ikke passer andre steder) «Ikke sorteret», se katNavn i app.js.
 const Katalog = (() => {
-  let kat = [], ing = [], regler = [];
+  let kat = [], ing = [], regler = [], hentet = false, idx = null;
   const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
   const rens = n => norm(String(n).replace(/\([^)]*\)/g, ' ').replace(/[.,;:]+$/, ''));
   const katId = navn => { const n = norm(navn), k = kat.find(x => x.navn_norm === (n === 'ikke sorteret' ? 'andet' : n)); return k ? k.id : null; }; // «Ikke sorteret» er kategorien «Andet»
@@ -10,6 +10,7 @@ const Katalog = (() => {
   const unik = navne => [...new Set(navne.map(n => rens(simpel(n))).filter(Boolean))]; // i databasen står ingredienserne i simpel form
   async function hent() {
     [kat, ing, regler] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('ingrediens_regler?select=*')]);
+    hentet = true; idx = null;
     if (!kat.some(k => k.navn_norm === 'andet')) { // «Andet» er en rigtig kategori, som altid skal findes (står sidst)
       try { await api('ingrediens_kategorier?on_conflict=navn_norm', { method: 'POST', flet: 'ignorer', body: { navn: 'Andet', navn_norm: 'andet', raekkefolge: 1000 } }); kat = await api('ingrediens_kategorier?select=*'); }
       catch (e) { console.error(e); }
@@ -54,6 +55,7 @@ const Katalog = (() => {
       if (fund) { if (!fund.kategori_id && k) opdat.push([fund.id, k]); continue; }
       nye.push({ navn: n, navn_norm: n, kategori_id: k || gaet(n) || null });
     }
+    if (nye.length) idx = null;
     if (nye.length) ing.push(...await api('ingredienser?on_conflict=navn_norm', { method: 'POST', flet: 'ignorer', body: nye })); // de nye huskes med deres id
     for (const [id, k] of opdat) await api(`ingredienser?id=eq.${enc(id)}`, { method: 'PATCH', body: { kategori_id: k } });
   }
@@ -62,7 +64,7 @@ const Katalog = (() => {
   // Ved «Gem» (opdatering 4c): lægger ingredienserne i kataloget og giver hver linje ingrediensens id og navn derfra.
   // Tilberedningen («finthakket») flyttes fra navnet til linjens forberedelse (f). En linje uden navn falder væk.
   async function knyt(liste, valg = {}, claude = {}) {
-    const dele = liste.map(x => 'g' in x ? null : { ...delIng(x.n), k: noegle(x.n) });
+    const dele = liste.map(x => 'g' in x || Array.isArray(x.eller) ? null : { ...delIng(x.n), k: noegle(x.n) }); // en «eller»-linje har sine varer i forvejen
     await laeg(dele.filter(d => d && d.k).map(d => d.k), valg, claude);
     if (dele.some(d => d && d.k && !ing.some(i => i.navn_norm === d.k))) await hent(); // en anden enhed lagde den ind samtidig
     return liste.map((x, nr) => {
@@ -141,8 +143,51 @@ const Katalog = (() => {
     return { udfald: ids.length ? 'flere' : 'ukendt', varer: [], lignende, ogEller };
   }
   const kategorier = () => sorteret().map(katNavn);
-  // Er ingrediensen et krydderi? Kategorien kommer fra kataloget. Ukendte ingredienser tæller ikke som krydderier.
-  const erKrydderi = n => { const i = ing.find(x => x.navn_norm === rens(simpel(n)) || x.navn_norm === norm(n)); const k = i && kat.find(c => c.id === i.kategori_id); return !!k && k.navn_norm === 'krydderier'; };
+
+  // ---------- En linje læst på id (Styr på ingredienser, fase 2) ----------
+  // Én regel for alle: «Hvad kan jeg lave?», madplanen, «træk fra» og søgningen bruger funktionerne herunder.
+  // Er kataloget ikke hentet (fx uden net første gang), bruges navnet på linjen, som det står.
+  const sikr = () => hentet ? Promise.resolve() : hent().catch(e => console.error(e));
+  function I() { // opslag: id -> ingrediens, fællesnavn -> varianter, id -> aliaser, skrevet tekst -> varer
+    if (idx) return idx;
+    idx = { id: new Map(ing.map(i => [i.id, i])), var: new Map(), alias: new Map(), tekst: new Map() };
+    for (const i of ing) if (i.faelles_id) { if (!idx.var.has(i.faelles_id)) idx.var.set(i.faelles_id, []); idx.var.get(i.faelles_id).push(i.id); }
+    for (const r of regler) if (r.slags === 'vare' && r.resultat.length === 1 && !r.resultat[0].f) { const id = r.resultat[0].id; if (!idx.alias.has(id)) idx.alias.set(id, []); idx.alias.get(id).push(r.tekst); }
+    return idx;
+  }
+  // Varerne på en linje: «eller»-listen, linjens id, eller (uden id) det, navnet præcis svarer til som navn, vare eller regel
+  function varerAf(x) {
+    if (!x || 'g' in x) return [];
+    if (Array.isArray(x.eller)) return x.eller.filter(id => I().id.has(id));
+    if (x.id && I().id.has(x.id)) return [x.id];
+    const t = String(x.n || ''), ix = I();
+    if (!ix.tekst.has(t)) {
+      const n = rens(t), k = noegle(t), r = regler.find(r => (r.tekst === n || r.tekst === k) && (r.slags === 'vare' || r.slags === 'eller')), i = !r && ing.find(i => i.navn_norm === n || i.navn_norm === k);
+      ix.tekst.set(t, r ? r.resultat.map(v => v.id) : i ? [i.id] : []);
+    }
+    return ix.tekst.get(t);
+  }
+  // Navnet fra kataloget («frisk timian», «timian», «smør eller margarine»). Kendes en vare ikke, bruges navnet på linjen.
+  function navn(x) {
+    const v = varerAf(x);
+    return v.length && (x.id || Array.isArray(x.eller)) ? v.map(id => I().id.get(id).navn).join(' eller ') : x.n;
+  }
+  const medNavn = x => x && !('g' in x) ? { ...x, n: navn(x) } : x;
+  // Det, der dækker en vare: varen selv og, er den et fællesnavn, dets varianter. Tørret timian dækker ikke frisk timian.
+  const daekker = id => [id, ...(I().var.get(id) || [])];
+  // Er linjen opfyldt af det, der er derhjemme (et Set af id'er)? En «eller»-linje er opfyldt af én af varerne.
+  // En linje uden kendt vare er opfyldt, hvis det samme navn står derhjemme.
+  const opfyldt = (x, har) => { const v = varerAf(x); return v.length ? v.some(id => daekker(id).some(d => har.has(d))) : [...har].some(id => { const i = I().id.get(id); return i && i.navn_norm === noegle(x.n); }); };
+  const noegleAf = x => varerAf(x).join('|') || noegle(x.n); // samme vare tæller kun én gang som manglende
+  // Ord, en linje kan findes på: linjens navn, varerne, deres varianter og fællesnavn, og aliaser
+  function soegeord(x) {
+    const ud = new Set([norm(x.n)]), ids = new Set();
+    for (const id of varerAf(x)) { daekker(id).forEach(d => ids.add(d)); const f = I().id.get(id).faelles_id; if (f) ids.add(f); }
+    for (const id of ids) { const i = I().id.get(id); if (i) ud.add(i.navn_norm); (I().alias.get(id) || []).forEach(t => ud.add(t)); }
+    return [...ud];
+  }
+  // Er linjen et krydderi? Kategorien kommer fra kataloget. Ukendte ingredienser tæller ikke som krydderier.
+  const krydderi = x => { const v = varerAf(x); return !!v.length && v.every(id => { const k = kat.find(c => c.id === I().id.get(id).kategori_id); return !!k && k.navn_norm === 'krydderier'; }); };
 
   // Knappen i Hvad kan jeg lave?: bed Claude om at sortere og rette ingredienserne
   let andre = [], efterSortering = null, besked = '', modus = 'alle'; // modus: «alle» (ret alle kategorier) eller «andet» (kun dem, der er «Ikke sorteret»)
@@ -266,5 +311,5 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
       if (efterSortering) efterSortering();
     }
   });
-  return { hent, rens, noegle, spoerg, knyt, laes, kategorier, sorterAndet, laesKat, erKrydderi };
+  return { hent, sikr, rens, noegle, spoerg, knyt, laes, kategorier, sorterAndet, laesKat, varerAf, navn, medNavn, daekker, opfyldt, noegleAf, soegeord, krydderi };
 })();

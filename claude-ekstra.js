@@ -75,7 +75,7 @@ const ClaudeEkstra = (() => {
     async kopierOpdat() { // samme besked som «Tilføj med Claude», med den nuværende opskrift som tekst
       await Katalog.hent().catch(() => {});
       const r = O.r, f = r.portioner || 4;
-      await kopierTil(lavBesked() + [r.titel, `${f} portioner`, '', 'Ingredienser:', ...ingListe(r).map(x => 'g' in x ? x.g + ':' : visIng(x)), '', 'Sådan gør du:', trinTilTekst(trinAf(r))].join('\n') + '\n');
+      await kopierTil(lavBesked() + [r.titel, `${f} portioner`, '', 'Ingredienser:', ...ingListe(r).map(Katalog.medNavn).map(x => 'g' in x ? x.g + ':' : visIng(x)), '', 'Sådan gør du:', trinTilTekst(trinAf(r))].join('\n') + '\n');
     },
     async gemOpdat(el) {
       const svar = laesImport($('#claudesvar').value);
