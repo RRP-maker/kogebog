@@ -953,12 +953,16 @@ async function formular(type, rid) {
       const o = findNavn(nu, data.titel);
       if (o && !(await spoergDublet([o], 1))) return;
     }
-    let valg = {};
-    if (type === 'opskrifter') { try { valg = await Katalog.spoerg(ingAf(data).map(i => i.n)); } catch (err) { console.error(err); } } // spørger om kategorier til nye ingredienser
+    let svar = {};
+    if (type === 'opskrifter') { // ukendte ingredienser: ét ark med alle spørgsmål, før noget gemmes. «Tilbage» = tilbage til formularen
+      try { svar = await Katalog.afklar(ingAf(data).map(i => i.n), { gem: 'Gem opskriften', tilbage: 'Tilbage til opskriften' }); }
+      catch (err) { console.error(err); return visFejl('Ingredienserne kunne ikke tjekkes, og intet er gemt. Tjek internettet, og tryk på «Gem» igen.'); }
+      if (!svar) return;
+    }
     const knap = $('#nav-gem'), kt = knap.lastElementChild;
     knap.disabled = true; kt.textContent = 'Gemmer…';
     try {
-      if (type === 'opskrifter') data.ingredienser = await Katalog.knyt(data.ingredienser, valg); // hver linje får ingrediensens id fra kataloget
+      if (type === 'opskrifter') data.ingredienser = await Katalog.knyt(data.ingredienser, svar); // hver linje får ingrediensens id fra kataloget
       const res = ret
         ? await api(`${type}?id=eq.${enc(ret)}`, { method: 'PATCH', body: data })
         : await api(type, { method: 'POST', body: data });

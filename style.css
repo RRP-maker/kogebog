@@ -823,6 +823,8 @@ input.felt-l, select.felt-l { height: 96px; }
 .iv-tvivl .lille, .iv-kopi .tekst { margin: 0; }
 /* Regler og aliaser (fase 4): en regel er en tekstrække og en række knapper, en vare er to felter under hinanden */
 .iv-regel, .iv-vare { display: flex; flex-direction: column; }
+.af-sp { margin-top: 32px; } /* spørgsmålet ved «Gem» (fase 5): en række luft mellem teksterne */
+.af-sp > .lille { margin: 0; }
 .iv-regel p, #iv-regler > .lille, .iv-del > .lille { margin: 0; }
 .iv-del .iv-regel .rakke, .iv-del > .rakke { margin: 0 0 var(--pt); }
 .top:has(#toast.vis) { z-index: 70; } /* beskeden kan ses oven på vinduer */

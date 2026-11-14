@@ -8,28 +8,15 @@ const Hjemme = (() => {
   const katAf = id => D.kat.find(k => k.id === id);
   const enhHtml = v => (ENH.includes(v) || !v ? ENH : [...ENH, v]).map(e => `<option${e === (v || 'stk') ? ' selected' : ''}>${esc(e)}</option>`).join('');
 
-  // Gæt kategori ud fra kendte ingredienser: «røde løg» ligner «løg». Længste match vinder.
-  function gaetKat(n) {
-    let bedst = null;
-    for (const i of D.ing) {
-      if (!i.kategori_id || i.navn_norm.length < 3) continue;
-      if ((n.includes(i.navn_norm) || i.navn_norm.includes(n)) && (!bedst || i.navn_norm.length > bedst.navn_norm.length)) bedst = i;
-    }
-    return bedst ? bedst.kategori_id : null;
-  }
-  async function findEllerOpret(navn) {
-    const n = norm(navn);
-    let ing = D.ing.find(i => i.navn_norm === n);
-    if (ing) return ing;
-    try { [ing] = await api('ingredienser', { method: 'POST', body: { navn: n, navn_norm: n, kategori_id: gaetKat(n) } }); }
-    catch (e) { // en anden enhed nåede først
-      D.ing = await api('ingredienser?select=*');
-      ing = D.ing.find(i => i.navn_norm === n);
-      if (!ing) throw e;
-      return ing;
-    }
-    D.ing.push(ing);
-    return ing;
+  // Navnene som ingredienser (navn -> ingrediens). Ukendte navne og fællesnavne spørges der om først i ét ark (Katalog.afklar).
+  // Intet oprettes uden et valg. Et navn, man ikke svarer på, er ikke med. null: man gik tilbage.
+  async function findIng(navne, gem = 'Gem') {
+    const svar = await Katalog.afklar(navne, { hjemme: true, gem, tilbage: 'Annuller' });
+    if (!svar) return null;
+    if (Object.values(svar).some(x => x && x.ny)) D.ing = await api('ingredienser?select=*');
+    const ud = new Map();
+    for (const n of navne) { const i = ingAf(Katalog.hjemmeId(n, svar)); if (i) ud.set(n, i); }
+    return ud;
   }
   // Står den allerede på listen? Samme navn, eller samme stamme (æble/æbler).
   function dublet(n, udenId) {
@@ -89,7 +76,12 @@ const Hjemme = (() => {
     if (m <= 0) m = null; // 0 = ingen angivelse: så regnes der med, at man har nok
     laaser = true;
     try {
-      const ing = await findEllerOpret(navn);
+      const fund = await findIng([navn], 'Tilføj');
+      if (!fund) return; // tilbage: teksten står stadig i feltet
+      const ing = fund.get(navn);
+      if (!ing) { toast(`«${navn}» er ikke tilføjet.`); return; }
+      const d2 = D.hj.find(h => h.ingrediens_id === ing.id);
+      if (d2) { felt.value = ''; return nej(ing.navn, d2.id); }
       const [ny] = await api('hjemme', { method: 'POST', body: { ingrediens_id: ing.id, maengde: m, enhed: enh.value } });
       D.hj.push(ny);
       felt.value = ''; mgd.value = ''; enh.value = 'stk';
@@ -109,7 +101,13 @@ const Hjemme = (() => {
     if (n === gl.navn_norm) return;
     const d = dublet(n, h.id);
     if (d) { inp.value = gl.navn; return nej(n, d.id); }
-    const ing = await findEllerOpret(inp.value);
+    let fund = null;
+    try { fund = await findIng([inp.value]); } catch (e) { console.error(e); fejlbesked('Navnet blev ikke gemt. Tjek internettet, og prøv igen.'); }
+    const ing = fund && fund.get(inp.value);
+    if (!ing) { inp.value = gl.navn; return; } // ikke svaret: navnet bliver, som det var
+    if (ing.id === gl.id) { inp.value = gl.navn; return; }
+    const d2 = D.hj.find(x => x.ingrediens_id === ing.id && x.id !== h.id);
+    if (d2) { inp.value = gl.navn; return nej(ing.navn, d2.id); }
     const [ny] = await api(`hjemme?id=eq.${enc(h.id)}`, { method: 'PATCH', body: { ingrediens_id: ing.id } });
     Object.assign(h, ny);
     tegn();
@@ -325,10 +323,14 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
     async gnGem() {
       const nye = [], ret = [];
       G.forEach(x => { const d = dublet(x.navn); if (d) { if (x.ret) ret.push([d, x]); } else nye.push(x); });
-      let ny = 0, rettet = 0, fejl = 0;
+      let ny = 0, rettet = 0, fejl = 0, ikke = 0, fund;
+      try { fund = await findIng(nye.map(x => x.navn)); } catch (e) { console.error(e); return fejlbesked('Listen blev ikke gemt. Tjek internettet, og prøv igen.'); }
+      if (!fund) return; // tilbage til gennemgangen
       for (const x of nye) {
+        const ing = fund.get(x.navn);
+        if (!ing) { ikke++; continue; }
+        if (D.hj.some(h => h.ingrediens_id === ing.id)) continue; // samme ingrediens under et andet navn
         try {
-          const ing = await findEllerOpret(x.navn);
           const [h] = await api('hjemme', { method: 'POST', body: { ingrediens_id: ing.id, maengde: x.maengde, enhed: x.enhed } });
           D.hj.push(h); ny++;
         } catch (e) { console.error(x.navn, e); if (!/duplicate|23505|409/.test(String(e.message))) fejl++; }
@@ -338,7 +340,7 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
         catch (e) { console.error(x.navn, e); fejl++; }
       }
       lager.gem('hjcNye', []); lager.gem('hjcSvar', '');
-      toast([ny && `${ny} tilføjet`, rettet && `${rettet} mængder rettet`, fejl && `${fejl} kunne ikke gemmes`].filter(Boolean).join(', ') || 'Der var ikke noget nyt');
+      toast([ny && `${ny} tilføjet`, rettet && `${rettet} mængder rettet`, ikke && `${ikke} ikke tilføjet`, fejl && `${fejl} kunne ikke gemmes`].filter(Boolean).join(', ') || 'Der var ikke noget nyt');
       location.hash = '#/forslag';
       if (ny || rettet) Hjaelper.glad();
     }

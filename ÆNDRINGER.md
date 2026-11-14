@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.17.0 · Styr på ingredienser, fase 5: spørgsmålet i formular, «Tilpas» og «Derhjemme»
+- **Ét ark ved «Gem»** med alle ingredienser, appen ikke kender (`Katalog.afklar`). For hver: en af de lignende, «Opret ny ingrediens» (navn og kategori), «Del selv» (én vare med tilberedning, flere varer, én af flere, ikke en vare) eller «Ikke nu». Arket afløser spørgsmålet om kategori. «Tilbage til opskriften» gemmer intet, og svarene står der, når arket åbnes igen.
+- **Svar huskes som regel:** en valgt lignende eller et ændret navn bliver et alias, «Del selv» bliver en regel. Har en anden enhed lige lavet reglen, gælder den, der findes. «Ikke nu»: linjen gemmes uden vare, og der spørges igen næste gang.
+- **Regler bruges ved «Gem»:** en tekst med en regel deles, bliver en «eller»-linje eller slettes uden spørgsmål (`Katalog.knyt`). Ved deling får første vare mængden.
+- **«Derhjemme» spørger også** (tilføj, nyt navn på en række og listen fra Claude). Et fællesnavn spørger om varianten (fx frisk eller tørret timian). «Tilføj den ikke» opretter intet. Samme ingrediens under et andet navn findes på listen.
+- **Én vej til nye ingredienser:** `ingrediens_opret` (via `Katalog.opret`). `findEllerOpret`, `laeg` og `spoerg` er fjernet. Import (links, tekst, «Opdater med Claude») opretter stadig selv gennem den, til 2.18.0.
+
 ## 2.16.0 · Styr på ingredienser, fase 4: Ingrediensværktøjet
 - **Regler og aliaser** står i Ingrediensværktøjet (søg på en ingrediens eller en regel). Under hver ingrediens ses dens aliaser og regler. De kan tilpasses og slettes, og man kan lave et nyt alias eller en ny regel: én vare (med tilberedning), flere varer, en af flere varer eller ingen vare.
 - **Tjek mod den andens ændring:** `ingrediens_regel_gem` og `ingrediens_regel_slet` tjekker versionen. Er reglen ændret, siden den blev åbnet, vises den andens udgave først, og man vælger at beholde den, tilpasse den eller gemme sin egen oven på. Findes teksten allerede som regel, vises den. Er teksten navnet på en ingrediens, afvises den.
