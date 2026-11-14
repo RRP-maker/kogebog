@@ -15,6 +15,10 @@ const LinkImport = (() => {
   const ING_H = /^(ingredienser|ingredients|det skal du bruge|du skal bruge|what you need|you'?ll need)\b\s*:?\s*/i;
   const TRIN_H = /^(fremgangsmåde|sådan gør du|tilberedning|instruktioner|instructions|method|directions|preparation|how to make it)\b\s*:?\s*/i;
   const TAL = /^(\d|[½¼¾])/;
+  // Linjer på hjemmesider, der ikke er opskrift: knapper under opskriften, tips, forslag og kommentarer. Trinnene slutter ved den første.
+  const SLUT = /^(føj til|sæt på madplan|udskriv\b|send$|hold min skærm|næringsindhold|mine noter|tips?\b|tip til|forslag til servering|prøv også|relaterede|læs også|del opskriften|spørgsmål til|\d+\s+kommentarer|kommentarer\b|bedøm)/i;
+  const STOEJ = /^(tilmeld|log ind|menu|søg\b|premium|cookies?|accepter|gå til indhold|skip to)/i; // menuer og tilbud, der kan stå før opskriften
+  const rensTitel = t => String(t || '').split(/\s+[|•]\s+/)[0].replace(/\s+[-–—]\s+(valdemarsro|[^-–—]*opskrift)\s*$/i, '').trim(); // «Navn | Side» -> «Navn»
   function tekstTilOpskrift(tekst, titel) {
     const linjer = String(tekst || '').replace(/\r/g, '')
       .replace(/[ \t]+(?=(?:ingredienser|ingredients|fremgangsmåde|sådan gør du|instructions|method|directions)\s*:)/gi, '\n') // overskrifter midt i en linje (opslag uden linjeskift)
@@ -38,6 +42,7 @@ const LinkImport = (() => {
     let trin = iTrin >= 0 ? [linjer[iTrin].replace(TRIN_H, ''), ...linjer.slice(iTrin + 1)].filter(Boolean) : linjer.slice(slutIng);
     if (trin.length === 1 && /\s\d{1,2}[.)]\s/.test(trin[0])) trin = trin[0].split(/\s+(?=\d{1,2}[.)]\s)/); // «1. … 2. …» på én linje
     else if (trin.length === 1 && trin[0].length > 160) trin = trin[0].split(/(?<=[.!?])\s+(?=[A-ZÆØÅ])/);
+    const stopI = trin.findIndex((t, i) => i > 0 && SLUT.test(t)); if (stopI > 0) trin = trin.slice(0, stopI); // sidens knapper, tips, kommentarer og forslag hører ikke til trinnene
     trin = trin.map(t => t.replace(/^(?:trin|step)?\s*\d{1,2}\s*[.):]\s*/i, '').trim()).filter(t => t.length > 2);
     // Ingredienser: en linje, der slutter med kolon, er en overskrift til en gruppe («Sovs:»)
     const ud = []; let gruppe = null;
@@ -46,7 +51,7 @@ const LinkImport = (() => {
     if (!trin.length) return { fejl: 'Jeg kunne ikke finde, hvordan retten laves. Skriv «Sådan gør du» på en linje for sig selv, og skriv trinnene under.' };
     const hoved = foer.join(' '), port = hoved.match(/(\d+)\s*(?:portioner|personer|pers\b|servings|people)/i) || hoved.match(/(?:serves|rækker til)\s*(\d+)/i);
     const min = hoved.match(/(\d+)\s*(?:min\b|minutter|minutes)/i), timer = hoved.match(/(\d+)\s*(?:timer?|hours?)\b/i);
-    const navn = (foer.find(l => !/^\d/.test(l) && l.length > 2) || titel || '').replace(/[:.!]+$/, '').slice(0, 80).trim();
+    const navn = (rensTitel(titel) || foer.find(l => !/^\d/.test(l) && l.length > 2 && !STOEJ.test(l)) || '').replace(/[:.!]+$/, '').slice(0, 80).trim();
     if (!navn) return { fejl: 'Jeg mangler rettens navn. Skriv navnet på den øverste linje.' };
     return { j: { navn, portioner: port ? Number(port[1]) : null, tid: (timer ? Number(timer[1]) * 60 : 0) + (min ? Number(min[1]) : 0) || null, ingredienser: ud, trin } };
   }

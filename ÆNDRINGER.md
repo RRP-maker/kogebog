@@ -2,6 +2,9 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.8.1 · Import fra hjemmeside uden JSON-LD
+- `tekstTilOpskrift`: trinene stopper ved sidens knapper, tips, forslag og kommentarer (fx «Føj til indkøbsseddel», «Tip til opskriften»). Navnet tages fra sidens titel (uden « | Sidenavn»), og menu- og tilbudslinjer som «Tilmeld Premium» springes over. Testet med valdemarsro.dk/kyllingefrikadeller: 9 ingredienser og 3 trin i stedet for en side fuld af uvedkommende tekst.
+
 ## 2.8.0 · Importér opskrift, knapper under skrivefelter og bjælkens animation
 - **«Importér opskrift»** erstatter «Tilføj med Claude» og «Importér links» (`#/import`, `linkimport.js`). Ét felt: sæt et eller flere links ind, sæt teksten fra en side ind, eller skriv selv. Mere end 40 tegn ud over links læses som tekst.
 - **Tekst læses i appen** (`LinkImport.tekstTilOpskrift`): navnet øverst, «Ingredienser» og «Sådan gør du» (eller de engelske ord) deler teksten. Uden overskrifter er linjer med tal forrest ingredienser. En linje med kolon til sidst er en gruppe («Sovs:»). Opskriften gemmes og åbnes, så den kan tjekkes.
