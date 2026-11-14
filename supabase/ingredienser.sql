@@ -96,6 +96,7 @@ begin
 end $$;
 
 -- p kommer fra appen (ingvaerktoej.js, beregn): { antal, note, flet: [{fra, til}], slet: [id], ret: [{id, navn, navn_norm, kategori_id}], ny: [det samme], faelles: [{id, faelles_id}], opskrifter: [{id, ingredienser}] }
+-- Fase 3 (2.15.0) også: hjemme: [{id, ingrediens_id}] (flyttes før fællesnavnene), regler: [{tekst, slags, resultat}], hjemme_antal (så mange rækker skal «Derhjemme» have bagefter)
 create or replace function ingrediens_ret(p jsonb) returns jsonb language plpgsql security definer set search_path = public as $$
 declare kopi uuid; r record; n int;
 begin
@@ -126,17 +127,29 @@ begin
   insert into ingredienser (id, navn, navn_norm, kategori_id)
     select x.id, x.navn, x.navn_norm, x.kategori_id
     from jsonb_to_recordset(coalesce(p->'ny', '[]'::jsonb)) as x(id uuid, navn text, navn_norm text, kategori_id uuid);
+  -- 4a. «Derhjemme» flyttes til en anden vare (fx fra «timian» til «tørret timian»), før «timian» bliver et fællesnavn
+  update hjemme h set ingrediens_id = x.ingrediens_id
+    from jsonb_to_recordset(coalesce(p->'hjemme', '[]'::jsonb)) as x(id uuid, ingrediens_id uuid) where h.id = x.id;
   -- 4b. Fællesnavne: { id, faelles_id } (faelles_id null = ikke længere en variant)
   update ingredienser i set faelles_id = x.faelles_id
     from jsonb_to_recordset(coalesce(p->'faelles', '[]'::jsonb)) as x(id uuid, faelles_id uuid) where i.id = x.id;
+  -- 4c. Nye regler (aliaser og varer med tilberedning). Triggeren afviser en tekst, der er navnet på en ingrediens.
+  insert into ingrediens_regler (tekst, slags, resultat)
+    select lower(regexp_replace(btrim(x.tekst), '\s+', ' ', 'g')), x.slags, x.resultat
+    from jsonb_to_recordset(coalesce(p->'regler', '[]'::jsonb)) as x(tekst text, slags text, resultat jsonb);
   -- 5. Opskrifternes linjer
   update opskrifter o set ingredienser = x.ingredienser
     from jsonb_to_recordset(coalesce(p->'opskrifter', '[]'::jsonb)) as x(id uuid, ingredienser jsonb) where o.id = x.id;
   -- 6. Kontrol: hver linje i hver opskrift peger på en ingrediens, der findes. Ellers rulles alt tilbage.
   select count(*) into n
     from opskrifter o, jsonb_array_elements(case when jsonb_typeof(o.ingredienser) = 'array' then o.ingredienser else '[]'::jsonb end) l
-    where jsonb_typeof(l) <> 'object' or (not (l ? 'g') and not exists (select 1 from ingredienser i where i.id::text = l->>'id'));
+    where jsonb_typeof(l) <> 'object' or (not (l ? 'g') and case when l ? 'eller' then jsonb_typeof(l->'eller') <> 'array' or jsonb_array_length(l->'eller') < 2
+      or exists (select 1 from jsonb_array_elements_text(l->'eller') e where not exists (select 1 from ingredienser i where i.id::text = e))
+      else not exists (select 1 from ingredienser i where i.id::text = l->>'id') end);
   if n > 0 then raise exception '% linjer peger ikke på en ingrediens i kataloget.', n; end if;
+  -- 7. Kontrol: ingen række i «Derhjemme» er tabt
+  if p ? 'hjemme_antal' and (p->>'hjemme_antal')::int <> (select count(*) from hjemme) then
+    raise exception '«Derhjemme» ville få % rækker i stedet for %.', (select count(*) from hjemme), p->>'hjemme_antal'; end if;
   return jsonb_build_object('kopi', kopi, 'ingredienser', (select count(*) from ingredienser));
 end $$;
 
