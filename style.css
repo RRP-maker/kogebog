@@ -119,14 +119,14 @@ p + p { margin-top: 32px; }
 :focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
 
 /* Liquid Glass: gennemsigtige flader med sløring, lyskant og blød skygge. Teksten er altid helt dækkende. */
-.top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .fane, .forklaring, .lav-bund, .ark-kort, .h-boble, .ur, #toast {
+.top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .fane, .lav-bund, .ark-kort, .h-boble, .ur, #toast {
   background: var(--glas);
   -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter);
   border: 1px solid var(--glaskant);
   box-shadow: var(--skygge), var(--glans);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .forklaring, .lav-bund, .ark-kort, .h-boble, .ur { background: var(--flade); }
+  .top, .knap, .tilbage, .rund, .chip, .rk-knap, .kort, .lav-bund, .ark-kort, .h-boble, .ur { background: var(--flade); }
 }
 
 .top {
@@ -299,13 +299,6 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
   border-radius: 6px 6px 0 0; padding: 0 4px; margin: 0; cursor: pointer; transition: background-color .2s;
 }
 .begreb.udpeget { background: var(--smor); color: var(--paa-lys); }
-.forklaring {
-  display: block; border-radius: 20px; margin: var(--m) 0 var(--pt); padding: 15px 16px;
-  animation: ind .22s var(--ud);
-}
-.forklaring b { font: 24px/32px var(--hoved); font-weight: 400; }
-.forklaring i { font-style: normal; font-size: 16px; background: var(--mynte); color: var(--paa-lys); border-radius: 12px; padding: 2px 10px; margin-left: 4px; }
-.forklaring span { display: block; white-space: pre-wrap; }
 @keyframes ind { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
 .stjernevalg { display: flex; gap: 0; height: 64px; margin: var(--m) 0 var(--pt); align-items: flex-start; }
 .stjernevalg button { font: 40px/48px sans-serif; width: 48px; height: 52px; border: 0; background: none; color: var(--stjerne-fra); cursor: pointer; padding: 0; transition: transform .16s var(--ud); }
@@ -450,6 +443,9 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 .h-boble.stor p { white-space: pre-line; }
 .h-videre { display: none; font-size: 15px; color: var(--blyant); }
 .h-boble.flere .h-videre { display: block; }
+/* Tips: Grydelil er hurtig, så man ikke venter midt i madlavningen */
+#hjaelper.hurtig .h-boble { animation-duration: .1s; }
+#hjaelper.hurtig .h-pegearm { transition-duration: .1s; }
 @keyframes bobleind { from { opacity: 0; transform: scale(.85); } }
 
 .h-skygge { fill: rgba(var(--skyg-rgb), .18); }
@@ -607,7 +603,7 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 /* Print: kun opskriften */
 @media print {
   body { background: var(--raa-hvid); font-size: 14pt; line-height: 1.4; }
-  .top, #ure, #toast, #hjaelper, #hjaelper-vis, .skaerm, .forklaring { display: none !important; }
+  .top, #ure, #toast, #hjaelper, #hjaelper-vis, .skaerm { display: none !important; }
   main { padding: 0; max-width: none; }
   .begreb { background: none; border: 0; color: inherit; padding: 0; }
   .kort { box-shadow: none; border: 1px solid var(--blyant); }

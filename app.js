@@ -79,7 +79,7 @@ const TYPER = {
     felter: [
       { n: 'titel', l: 'Navn', t: 'text', kraevet: true, hint: 'Skriv det, som det står i opskrifterne, fx «koge ris». Så bliver ordet til et link.' },
       { n: 'tekst', l: 'Tip', t: 'textarea', rows: 5, kraevet: true },
-      { n: 'opskrift_id', l: 'Hører til opskrift', t: 'opskrift', hint: 'Så står tippet også nederst på opskriften.' }
+      { n: 'opskrift_id', l: 'Hører til opskrift', t: 'opskrift', hint: 'Valgfrit. Tippet vises i tips-listen ved den opskrift. Står ordet i andre opskrifters trin, finder appen dem selv.' }
     ]
   }
 };
@@ -330,7 +330,6 @@ function medBegreber(tekst, begreber) {
   return ud + esc(tekst.slice(p));
 }
 let kendteBegreber = [];
-function lukForklaring() { const f = $('.forklaring'); if (f) f.remove(); }
 
 // ---------- Ure ----------
 function tidISek(tekst) {
@@ -380,7 +379,7 @@ async function route() {
   const id = ++visning;
   const nuHash = location.hash || '#/';
   if (spor[spor.length - 2] === nuHash) spor.pop(); else if (spor[spor.length - 1] !== nuHash) spor.push(nuHash);
-  lukArk(); lukForklaring(); slipSkaerm(); sidsteValg = ''; navTilpas(null);
+  lukArk(); slipSkaerm(); sidsteValg = ''; navTilpas(null);
   Hjaelper.side(null);
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
   app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
@@ -502,13 +501,13 @@ async function liste(type, maal = app) {
   if (maal === app) henter(); else maal.innerHTML = HENTER;
   const [rader, ekstra, bil] = await Promise.all([
     api(`${type}?select=*&order=${type === 'opskrifter' ? 'titel' : 'oprettet.desc'}`),
-    type === 'tips' ? api('opskrifter?select=id,titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : [],
+    type === 'tips' ? api('opskrifter?select=id,titel,fremgangsmaade&order=titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : [],
     type === 'opskrifter' ? Billeder.hentForsider() : {}
   ]);
   if (id !== visning) return;
   const fil = type === 'opskrifter' && FIL ? FIL : {}, rude = maal !== app;
   L = { type, rader, q: fil.q || '', kat: fil.kat || '', koekken: fil.koekken || '', kunFav: !!fil.kunFav, kunEgne: fil.kunEgne ?? egneStandard(), valgt: '', soeg: SOEG[lager.hent('soegtype', 'begge')] ? lager.hent('soegtype', 'begge') : 'begge', navne: {}, fav: new Set(), bil };
-  if (type === 'tips') L.navne = Object.fromEntries(ekstra.map(o => [o.id, o.titel]));
+  if (type === 'tips') L.iOpskrifter = tipsOpskrifter(rader, ekstra);
   if (type === 'opskrifter') L.fav = new Set(ekstra.map(f => f.opskrift_id));
   const unik = n => [...new Set(rader.map(r => r[n]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da')), kat = unik('kategori'), koek = unik('koekken');
   if (L.kat && !kat.includes(L.kat)) L.kat = '';
@@ -564,9 +563,9 @@ function tegnListe() {
       const b = (r.titel || '').trim().charAt(0).toLocaleUpperCase('da'), ny = !q && b !== bogstav; bogstav = b;
       return (ny ? `<h3 class="oplist-bogstav">${esc(b)}</h3>` : '') + opskriftRaekke(r, L.fav.has(r.id), r.id === L.valgt, L.bil[r.id]);
     }
-    const til = L.navne[r.opskrift_id];
+    const til = L.iOpskrifter[r.id] || [];
     return `<article class="kort" data-tpid="tip-kort" id="tip-${r.id}">${r.titel ? `<strong>${esc(r.titel)}</strong>` : ''}<p class="tekst">${esc(r.tekst)}</p>
-      ${til ? `<p class="lille">Til: <a href="#/opskrifter/${r.opskrift_id}">${esc(til)}</a></p>` : ''}${knapper('tips', r.id)}</article>`;
+      ${til.length ? `<p class="lille">Bruges i: ${til.map(o => `<a href="#/opskrifter/${o.id}">${esc(o.titel)}</a>`).join(', ')}</p>` : ''}${knapper('tips', r.id)}</article>`;
   }).join('') : `<p class="tomt">${rader.length ? (L.kunFav && !q && !kat && !koekken ? 'Du har ingen favoritter endnu. Tryk på stjernen i en opskrift.' : type === 'opskrifter' && L.kunEgne && rader.some(r => kildeAf(r) === 'importeret') ? 'Ingen af dine egne opskrifter passer. Tryk på «Mine egne» for at se de importerede også.' : 'Ingen opskrifter passer. Prøv et andet ord.') : T.tom}</p>`;
 }
 // Knapperne nederst i et tip-kort: små, side om side. Egne id'er, så de ikke følger opskriftens «Tilpas» og «Slet».
@@ -574,6 +573,17 @@ const knapper = (type, id, ekstra = '') => `<div class="rakke skaerm kortknapper
   <a class="knap mini tilpas" data-tpid="tip-rediger" href="#/${type}/${id}/rediger">${ik('blyant')} Tilpas</a>${ekstra}
   <button class="knap mini slet" data-tpid="tip-slet" data-h="slet" data-v="${type}:${id}">${ik('slet')} Slet</button></div>`;
 
+// Hvilke opskrifter et tip indgår i: dem, hvor tippets navn står i et trin (som det blå ord), og den opskrift, tippet er valgt til. {tip-id: [{id, titel}]}
+function tipsOpskrifter(tips, opskrifter) {
+  const b = begreberAf(tips), ud = {};
+  const tilfoej = (tid, o) => { const l = ud[tid] = ud[tid] || []; if (!l.some(x => x.id === o.id)) l.push({ id: o.id, titel: o.titel }); };
+  for (const o of opskrifter) {
+    for (const t of trinAf(o)) for (const x of [t.t, ...t.del]) for (const m of medBegreber(x, b).matchAll(/data-v="tips:([^"]+)"/g)) tilfoej(m[1], o);
+    for (const t of tips) if (t.opskrift_id === o.id) tilfoej(t.id, o);
+  }
+  for (const l of Object.values(ud)) l.sort((x, y) => x.titel.localeCompare(y.titel, 'da'));
+  return ud;
+}
 // ---------- Opskrift ----------
 let S = null; // den opskrift, der vises
 const portValg = {};
@@ -590,7 +600,7 @@ async function opskriftSide(rid, maal = app) {
   if (!r) { if (maal !== app) maal.innerHTML = '<p class="tomt">Opskriften findes ikke længere. Vælg en anden i listen.</p>'; else info('Opskriften findes ikke længere.<br><a href="#/opskrifter">Tilbage til Opskrifter</a>'); return; }
   S = { r, tips, fav: fav.length > 0, stj, bil, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips);
-  const c = chips(r), egne = tips.filter(t => t.opskrift_id === r.id);
+  const c = chips(r);
   maal.innerHTML = `${iRude ? rudeLuk() : Ikoner.tilbage(opskriftFra || '#/opskrifter', 'skaerm')}
     ${vaerktoej(`<a class="knap tilpas" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Tilpas</a>`)}
     <div class="titelrakke opsk-felt" data-tpid="opsk-titel"><h1>${esc(r.titel)}</h1>
@@ -611,7 +621,6 @@ async function opskriftSide(rid, maal = app) {
     <div id="trin"></div></section></div>
     <div class="opsk-felt skaerm" data-tpid="opsk-smag"><h2 class="skaerm opsk">Hvordan smagte det?</h2>
     <div id="stjerner" class="skaerm"></div></div>
-    ${egne.length ? `<div class="opsk-felt" data-tpid="opsk-tips"><h2 class="opsk">Tips til retten</h2>${egne.map(t => `<div class="kort">${t.titel ? `<strong>${esc(t.titel)}</strong>` : ''}<p class="tekst">${esc(t.tekst)}</p></div>`).join('')}</div>` : ''}
     <div class="rakke skaerm"><a class="knap" data-tpid="opdater-claude" href="#/opdater/${r.id}">${ik('gnist')} Opdater med Claude</a>
       <button class="knap" data-h="print">Print</button></div>
     <div class="rakke skaerm sletrakke"><button class="knap slet" data-tpid="slet" data-h="slet" data-v="opskrifter:${r.id}">${ik('slet')} Slet opskriften</button></div>`;
@@ -680,7 +689,6 @@ const urKnap = (tekst, navn, stor) => {
 };
 function tegnLav() {
   const { r, trin, i } = K, n = trin.length;
-  lukForklaring();
   let midte, naeste = 'Næste ›';
   if (i === -1) {
     const grp = ingGrupper(r), f = K.port / (r.portioner || K.port);
@@ -1323,14 +1331,9 @@ const H = {
   stopUr(el) { ure = ure.filter(u => u.id !== Number(el.dataset.v)); tegnUre(); },
   begreb(el) {
     const [type, id] = el.dataset.v.split(':'), b = kendteBegreber.find(x => x.type === type && x.id === id);
-    const aaben = $('.forklaring');
-    lukForklaring();
-    if (!b || (aaben && aaben.dataset.for === el.dataset.v && aaben.previousElementSibling === el)) return;
-    const f = document.createElement('span');
-    f.className = 'forklaring'; f.dataset.for = el.dataset.v; f.setAttribute('role', 'note');
-    f.innerHTML = `<b>${esc(b.navn)}</b> <i>Tip</i><span>${esc(b.tekst || 'Der er ingen forklaring endnu.')}</span>`;
-    el.after(f);
-    Hjaelper.sig(`${b.navn}: ${b.tekst || 'Der er ingen forklaring endnu.'}`, { peg: el, nu: true });
+    if (!b) return;
+    if (el.classList.contains('udpeget')) { Hjaelper.stille(); return; } // et tryk til på samme ord lukker forklaringen
+    Hjaelper.sig(`${b.navn}: ${b.tekst || 'Der er ingen forklaring endnu.'}`, { peg: el, nu: true, hurtig: true }); // kun Grydelil forklarer, og hurtigt, så man ikke venter midt i madlavningen
   },
   nytBegreb() {
     const valgt = (String(window.getSelection ? window.getSelection() : '').trim() || sidsteValg).slice(0, 60);
@@ -1447,7 +1450,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     const a = $('#ark');
     if (a) { e.preventDefault(); const bag = a.querySelector('.ark-bag'); if (bag) bag.click(); else lukArk(); return; }
-    if ($('.forklaring')) { lukForklaring(); return; }
     if (window.Hjaelper && Hjaelper.luk && Hjaelper.luk()) return;
     if (skriverNu(el) && !(el.type === 'search' && el.value)) el.blur();
     return;
@@ -1478,7 +1480,7 @@ document.addEventListener('click', async e => {
     if (i >= 0) { e.preventDefault(); const mål = spor[i]; spor.length = i + 1; if (location.hash === mål) route(); else location.hash = mål; return; }
   }
   const el = e.target.closest('[data-h]');
-  if (!el) { if (!e.target.closest('.forklaring')) lukForklaring(); return; }
+  if (!el) return;
   const f = H[el.dataset.h];
   if (!f) return;
   try { await f(el, e); }

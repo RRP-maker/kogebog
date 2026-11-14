@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.11.0 · Tips kun hos hjælperen, og ny animation til ?
+- **Tips:** et blåt ord forklares kun af Grydelil. Tekstfeltet under ordet er væk, og «Tips til retten» står ikke længere nederst i opskriften. Et tryk mere på samme ord lukker forklaringen.
+- **Tips-listen** viser «Bruges i:» med alle opskrifter, hvor tippets navn står i et trin, samt den opskrift, tippet er valgt til (`tipsOpskrifter` i `app.js`).
+- **Hurtig forklaring:** teksten står der med det samme (ingen skrivning bogstav for bogstav), og boble og arm er hurtige (ca. 0,1 s). Er hjælperen skjult, kigger Grydelil forbi ved ?-knappen, forklarer og forsvinder igen (`gaest` i `hjaelper.js`).
+- **?-knappen:** Grydelil hopper op og kaster knappen væk som en bold og går så direkte til første trin i gennemgangen. Uden gennemgang på siden siger han hej.
+- **Slut på gennemgangen:** Grydelil hopper ud af skærmen og sætter ?-knappen tilbage (den falder på plads). Han er så skjult, som hvis man havde trykket på krydset. «Vis hjælperen» under Indstillinger henter ham frem uden animation.
+- Med «reducer bevægelse» springes kast, hop og fald over.
+- Ikke prøvet på iPhone eller iPad. Testet i headless Chrome (390 px) med mock-data.
+
 ## 2.10.1 · Import: overskrifter i trin fra hjemmesider
 - Mellemoverskrifter på hjemmesider bliver `overskrift` på det første trin under dem (kort linje uden punktum i teksten, eller en `HowToSection` i sidens JSON-LD). Står der kun én overskrift, og den står først, udelades den.
 - Sider med JSON-LD får nu også kategori (første mærke), køkken (første ord, «Grækenland» bliver «Græsk»), sværhed (skøn) og kortere navn («Broccolisalat – Klassisk opskrift…» bliver «Broccolisalat»). Lange trin deles i trin og deltrin som for tekst.
