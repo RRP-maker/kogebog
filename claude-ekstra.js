@@ -1,8 +1,8 @@
-// «Opdater opskrift med Claude» og «Tilføj tips med Claude». Samme vej som «Tilføj med Claude»:
+// «Opdater opskrift med Claude» og «Tilføj tips med Claude»:
 // appen laver en besked, du sætter ind hos Claude, og så sætter du Claudes svar ind her. Ingen nøgler i koden.
 const ClaudeEkstra = (() => {
   let O = null, TI = null; // O: opskriften, der opdateres. TI: opskrifter og tips, der allerede findes.
-  const felter = (pre, id) => `<div class="felt-knapper"><button type="button" class="knap" data-tpid="${pre}-saet" data-h="saetInd" data-v="${id}">Sæt ind</button><span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="${pre}-fortryd" data-h="fortrydRyd" data-v="${id}" hidden')}<button type="button" class="knap mini slet" data-tpid="${pre}-ryd" data-h="rydFelt" data-v="${id}">Ryd</button></span></div>`;
+  const felter = feltKnapper;
   const side = ({ tilbage, titel, tekst1, husk, pre, kopierH, gemH, gemTekst, plads, ekstra = '', udenEgen = false }) => {
     app.innerHTML = `${Ikoner.tilbage(tilbage)}<h1>${esc(titel)}</h1>
       <ol class="trin vejledning">

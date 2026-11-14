@@ -194,6 +194,12 @@ const Billeder = (() => {
     }
   }
 
+  // Ét billede til en opskrift uden om formularen (bruges af «Importér opskrift»): gøres mindre og sendes som forside
+  async function fraFil(opskriftId, fil) {
+    const s = await skaler(fil);
+    await gem({ st: { liste: [{ blob: s.stor, lille: s.lille, bytes: s.bytes, w: s.w, h: s.h, forside: true, trin: null, trinTekst: null, src: '' }], fjern: [] } }, opskriftId, []);
+  }
+
   // Sletter filer og tjekker bagefter, at de er væk fra lageret (et svar uden fejl er ikke nok)
   async function sletStier(stier) {
     if (!stier.length) return;
@@ -222,5 +228,5 @@ const Billeder = (() => {
   }
   async function ryd(uden) { for (let i = 0; i < uden.length; i += 50) await sletStier(uden.slice(i, i + 50).map(f => f.sti)); }
 
-  return { url, kb, hentFor, hentForsider, toppen, trinHtml, miniature, formular, gem, sletFor, gennemgang, ryd };
+  return { url, kb, hentFor, hentForsider, toppen, trinHtml, miniature, formular, gem, fraFil, sletFor, gennemgang, ryd };
 })();

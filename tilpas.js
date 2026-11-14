@@ -8,7 +8,7 @@ const Tilpas = (() => {
   const TEKSTER = 'main :is(h3, label, li, legend, summary, th, p), .ark-kort :is(h2, h3, p, label, li, small, th, summary), table[data-tpid]';
   const VALG = '.knap, .tilbage, .fane, .logo, main h1, main h2, main p.lille, main p.tomt, main small, .mp-dagfelt, .mp-ret, .mp-rk > span, .hj-fold, .tp-egen, ' + TEKSTER; // tp-egen: dine egne felter. hj-fold: overskrifterne i «Hvad har du derhjemme?» (en liste med skabelon) // de sidste: dagene, retternes felter og tællernes navne på Madplan
   const NEDE = '#form > button[type=submit]'; // «Gem» nederst i formularer: fast i CSS, uden for tilpasserens flytning
-  const FAST = '.opsk'; // tekster inde i selve opskriften: kan ændres, men aldrig flyttes
+  const FAST = '.opsk, .felt-knapper .knap, .felt-knapper .rund'; // tekster inde i selve opskriften og knapperne under et skrivefelt: kan ændres, men aldrig flyttes
   const KORT = '.kort:not([href^="#/opskrifter"]):not(.koebsforslag)', DELE = '.stepper[data-tpid] .rund, .stepper[data-tpid] input, .filter .chip', TRIN = '.stepper[data-tpid], .filter', TRINFLYT = TRIN.split(', ').map(x => x + '[data-flyt]').join(', '), FLYT = VALG + ', ' + DELE + ', ' + TRIN + ', ' + KORT + ', .opsk-felt'; // opsk-felt: opskriftens dele (datafelter)
   // Tæller på Madplan («−», skrivefelt, «+») og bjælker med mærker (kategorier, køkkener, søgning): delene kan tilpasses hver for sig (DELE), men et tryk-og-træk flytter hele tælleren eller bjælken (TRIN). // opskrifter kan ikke tilpasses
   const FELTSTR = [['s', 'Lille'], ['m', 'Normal'], ['l', 'Stor']]; // 32, 64 og 96 px: som mærker, knapper og faner

@@ -818,6 +818,10 @@ input.felt-l, select.felt-l { height: 96px; }
 /* Knapper lige under et skrivefelt: Sæt ind til venstre, Ryd (lille) til højre */
 .felt-knapper { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: var(--m) 0 var(--pt); }
 .felt-knapper .knap.mini { min-width: 64px; }
+/* Knapperne står i rækken, uanset hvilken feltstørrelse Designer giver dem (S-felter rykkes ellers 16 px ned) */
+.felt-knapper .knap, .felt-knapper .knap[data-fs], .felt-knapper .rund { top: 0; margin-top: 0; margin-bottom: 0; }
+.felt-knapper .rund-s { width: 32px; height: 32px; }
+.felt-knapper .rund:disabled { opacity: .35; cursor: default; }
 .knap.mini { height: 32px; min-height: 0; padding: 0 14px; font-size: 18px; line-height: 32px; border-radius: 16px; }
 
 /* Rigtig Liquid Glass alle steder: også skrivefelter, vinduer og farvede knapper er gennemsigtige med sløring og lyskant */
@@ -1014,6 +1018,15 @@ html { scroll-padding-top: 64px; }
 #nav a .ikon, #nav .nav-knap .ikon { width: 26px; height: 26px; vertical-align: 0; }
 #nav a:active { transform: scale(.95); }
 #nav a[aria-current=page] { background: var(--valgt); color: var(--paa-valgt); }
+/* Bjælken skifter knapper (normal, Tilpas, Designer): de nye knapper hopper blødt ind, én efter én. Det valgte ikon vipper kort.
+   Kun «backwards», så tryk-effekten (scale) virker igen bagefter. Ved reduceret bevægelse forkortes det af den fælles regel, og forsinkelsen fjernes. */
+@keyframes nav-ind { from { opacity: 0; transform: translateY(10px) scale(.8); } 55% { opacity: 1; } }
+@keyframes nav-valgt { 40% { transform: translateY(-4px) rotate(-8deg); } 75% { transform: translateY(1px) rotate(3deg); } }
+#nav > a, #nav > .nav-knap { animation: nav-ind .3s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+#nav > :nth-child(6n+2) { animation-delay: 30ms; } #nav > :nth-child(6n+3) { animation-delay: 60ms; } #nav > :nth-child(6n+4) { animation-delay: 90ms; }
+#nav > :nth-child(6n+5) { animation-delay: 120ms; } #nav > :nth-child(6n) { animation-delay: 150ms; }
+#nav a[aria-current=page] .ikon { animation: nav-valgt .4s var(--ud); }
+@media (prefers-reduced-motion: reduce) { #nav > * { animation-delay: 0s !important; } #nav a[aria-current=page] .ikon { animation: none; } }
 #nav .nav-hjem { display: none; }
 @media (hover: hover) { #nav a:hover:not([aria-current=page]) { background: var(--flade-hover); } }
 /* Bjælkens fire tilstande (opdatering 4b). Normal: navigationen. Designer i gang (body.tilpas): Fortryd, Gentag, Tilføj og Designer. Designer på pause: navigationen og Designer-knappen.
@@ -1133,14 +1146,6 @@ body.ruder-vist main { --maxb: 1248px; max-width: 1248px; }
 .rude-knapper { flex-wrap: nowrap; gap: 8px; }
 .rude-knapper > .hoved { flex: 1 1 auto; min-width: 0; padding: 0 12px; }
 /* «Importér»: de to måder at hente en opskrift ind på ligger i en menu, så de ikke fylder over listen */
-.tilfoej { position: relative; flex: none; }
-.tilfoej summary { list-style: none; cursor: pointer; padding: 0 14px 0 18px; }
-.tilfoej summary::-webkit-details-marker { display: none; }
-.tilfoej summary::after { content: ""; width: 8px; height: 8px; margin: -4px 0 0 4px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform .16s var(--ud); }
-.tilfoej[open] summary::after { margin-top: 4px; transform: rotate(-135deg); }
-.tilfoej summary:focus-visible { outline: 3px solid var(--gryde); outline-offset: 2px; }
-.tilfoej-menu { position: absolute; z-index: 5; right: 0; top: calc(100% + 4px); width: 288px; display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 32px; background: var(--flade); box-shadow: var(--skygge), 0 0 0 1px var(--glaskant); }
-.tilfoej-menu .knap { justify-content: flex-start; }
 /* Kategori og køkken: valgfelter med hele navnet, i stedet for rækker af chips, der ruller ud af ruden */
 .rude-valg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .rude-valg select { min-width: 0; margin: var(--m) 0 var(--pt); font-size: 17px; padding: 14px 28px 14px 10px; background-position: calc(100% - 15px) 50%, calc(100% - 8px) 50%; }

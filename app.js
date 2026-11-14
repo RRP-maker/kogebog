@@ -388,8 +388,7 @@ async function route() {
     if (a === 'forslag' && b === 'madplan') return await Madplan.side();
     if (a === 'forslag' && b === 'nye') return await Hjemme.gennemgang();
     if (a === 'forslag') return await forslagSide();
-    if (a === 'import' && b === 'links') return LinkImport.side();
-    if (a === 'import') return importSide();
+    if (a === 'import') return LinkImport.side();
     if (a === 'opdater' && b) return await ClaudeEkstra.opdaterSide(b);
     if (a === 'tipsimport') return await ClaudeEkstra.tipsSide();
     if (a === 'mere') return mereSide();
@@ -502,8 +501,7 @@ async function liste(type, maal = app) {
   const hoved = rude && type === 'opskrifter' ? `<h1>${T.navn}</h1>
     <div class="rakke rude-knapper">
       <a class="knap hoved" href="#/${type}/ny">+ ${T.ny}</a>
-      <details class="tilfoej"><summary class="knap" data-tpid="opskrifter-importer">Importér</summary>
-        <div class="tilfoej-menu"><a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a><a class="knap" data-tpid="opskrifter-links" href="#/import/links">${ik('gryde')} Importér links</a></div></details>
+      <a class="knap" data-tpid="opskrifter-importer" href="#/import">${ik('gryde')} Importér opskrift</a>
     </div>
     ${rader.length ? `${soeg}
       <div class="rude-valg" data-r="kat">${kat.length ? valg('valg-kat', 'katValg', 'Kategori', 'Alle kategorier', kat, L.kat) : ''}${koek.length ? valg('valg-koek', 'koekkenValg', 'Køkken', 'Alle køkkener', koek, L.koekken) : ''}</div>
@@ -512,7 +510,7 @@ async function liste(type, maal = app) {
     <h1>${T.navn}</h1>
     <div class="rakke">
       <a class="knap hoved" href="#/${type}/ny">+ ${T.ny}</a>
-      ${type === 'opskrifter' ? `<a class="knap" href="#/import">${ik('gnist')} Tilføj med Claude</a><a class="knap" data-tpid="opskrifter-links" href="#/import/links">${ik('gryde')} Importér links</a>` : ''}
+      ${type === 'opskrifter' ? `<a class="knap" data-tpid="opskrifter-importer" href="#/import">${ik('gryde')} Importér opskrift</a>` : ''}
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `${soeg}
@@ -526,8 +524,7 @@ async function liste(type, maal = app) {
   if (s) s.addEventListener('input', () => { L.q = s.value.trim().toLowerCase(); tegnListe(); });
   Hjaelper.side(type === 'opskrifter' ? [
     { tekst: 'Vil du skrive din egen ret? Tryk her.', maal: 'opskrifter|ny-opskrift', bev: 'salto' },
-    rude ? { tekst: 'Har du en opskrift fra nettet? Tryk på «Importér», så skriver Claude den ind for dig.', maal: 'opskrifter-importer', bev: 'skridt', valgfri: true }
-         : { tekst: 'Har du en opskrift fra nettet? Claude skriver den ind for dig.', maal: 'opskrifter|tilføj-med-claude', bev: 'skridt', valgfri: true },
+    { tekst: 'Har du en opskrift fra nettet? Tryk her, og sæt linket ind.', maal: 'opskrifter-importer', bev: 'skridt', valgfri: true },
     { tekst: 'Skriv et navn eller en ingrediens. Så finder jeg retten.', maal: 'soeg', bev: 'dans', valgfri: true },
     { tekst: 'Vælg, om jeg skal søge i navne, ingredienser eller begge dele.', maal: 'bjaelke-soeg', bev: 'skridt', valgfri: true },
     { tekst: 'Tryk på en kategori eller et køkken for at sortere.', maal: 'bjaelke-kategori', bev: 'hop', valgfri: true },
@@ -1024,7 +1021,7 @@ function tegnForslag() {
 }
 function saetMaks(n) { lager.gem('maxMangler', Math.max(0, Math.min(20, Math.round(Number(n)) || 0))); visNaesten = 20; tegnForslag(); }
 
-// ---------- Tilføj med Claude ----------
+// ---------- Beskeden til Claude (bruges af «Opdater med Claude») og læsning af svaret ----------
 const CLAUDE_BESKED = `Omskriv opskriften nederst til min kogebog-app. Den skal kunne laves af en 10-årig, men uden at være mere detaljeret end nødvendigt.
 
 Regler:
@@ -1067,39 +1064,11 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
 
 Her er opskriften:
 `;
-const CLAUDE_FOERSTE = CLAUDE_BESKED.slice(0, 30); // bruges til at se, om udklipsholderen allerede indeholder beskeden
-let claudeBesked = '';
 const FALDBACK_KAT = 'Grøntsager, Frugt, Kød, Fisk og skaldyr, Mejeri og æg, Bønner og linser, Pasta, ris og korn, Krydderier, Konserves';
-const FLERE_LINKS = `
-
-Der er flere links nedenfor. Lav én opskrift for hvert link. Svar med en liste i stedet: [ { …opskrift 1… }, { …opskrift 2… } ], stadig kun i én kodeblok.`;
-const antalLinks = t => (String(t).match(/https?:\/\/\S+/g) || []).length;
-const rydFoer = {}; // teksten før «Ryd», så den kan sættes tilbage
+const rydFoer = {}; // teksten før «Ryd» eller «Sæt ind», så «Fortryd» kan sætte den tilbage
 const lavBesked = () => CLAUDE_BESKED.replace('§KAT§', Katalog.kategorier().join(', ') || FALDBACK_KAT);
-function importSide() {
-  claudeBesked = lavBesked();
-  Katalog.hent().catch(() => {}); // kategorierne kommer med i beskeden
-  app.innerHTML = `${Ikoner.tilbage('#/opskrifter')}<h1>Tilføj med Claude</h1>
-    <ol class="trin vejledning">
-      <li>Skriv din opskrift her, eller sæt ét eller flere links ind (ét pr. linje). Står der intet, bruger jeg det, du har kopieret. Tryk så på knappen. Din tekst bliver sat sammen med beskeden til Claude.
-        <textarea id="egen" data-tpid="egen-tekst" rows="5" data-husk="importEgen" placeholder="Din opskrift eller links" aria-label="Din opskrift"></textarea>
-        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-egen-saet" data-h="saetInd" data-v="egen">Sæt ind</button><span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="import-egen-fortryd" data-h="fortrydRyd" data-v="egen" hidden')}<button type="button" class="knap mini slet" data-tpid="import-egen-ryd" data-h="rydFelt" data-v="egen">Ryd</button></span></div>
-        <button class="knap hoved stor formknap" data-tpid="kopier-besked" data-h="kopierBesked">${ik('gnist')} Kopiér besked</button></li>
-      <li>Åbn Claude, og sæt beskeden ind, hvis feltet er tomt. Har du et billede, så sæt det på hos Claude.
-        <div class="rakke venstre"><a class="knap stor" data-tpid="aabn-claude" id="aabnClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Åbn Claude ›</a></div></li>
-      <li>Kopiér Claudes svar, og sæt det ind her:
-        <textarea id="claudesvar" data-tpid="claude-svar" rows="7" data-husk="importSvar" placeholder='{ "navn": "…" }' aria-label="Claudes svar"></textarea>
-        <div class="felt-knapper"><button type="button" class="knap" data-tpid="import-svar-saet" data-h="saetInd" data-v="claudesvar">Sæt ind</button><span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', 'data-tpid="import-svar-fortryd" data-h="fortrydRyd" data-v="claudesvar" hidden')}<button type="button" class="knap mini slet" data-tpid="import-svar-ryd" data-h="rydFelt" data-v="claudesvar">Ryd</button></span></div></li>
-    </ol>
-    <div id="formfejl"></div>
-    <button class="knap gem stor formknap" data-h="gemImport">Gem opskriften</button>`;
-  document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); }); // teksten huskes, til opskriften er gemt
-  Hjaelper.side([
-    { tekst: 'Sæt din opskrift eller dine links ind her.', maal: 'egen-tekst', bev: 'salto' },
-    { tekst: 'Tryk her. Så kopierer jeg en besked til Claude.', maal: 'kopier-besked', bev: 'skridt' },
-    { tekst: 'Åbn Claude, og sæt beskeden ind.', maal: 'aabn-claude', bev: 'dans' },
-    { tekst: 'Sæt Claudes svar ind her. Tryk så på Gem.', maal: 'claude-svar', bev: 'rul' }]);;
-}
+// Knapperne under et skrivefelt: «Sæt ind» til venstre, «Fortryd» og «Ryd» til højre. Alle tre står der altid (Fortryd er slået fra, til der er noget at fortryde), så rækken ikke flytter sig.
+const feltKnapper = (pre, id) => `<div class="felt-knapper"><button type="button" class="knap mini" data-tpid="${pre}-saet" data-h="saetInd" data-v="${id}">Sæt ind</button><span class="hoejre">${Ikoner.rund('fortryd', 'Fortryd', `data-tpid="${pre}-fortryd" data-h="fortrydRyd" data-v="${id}" disabled`)}<button type="button" class="knap mini slet" data-tpid="${pre}-ryd" data-h="rydFelt" data-v="${id}">Ryd</button></span></div>`;
 // Læser Claudes svar. Giver { data } eller { fejl } med en besked på dansk.
 const tekstAf = x => typeof x === 'string' ? x : (x && (x.tekst ?? x.trin ?? x.beskrivelse)) || '';
 const enLinje = t => String(t).replace(/\s*\n\s*/g, ' ').trim();
@@ -1160,6 +1129,10 @@ function laesEn(j) {
     svaerhed: helt(j['sværhed'] ?? j.svaerhed, 1, 5), tid_minutter: helt(j.tid, 0, 6000), portioner: helt(j.portioner, 1, 100),
     ingredienser: ing, fremgangsmaade: trinTilTekst(trin)
   }, kat };
+}
+function feltHusk(felt) { // gemmer feltets tekst og slår «Fortryd» til
+  rydFoer[felt.id] = felt.value;
+  const f = document.querySelector(`[data-h="fortrydRyd"][data-v="${felt.id}"]`); if (f) f.disabled = false;
 }
 async function kopier(tekst) {
   try { await navigator.clipboard.writeText(tekst); return true; }
@@ -1375,72 +1348,26 @@ const H = {
     else if (naboe) rkFokus(naboe);
   },
   print() { window.print(); },
-  // Sæt ind: lægger det kopierede i feltet med en retur efter, så næste link kan stå på en ny linje
+  // Ryd, Fortryd og Sæt ind under et skrivefelt (feltKnapper). Ingen af dem sætter fokus i feltet, så tastaturet ikke springer frem.
   rydFelt(el) {
     const felt = $('#' + el.dataset.v);
-    if (felt.value) { rydFoer[felt.id] = felt.value; const f = document.querySelector(`[data-h="fortrydRyd"][data-v="${felt.id}"]`); if (f) f.hidden = false; }
-    felt.value = ''; lager.gem(felt.dataset.husk, ''); // ingen fokus, så tastaturet ikke kommer frem
+    if (!felt.value) return;
+    feltHusk(felt); felt.value = ''; felt.dispatchEvent(new Event('input', { bubbles: true }));
+    toast('Feltet er ryddet');
   },
-  fortrydRyd(el) { // sætter den ryddede tekst tilbage
+  fortrydRyd(el) { // sætter teksten fra før «Ryd» eller «Sæt ind» tilbage
     const felt = $('#' + el.dataset.v);
-    if (rydFoer[felt.id] != null) { felt.value = rydFoer[felt.id]; lager.gem(felt.dataset.husk, felt.value); delete rydFoer[felt.id]; }
-    el.hidden = true;
+    if (rydFoer[felt.id] != null) { felt.value = rydFoer[felt.id]; delete rydFoer[felt.id]; felt.dispatchEvent(new Event('input', { bubbles: true })); toast('Fortrudt'); }
+    el.disabled = true;
   },
-  async saetInd(el) {
+  async saetInd(el) { // lægger det kopierede sidst i feltet på en ny linje
     const felt = $('#' + el.dataset.v), t = await laesUdklip();
     if (t === null) { fejlbesked('Appen må ikke læse udklipsholderen. Hold fingeren i feltet, og vælg «Sæt ind».'); return; }
     if (!t) { fejlbesked('Der er ikke noget i udklipsholderen. Kopiér teksten først, og tryk så på «Sæt ind».'); return; }
     const foer = felt.value, mellem = foer && !foer.endsWith('\n') ? '\n' : '';
-    felt.value = foer + mellem + t + '\n';
+    feltHusk(felt); felt.value = foer + mellem + t + '\n';
     felt.dispatchEvent(new Event('input', { bubbles: true }));
-    felt.focus(); felt.scrollTop = felt.scrollHeight;
-  },
-  async kopierBesked() {
-    await Katalog.hent().catch(() => {});
-    const grund = lavBesked(), egen = ($('#egen') || {}).value ? $('#egen').value.trim() : '';
-    const udklip = egen ? '' : await laesUdklip(); // null = browseren måtte ikke læse udklipsholderen
-    // Ligger beskeden selv i udklipsholderen (man trykker to gange), så beholder vi den, vi allerede har bygget.
-    let status;
-    if (egen) { claudeBesked = grund.replace('\n\nHer er opskriften:\n', (antalLinks(egen) > 1 ? FLERE_LINKS : '') + '\n\nHer er opskriften:\n') + egen + '\n'; status = 'egen'; }
-    else if (udklip && udklip.startsWith(CLAUDE_FOERSTE)) status = 'igen';
-    else if (udklip) { claudeBesked = grund + udklip + '\n'; status = 'med'; }
-    else { claudeBesked = grund; status = udklip === null ? 'naegtet' : 'tom'; }
-    const ok = await kopier(claudeBesked);
-    // Hos Claude kan feltet udfyldes via adressen. Er beskeden for lang til det, åbner Claude tomt, og beskeden ligger i udklipsholderen.
-    const kodet = encodeURIComponent(claudeBesked);
-    $('#aabnClaude').href = 'https://claude.ai/new' + (kodet.length < 7000 ? '?q=' + kodet : '');
-    ok ? toast('Beskeden er kopieret') : fejlbesked('Beskeden blev ikke kopieret. Tryk på knappen igen.');
-  },
-  async gemImport(el) {
-    const svar = laesImport($('#claudesvar').value);
-    if (svar.fejl) { $('#formfejl').innerHTML = `<div class="fejlboks">${esc(svar.fejl)}</div>`; return; }
-    el.disabled = true;
-    try {
-      let alle = svar.liste || [svar];
-      const antal = alle.length;
-      let nu = []; try { nu = await api('opskrifter?select=id,titel'); } catch (e) { console.error(e); }
-      const set = [], dubletter = [];
-      for (const r of alle) {
-        const o = findNavn(nu, r.data.titel) || findNavn(set, r.data.titel);
-        if (o) dubletter.push({ ...o, titel: r.data.titel }); r.dublet = !!o;
-        set.push({ id: null, titel: r.data.titel, ...(o && o.id ? { id: o.id } : {}) });
-      }
-      if (dubletter.length) {
-        const v = await spoergDublet(dubletter, antal);
-        if (!v) { el.disabled = false; return; }
-        if (v === 'spring') alle = alle.filter(r => !r.dublet);
-        if (!alle.length) { el.disabled = false; toast('Alle findes allerede'); return; }
-      }
-      let sidste;
-      for (const r of alle) {
-        r.data.ingredienser = await Katalog.knyt(r.data.ingredienser, {}, r.kat); // ingredienserne lægges i kataloget med Claudes kategorier
-        [sidste] = await api('opskrifter', { method: 'POST', body: r.data });
-      }
-      lager.gem('importEgen', ''); lager.gem('importSvar', ''); // opskriften er gemt, så felterne tømmes
-      const flere = alle.length > 1;
-      toast(flere ? `${alle.length} opskrifter er gemt` : 'Opskriften er gemt'); Hjaelper.glad(flere ? 'Opskrifterne er gemt!' : 'Opskriften er gemt!');
-      location.hash = flere ? '#/opskrifter' : '#/opskrifter/' + sidste.id;
-    } catch (err) { el.disabled = false; throw err; }
+    felt.scrollTop = felt.scrollHeight; toast('Sat ind');
   },
   async eksport() {
     const tabeller = ['opskrifter', 'tips', 'favoritter', 'stjerner'], data = { hentet: new Date().toISOString() };
@@ -1453,7 +1380,7 @@ const H = {
     toast('Sikkerhedskopien er hentet');
   }
 };
-document.addEventListener('input', e => { // teksten på «Tilføj med Claude» huskes, også hvis appen lukkes eller opdateres
+document.addEventListener('input', e => { // teksten i felter med data-husk huskes, også hvis appen lukkes eller opdateres
   if (e.target.dataset && e.target.dataset.husk) lager.gem(e.target.dataset.husk, e.target.value);
 });
 function markerKat() { document.querySelectorAll('.katvalg .chip').forEach(c => { const f = $('#f_' + (c.dataset.f || 'kategori')); c.classList.toggle('valgt', !!f && c.dataset.v.toLowerCase() === f.value.trim().toLowerCase()); }); }
@@ -1463,9 +1390,6 @@ document.addEventListener('change', e => {
   if (e.target.id === 'maks') saetMaks(e.target.value);
   if (e.target.id === 'udenkryd') { lager.gem('udenKrydderier', e.target.checked); tegnForslag(); }
   if (e.target.id === 'portinp') { S.port = Math.max(1, Math.min(50, Math.round(Number(e.target.value)) || S.r.portioner || 4)); portValg[S.r.id] = S.port; tegnIng(); }
-});
-document.addEventListener('click', e => { // «Importér»-menuen lukkes, når man trykker et andet sted
-  document.querySelectorAll('details.tilfoej[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; });
 });
 // ---------- Tastatur (Mac, og iPad med tastatur) ----------
 // Escape lukker det øverste: menu, vindue, forklaring, Grydelil. / eller ⌘K søger. ⌘1–5 (eller ⌥1–5 i browseren) går til de fem steder.
@@ -1482,8 +1406,6 @@ document.addEventListener('keydown', e => {
   if (e.defaultPrevented || e.isComposing) return;
   const mod = e.metaKey || e.ctrlKey, el = document.activeElement;
   if (e.key === 'Escape') {
-    const menu = document.querySelector('details.tilfoej[open]');
-    if (menu) { menu.open = false; menu.querySelector('summary').focus(); return; }
     const a = $('#ark');
     if (a) { e.preventDefault(); const bag = a.querySelector('.ark-bag'); if (bag) bag.click(); else lukArk(); return; }
     if ($('.forklaring')) { lukForklaring(); return; }

@@ -2,6 +2,17 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.8.0 · Importér opskrift, knapper under skrivefelter og bjælkens animation
+- **«Importér opskrift»** erstatter «Tilføj med Claude» og «Importér links» (`#/import`, `linkimport.js`). Ét felt: sæt et eller flere links ind, sæt teksten fra en side ind, eller skriv selv. Mere end 40 tegn ud over links læses som tekst.
+- **Tekst læses i appen** (`LinkImport.tekstTilOpskrift`): navnet øverst, «Ingredienser» og «Sådan gør du» (eller de engelske ord) deler teksten. Uden overskrifter er linjer med tal forrest ingredienser. En linje med kolon til sidst er en gruppe («Sovs:»). Opskriften gemmes og åbnes, så den kan tjekkes.
+- **Funktionen `hent-opskrift`:** sender billedets adresse med, sender sidens tekst, når der ikke er JSON-LD, læser teksten under opslag på TikTok (oEmbed), Instagram og Facebook (forhåndsvisningens tekst), og henter et billede for appen (`{ billede }`, kun billeder, højst 8 MB). Skal lægges ind i Supabase igen.
+- **Billede fra hjemmesider** gemmes som forside (`Billeder.fraFil`). Fejler billedet, er opskriften stadig gemt («uden billede»). Ikke fra sociale medier.
+- **Sæt ind, Fortryd og Ryd** (`feltKnapper` i `app.js`): alle tre står der altid, er 32 px høje og kan ikke flyttes i Designer (tekst, størrelse og farve kan stadig ændres). Fortryd er slået fra, til der er noget at fortryde, og tager også «Sæt ind» tilbage. Ingen af dem åbner tastaturet.
+- **Navigationsbjælken:** når knapperne skifter (normal, Tilpas, Designer), hopper de nye ind én efter én (0,3 s), og det valgte ikon vipper kort. Ved reduceret bevægelse sker skiftet uden bevægelse.
+- Fjernet: siden «Tilføj med Claude» for opskrifter, `kopierBesked`, `gemImport` og «Importér»-menuen. «Opdater med Claude» og «Tilføj tips med Claude» er uændrede.
+- Beslutning: tekst læses med faste regler, ikke med en AI, så der ikke skal en nøgle ind. Står opskriften kun i en video, kan den ikke hentes.
+- Beslutning: de nye knapper har nye id'er (`importer-…`), så gamle placeringer fra Designer ikke følger med.
+
 ## 2.7.0 · Designer: alle tekster, popupvinduer, tabeller og farver med rolle (opdatering 4d-2)
 - **Alle faste tekster kan vælges:** også mellemoverskrifter, navne over felter, punkter i vejledninger, tabelhoveder og teksterne i appens popupvinduer. Data kan ikke ændres: navne, beskeder med «», fejlbeskeder, opskriftens linjer og tekster med et felt inde i sig.
 - **Tekster, appen selv skifter** (fx en status), skrives ikke længere tilbage til den første tekst. Kun en tekst, du har ændret i Designer, sættes ind.
