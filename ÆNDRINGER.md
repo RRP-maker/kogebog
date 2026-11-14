@@ -2,6 +2,9 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.9.1 · Søgevalg inde i søgefeltet
+- Begge / Navn / Ingredienser sidder nu inde i søgefeltets ramme, nederst, som plus og minus i ingredienslisten (`.soegblok`, 96 px højde). Før var de en separat strimmel under feltet.
+
 ## 2.9.0 · Mærker på opskrifter, kameraknap og søgeblok
 - **Mærke på opskrifter** (`kilde`: `egen` eller `importeret`, `supabase/kilde.sql`, kørt i Supabase). «Importér opskrift» gemmer som importeret, formularen som min egen. Øverst i formularen (også ved Tilpas) kan det skiftes. Mærket står blandt kategori og køkken på opskriften. Alle gamle opskrifter blev «min egen».
 - **«Mine egne»** over søgefeltet: tændt = kun egne, slukket = alle. Tændt som standard, hver gang listen åbnes, medmindre man slår «Vis kun mine egne opskrifter som standard» fra under Indstillinger (`egneStandard`). Mærket vises i rækken, når alle vises.

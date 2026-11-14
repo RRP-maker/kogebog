@@ -1220,14 +1220,15 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .kilde-valg .chip:has(input:focus-visible) { outline: 3px solid var(--gryde); outline-offset: 2px; border-radius: 16px; }
 .chips > span.kilde-maerke .ikon { width: 18px; height: 18px; vertical-align: -3px; }
 
-/* Søgefeltet og Begge / Navn / Ingredienser er ét felt: valgene sidder fast under søgefeltet (12 + 64 + 52 = 128 px = 4 rækker) */
-.soegblok { display: flex; flex-direction: column; border-radius: 10px; box-shadow: var(--skygge), var(--glans); }
-.soegblok #soeg { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; box-shadow: none; border-bottom-color: transparent; }
-.soegblok .filter.soegtype { position: static; top: auto; height: 52px; margin: 0; padding: 0 8px; gap: 4px; align-items: center; overflow-x: auto;
-  border: 1px solid var(--glaskant); border-top: 0; border-radius: 0 0 10px 10px; background-color: var(--felt-bg);
-  -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); -webkit-mask-image: none; mask-image: none; }
-.soegblok .soegtype .chip { padding: 0 12px; }
-
+/* Søgefeltet og Begge / Navn / Ingredienser er ét felt: valgene sidder inde i feltets ramme, nederst, som plus og minus i ingredienslisten.
+   12 + 96 + 20 = 128 px = 4 rækker. */
+.soegblok { display: flex; flex-direction: column; height: 96px; margin: var(--m) 0 var(--pt); border-radius: 10px; overflow: hidden;
+  background-color: var(--felt-bg); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans);
+  -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); }
+.soegblok:focus-within { outline: 3px solid var(--gryde); outline-offset: 1px; }
+.soegblok #soeg { flex: 1; min-height: 0; height: auto; margin: 0; padding: 0 12px; border: 0; border-radius: 0; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; outline: 0; }
+.soegblok .filter.soegtype { position: static; top: auto; flex: none; height: 44px; margin: 0; padding: 0 8px 6px; gap: 4px; align-items: center; overflow-x: auto; border: 0; border-radius: 0; background: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
 /* Kameraknap i billedafsnittet: rund, kun ikon. Menuen med «Tag billede» og «Vælg fra enheden» åbner under den. */
 .bil-tilfoej { position: relative; display: flex; align-items: center; height: 32px; }
 .rund.rund-s.bil-rund { width: 56px; height: 56px; margin: -12px 0; }
