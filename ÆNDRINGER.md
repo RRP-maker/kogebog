@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.9.2 · Bedre læsning af opskrifter fra hjemmesider
+- `tekstTilOpskrift` læser nu også kategori, køkken og sværhed (mærkerne over opskriften, ellers rettens navn; sværhed er et skøn), navn fra sidens egen overskrift, tid fra «Tid i alt» og antal fra «Antal».
+- Overskrifter i ingredienslisten («Til servering») bliver grupper. Overskrifter i fremgangsmåden («Mangosalsa») bliver trin med deltrin. «1 ½ kg» læses som 1.5, «salt og friskkværnet peber» bliver to linjer, og parenteser fjernes.
+- Testet uden for appen mod 16 gemte sider fra valdemarsro.dk (funktionen og appens egen kode kørt i Node). 13 af 16 uden anmærkninger. Ingen sider har JSON-LD, så alle går gennem tekstlæseren. Funktionen `hent-opskrift` er uændret, så den skal ikke lægges ind i Supabase igen.
+
 ## 2.9.1 · Søgevalg inde i søgefeltet
 - Begge / Navn / Ingredienser sidder nu inde i søgefeltets ramme, nederst, som plus og minus i ingredienslisten (`.soegblok`, 96 px højde). Før var de en separat strimmel under feltet.
 

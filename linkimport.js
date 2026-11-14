@@ -19,6 +19,30 @@ const LinkImport = (() => {
   const SLUT = /^(føj til|sæt på madplan|udskriv\b|send$|hold min skærm|næringsindhold|mine noter|tips?\b|tip til|forslag til servering|prøv også|relaterede|læs også|del opskriften|spørgsmål til|\d+\s+kommentarer|kommentarer\b|bedøm)/i;
   const STOEJ = /^(tilmeld|log ind|menu|søg\b|premium|cookies?|accepter|gå til indhold|skip to)/i; // menuer og tilbud, der kan stå før opskriften
   const rensTitel = t => String(t || '').split(/\s+[|•]\s+/)[0].replace(/\s+[-–—]\s+(valdemarsro|[^-–—]*opskrift)\s*$/i, '').trim(); // «Navn | Side» -> «Navn»
+  // Kategori og køkken findes først i mærkerne over opskriften, ellers i rettens navn
+  const KAT_ORD = [[/dessert|kage|bagværk/, 'Dessert'], [/drik|cocktail|smoothie/, 'Drikke'], [/^salat|\bsalat\b/, 'Salat'], [/forret/, 'Forret'], [/tilbehør/, 'Tilbehør'], [/aftensmad|frokost|middag|hovedret|hverdagsmad|bålmad|simremad/, 'Hovedret']];
+  const KOEKKEN_ORD = [[/taco|burrito|fajita|enchilada|quesadilla/, 'Mexicansk'], [/teriyaki|sushi|wok|ramen|pad thai/, 'Asiatisk'], [/pasta|spaghetti|carbonara|bolognese|lasagne|risotto|pizza|gnocchi|alfredo|pesto/, 'Italiensk'], [/frikadelle|millionbøf|medister|stegt flæsk|hakkebøf|tarteletter|leverpostej/, 'Dansk']];
+  const UDEN_MAENGDE = /^(salt|peber|friskkværnet|sort peber|olie|olivenolie|smør|vand|sukker|mel|chili|persille|dild|basilikum|timian|oregano|koriander|citron|lime|løg|hvidløg)\b/i;
+  const ingOverskrift = l => /^[A-ZÆØÅ]/.test(l) && l.length <= 50 && !/[,.;()]/.test(l) && !UDEN_MAENGDE.test(l);
+  const BROEK_T = { '½': 0.5, '¼': 0.25, '¾': 0.75 };
+  // «1 ½ kg kartofler» -> «1.5 kg kartofler», «salt og friskkværnet peber» -> to linjer, «(eller anden pasta)» væk
+  const ingLinjer = l => {
+    const t = renIng(l.replace(/^(\d+)\s*([½¼¾])/, (m, a, b) => String(Number(a) + BROEK_T[b])));
+    const g = t.match(/^(.*?\S),\s*(\S+)$/); if (g && g[1].toLowerCase().includes(g[2].toLowerCase())) return [g[1]]; // «teriyakisauce, sauce»
+    const sp = t.match(/^(salt)\s+og\s+(.*peber.*)$/i);
+    return sp ? [sp[1].toLowerCase(), sp[2]] : [t];
+  };
+  // Korte linjer uden slutpunktum («Mangosalsa», «Anret salaten») er overskrifter: de bliver et trin, og linjerne under bliver deltrin
+  const trinOverskrift = t => t.length <= 45 && t.split(/\s+/).length <= 5 && !/[.!?:,;]$/.test(t) && /^[A-ZÆØÅ]/.test(t);
+  function trinMedDele(trin) {
+    const ud = [];
+    trin.forEach((t, i) => {
+      if (trinOverskrift(t) && trin[i + 1] && !trinOverskrift(trin[i + 1])) ud.push({ tekst: t, deltrin: [] });
+      else if (ud.length && typeof ud[ud.length - 1] === 'object') ud[ud.length - 1].deltrin.push(t);
+      else ud.push(t);
+    });
+    return ud;
+  }
   function tekstTilOpskrift(tekst, titel) {
     const linjer = String(tekst || '').replace(/\r/g, '')
       .replace(/[ \t]+(?=(?:ingredienser|ingredients|fremgangsmåde|sådan gør du|instructions|method|directions)\s*:)/gi, '\n') // overskrifter midt i en linje (opslag uden linjeskift)
@@ -44,16 +68,29 @@ const LinkImport = (() => {
     else if (trin.length === 1 && trin[0].length > 160) trin = trin[0].split(/(?<=[.!?])\s+(?=[A-ZÆØÅ])/);
     const stopI = trin.findIndex((t, i) => i > 0 && SLUT.test(t)); if (stopI > 0) trin = trin.slice(0, stopI); // sidens knapper, tips, kommentarer og forslag hører ikke til trinnene
     trin = trin.map(t => t.replace(/^(?:trin|step)?\s*\d{1,2}\s*[.):]\s*/i, '').trim()).filter(t => t.length > 2);
-    // Ingredienser: en linje, der slutter med kolon, er en overskrift til en gruppe («Sovs:»)
+    // Ingredienser: en linje, der slutter med kolon, eller en kort linje uden tal og med stort begyndelsesbogstav («Til servering»), er en overskrift til en gruppe
     const ud = []; let gruppe = null;
-    for (const l of ing) { if (/:$/.test(l) && !TAL.test(l)) { gruppe = { overskrift: l.slice(0, -1).trim(), varer: [] }; ud.push(gruppe); } else (gruppe ? gruppe.varer : ud).push(l); }
+    for (const [i, l] of ing.entries()) {
+      if (!TAL.test(l) && (/:$/.test(l) || (ingOverskrift(l) && ing[i + 1] && TAL.test(ing[i + 1])))) { gruppe = { overskrift: l.replace(/:$/, '').trim(), varer: [] }; ud.push(gruppe); continue; }
+      (gruppe ? gruppe.varer : ud).push(...ingLinjer(l));
+    }
+    const trinUd = trinMedDele(trin);
     if (!ud.some(x => typeof x === 'string' || x.varer.length)) return { fejl: 'Jeg kunne ikke finde ingredienserne. Skriv én ingrediens på hver linje under «Ingredienser».' };
-    if (!trin.length) return { fejl: 'Jeg kunne ikke finde, hvordan retten laves. Skriv «Sådan gør du» på en linje for sig selv, og skriv trinnene under.' };
-    const hoved = foer.join(' '), port = hoved.match(/(\d+)\s*(?:portioner|personer|pers\b|servings|people)/i) || hoved.match(/(?:serves|rækker til)\s*(\d+)/i);
-    const min = hoved.match(/(\d+)\s*(?:min\b|minutter|minutes)/i), timer = hoved.match(/(\d+)\s*(?:timer?|hours?)\b/i);
-    const navn = (rensTitel(titel) || foer.find(l => !/^\d/.test(l) && l.length > 2 && !STOEJ.test(l)) || '').replace(/[:.!]+$/, '').slice(0, 80).trim();
+    if (!trinUd.length) return { fejl: 'Jeg kunne ikke finde, hvordan retten laves. Skriv «Sådan gør du» på en linje for sig selv, og skriv trinnene under.' };
+    const hoved = foer.join(' '), iOpsk = foer.findIndex(l => /^opskrift$/i.test(l)); // på nogle sider står kategori og mærker lige over «Opskrift», og rettens navn lige under
+    const port = hoved.match(/\bantal\s+(\d+)\s*(?:pers|portion)/i) || hoved.match(/(\d+)\s*(?:portioner|personer|pers\b|servings|people)/i) || hoved.match(/(?:serves|rækker til)\s*(\d+)/i);
+    const tidLinje = (hoved.match(/tid i alt\s+((?:\d+\s*(?:timer|time|t)\b\.?\s*)?(?:\d+\s*min\w*\.?)?)/i) || [])[1] || hoved;
+    const min = tidLinje.match(/(\d+)\s*(?:min\b|minutter|minutes)/i), timer = tidLinje.match(/(\d+)\s*(?:timer?|hours?)\b/i);
+    const tid = (timer ? Number(timer[1]) * 60 : 0) + (min ? Number(min[1]) : 0) || null;
+    const efterOpsk = iOpsk >= 0 ? foer[iOpsk + 1] : '', titelDel = rensTitel(titel).split(/\s+[-–—|]\s+|\s+I\s+(?=[a-zæøå])/)[0];
+    const navn = ((efterOpsk && efterOpsk.split(/\s+[-–—]\s+/)[0]) || titelDel || foer.find(l => !/^\d/.test(l) && l.length > 2 && !STOEJ.test(l)) || '').replace(/[:.!]+$/, '').slice(0, 80).trim();
     if (!navn) return { fejl: 'Jeg mangler rettens navn. Skriv navnet på den øverste linje.' };
-    return { j: { navn, portioner: port ? Number(port[1]) : null, tid: (timer ? Number(timer[1]) * 60 : 0) + (min ? Number(min[1]) : 0) || null, ingredienser: ud, trin } };
+    const maerker = iOpsk >= 0 ? foer.slice(Math.max(0, iOpsk - 2), iOpsk).join(', ').split(/\s*,\s*/).map(x => x.toLowerCase()) : [];
+    const kategori = (KAT_ORD.find(([re]) => maerker.some(m => re.test(m))) || KAT_ORD.find(([re]) => !maerker.length && re.test(navn.toLowerCase())) || [])[1] || null;
+    const koekken = (maerker.map(m => OPSKRIFT_KOEKKEN.find(k => k.toLowerCase() === m)).find(Boolean)) || (KOEKKEN_ORD.find(([re]) => re.test(navn.toLowerCase())) || [])[1] || null;
+    const antalVarer = ud.reduce((n, x) => n + (typeof x === 'string' ? 1 : x.varer.length), 0);
+    const svaerhed = Math.min(4, 1 + (antalVarer > 8) + (antalVarer > 14) + ((tid || 30) > 60)); // et skøn, der kan rettes
+    return { j: { navn, kategori, 'køkken': koekken, 'sværhed': svaerhed, portioner: port ? Number(port[1]) : null, tid, ingredienser: ud, trin: trinUd } };
   }
 
 
