@@ -2,6 +2,9 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.9.3 · Lange trin deles i deltrin
+- Et trin med flere sætninger (fra en hjemmeside) bliver til et trin med første sætning som tekst og resten som deltrin. Under en overskrift bliver hver sætning et deltrin. Trin med én sætning er uændrede.
+
 ## 2.9.2 · Bedre læsning af opskrifter fra hjemmesider
 - `tekstTilOpskrift` læser nu også kategori, køkken og sværhed (mærkerne over opskriften, ellers rettens navn; sværhed er et skøn), navn fra sidens egen overskrift, tid fra «Tid i alt» og antal fra «Antal».
 - Overskrifter i ingredienslisten («Til servering») bliver grupper. Overskrifter i fremgangsmåden («Mangosalsa») bliver trin med deltrin. «1 ½ kg» læses som 1.5, «salt og friskkværnet peber» bliver to linjer, og parenteser fjernes.

@@ -34,14 +34,17 @@ const LinkImport = (() => {
   };
   // Korte linjer uden slutpunktum («Mangosalsa», «Anret salaten») er overskrifter: de bliver et trin, og linjerne under bliver deltrin
   const trinOverskrift = t => t.length <= 45 && t.split(/\s+/).length <= 5 && !/[.!?:,;]$/.test(t) && /^[A-ZÆØÅ]/.test(t);
+  const saetninger = t => t.split(/(?<=[.!?])\s+(?=[A-ZÆØÅ])/).map(x => x.trim()).filter(Boolean);
+  // Flere sætninger i ét trin: den første sætning er trinnet, resten er deltrin. Under en overskrift bliver hver sætning et deltrin.
   function trinMedDele(trin) {
     const ud = [];
     trin.forEach((t, i) => {
-      if (trinOverskrift(t) && trin[i + 1] && !trinOverskrift(trin[i + 1])) ud.push({ tekst: t, deltrin: [] });
-      else if (ud.length && typeof ud[ud.length - 1] === 'object') ud[ud.length - 1].deltrin.push(t);
-      else ud.push(t);
+      const dele = saetninger(t), sidste = ud[ud.length - 1];
+      if (trinOverskrift(t) && trin[i + 1] && !trinOverskrift(trin[i + 1])) ud.push({ tekst: t, deltrin: [], overskrift: true });
+      else if (sidste && typeof sidste === 'object' && sidste.overskrift) sidste.deltrin.push(...dele);
+      else ud.push(dele.length > 1 ? { tekst: dele[0], deltrin: dele.slice(1) } : t);
     });
-    return ud;
+    return ud.map(x => (x && x.overskrift ? { tekst: x.tekst, deltrin: x.deltrin } : x));
   }
   function tekstTilOpskrift(tekst, titel) {
     const linjer = String(tekst || '').replace(/\r/g, '')
