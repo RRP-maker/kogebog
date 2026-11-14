@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.13.0 · Styr på ingredienser, fase 1: grundlag
+Intet ændres på skærmen. Grundlaget for, at en ingrediens hedder ét og er den samme overalt (plan: `claude/opdatering-ingredienser-plan.md`).
+- **Regler** (`ingrediens_regler`): «skrevet tekst → resultat». Slags: `vare` (alias eller vare med tilberedning), `del`, `eller`, `slet`. En tekst kan kun stå ét sted: som regel eller som navn på en ingrediens (tjekkes i databasen, også når to enheder gemmer samtidig). Regler ændres kun gennem `ingrediens_regel_gem` og `ingrediens_regel_slet`, som tjekker version, så den anden enheds ændring ses først.
+- **Fællesnavne:** `ingredienser.faelles_id` peger fra en variant («frisk timian») til fællesnavnet («timian»). Ét niveau. Et fællesnavn kan ikke stå i «Derhjemme».
+- **Én vej til nye ingredienser:** `ingrediens_opret` (alt eller intet, afviser navne, der findes som navn eller regel). Appen bruger den først fra fase 5.
+- **Kopi og gendan** tager regler og fællesnavne med. `ingrediens_ret` flytter regler og varianter med ved sammenlægning, og en ingrediens i en regel kan ikke slettes.
+- **`Katalog.laes`:** læser et navn som kendt, tæt på (ental og flertal, ét bogstav fra, delt eller samlet ord, accenter), flere eller ukendt, og giver lignende navne til spørgsmålet. Bruges først fra fase 5.
+- Målt mod de 591 navne fra før 14. nov. Se `claude/opdatering-ingredienser-1-status.md` i projektet.
+
 ## 2.12.0 · Grydelil er enten i gang eller der ikke
 - **Ingen hvileplads:** Grydelil står ikke længere ved siden af ?-knappen. Enten er han i gang (tur, tip eller besked), eller også er han der ikke, og kun ?-knappen står.
 - **?-knappen:** Grydelil letter som en raket direkte ud af hjørnet og op til første trin i gennemgangen. Bolden (?) bliver sparket væk, når han letter. Ét tryk på ? startes kun, når han ikke er i gang.

@@ -1,7 +1,7 @@
 // Kataloget over ingredienser (tabellerne «ingredienser» og «ingrediens_kategorier» i Supabase).
 // Opskrifter lægger deres ingredienser her. Kategorien kommer fra kataloget, fra Claude eller fra dig. I appen hedder både «ingen kategori» og den rigtige kategori «Andet» (til det, der ikke passer andre steder) «Ikke sorteret», se katNavn i app.js.
 const Katalog = (() => {
-  let kat = [], ing = [];
+  let kat = [], ing = [], regler = [];
   const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
   const rens = n => norm(String(n).replace(/\([^)]*\)/g, ' ').replace(/[.,;:]+$/, ''));
   const katId = navn => { const n = norm(navn), k = kat.find(x => x.navn_norm === (n === 'ikke sorteret' ? 'andet' : n)); return k ? k.id : null; }; // «Ikke sorteret» er kategorien «Andet»
@@ -9,7 +9,7 @@ const Katalog = (() => {
   const sorteret = () => [...kat].sort((a, b) => a.raekkefolge - b.raekkefolge || a.navn.localeCompare(b.navn, 'da'));
   const unik = navne => [...new Set(navne.map(n => rens(simpel(n))).filter(Boolean))]; // i databasen står ingredienserne i simpel form
   async function hent() {
-    [kat, ing] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*')]);
+    [kat, ing, regler] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('ingrediens_regler?select=*')]);
     if (!kat.some(k => k.navn_norm === 'andet')) { // «Andet» er en rigtig kategori, som altid skal findes (står sidst)
       try { await api('ingrediens_kategorier?on_conflict=navn_norm', { method: 'POST', flet: 'ignorer', body: { navn: 'Andet', navn_norm: 'andet', raekkefolge: 1000 } }); kat = await api('ingrediens_kategorier?select=*'); }
       catch (e) { console.error(e); }
@@ -74,6 +74,71 @@ const Katalog = (() => {
       const f = [d.f, x.f].filter(Boolean).join(', ');
       return { m: x.m, e: x.e, n: i.navn, id: i.id, ...(f && { f }) };
     }).filter(Boolean);
+  }
+  // ---------- Læs et skrevet navn (Styr på ingredienser) ----------
+  // Fire udfald. «kendt»: navnet, selve varen eller en regel passer præcist og bruges uden spørgsmål.
+  // «taet»: præcis én ingrediens ligner (ental og flertal, ét bogstav fra, delt eller samlet ord, accenter). Import retter selv, de andre steder spørger.
+  // «flere»: flere ligner. «ukendt»: ingen ligner. Ved «flere» og «ukendt» spørges der altid. Linjer med «og» eller «eller» rettes aldrig selv.
+  // Svar: { udfald, via, slags, varer: [{ id, f }], lignende: [id, …] (højst 5, til spørgsmålet), ogEller }
+  const ACCENT = { é: 'e', è: 'e', ê: 'e', ë: 'e', á: 'a', à: 'a', â: 'a', ä: 'a', í: 'i', ì: 'i', î: 'i', ï: 'i', ó: 'o', ò: 'o', ô: 'o', ú: 'u', ù: 'u', û: 'u', ü: 'u', ç: 'c', ñ: 'n' };
+  const samlet = s => s.replace(/[éèêëáàâäíìîïóòôúùûüçñ]/g, c => ACCENT[c]).replace(/[\s-]+/g, '');
+  const ENDELSER = ['e', 'r', 'er', 'en', 'et', 'ne', 'ene', 'erne', 's'];
+  const boejning = (a, b) => { if (a.length > b.length) [a, b] = [b, a]; return a.length >= 3 && a !== b && b.startsWith(a) && ENDELSER.includes(b.slice(a.length)); };
+  function afstand(a, b, max) { // bogstaver, der skal ændres, tilføjes, fjernes eller bytte plads
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    let p2 = null, p = [...Array(b.length + 1).keys()];
+    for (let i = 1; i <= a.length; i++) {
+      const r = [i];
+      for (let j = 1; j <= b.length; j++) {
+        r[j] = Math.min(p[j] + 1, r[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        if (p2 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) r[j] = Math.min(r[j], p2[j - 2] + 1);
+      }
+      p2 = p; p = r;
+    }
+    return p[b.length];
+  }
+  // Det, et navn kan ligne: ingrediensernes navne og aliaser (en regel med én vare uden tilberedning)
+  const kandidater = (liste, rl) => [...liste.map(i => ({ t: i.navn_norm, id: i.id })),
+    ...rl.filter(r => r.slags === 'vare' && r.resultat.length === 1 && !r.resultat[0].f).map(r => ({ t: r.tekst, id: r.resultat[0].id }))];
+  function taetPaa(k, c) {
+    const a = samlet(k), b = samlet(c);
+    if (a.replace(/\D/g, '') !== b.replace(/\D/g, '')) return null; // «cremefraiche 38 %» er ikke «cremefraiche 18 %»
+    if (a === b) return 'ord';
+    const ka = k.split(' '), cb = c.split(' ');
+    if ((ka.length === cb.length && ka.some((w, i) => boejning(w, cb[i])) && ka.every((w, i) => w === cb[i] || boejning(w, cb[i]))) || boejning(a, b)) return 'boejning';
+    if (Math.min(a.length, b.length) >= 5 && afstand(a, b, 1) <= 1) return 'stavning';
+    return null;
+  }
+  const SMAAORD = ['til', 'med', 'og', 'eller', 'af', 'på', 'fra', 'som', 'uden', 'i'];
+  function lignendeAf(k, alle, foerst) { // til spørgsmålet: dem, der står i navnet, ligner det eller deler et ord med det
+    const a = samlet(k), ord = k.split(' ').filter(w => w.length >= 3 && !SMAAORD.includes(w)), pt = new Map();
+    for (const c of alle) {
+      if (foerst.includes(c.id)) continue;
+      const b = samlet(c.t), et = c.t.length >= 4 && !c.t.includes(' ');
+      let p = null;
+      if (c.t.length >= 3 && ((' ' + k + ' ').includes(' ' + c.t + ' ') || a.endsWith(b) || a.startsWith(b) || b.endsWith(a))) p = 0;
+      else if (et && ord.some(w => w.startsWith(c.t) || w.endsWith(c.t) || boejning(w, c.t))) p = 0; // «basilikumblade», «tomater»
+      else if (Math.min(a.length, b.length) >= 4 && afstand(a, b, 2) <= 2) p = 1;
+      else if (et && c.t.length >= 5 && ord.some(w => afstand(w, c.t, 1) <= 1)) p = 1; // «ruccola»
+      else if (c.t.split(' ').some(w => ord.includes(w))) p = 2;
+      if (p != null && (!pt.has(c.id) || pt.get(c.id)[0] > p)) pt.set(c.id, [p, -c.t.length]);
+    }
+    return [...foerst, ...[...pt].sort((x, y) => x[1][0] - y[1][0] || x[1][1] - y[1][1]).map(x => x[0])].slice(0, 5);
+  }
+  function laes(tekst, liste = ing, rl = regler) {
+    const n = rens(tekst), d = delIng(n), k = rens(d.n) || n, f = k === n ? '' : d.f;
+    const medF = (varer, ekstra) => varer.map(v => { const ff = [ekstra, v.f].filter(Boolean).join(', '); return { id: v.id, ...(ff && { f: ff }) }; });
+    for (const [t, ff] of k === n ? [[n, '']] : [[n, ''], [k, f]]) {
+      const r = rl.find(x => x.tekst === t);
+      if (r) return { udfald: 'kendt', via: 'regel', slags: r.slags, regel: r, varer: medF(r.resultat, ff), lignende: [] };
+      const i = liste.find(x => x.navn_norm === t);
+      if (i) return { udfald: 'kendt', via: 'navn', slags: 'vare', varer: medF([{ id: i.id }], ff), lignende: [] };
+    }
+    const ogEller = /(^| )(og|eller)( |$)|[,&+/]/.test(k), alle = kandidater(liste, rl), grund = new Map();
+    if (!ogEller) for (const c of alle) { const g = taetPaa(k, c.t); if (g && !grund.has(c.id)) grund.set(c.id, g); }
+    const ids = [...grund.keys()], lignende = lignendeAf(k, alle, ids);
+    if (ids.length === 1) return { udfald: 'taet', via: grund.get(ids[0]), slags: 'vare', varer: medF([{ id: ids[0] }], f), lignende, ogEller };
+    return { udfald: ids.length ? 'flere' : 'ukendt', varer: [], lignende, ogEller };
   }
   const kategorier = () => sorteret().map(katNavn);
   // Er ingrediensen et krydderi? Kategorien kommer fra kataloget. Ukendte ingredienser tæller ikke som krydderier.
@@ -201,5 +266,5 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
       if (efterSortering) efterSortering();
     }
   });
-  return { hent, rens, noegle, spoerg, knyt, kategorier, sorterAndet, laesKat, erKrydderi };
+  return { hent, rens, noegle, spoerg, knyt, laes, kategorier, sorterAndet, laesKat, erKrydderi };
 })();
