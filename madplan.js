@@ -9,7 +9,7 @@ const Madplan = (() => {
   };
   const RAEKKE = 'faelles', SLOTS = ['hoved', 'salat', 'tilbehoer'], NAVN = { hoved: 'Hovedret', salat: 'Salat', tilbehoer: 'Tilbehør' };
   const STD = { dage: 5, prRet: 2, i_alt: 4, plan: null }; // plan: [{ paa: { hoved, salat, tilbehoer }, hoved: id, salat: id, tilbehoer: id }]
-  let ST = { ...STD }, har = '', P = new Map(), gemTimer, fortrydes = [], gentages = [], aaben = null;
+  let ST = { ...STD }, har = new Set(), P = new Map(), gemTimer, fortrydes = [], gentages = [], aaben = null;
   const vaerdi = k => { const [, std, min, max] = VALG[k]; return Math.max(min, Math.min(max, Math.round(Number(ST[k])))) || (min > 0 ? std : 0); };
   const gem = straks => {
     clearTimeout(gemTimer);
@@ -21,7 +21,7 @@ const Madplan = (() => {
   // En ret hører til én slags: tilbehør, salat eller hovedret. Drikke og dessert er aldrig med. En salat kendes på ordet «salat» i navnet eller kategorien.
   const slotAf = r => /tilbehør/i.test(r.kategori || '') ? 'tilbehoer' : /drik|dessert/i.test(r.kategori || '') ? null : /salat/i.test((r.kategori || '') + ' ' + (r.titel || '')) ? 'salat' : 'hoved';
   const pool = filter => { const f = beregnForslag(F.filter(r => slotAf(r) && filter(r)), har);
-    return [...f.kan.map(r => ({ r, mangler: [] })), ...f.naesten].map(x => ({ ...x, n: [...new Set(x.mangler.map(stamme))] })); };
+    return [...f.kan.map(r => ({ r, mangler: [] })), ...f.naesten].map(x => ({ ...x, n: [...new Set(x.mangler)] })); }; // ét navn pr. vare (kataloget)
   // Prøv hver ret som den første. Læg derefter den ret til, der giver færrest nye varer at købe
   // (og bruger flest af dem, der allerede skal købes). Den plan med flest dage og kortest indkøbsliste vinder.
   // K0: varer, der allerede skal købes til en anden del af planen. De tæller med i grænsen.
@@ -96,8 +96,8 @@ const Madplan = (() => {
       <button type="button" class="knap felt felt-s slet" data-tpid="mp-ryd" data-h="mpRyd">Ryd madplan</button>`;
     $('#mp-alle').innerHTML = SLOTS.map(s => { const n = pl.filter(d => d.paa[s]).length; return `<button type="button" class="chip${n === pl.length ? ' valgt' : n ? ' delvis' : ''}" data-tpid="mp-alle-${s}" data-h="mpAlle" data-v="${s}" aria-pressed="${n === pl.length}">${NAVN[s]}</button>`; }).join('')
       + (blandet() ? '<span class="chip valgt mp-blandet">Blandet</span>' : '');
-    const koeb = new Map(); // stamme -> { navn, antal }
-    pl.forEach(d => SLOTS.forEach(s => { const x = d[s] && P.get(d[s]); if (x) x.mangler.forEach(m => { const st = stamme(m), k = koeb.get(st); if (k) k.antal++; else koeb.set(st, { navn: m, antal: 1 }); }); }));
+    const koeb = new Map(); // navn -> { navn, antal }
+    pl.forEach(d => SLOTS.forEach(s => { const x = d[s] && P.get(d[s]); if (x) x.mangler.forEach(m => { const k = koeb.get(m); if (k) k.antal++; else koeb.set(m, { navn: m, antal: 1 }); }); }));
     $('#mp-plan').innerHTML = `<div class="mp-grid">${pl.map(dagHtml).join('')}</div>
       <h2>Det skal du købe</h2>
       ${koeb.size ? `<div class="kort"><ul class="ing">${[...koeb.values()].map(k => `<li><span>${esc(k.navn)}${k.antal > 1 ? ` (til ${k.antal} retter)` : ''}</span></li>`).join('')}</ul></div>`
@@ -131,9 +131,9 @@ const Madplan = (() => {
   async function side() {
     const id = visning;
     henter();
-    const [opsk, hj, rk] = await Promise.all([api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel'), api('hjemme?select=ingredienser(navn)'), api(`madplan?id=eq.${RAEKKE}&select=data`).catch(e => { console.error(e); return []; })]);
+    const [opsk, hj, rk] = await Promise.all([api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel'), api('hjemme?select=ingrediens_id'), api(`madplan?id=eq.${RAEKKE}&select=data`).catch(e => { console.error(e); return []; }), Katalog.sikr()]);
     if (id !== visning) return;
-    F = opsk.filter(r => !r.skjul_forslag); har = hj.map(h => h.ingredienser && h.ingredienser.navn).filter(Boolean).join(',');
+    F = opsk.filter(r => !r.skjul_forslag); har = new Set(hj.map(h => h.ingrediens_id));
     ST = { ...STD, ...(rk[0] && rk[0].data) };
     ST.plan = normPlan(ST.plan);
     if (!ST.plan || !ST.plan.length) ST.plan = Array.from({ length: vaerdi('dage') }, () => tomDag(STANDARDDAG));

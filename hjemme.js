@@ -121,7 +121,7 @@ const Hjemme = (() => {
     toast(`${ingAf(ingId).navn} står nu under ${katId ? katNavn(katAf(katId)) : IKKE_SORTERET}`);
   }
 
-  const navne = () => D.hj.map(h => (ingAf(h.ingrediens_id) || {}).navn).filter(Boolean);
+  const ids = () => new Set(D.hj.map(h => h.ingrediens_id)); // det, der er derhjemme, til «Hvad kan jeg lave?»
   // Lægger listen ind i en boks på siden. «aendret» kaldes, hver gang listen ændrer sig.
   const LISTE = '<h2>Hvad har du derhjemme?</h2><div id="hj-liste"></div>';
   async function vis(boks, aendret, listeBoks) {
@@ -226,18 +226,18 @@ const Hjemme = (() => {
     const a = FAM[fra], b = FAM[til];
     return a && b && a[0] === b[0] ? q * a[1] / b[1] : null;
   }
+  // Varen findes på id med samme regel som «Hvad kan jeg lave?» (Katalog.opfyldt): først selve varen, så en variant af et fællesnavn.
+  // Ved en «eller»-linje trækkes den første vare fra, der står derhjemme.
   async function traek(liste, faktor = 1) {
-    const [ing, hj] = await Promise.all([api('ingredienser?select=*'), api('hjemme?select=*')]);
-    const ingId = new Map(ing.map(i => [i.id, i])), brugt = new Map();
+    const [hj] = await Promise.all([api('hjemme?select=*'), Katalog.sikr()]);
+    const brugt = new Map(), med = hj.filter(h => h.maengde != null);
     for (const x of liste) {
       if (!(x.m > 0)) continue;
-      const s = stamme(simpel(x.n).toLowerCase());
-      let bedst = null, point = 0;
-      for (const h of hj) {
-        const i = ingId.get(h.ingrediens_id);
-        if (!i || h.maengde == null) continue;
-        const hs = stamme(i.navn_norm), p = hs === s ? 1000 : passer(s, hs) ? Math.min(s.length, hs.length) : 0;
-        if (p > point) { point = p; bedst = h; }
+      let bedst = null;
+      for (const id of Katalog.varerAf(x)) {
+        const d = Katalog.daekker(id);
+        bedst = med.find(h => h.ingrediens_id === id) || med.find(h => d.includes(h.ingrediens_id));
+        if (bedst) break;
       }
       const q = bedst && omregn(x.m * faktor, enhNorm(x.e), enhNorm(bedst.enhed));
       if (q != null && q !== false && bedst) brugt.set(bedst.id, (brugt.get(bedst.id) || 0) + q);
@@ -402,5 +402,5 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
     Hjaelper.side('Her ser du det, Claude fandt. Ret navn og mængde, og tryk på krydset for at fjerne noget. Tryk på «Tilføj», når listen er rigtig.');
   }
 
-  return { vis, navne, traek, gennemgang };
+  return { vis, ids, traek, gennemgang };
 })();

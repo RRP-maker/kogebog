@@ -252,10 +252,12 @@ function normIng(x) {
   const n = String(x.n ?? x.navn ?? x.name ?? '').trim();
   if (!n) return null;
   const f = String(x.f ?? x.forberedelse ?? x.tilberedning ?? '').trim(), id = typeof x.id === 'string' ? x.id : '';
-  return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n, ...(f && { f }), ...(id && { id }) };
+  const eller = Array.isArray(x.eller) ? x.eller.filter(v => typeof v === 'string') : null; // en af flere varer (Styr på ingredienser)
+  return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n, ...(f && { f }), ...(id && { id }), ...(eller && eller.length && { eller }) };
 }
 // ingredienser gemmes som en liste. Et element { g: "Sovs" } er en overskrift, resten er ingredienser.
 // En ingrediens er { m: mængde, e: enhed, n: navn, id: ingrediensens id i kataloget, f: forberedelse }. «id» og «n» sættes ved «Gem» (Katalog.knyt).
+// En linje med en af flere varer har «eller»: [id, …] i stedet for «id». Navnet, der vises, kommer fra kataloget (Katalog.navn). «n» er en kopi, hvis kataloget ikke er hentet.
 // (Ældre kode ignorerer overskrifterne, så de gør ingen skade.)
 function ingListe(r) {
   return (Array.isArray(r.ingredienser) ? r.ingredienser : []).map(x =>
@@ -266,7 +268,7 @@ const ingAf = r => ingListe(r).filter(x => !('g' in x));
 function ingGrupper(r) {
   const ud = [{ navn: null, ing: [] }];
   for (const x of ingListe(r)) {
-    if ('g' in x) ud.push({ navn: x.g, ing: [] }); else ud[ud.length - 1].ing.push(x);
+    if ('g' in x) ud.push({ navn: x.g, ing: [] }); else ud[ud.length - 1].ing.push(Katalog.medNavn(x)); // navnet fra kataloget
   }
   return ud.filter((g, i) => g.ing.length || (i > 0 && g.navn));
 }
@@ -502,7 +504,7 @@ async function liste(type, maal = app) {
   const [rader, ekstra, bil] = await Promise.all([
     api(`${type}?select=*&order=${type === 'opskrifter' ? 'titel' : 'oprettet.desc'}`),
     type === 'tips' ? api('opskrifter?select=id,titel,fremgangsmaade&order=titel') : type === 'opskrifter' ? api('favoritter?select=opskrift_id') : [],
-    type === 'opskrifter' ? Billeder.hentForsider() : {}
+    type === 'opskrifter' ? Billeder.hentForsider() : {}, type === 'opskrifter' && Katalog.sikr() // søgningen bruger kataloget
   ]);
   if (id !== visning) return;
   const fil = type === 'opskrifter' && FIL ? FIL : {}, rude = maal !== app;
@@ -554,7 +556,7 @@ async function liste(type, maal = app) {
 function tegnListe() {
   const { type, rader, q, kat, koekken, soeg } = L, T = TYPER[type];
   if (type === 'opskrifter') FIL = { q, qr: ($('#soeg') || {}).value || '', kat, koekken, kunFav: L.kunFav, kunEgne: L.kunEgne };
-  const iNavn = r => (r.titel || '').toLowerCase().includes(q), iIng = r => ingAf(r).some(i => i.n.toLowerCase().includes(q));
+  const iNavn = r => (r.titel || '').toLowerCase().includes(q), iIng = r => ingAf(r).some(i => Katalog.soegeord(i).some(t => t.includes(q))); // også aliaser, varianter og fællesnavn
   const vis = rader.filter(r => (!kat || r.kategori === kat) && (!koekken || r.koekken === koekken) && (!L.kunFav || L.fav.has(r.id)) && (type !== 'opskrifter' || !L.kunEgne || kildeAf(r) === 'egen') &&
     (!q || (type !== 'opskrifter' || soeg === 'navn' ? iNavn(r) : soeg === 'ing' ? iIng(r) : iNavn(r) || iIng(r))));
   let bogstav = ''; // bogstav-overskrifter, når listen står i alfabetisk orden uden søgning
@@ -593,7 +595,7 @@ async function opskriftSide(rid, maal = app) {
   const q = `opskrift_id=eq.${enc(rid)}`;
   const [rr, tips, fav, stj, bil] = await Promise.all([
     api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*&order=oprettet.desc'),
-    api(`favoritter?${q}&select=id`), api(`stjerner?${q}&select=antal,bruger_id`), Billeder.hentFor(rid)
+    api(`favoritter?${q}&select=id`), api(`stjerner?${q}&select=antal,bruger_id`), Billeder.hentFor(rid), Katalog.sikr() // navnene kommer fra kataloget
   ]);
   if (id !== visning) return;
   const r = rr[0];
@@ -665,7 +667,7 @@ async function lavSide(rid) {
   const id = visning;
   henter();
   const q = `opskrift_id=eq.${enc(rid)}`;
-  const [rr, tips, stj, bil] = await Promise.all([api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*'), api(`stjerner?${q}&select=antal,bruger_id`), Billeder.hentFor(rid)]);
+  const [rr, tips, stj, bil] = await Promise.all([api(`opskrifter?id=eq.${enc(rid)}&select=*`), api('tips?select=*'), api(`stjerner?${q}&select=antal,bruger_id`), Billeder.hentFor(rid), Katalog.sikr()]);
   if (id !== visning) return;
   const r = rr[0];
   if (!r) return info('Opskriften findes ikke længere.<br><a href="#/opskrifter">Tilbage til Opskrifter</a>');
@@ -751,7 +753,7 @@ function rkHtml(ed, { art = 'ing', niv = 0, tekst = '' } = {}) {
 function edFelt(f, rad) {
   const ed = f.t === 'trin' ? 'trin' : 'ing';
   let rader;
-  if (ed === 'ing') rader = ingListe(rad).map(x => 'g' in x ? { art: 'over', tekst: x.g } : { art: 'ing', tekst: visIng(x) });
+  if (ed === 'ing') rader = ingListe(rad).map(Katalog.medNavn).map(x => 'g' in x ? { art: 'over', tekst: x.g } : { art: 'ing', tekst: visIng(x) });
   else rader = trinAf(rad).flatMap((t, i, alle) => [...(t.g && t.g !== (alle[i - 1] || {}).g ? [{ art: 'over', tekst: t.g }] : []), { niv: 0, tekst: t.t }, ...t.del.map(d => ({ niv: 1, tekst: d }))]);
   if (!rader.length) rader = [{}];
   return `<div class="edfelt"><h3 class="ed-titel">${f.l}</h3>${f.hint ? `<small>${f.hint}</small>` : ''}
@@ -892,7 +894,7 @@ async function formular(type, rid) {
   henter();
   const [r, ekstra] = await Promise.all([
     rid ? api(`${type}?id=eq.${enc(rid)}&select=*`) : [],
-    type === 'tips' ? api('opskrifter?select=id,titel&order=titel') : type === 'opskrifter' ? api('opskrifter?select=id,titel,kategori,koekken') : []
+    type === 'tips' ? api('opskrifter?select=id,titel&order=titel') : type === 'opskrifter' ? api('opskrifter?select=id,titel,kategori,koekken') : [], type === 'opskrifter' && Katalog.sikr()
   ]);
   if (id !== visning) return;
   if (rid && !r[0]) return info(`Den findes ikke længere.<br><a href="#/${type}">Tilbage</a>`);
@@ -990,13 +992,12 @@ document.addEventListener('change', async e => {
 const BASIS = ['salt', 'olie', 'vand', 'peber'];
 const stamme = s => { s = s.toLowerCase().replace(/[^a-zæøåéü ]/g, '').trim(); return s.length > 4 ? s.replace(/(erne|ene|er|en|et|e|r)$/, '') : s; };
 const erBasis = n => BASIS.some(b => n === b || n.endsWith(b) || n.split(' ').includes(b));
-const passer = (a, b) => a === b || (a.length >= 3 && b.length >= 3 && (a.includes(b) || b.includes(a)));
-function beregnForslag(opskrifter, harTekst, udenKrydderier) {
-  const har = harTekst.split(/[,\n]/).map(stamme).filter(Boolean);
+// har: et Set med id'er på det, der er derhjemme. En linje er opfyldt efter Katalog.opfyldt (samme regel som madplanen og «træk fra»).
+function beregnForslag(opskrifter, har, udenKrydderier) {
   const rader = opskrifter.map(r => {
-    const brug = ingAf(r).map(i => simpel(i.n.toLowerCase())).filter(n => !erBasis(n) && !(udenKrydderier && Katalog.erKrydderi(n)));
-    const set = new Set(), mangler = []; // vises med hele ord («sojasauce»), men tæller kun én gang pr. stamme
-    for (const n of brug) { const s = stamme(n); if (!har.some(h => passer(s, h)) && !set.has(s)) { set.add(s); mangler.push(n); } }
+    const brug = ingAf(r).filter(i => !erBasis(simpel(Katalog.navn(i).toLowerCase())) && !(udenKrydderier && Katalog.krydderi(i)));
+    const set = new Set(), mangler = []; // samme vare tæller kun én gang
+    for (const i of brug) { const k = Katalog.noegleAf(i); if (!Katalog.opfyldt(i, har) && !set.has(k)) { set.add(k); mangler.push(Katalog.navn(i)); } }
     return { r, antal: brug.length, mangler };
   }).filter(x => x.antal > 0);
   const kan = rader.filter(x => !x.mangler.length), naesten = rader.filter(x => x.mangler.length);
@@ -1016,7 +1017,7 @@ async function forslagSide() {
   const id = visning;
   henter();
   F = (await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel')).filter(r => !r.skjul_forslag);
-  await Katalog.hent().catch(() => {}); // kategorierne bruges til at kende krydderier
+  await Katalog.hent().catch(() => {}); // linjerne læses på id, og kategorierne bruges til at kende krydderier
   if (id !== visning) return;
   // Brede skærme med «to ruder»: ingredienserne i et kort til venstre, forslagene til højre. Ellers én kolonne, som før.
   const tilbage = Ikoner.tilbage('#/'), titel = '<h1>Hvad kan jeg lave?</h1>',
@@ -1040,10 +1041,10 @@ let visNaesten = 20; // hvor mange af «Du mangler lidt»-retterne der vises
 const udenKryd = () => lager.hent('udenKrydderier', false);
 const maksMangler = () => Math.max(0, Math.min(20, Math.round(Number(lager.hent('maxMangler', 3))) || 0));
 function tegnForslag() {
-  const nu = $('#forslag-nu'), rest = $('#forslag-resten'), tekst = Hjemme.navne().join(',');
+  const nu = $('#forslag-nu'), rest = $('#forslag-resten'), har = Hjemme.ids();
   if (!nu) return;
-  if (!tekst.trim()) { nu.innerHTML = '<h2>Det kan du lave nu</h2><p class="tomt">Skriv mindst én ting i feltet ovenfor, så finder jeg retter.</p>'; rest.innerHTML = ''; return; }
-  const f = beregnForslag(F, tekst, udenKryd()), maks = maksMangler(), naesten = f.naesten.filter(x => x.mangler.length <= maks);
+  if (!har.size) { nu.innerHTML = '<h2>Det kan du lave nu</h2><p class="tomt">Skriv mindst én ting i feltet ovenfor, så finder jeg retter.</p>'; rest.innerHTML = ''; return; }
+  const f = beregnForslag(F, har, udenKryd()), maks = maksMangler(), naesten = f.naesten.filter(x => x.mangler.length <= maks);
   nu.innerHTML = `<div class="mangler-top"><h2>Det kan du lave nu</h2>
       <label class="skift" data-tpid="uden-krydderier"><input type="checkbox" id="udenkryd" ${udenKryd() ? 'checked' : ''}> <span>Uden krydderier</span></label></div>
     ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe længere nede.</p>'}`;

@@ -2,6 +2,14 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.14.0 · Styr på ingredienser, fase 2: læsning på id
+Data er uændrede. Appen sammenligner nu varer på id fra kataloget i stedet for tekst.
+- **Navnet kommer fra kataloget** (`Katalog.navn`). Kopien på linjen bruges kun, hvis kataloget ikke er hentet.
+- **Én fælles regel** (`Katalog.opfyldt`) afgør, om en linje er opfyldt. Bruges af «Hvad kan jeg lave?», madplanen, «træk fra» og søgningen. Et fællesnavn er opfyldt af en af sine varianter. En «eller»-linje (`eller: [id, …]`) er opfyldt af én af varerne.
+- **Strengere:** «løg» derhjemme dækker ikke længere rødløg, og «ost» ikke flødeost. Regler kan lægges til senere (fase 4).
+- Søgningen bruger kataloget og går begge veje mellem fællesnavn og varianter (`Katalog.soegeord`).
+- Målt: alle 30 opskrifter viser samme tekst før og efter. Ikke prøvet uden net.
+
 ## 2.13.0 · Styr på ingredienser, fase 1: grundlag
 Intet ændres på skærmen. Grundlaget for, at en ingrediens hedder ét og er den samme overalt (plan: `claude/opdatering-ingredienser-plan.md`).
 - **Regler** (`ingrediens_regler`): «skrevet tekst → resultat». Slags: `vare` (alias eller vare med tilberedning), `del`, `eller`, `slet`. En tekst kan kun stå ét sted: som regel eller som navn på en ingrediens (tjekkes i databasen, også når to enheder gemmer samtidig). Regler ændres kun gennem `ingrediens_regel_gem` og `ingrediens_regel_slet`, som tjekker version, så den anden enheds ændring ses først.
