@@ -19,7 +19,7 @@ const Flytning = (() => {
     // «Derhjemme»: fællesnavn -> variant
     hjemme: { basilikum: 'frisk basilikum', koriander: 'stødt koriander', oregano: 'tørret oregano', rosmarin: 'tørret rosmarin', timian: 'tørret timian' },
     // Gamle navne, der ikke bliver regler (kan betyde flere ting). Navne med «og» eller «eller» bliver aldrig regler her.
-    ikkeRegel: ['gris', 'mel', 'bønner', 'grøn peber', 'rød peber'],
+    ikkeRegel: ['gris', 'bønner'],
   };
   const norm = s => String(s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
   const ordAf = f => String(f || '').split(',').map(norm).filter(Boolean);
