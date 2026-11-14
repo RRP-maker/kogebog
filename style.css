@@ -818,9 +818,13 @@ input.felt-l, select.felt-l { height: 96px; }
 .iv-del .ing-tabel th, .iv-del .ing-tabel td { border-bottom: 0; box-shadow: inset 0 -1px 0 rgba(var(--blaek-rgb), .15); line-height: 32px; } /* en skygge i stedet for en kant, så rækkerne er præcis 32 px */
 .iv-vis h3 { font-family: var(--hoved); font-weight: 400; font-size: 24px; line-height: 32px; margin: 32px 0 0; }
 .vejledning .iv-knapper { justify-content: flex-start; }
-.iv-tvivl { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; }
-.iv-tvivl legend { padding: 0; line-height: 32px; font-weight: 600; }
+.iv-tvivl, .iv-valg { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; }
+.iv-tvivl legend, .iv-valg legend { padding: 0; line-height: 32px; font-weight: 600; }
 .iv-tvivl .lille, .iv-kopi .tekst { margin: 0; }
+/* Regler og aliaser (fase 4): en regel er en tekstrække og en række knapper, en vare er to felter under hinanden */
+.iv-regel, .iv-vare { display: flex; flex-direction: column; }
+.iv-regel p, #iv-regler > .lille, .iv-del > .lille { margin: 0; }
+.iv-del .iv-regel .rakke, .iv-del > .rakke { margin: 0 0 var(--pt); }
 .top:has(#toast.vis) { z-index: 70; } /* beskeden kan ses oven på vinduer */
 
 /* Knapper lige under et skrivefelt: Sæt ind til venstre, Ryd (lille) til højre */

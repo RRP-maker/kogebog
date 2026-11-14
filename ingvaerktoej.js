@@ -8,8 +8,8 @@ const IngVaerktoej = (() => {
   const norm = s => String(s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
   const KORT = 8; // så mange tegn af et id står i listen til Claude
   const hentAlt = async () => {
-    const [ing, kat, hj, ops] = await Promise.all([api('ingredienser?select=*'), api('ingrediens_kategorier?select=*'), api('hjemme?select=id,ingrediens_id'), api('opskrifter?select=id,titel,ingredienser&order=titel')]);
-    return { ing, kat, hj, ops };
+    const [ing, kat, hj, ops, regler] = await Promise.all([api('ingredienser?select=*'), api('ingrediens_kategorier?select=*'), api('hjemme?select=id,ingrediens_id'), api('opskrifter?select=id,titel,ingredienser&order=titel'), api('ingrediens_regler?select=*')]);
+    return { ing, kat, hj, ops, regler };
   };
   // Et id fra rettelserne er de første tegn af det rigtige id. Det skal passe på præcis én.
   const findKort = (liste, kort) => { const k = String(kort ?? '').toLowerCase().trim(); if (k.length < 6) return null; const m = liste.filter(x => x.id === k || x.id.startsWith(k)); return m.length === 1 ? m[0] : null; };
@@ -17,8 +17,10 @@ const IngVaerktoej = (() => {
 
   // Regner ud, hvad rettelserne gør. Ændrer intet. data: { ing, kat, hj, ops }. rettelse: { ingredienser: [...], linjer: [...] }. svar: dine svar på tvivl (nøgle -> true/false).
   // Regler: to ingredienser med samme navn lægges sammen. Hver linje i hver opskrift får id og navn fra kataloget. En linje uden ingrediens i kataloget giver en ny ingrediens.
+  // Et gammelt navn, der lægges sammen eller omdøbes, bliver et alias (en regel), så teksten stadig findes. En tekst, der er en regel, kan ikke også blive navnet på en ingrediens.
   function beregn(data, rettelse = {}, svar = {}) {
-    const { ing, kat, hj, ops } = data, fejl = [], tvivl = [];
+    const { ing, kat, hj, ops } = data, regler = data.regler || [], reglerTekst = new Set(regler.map(r => r.tekst)), fejl = [], tvivl = [];
+    const erRegel = n => `«${n}» er allerede en regel. Slet reglen under «Regler og aliaser» først, eller brug et andet navn.`;
     const katAf = navn => { const n = norm(navn); return kat.find(k => k.navn_norm === (n === 'ikke sorteret' ? 'andet' : n)); };
     const derhjemme = new Set(hj.map(h => h.ingrediens_id));
     const spoerg = (noegle, r, forslag) => { tvivl.push({ noegle, tekst: String(r.tvivl), forslag, svar: svar[noegle] }); return svar[noegle] === true; };
@@ -33,6 +35,7 @@ const IngVaerktoej = (() => {
       set.add(i.id);
       const n = r.navn != null ? norm(r.navn) : null, k = r.kategori != null ? katAf(r.kategori) : null;
       if (n != null && ugyldigt(n)) { fejl.push(`Navnet «${r.navn}» kan ikke bruges. Et navn må ikke være tomt eller have komma eller parentes.`); continue; }
+      if (n != null && n !== i.navn_norm && reglerTekst.has(n)) { fejl.push(erRegel(n)); continue; }
       if (r.kategori != null && !k) { fejl.push(`Kategorien «${r.kategori}» findes ikke.`); continue; }
       if (r.tvivl && !spoerg('i:' + i.id, r, r.slet ? `«${i.navn}» slettes` : `«${i.navn}» bliver til «${n || i.navn}»${r.f ? `, og «${r.f}» flyttes til linjen` : ''}${k ? ` (${katNavn(k)})` : ''}`)) continue;
       const p = plan.get(i.id);
@@ -63,9 +66,12 @@ const IngVaerktoej = (() => {
     }
     // 4. Hver linje i hver opskrift
     const glNavn = new Map(ing.map(i => [i.navn_norm, i.id])), nye = new Map();
-    const maal = navn => { // ingrediensen med det navn efter rettelserne. Findes den ikke, oprettes den.
+    const maal = navn => { // ingrediensen med det navn efter rettelserne. Er teksten et alias, bruges ingrediensen bag. Findes den ikke, oprettes den.
       const g = grupper.get(navn);
       if (g) return g[0].vinder;
+      const a = regler.find(x => x.tekst === navn && x.slags === 'vare' && !x.resultat[0].f), m = a && plan.get(a.resultat[0].id);
+      if (m && m.vinder) return m.vinder;
+      if (reglerTekst.has(navn)) { fejl.push(`«${navn}» er en regel, som ikke kan bruges her. Ret linjen i opskriften.`); return { ny: true, i: { id: crypto.randomUUID() }, navn, kat: null }; }
       if (!nye.has(navn)) nye.set(navn, { ny: true, i: { id: crypto.randomUUID() }, navn, kat: null });
       return nye.get(navn);
     };
@@ -75,7 +81,7 @@ const IngVaerktoej = (() => {
       const raa = Array.isArray(o.ingredienser) ? o.ingredienser : [], liste = ingListe(o);
       let aendret = liste.length !== raa.length || !Array.isArray(o.ingredienser);
       const ny = liste.map((x, nr) => {
-        if ('g' in x) return x;
+        if ('g' in x || Array.isArray(x.eller)) return x; // en overskrift eller en «eller»-linje er allerede ordnet
         antalLinjer++;
         const kendt = !!x.id && plan.has(x.id), r = linjeRet.get(o.id + ':' + nr), k = Katalog.noegle(x.n);
         if (!kendt) uden++;
@@ -97,21 +103,31 @@ const IngVaerktoej = (() => {
     }
     for (const p of plan.values()) if (p.slet && derhjemme.has(p.i.id)) fejl.push(`«${p.i.navn}» står i «Derhjemme» og kan ikke slettes.`);
     // 5. Pakken til databasen og oversigten til forhåndsvisningen
-    const flet = [], ret = [], sammen = [], omdoebt = [];
+    const flet = [], ret = [], sammen = [], omdoebt = [], aliaser = [];
     let kategori = 0;
+    const slutNavne = new Set([...grupper.keys(), ...nye.keys()]);
     for (const [navn, g] of grupper) {
       const v = g[0].vinder, nytNavn = v.i.navn_norm !== navn, nyKat = (v.i.kategori_id || null) !== v.kat;
       g.forEach(p => { if (p !== v) flet.push({ fra: p.i.id, til: v.i.id }); });
+      g.forEach(p => { // det gamle navn bliver en regel (med tilberedningen, hvis den flyttede). Ikke hvis navnet er uændret, allerede er en regel eller nu er navnet på en ingrediens.
+        const gammel = p.i.navn_norm;
+        if (gammel === navn || reglerTekst.has(gammel) || slutNavne.has(gammel)) return;
+        aliaser.push({ tekst: gammel, slags: 'vare', resultat: [{ id: v.i.id, ...(p.f && { f: p.f }) }], til: navn });
+      });
       if (g.length > 1) sammen.push({ til: navn, fra: g.map(p => p.i.navn).filter(n => n !== navn) });
       else if (nytNavn) omdoebt.push({ fra: v.i.navn, til: navn });
       if (nytNavn || nyKat) ret.push({ id: v.i.id, navn, navn_norm: navn, kategori_id: v.kat });
       if (nyKat) kategori++;
     }
     const slettes = [...plan.values()].filter(p => p.slet), da = (a, b) => a.localeCompare(b, 'da');
-    const payload = { antal: ing.length, flet, slet: slettes.map(p => p.i.id), ret, ny: [...nye.values()].map(p => ({ id: p.i.id, navn: p.navn, navn_norm: p.navn, kategori_id: p.kat })), opskrifter };
+    const payload = { antal: ing.length, flet, slet: slettes.map(p => p.i.id), ret, ny: [...nye.values()].map(p => ({ id: p.i.id, navn: p.navn, navn_norm: p.navn, kategori_id: p.kat })), opskrifter,
+      regler: aliaser.map(({ til, ...r }) => r) };
+    const navnAf = id => (ing.find(i => i.id === id) || {}).navn; // til forhåndsvisningen: hvad ligner en ny ingrediens?
+    const lignendeNye = [...nye.keys()].sort(da).map(n => ({ navn: n, ligner: Katalog.laes(n, ing, regler).lignende.map(navnAf).filter(Boolean) }));
     return { fejl: [...new Set(fejl)], tvivl, uafgjort: tvivl.filter(t => t.svar == null).length, payload,
       tom: !flet.length && !payload.slet.length && !ret.length && !payload.ny.length && !opskrifter.length,
-      oversigt: { sammen: sammen.sort((a, b) => da(a.til, b.til)), omdoebt: omdoebt.sort((a, b) => da(a.fra, b.fra)), kategori, slettet: slettes.map(p => p.i.navn).sort(da), nye: [...nye.keys()].sort(da),
+      oversigt: { sammen: sammen.sort((a, b) => da(a.til, b.til)), omdoebt: omdoebt.sort((a, b) => da(a.fra, b.fra)), kategori, slettet: slettes.map(p => p.i.navn).sort(da), nye: [...nye.keys()].sort(da), lignendeNye,
+        aliaser: aliaser.map(a => ({ fra: a.tekst, til: a.til, f: a.resultat[0].f || '' })).sort((a, b) => da(a.fra, b.fra)),
         linjer, knyttet, antalLinjer, uden, foer: ing.length, efter: ing.length - flet.length - slettes.length + nye.size } };
   }
   // Ingredienser, der ligner hinanden (ental og flertal): «porre» og «porrer». Kun en hjælp til at finde dubletter.
@@ -187,18 +203,169 @@ ${linjer.join('\n')}
     return r.oversigt;
   }
 
+  // ---------- Regler og aliaser (Styr på ingredienser, fase 4) ----------
+  // En regel er «skrevet tekst → resultat» (tabellen ingrediens_regler). Et alias er en regel med én vare uden tilberedning: «kyllingefilet» → kyllingebryst.
+  // Regler ændres kun gennem ingrediens_regel_gem og ingrediens_regel_slet. De tjekker versionen: er reglen ændret, siden den blev hentet, vises den andens udgave først.
+  let soeg = '', ed = null; // ed: reglen i vinduet: { id, version, tekst, slags, varer: [{ navn, f }], t, resultat }
+  const SLAGS = [['vare', 'Én vare', 'Teksten er én ingrediens. Skriv en tilberedning, hvis den hører med, fx «finthakket».'], ['del', 'Flere varer', 'Linjen deles i flere linjer, fx «salt og peber».'],
+    ['eller', 'Én af flere varer', 'Linjen er opfyldt, når én af varerne er derhjemme, fx «smør eller margarine».'], ['slet', 'Ingen vare', 'Linjen slettes, fx en overskrift, der ikke er en ingrediens.']];
+  const ingNavn = id => (D.ing.find(x => x.id === id) || {}).navn || '?';
+  const varTekst = v => ingNavn(v.id) + (v.f ? ', ' + v.f : '');
+  const regelTekst = r => r.slags === 'slet' ? 'slettes' : r.slags === 'del' ? r.resultat.map(varTekst).join(' + ') + ' (deles)' : r.slags === 'eller' ? r.resultat.map(varTekst).join(' eller ') : varTekst(r.resultat[0]);
+  const regelAf = r => ({ id: r.id, version: r.version, tekst: r.tekst, slags: r.slags, varer: r.resultat.map(v => ({ navn: ingNavn(v.id), f: v.f || '' })) });
+  const serverFejl = e => { const m = String(e.message).match(/"message":"((?:[^"\\]|\\.)*)"/); try { return m ? JSON.parse('"' + m[1] + '"') : ''; } catch (x) { return ''; } };
+  const regelFejl = (e, hvad) => { console.error(e); const s = serverFejl(e); return /PGRST202|42883|404/.test(String(e.message)) && !s ? 'Databasen mangler reglernes funktioner. Kør supabase/ingredienser.sql i Supabase.' : s.includes('«') ? s : `${hvad} Intet er ændret. Tjek internettet, og prøv igen.`; };
+
+  function reglerListe() {
+    const q = norm(soeg), pr = new Map(), uden = [];
+    for (const r of D.regler) { if (!r.resultat.length) uden.push(r); for (const v of r.resultat) { if (!pr.has(v.id)) pr.set(v.id, []); pr.get(v.id).push(r); } }
+    const soegt = q.length >= 2, hit = r => r.tekst.includes(q);
+    const alle = D.ing.filter(i => soegt ? i.navn_norm.includes(q) || (pr.get(i.id) || []).some(hit) : pr.has(i.id)).sort((a, b) => a.navn.localeCompare(b.navn, 'da'));
+    const vis = alle.slice(0, 30), sletRegler = uden.filter(r => !soegt || hit(r));
+    const regel = r => `<div class="iv-regel"><p class="tekst-s" data-tpdata>«${esc(r.tekst)}» → ${esc(regelTekst(r))}</p><div class="rakke venstre">
+      <button type="button" class="knap mini" data-tpid="iv-regel-tilpas" data-h="ivRegel" data-v="${r.id}" aria-label="Tilpas reglen ${esc(r.tekst)}">Tilpas</button>
+      <button type="button" class="knap mini slet" data-tpid="iv-regel-slet" data-h="ivRegelSlet" data-v="${r.id}" aria-label="Slet reglen ${esc(r.tekst)}">${ik('slet')} Slet</button></div></div>`;
+    const dele = vis.map(i => {
+      const rs = pr.get(i.id) || [], fae = i.faelles_id && ingNavn(i.faelles_id), vars = D.ing.filter(x => x.faelles_id === i.id).map(x => x.navn);
+      const info = [`Kategori: ${katNavn(D.kat.find(k => k.id === i.kategori_id))}.`, fae && `Variant af «${fae}».`, vars.length && `Varianter: ${vars.join(', ')}.`].filter(Boolean).join(' ');
+      return del('r:' + i.id, `<span data-tpdata>${esc(i.navn)}</span>`, rs.length, `<p class="lille" data-tpdata>${esc(info)}</p>${rs.map(regel).join('') || '<p class="lille">Ingen regler endnu.</p>'}
+        <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-alias-nyt" data-h="ivRegel" data-n="${i.id}" aria-label="Nyt alias til ${esc(i.navn)}">${ik('plus')} Nyt alias</button></div>`, true);
+    }).join('');
+    const slet = sletRegler.length ? del('r:slet', 'Regler uden vare', sletRegler.length, sletRegler.map(regel).join('')) : '';
+    const tom = !dele && !slet ? `<p class="lille">${soegt ? 'Ingen ingredienser eller regler passer.' : 'Der er ingen regler endnu.'}</p>` : '';
+    return dele + slet + tom + (alle.length > vis.length ? `<p class="lille">${flertal(alle.length - vis.length, 'ingrediens', 'ingredienser')} mere. Skriv mere i feltet for at indsnævre.</p>` : '');
+  }
+  const reglerHtml = () => `<h2>Regler og aliaser</h2>
+    <p class="lille">En regel fortæller appen, hvad en tekst i en opskrift betyder. Et alias er et andet navn for den samme ingrediens, fx «kyllingefilet» for «kyllingebryst».</p>
+    <label for="ivsoeg">Find en ingrediens eller en regel</label>
+    <input id="ivsoeg" type="search" class="felt felt-m" value="${esc(soeg)}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="ivsoeg-h" aria-controls="iv-regler">
+    <p class="lille" id="ivsoeg-h">Skriv mindst to bogstaver. Uden søgning ses de ingredienser, der har en regel.</p>
+    <div id="iv-regler">${reglerListe()}</div>
+    <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-regel-ny" data-h="ivRegel">${ik('plus')} Ny regel</button></div>`;
+
+  // Vinduet, hvor en regel laves eller tilpasses
+  const raekker = () => {
+    const n = ed.slags === 'slet' ? 0 : ed.slags === 'vare' ? 1 : Math.max(2, ed.varer.length);
+    while (ed.varer.length < n) ed.varer.push({ navn: '', f: '' });
+    ed.varer.length = n;
+    return ed.varer.map((v, i) => `<div class="iv-vare"><label for="rgv${i}">${n > 1 ? 'Vare ' + (i + 1) : 'Vare'}</label>
+      <input id="rgv${i}" class="felt felt-m" list="rgliste" value="${esc(v.navn)}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="rgf${i}">Tilberedning (valgfrit)</label>
+      <input id="rgf${i}" class="felt felt-m" value="${esc(v.f)}" placeholder="fx finthakket" autocomplete="off" autocapitalize="off">
+      ${n > 2 ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-vare-fjern" data-h="rgFjern" data-v="${i}" aria-label="Fjern vare ${i + 1}">${ik('fjern')} Fjern</button></div>` : ''}</div>`).join('')
+      + (ed.slags === 'del' || ed.slags === 'eller' ? `<div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-vare-ny" data-h="rgTilfoej">${ik('plus')} Tilføj vare</button></div>` : '');
+  };
+  const laesVinduet = () => { // vinduets felter ind i ed
+    if (!$('#rgtekst')) return;
+    ed.tekst = $('#rgtekst').value;
+    ed.varer.forEach((v, i) => { const a = $('#rgv' + i), b = $('#rgf' + i); if (a) v.navn = a.value; if (b) v.f = b.value; });
+  };
+  const tegnRaekker = () => { $('#rgvarer').innerHTML = raekker(); $('#rghint').textContent = SLAGS.find(s => s[0] === ed.slags)[2]; };
+  const arkFejl = liste => { $('#arkfejl').innerHTML = liste.length ? `<div class="fejlboks" role="alert" tabindex="-1">${liste.map(esc).join('<br>')}</div>` : ''; const b = $('#arkfejl .fejlboks'); if (b) b.focus(); };
+  function aabnVindue(r) {
+    ed = r;
+    const d = ark(`<h2>${ed.id ? 'Tilpas reglen' : 'Ny regel'}</h2>
+      <small>En regel fortæller appen, hvad en tekst i en opskrift betyder.</small>
+      <label for="rgtekst">Når der står</label>
+      <input id="rgtekst" class="felt felt-m" value="${esc(ed.tekst)}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <fieldset class="iv-valg"><legend>Så betyder det</legend>${SLAGS.map(([k, t]) => `<label class="skift"><input type="radio" name="rgslags" value="${k}"${ed.slags === k ? ' checked' : ''}> <span>${t}</span></label>`).join('')}</fieldset>
+      <p class="lille" id="rghint"></p>
+      <div id="rgvarer"></div>
+      <datalist id="rgliste">${[...D.ing].sort((a, b) => a.navn.localeCompare(b.navn, 'da')).map(i => `<option value="${esc(i.navn)}"></option>`).join('')}</datalist>
+      <div id="arkfejl"></div>
+      <div class="rakke"><button type="button" class="knap annuller" data-tpid="annuller" data-h="lukArk">Annuller</button><button type="button" class="knap gem" data-tpid="gem" data-h="rgGem">${ik('tjek')} Gem reglen</button></div>`);
+    tegnRaekker();
+    $('.ark-bag', d).addEventListener('click', lukArk);
+  }
+  function loes() { // vinduet til tekst og resultat. Fejl, hvis noget ikke kan bruges.
+    laesVinduet();
+    const fejl = [], t = norm(ed.tekst), resultat = [];
+    if (!t) fejl.push('Skriv den tekst, reglen gælder for.');
+    if (ed.slags !== 'slet') ed.varer.forEach((v, i) => {
+      const n = norm(v.navn), hvilken = ed.varer.length > 1 ? 'vare ' + (i + 1) : 'varen';
+      if (!n) return fejl.push(`Vælg ${hvilken} fra listen.`);
+      const m = D.ing.find(x => x.navn_norm === n);
+      if (!m) { const l = Katalog.laes(n, D.ing, D.regler).lignende.slice(0, 3).map(id => '«' + ingNavn(id) + '»'); return fejl.push(`«${v.navn.trim()}» findes ikke i kataloget.${l.length ? ' Mente du ' + l.join(', ') + '?' : ''} Vælg ${hvilken} fra listen.`); }
+      if (resultat.some(x => x.id === m.id)) return fejl.push(`«${m.navn}» står to gange.`);
+      resultat.push({ id: m.id, ...(v.f.trim() && { f: v.f.trim() }) });
+    });
+    return { t, resultat, fejl };
+  }
+  async function efterRegel(besked) { // hent reglerne igen, og tegn listen og forhåndsvisningen forfra
+    D.regler = await api('ingrediens_regler?select=*');
+    await Katalog.hent().catch(e => console.error(e));
+    lukArk();
+    const l = $('#iv-regler'); if (l) l.innerHTML = reglerListe();
+    if (R) { R = beregn(D, rettelse, valg); tegnVis(); }
+    if (besked) toast(besked);
+  }
+  async function visKonflikt(hvad, deres) { // hvad: «gem», «slet» eller «slettet» (en anden har slettet reglen)
+    D.regler = await api('ingrediens_regler?select=*');
+    const l = $('#iv-regler'); if (l) l.innerHTML = reglerListe();
+    const gem = hvad === 'gem', slettet = hvad === 'slettet';
+    const d = ark(`<h2>${slettet ? 'Reglen er slettet' : 'Reglen er ændret'}</h2>
+      ${slettet ? '<p class="ark-tekst">En anden har slettet reglen, siden du åbnede den. Intet er gemt.</p>' : `<p class="ark-tekst">En anden har ændret reglen, siden du åbnede den. Nu står der:</p><p class="ark-tekst" data-tpdata>«${esc(deres.tekst)}» → ${esc(regelTekst(deres))}</p>
+      <p class="ark-tekst">${gem ? 'Vil du gemme din udgave oven på?' : 'Vil du slette den alligevel?'}</p>`}
+      <div class="rakke">${slettet ? '<button type="button" class="knap annuller" data-h="lukArk">Annuller</button><button type="button" class="knap gem" data-h="rgSomNy">Gem som ny regel</button>'
+        : gem ? '<button type="button" class="knap annuller" data-h="lukArk">Annuller</button><button type="button" class="knap" data-h="rgBrugDeres">Tilpas den nye</button><button type="button" class="knap gem" data-h="rgAlligevel">Gem min alligevel</button>'
+        : '<button type="button" class="knap" data-h="lukArk">Behold</button><button type="button" class="knap slet" data-h="rgAlligevel">Slet alligevel</button>'}</div>`);
+    $('.ark-bag', d).addEventListener('click', lukArk);
+    ed = ed || {}; ed.deres = deres; ed.hvad = hvad;
+  }
+  async function sendGem() {
+    const knap = $('[data-h="rgGem"]'), tekst = knap && knap.lastChild;
+    if (knap) { knap.disabled = true; tekst.textContent = ' Gemmer…'; }
+    let r;
+    try { r = await api('rpc/ingrediens_regel_gem', { method: 'POST', body: { p: { ...(ed.id && { id: ed.id, version: ed.version }), tekst: ed.t, slags: ed.slags, resultat: ed.resultat } } }); }
+    catch (e) { if (knap) { knap.disabled = false; tekst.textContent = ' Gem reglen'; } return $('#arkfejl') ? arkFejl([regelFejl(e, 'Reglen blev ikke gemt.')]) : fejlbesked(regelFejl(e, 'Reglen blev ikke gemt.')); }
+    if (r.ok) return efterRegel('Reglen er gemt');
+    if (knap) { knap.disabled = false; tekst.textContent = ' Gem reglen'; }
+    if (r.grund === 'aendret') return visKonflikt('gem', r.regel);
+    if (r.grund === 'slettet') return visKonflikt('slettet');
+    if (r.grund === 'findes') { // teksten er allerede en regel: den, der findes, gælder
+      D.regler = await api('ingrediens_regler?select=*'); ed.findes = r.regel;
+      const d = ark(`<h2>Teksten findes allerede</h2><p class="ark-tekst">Der er allerede en regel for den tekst:</p><p class="ark-tekst" data-tpdata>«${esc(r.regel.tekst)}» → ${esc(regelTekst(r.regel))}</p>
+        <div class="rakke"><button type="button" class="knap annuller" data-h="lukArk">Annuller</button><button type="button" class="knap" data-h="rgBrugFindes">Tilpas den</button></div>`);
+      return $('.ark-bag', d).addEventListener('click', lukArk);
+    }
+    if (r.grund === 'navn') return arkFejl([`«${ed.t}» er allerede navnet på en ingrediens. Linjer med den tekst peger allerede på den.`]);
+    arkFejl(['Reglen blev ikke gemt.']);
+  }
+  async function sletRegel(id, version) {
+    let s;
+    try { s = await api('rpc/ingrediens_regel_slet', { method: 'POST', body: { id, version } }); } catch (e) { return fejlbesked(regelFejl(e, 'Reglen blev ikke slettet.')); }
+    if (s.ok) return efterRegel('Reglen er slettet');
+    if (s.grund === 'aendret') { ed = { id, version }; return visKonflikt('slet', s.regel); }
+  }
+
   // ---------- Siden ----------
   const flertal = (n, en, flere) => `${n} ${n === 1 ? en : flere}`;
   const tid = t => new Date(t).toLocaleString('da-DK', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
-  const del = (noegle, titel, antal, indhold) => antal ? `<details class="iv-del" data-del="${noegle}"${aabne.has(noegle) ? ' open' : ''}><summary>${titel} (${antal})</summary>${indhold}</details>` : '';
+  const del = (noegle, titel, antal, indhold, altid) => antal || altid ? `<details class="iv-del" data-del="${noegle}"${aabne.has(noegle) ? ' open' : ''}><summary>${titel} (${antal})</summary>${indhold}</details>` : '';
   const tabel = (hoveder, raekker) => `<table class="ing-tabel tekst-s" data-tpid="iv-tabel"><thead><tr>${hoveder.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${raekker.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   const visFejl = liste => { $('#iv-fejl').innerHTML = liste.length ? `<div class="fejlboks" role="alert" tabindex="-1">${liste.slice(0, 8).map(esc).join('<br>')}${liste.length > 8 ? `<br>Og ${liste.length - 8} fejl mere.` : ''}</div>` : ''; const b = $('#iv-fejl .fejlboks'); if (b) b.focus(); };
 
+  // Opskrifter, hvor en linje endnu ikke er ordnet: flere varer i ét navn («persille og forårsløg») eller ingen ingrediens i kataloget
+  function venter() {
+    const iId = new Map(D.ing.map(i => [i.id, i])), ud = [];
+    for (const o of D.ops) {
+      const l = [];
+      for (const x of ingListe(o)) {
+        if ('g' in x || Array.isArray(x.eller)) continue;
+        const i = x.id && iId.get(x.id);
+        if (!i) l.push(x.n); else if (Katalog.flereVarer(i.navn_norm)) l.push(i.navn);
+      }
+      if (l.length) ud.push({ id: o.id, titel: o.titel, linjer: l });
+    }
+    return ud;
+  }
   function status() {
-    const r = beregn(D, {}), o = r.oversigt, l = ligner(D.ing);
+    const r = beregn(D, {}), o = r.oversigt, l = ligner(D.ing), v = venter();
     return `<p class="tekst" id="iv-status">${flertal(D.ing.length, 'ingrediens', 'ingredienser')} i kataloget. ${flertal(o.antalLinjer, 'linje', 'linjer')} i ${flertal(D.ops.length, 'opskrift', 'opskrifter')}.</p>
       <p class="lille">${o.uden ? `${flertal(o.uden, 'linje peger', 'linjer peger')} ikke på en ingrediens i kataloget endnu. Tryk på «Vis ændringerne», så bliver de knyttet til.` : 'Alle linjer peger på en ingrediens i kataloget.'}
-        ${l.length ? `${flertal(l.length, 'navn', 'navne')} ligner hinanden, fx ${l.slice(0, 3).map(g => '«' + esc(g.join('» og «')) + '»').join(', ')}.` : 'Ingen navne ligner hinanden.'}</p>`;
+        ${l.length ? `${flertal(l.length, 'navn', 'navne')} ligner hinanden, fx ${l.slice(0, 3).map(g => '«' + esc(g.join('» og «')) + '»').join(', ')}.` : 'Ingen navne ligner hinanden.'}
+        ${v.length ? `${flertal(v.length, 'opskrift har', 'opskrifter har')} linjer med flere varer i ét navn, fx «${esc(v[0].linjer[0])}». De er ikke ordnet endnu.` : 'Alle linjer har én vare.'}</p>
+      ${del('venter', 'Opskrifter, der venter på svar', v.length, v.map(x => `<p class="tekst-s" data-tpdata><a href="#/opskrifter/${x.id}">${esc(x.titel)}</a>: ${x.linjer.map(esc).join(', ')}</p>`).join(''))}`;
   }
   function tegnVis() {
     const boks = $('#iv-vis');
@@ -206,6 +373,7 @@ ${linjer.join('\n')}
     if (!R) { boks.innerHTML = ''; return; }
     const o = R.oversigt, sammen = o.sammen.reduce((n, g) => n + g.fra.length, 0);
     const dele = [sammen && `${flertal(sammen, 'ingrediens lægges', 'ingredienser lægges')} sammen med en anden`, o.omdoebt.length && `${o.omdoebt.length} får nyt navn`, o.kategori && `${o.kategori} får ny kategori`,
+      o.aliaser.length && `${flertal(o.aliaser.length, 'gammelt navn bliver', 'gamle navne bliver')} til alias`,
       o.slettet.length && `${o.slettet.length} slettes`, o.nye.length && `${flertal(o.nye.length, 'ny ingrediens', 'nye ingredienser')} oprettes`,
       o.linjer.length && `${flertal(o.linjer.length, 'linje', 'linjer')} i opskrifter får ny tekst`, o.knyttet && `${flertal(o.knyttet, 'linje knyttes', 'linjer knyttes')} til kataloget uden ny tekst`].filter(Boolean);
     if (R.tom && !R.tvivl.length) { boks.innerHTML = '<h2 tabindex="-1">Der er intet at ændre</h2><p class="lille">Rettelserne ændrer ikke noget, og alle linjer peger på en ingrediens.</p>'; return; }
@@ -218,7 +386,8 @@ ${linjer.join('\n')}
       ${del('sammen', 'Lægges sammen', o.sammen.length, tabel(['Bliver til', 'Var'], o.sammen.map(g => [g.til, g.fra.join(', ')])))}
       ${del('omdoebt', 'Nyt navn', o.omdoebt.length, tabel(['Var', 'Bliver til'], o.omdoebt.map(g => [g.fra, g.til])))}
       ${del('slettet', 'Slettes', o.slettet.length, `<p class="tekst-s">${o.slettet.map(esc).join(', ')}</p>`)}
-      ${del('nye', 'Nye ingredienser', o.nye.length, `<p class="tekst-s">${o.nye.map(esc).join(', ')}</p>`)}
+      ${del('aliaser', 'Gamle navne, der bliver aliaser', o.aliaser.length, `<p class="lille">Teksten virker stadig i opskrifter og import. Den peger nu på det nye navn.</p>${tabel(['Gammelt navn', 'Peger på'], o.aliaser.map(a => [a.fra, a.til + (a.f ? ', ' + a.f : '')]))}`)}
+      ${del('nye', 'Nye ingredienser', o.nye.length, `<p class="lille">Tjek, at de ikke findes i forvejen. Er en af dem det samme som en ingrediens i kolonnen til højre, så ret navnet i rettelserne.</p>${tabel(['Ny ingrediens', 'Ligner'], o.lignendeNye.map(n => [n.navn, n.ligner.join(', ') || 'Ingen lignende']))}`)}
       ${del('linjer', 'Linjer i opskrifter', o.linjer.length, tabel(['Opskrift', 'Var', 'Bliver til'], o.linjer.map(l => [l.opskrift, l.foer, l.efter])))}
       <p class="lille">Før der rettes, gemmes en sikkerhedskopi. Den kan du gendanne nederst på siden.</p>
       <div class="rakke"><button type="button" class="knap annuller" data-tpid="annuller" data-h="ivLuk">${ik('annuller')} Annuller</button><button type="button" class="knap gem" data-tpid="iv-gem" data-h="ivGem">${ik('tjek')} Gem rettelserne</button></div>`;
@@ -244,6 +413,7 @@ ${linjer.join('\n')}
       </ol>
       <div id="iv-fejl"></div>
       <section id="iv-vis" class="iv-vis"></section>
+      ${reglerHtml()}
       <h2>Sikkerhedskopier</h2>
       <p class="lille">En kopi har ingredienserne, «Derhjemme» og opskrifternes ingredienser, som de var. «Gendan» sætter dem tilbage og gemmer først en kopi af det, der er nu.</p>
       <div id="iv-kopier">${kopiHtml()}</div>`;
@@ -255,7 +425,7 @@ ${linjer.join('\n')}
   }
   async function side() {
     app.innerHTML = `${Ikoner.tilbage('#/vaerksted')}<h2>Ingrediensværktøj</h2><p class="lille">Henter…</p>`;
-    R = null; valg = {}; rettelse = null;
+    R = null; valg = {}; rettelse = null; soeg = ''; ed = null;
     await hentSiden();
     if (location.hash === '#/vaerksted/ingredienser') tegn(); // man kan have forladt siden, mens der blev hentet
   }
@@ -271,7 +441,41 @@ ${linjer.join('\n')}
     const r = document.querySelector(`input[name="${navn}"]:checked`); if (r) r.focus();
   });
   document.addEventListener('toggle', e => { const d = e.target; if (d.classList && d.classList.contains('iv-del')) d.open ? aabne.add(d.dataset.del) : aabne.delete(d.dataset.del); }, true);
+  document.addEventListener('change', e => { // valget af slags i reglens vindue
+    if (e.target.name !== 'rgslags' || !ed) return;
+    laesVinduet(); ed.slags = e.target.value; tegnRaekker();
+  });
+  document.addEventListener('input', e => { // søgningen i listen over regler
+    if (e.target.id !== 'ivsoeg') return;
+    soeg = e.target.value; $('#iv-regler').innerHTML = reglerListe();
+  });
   Object.assign(H, {
+    ivRegel(el) { // tilpas en regel (data-v), lav et alias til en ingrediens (data-n) eller en ny regel
+      const r = el.dataset.v && D.regler.find(x => x.id === el.dataset.v);
+      if (el.dataset.v && !r) return toast('Reglen findes ikke mere');
+      aabnVindue(r ? regelAf(r) : { id: null, version: null, tekst: '', slags: 'vare', varer: [{ navn: el.dataset.n ? ingNavn(el.dataset.n) : '', f: '' }] });
+    },
+    async ivRegelSlet(el) {
+      const r = D.regler.find(x => x.id === el.dataset.v);
+      if (!r || !await bekraeft(`Vil du slette reglen «${r.tekst}»? Opskrifter, der allerede er gemt, ændres ikke.`)) return;
+      await sletRegel(r.id, r.version);
+    },
+    rgTilfoej() { laesVinduet(); ed.varer.push({ navn: '', f: '' }); tegnRaekker(); const i = $('#rgv' + (ed.varer.length - 1)); if (i) i.focus(); },
+    rgFjern(el) { laesVinduet(); ed.varer.splice(Number(el.dataset.v), 1); tegnRaekker(); },
+    async rgGem() {
+      const { t, resultat, fejl } = loes();
+      if (fejl.length) return arkFejl(fejl);
+      arkFejl([]); ed.t = t; ed.resultat = resultat;
+      await sendGem();
+    },
+    rgBrugDeres() { aabnVindue(regelAf(ed.deres)); },
+    rgBrugFindes() { aabnVindue(regelAf(ed.findes)); },
+    async rgAlligevel() { // efter at have set den andens udgave
+      ed.version = ed.deres.version;
+      if (ed.hvad === 'slet') return sletRegel(ed.id, ed.deres.version);
+      await sendGem();
+    },
+    async rgSomNy() { ed.id = null; ed.version = null; await sendGem(); },
     async ivKopier() {
       D = await hentAlt();
       (await kopier(eksport(D))) ? toast('Listen er kopieret. Sæt den ind hos Claude.') : fejlbesked('Listen blev ikke kopieret. Tryk på knappen igen.');

@@ -111,6 +111,7 @@ const Katalog = (() => {
     if (Math.min(a.length, b.length) >= 5 && afstand(a, b, 1) <= 1) return 'stavning';
     return null;
   }
+  const OGELLER = /(^| )(og|eller)( |$)|[,&+/]/; // et navn med flere varer i
   const SMAAORD = ['til', 'med', 'og', 'eller', 'af', 'på', 'fra', 'som', 'uden', 'i'];
   function lignendeAf(k, alle, foerst) { // til spørgsmålet: dem, der står i navnet, ligner det eller deler et ord med det
     const a = samlet(k), ord = k.split(' ').filter(w => w.length >= 3 && !SMAAORD.includes(w)), pt = new Map();
@@ -136,7 +137,7 @@ const Katalog = (() => {
       const i = liste.find(x => x.navn_norm === t);
       if (i) return { udfald: 'kendt', via: 'navn', slags: 'vare', varer: medF([{ id: i.id }], ff), lignende: [] };
     }
-    const ogEller = /(^| )(og|eller)( |$)|[,&+/]/.test(k), alle = kandidater(liste, rl), grund = new Map();
+    const ogEller = OGELLER.test(k), alle = kandidater(liste, rl), grund = new Map();
     if (!ogEller) for (const c of alle) { const g = taetPaa(k, c.t); if (g && !grund.has(c.id)) grund.set(c.id, g); }
     const ids = [...grund.keys()], lignende = lignendeAf(k, alle, ids);
     if (ids.length === 1) return { udfald: 'taet', via: grund.get(ids[0]), slags: 'vare', varer: medF([{ id: ids[0] }], f), lignende, ogEller };
@@ -311,5 +312,5 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
       if (efterSortering) efterSortering();
     }
   });
-  return { hent, sikr, rens, noegle, spoerg, knyt, laes, kategorier, sorterAndet, laesKat, varerAf, navn, medNavn, daekker, opfyldt, noegleAf, soegeord, krydderi };
+  return { hent, sikr, rens, noegle, spoerg, knyt, laes, kategorier, sorterAndet, laesKat, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
 })();

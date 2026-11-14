@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.16.0 · Styr på ingredienser, fase 4: Ingrediensværktøjet
+- **Regler og aliaser** står i Ingrediensværktøjet (søg på en ingrediens eller en regel). Under hver ingrediens ses dens aliaser og regler. De kan tilpasses og slettes, og man kan lave et nyt alias eller en ny regel: én vare (med tilberedning), flere varer, en af flere varer eller ingen vare.
+- **Tjek mod den andens ændring:** `ingrediens_regel_gem` og `ingrediens_regel_slet` tjekker versionen. Er reglen ændret, siden den blev åbnet, vises den andens udgave først, og man vælger at beholde den, tilpasse den eller gemme sin egen oven på. Findes teksten allerede som regel, vises den. Er teksten navnet på en ingrediens, afvises den.
+- **En sammenlægning eller et nyt navn gør det gamle navn til alias** (med tilberedningen, hvis den flyttede). Det vises i forhåndsvisningen. Navne, der allerede er en regel, eller som nu er navnet på en ingrediens, springes over. Et nyt navn, der er en regel, afvises, og en linje, hvis tekst er et alias, peger på ingrediensen bag i stedet for at oprette en ny.
+- **Forhåndsvisningen viser lignende navne** til hver ny ingrediens, før den oprettes.
+- **Status** viser opskrifter med linjer, der har flere varer i ét navn (fx «persille og forårsløg»), med link til opskriften. En «eller»-linje røres ikke af værktøjet.
+- **Friske urter er krydderier:** frisk basilikum, frisk timian og frisk oregano (og fællesnavnet basilikum) er flyttet fra Grøntsager til Krydderier med kopi først («før: friske urter som krydderier»). «Uden krydderier» i «Hvad kan jeg lave?» tæller dem derfor ikke som noget, man skal have. Frisk dild og frisk koriander står stadig under Grøntsager.
+- Fælles regex for «flere varer» ligger i `Katalog` (`flereVarer`) og bruges af læsning, status og forhåndsvisning.
+
 ## 2.15.0 · Styr på ingredienser, fase 3: flytning af data
 Kun data og databasefunktionen. Kørt 14. nov. med kopi først (`ingrediens_ret`).
 - **Frisk og tørret er egne varer** under et fællesnavn: frisk basilikum, frisk dild, frisk og stødt koriander, frisk og tørret oregano, tørret rosmarin, frisk og tørret timian. Frisk står under Grøntsager, tørret og stødt under Krydderier. 21 linjer i 15 opskrifter er flyttet. «blade» regnes som frisk.
