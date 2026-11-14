@@ -1,0 +1,1845 @@
+{
+ "ingredienser": [
+  {
+   "id": "86e3531e",
+   "navn": "appelsin"
+  },
+  {
+   "id": "1dbb5288",
+   "navn": "asparges",
+   "f": "snitter"
+  },
+  {
+   "id": "0acf83fe",
+   "navn": "avocado"
+  },
+  {
+   "id": "1c09c701",
+   "navn": "balsamico"
+  },
+  {
+   "id": "9505b88e",
+   "navn": "banan"
+  },
+  {
+   "id": "0cc2a919",
+   "navn": "pesto"
+  },
+  {
+   "id": "9e0484a9",
+   "navn": "ris",
+   "f": "basmati"
+  },
+  {
+   "id": "60caeccd",
+   "navn": "quinoa",
+   "f": "blandet rød",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "e8dd29b5",
+   "navn": "persille",
+   "f": "bredbladet"
+  },
+  {
+   "id": "77e6558b",
+   "navn": "broccoli",
+   "f": "hoved"
+  },
+  {
+   "id": "0be05831",
+   "navn": "løg",
+   "f": "brunt"
+  },
+  {
+   "id": "8142cd70",
+   "navn": "tørrede bønner"
+  },
+  {
+   "id": "5909e257",
+   "navn": "citron",
+   "f": "saft"
+  },
+  {
+   "id": "c147aedd",
+   "kategori": "Konserves"
+  },
+  {
+   "id": "8e03d728",
+   "navn": "cremefraiche",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "257240ff",
+   "navn": "cremefraiche 18 %",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "de5665b1",
+   "navn": "cremefraiche 18 %",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "f41b93db",
+   "navn": "sennep",
+   "f": "dijon"
+  },
+  {
+   "id": "7d88a438",
+   "navn": "olivenolie"
+  },
+  {
+   "id": "854f48c3",
+   "navn": "kulør"
+  },
+  {
+   "id": "425a7ab2",
+   "navn": "instakaffe"
+  },
+  {
+   "id": "d63e5d9e",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "cb973499",
+   "navn": "feta"
+  },
+  {
+   "id": "47dd40a2",
+   "navn": "havregryn",
+   "f": "finvalset"
+  },
+  {
+   "id": "0e16d9ab",
+   "navn": "salt og peber"
+  },
+  {
+   "id": "35b01598",
+   "navn": "basilikum",
+   "f": "frisk"
+  },
+  {
+   "id": "b039ca78",
+   "navn": "dild",
+   "f": "frisk"
+  },
+  {
+   "id": "1dc1ce94",
+   "navn": "koriander",
+   "f": "frisk"
+  },
+  {
+   "id": "5278561f",
+   "navn": "mozzarella",
+   "f": "frisk"
+  },
+  {
+   "id": "8d6b5856",
+   "navn": "oregano",
+   "f": "frisk"
+  },
+  {
+   "id": "1951930d",
+   "navn": "timian",
+   "f": "frisk",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "3c8b4d9f",
+   "navn": "basilikum",
+   "f": "blade"
+  },
+  {
+   "id": "8eb10959",
+   "navn": "koriander",
+   "f": "blade",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "a5471940",
+   "navn": "peber",
+   "f": "friskkværnet"
+  },
+  {
+   "id": "f45dfcc0",
+   "navn": "pesto",
+   "f": "grov"
+  },
+  {
+   "id": "02d83edf",
+   "navn": "rucola"
+  },
+  {
+   "id": "94226051",
+   "navn": "ost",
+   "f": "som sort kul"
+  },
+  {
+   "id": "92a1c011",
+   "navn": "granatæble",
+   "f": "kerner"
+  },
+  {
+   "id": "048a0fdc",
+   "navn": "hakket svinekød",
+   "kategori": "Kød"
+  },
+  {
+   "id": "6db1a275",
+   "navn": "sennep",
+   "f": "grov"
+  },
+  {
+   "id": "b2a6c4e8",
+   "navn": "peberfrugt",
+   "f": "grøn",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "d3a115a3",
+   "navn": "peberfrugt",
+   "f": "grøn",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "5162b6fd",
+   "navn": "salat",
+   "f": "grøn"
+  },
+  {
+   "id": "0bcc5adc",
+   "navn": "asparges",
+   "f": "grønne"
+  },
+  {
+   "id": "b94dfb58",
+   "navn": "grøntsagsbouillon",
+   "kategori": "Olie, sauce og bouillon"
+  },
+  {
+   "id": "c2f66381",
+   "navn": "grøntsagsbouillon",
+   "kategori": "Olie, sauce og bouillon"
+  },
+  {
+   "id": "033368bf",
+   "kategori": "Kød"
+  },
+  {
+   "id": "88429897",
+   "navn": "peberfrugt",
+   "f": "gul",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "38f7e973",
+   "navn": "hakkede tomater"
+  },
+  {
+   "id": "0a95abd1",
+   "navn": "soltørrede tomater",
+   "f": "halve",
+   "kategori": "Konserves"
+  },
+  {
+   "id": "f8a9c3af",
+   "navn": "grønne bønner"
+  },
+  {
+   "id": "7155206c",
+   "navn": "kylling",
+   "f": "hel"
+  },
+  {
+   "id": "04b03961",
+   "navn": "basilikum",
+   "f": "frisk"
+  },
+  {
+   "id": "8b503de9",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "57d75a85",
+   "navn": "kaffe",
+   "f": "bønner",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "6618b615",
+   "navn": "oliven",
+   "f": "kalamata",
+   "kategori": "Konserves"
+  },
+  {
+   "id": "88b841bf",
+   "navn": "muskatnød",
+   "f": "knivspids"
+  },
+  {
+   "id": "244cc4ca",
+   "navn": "tomatpuré"
+  },
+  {
+   "id": "6e89f2f5",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "92d7dc6e",
+   "navn": "kyllingebryst"
+  },
+  {
+   "id": "a19f177b",
+   "navn": "mælk",
+   "f": "let"
+  },
+  {
+   "id": "4fcc12a7",
+   "navn": "rødløg",
+   "f": "lille"
+  },
+  {
+   "id": "558514c8",
+   "navn": "squash",
+   "f": "lille"
+  },
+  {
+   "id": "4c077d95",
+   "navn": "løgpulver"
+  },
+  {
+   "id": "f9e86f87",
+   "navn": "majs"
+  },
+  {
+   "id": "4eabebc4",
+   "navn": "hvedemel"
+  },
+  {
+   "id": "83c4473c",
+   "navn": "chilipulver",
+   "f": "mild",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "b5413f52",
+   "navn": "karry",
+   "f": "mild"
+  },
+  {
+   "id": "300e7873",
+   "navn": "olivenolie"
+  },
+  {
+   "id": "7a356781",
+   "navn": "pasta",
+   "f": "penne"
+  },
+  {
+   "id": "b754a6cc",
+   "navn": "pasta",
+   "f": "penne eller skruer"
+  },
+  {
+   "id": "7cc34592",
+   "navn": "peber"
+  },
+  {
+   "id": "09614299",
+   "navn": "peber",
+   "f": "korn"
+  },
+  {
+   "id": "c3db9ec6",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "becc7323",
+   "navn": "pecorino",
+   "f": "romano"
+  },
+  {
+   "id": "decd624a",
+   "navn": "pekannødder",
+   "f": "eller valnødder"
+  },
+  {
+   "id": "5dc4b621",
+   "navn": "persille",
+   "f": "og forårsløg"
+  },
+  {
+   "id": "befa158f",
+   "navn": "flødeost",
+   "f": "pikant"
+  },
+  {
+   "id": "7052ccf3",
+   "kategori": "Kød"
+  },
+  {
+   "id": "fdb0b2a1",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "15e07fdd",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "985088dd",
+   "navn": "hasselnødder",
+   "f": "ristede, eller saltede mandler"
+  },
+  {
+   "id": "5bcea4de",
+   "navn": "riseddike"
+  },
+  {
+   "id": "7bc67bb4",
+   "navn": "riseddike",
+   "f": "som mirin"
+  },
+  {
+   "id": "76bf69a3",
+   "navn": "balsamico",
+   "f": "rød"
+  },
+  {
+   "id": "8e17a522",
+   "navn": "chili",
+   "f": "rød"
+  },
+  {
+   "id": "51be498e",
+   "navn": "peberfrugt",
+   "f": "rød",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "d5cb3870",
+   "navn": "peberfrugt",
+   "f": "rød"
+  },
+  {
+   "id": "e999227d",
+   "navn": "linser",
+   "f": "røde"
+  },
+  {
+   "id": "a94386b8",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "bd4b4918",
+   "navn": "laks",
+   "f": "røget"
+  },
+  {
+   "id": "bc7f072e",
+   "navn": "salt og peber"
+  },
+  {
+   "id": "32658d66",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "5696f042",
+   "navn": "espresso"
+  },
+  {
+   "id": "86c377b8",
+   "navn": "kartofler",
+   "f": "små med æl"
+  },
+  {
+   "id": "a29aacfc",
+   "navn": "soja"
+  },
+  {
+   "id": "d2a7c2e9",
+   "navn": "solsikkekerner",
+   "f": "eller græskarkerner"
+  },
+  {
+   "id": "95cb630a",
+   "kategori": "Konserves"
+  },
+  {
+   "id": "bef0fd8b",
+   "navn": "soltørrede tomater",
+   "f": "i olie",
+   "kategori": "Konserves"
+  },
+  {
+   "id": "c038d232",
+   "navn": "peber",
+   "f": "sort"
+  },
+  {
+   "id": "e4c6980c",
+   "navn": "peber",
+   "f": "stødt"
+  },
+  {
+   "id": "f87f712b",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "ea6dbd89",
+   "navn": "kål",
+   "f": "sprød",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "320be4b8",
+   "navn": "sriracha"
+  },
+  {
+   "id": "dc7510c5",
+   "navn": "tomat",
+   "f": "store aromatiske"
+  },
+  {
+   "id": "21017b9e",
+   "navn": "rucola",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "d9d1cd97",
+   "navn": "løg",
+   "f": "store salat"
+  },
+  {
+   "id": "7fe931c6",
+   "navn": "bladselleri",
+   "f": "stængler"
+  },
+  {
+   "id": "3be3d4ba",
+   "navn": "koriander",
+   "f": "stødt",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "b6724b91",
+   "navn": "spidskommen",
+   "f": "stødt"
+  },
+  {
+   "id": "90370a81",
+   "navn": "paprika",
+   "f": "sød"
+  },
+  {
+   "id": "b40463b1",
+   "kategori": "Olie, sauce og bouillon"
+  },
+  {
+   "id": "8830cee2",
+   "navn": "teriyakisauce",
+   "kategori": "Olie, sauce og bouillon"
+  },
+  {
+   "id": "db43c099",
+   "navn": "tomat"
+  },
+  {
+   "id": "1de852b7",
+   "navn": "tomatpuré",
+   "kategori": "Konserves"
+  },
+  {
+   "id": "9cec6cb0",
+   "navn": "tortillas",
+   "f": "pandekager"
+  },
+  {
+   "id": "2f34f20d",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "63e033ef",
+   "navn": "tun",
+   "f": "i vand"
+  },
+  {
+   "id": "6a14027f",
+   "navn": "oregano",
+   "f": "tørret"
+  },
+  {
+   "id": "8c226aa1",
+   "navn": "rosmarin",
+   "f": "tørret"
+  },
+  {
+   "id": "d67cf7bf",
+   "navn": "timian",
+   "f": "tørret"
+  },
+  {
+   "id": "14088d29",
+   "navn": "æbler"
+  },
+  {
+   "id": "53497f30",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "fec92631",
+   "navn": "citron",
+   "f": "øko"
+  },
+  {
+   "id": "e8bf9750",
+   "navn": "lime",
+   "f": "øko"
+  },
+  {
+   "id": "1f6f050b",
+   "navn": "abrikos",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "ea41ceaa",
+   "navn": "allehånde",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "b5649b18",
+   "navn": "and",
+   "kategori": "Kød"
+  },
+  {
+   "id": "934caea3",
+   "navn": "artiskokker",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "1394f7f6",
+   "navn": "baileys",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "51e28b81",
+   "navn": "bergamotte",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "a71ac5f1",
+   "navn": "blodappelsin",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "4edfdfdb",
+   "navn": "blommer",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "d8084240",
+   "navn": "boghvede",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "098c9928",
+   "navn": "bouillon",
+   "kategori": "Olie, sauce og bouillon"
+  },
+  {
+   "id": "735a4d8a",
+   "navn": "brombær",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "1a81b4e6",
+   "navn": "brøndkarse",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "eb9186dd",
+   "navn": "bulgur",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "cb5830e8",
+   "navn": "butterdej",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "9b308e78",
+   "navn": "butternut squash",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "bae40e35",
+   "navn": "caviar",
+   "kategori": "Fisk og skaldyr"
+  },
+  {
+   "id": "37db3c1b",
+   "navn": "chia",
+   "kategori": "Ikke sorteret"
+  },
+  {
+   "id": "0ff85008",
+   "navn": "citronmelisse",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "a93aefd3",
+   "navn": "cognac",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "9231d351",
+   "navn": "durum",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "f211f65d",
+   "navn": "estragon",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "f3bf2632",
+   "navn": "fersken",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "e40bd38a",
+   "navn": "figner",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "62132218",
+   "navn": "flormelis",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "60187dc7",
+   "navn": "gedeost",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "5eba18b2",
+   "navn": "gin",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "f7d73a01",
+   "navn": "gorgonzola",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "a6e9f840",
+   "navn": "grand marnier",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "b4c1d48b",
+   "navn": "grape",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "a6aa4320",
+   "navn": "græskar",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "e78ee5a3",
+   "navn": "græskarkerner",
+   "kategori": "Ikke sorteret"
+  },
+  {
+   "id": "fead37bb",
+   "navn": "guldstøv",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "80711a3e",
+   "navn": "hakket kylling",
+   "kategori": "Kød"
+  },
+  {
+   "id": "d4966f71",
+   "navn": "havtorn",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "77f4aa42",
+   "navn": "hindbær",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "b2f8e6fe",
+   "navn": "hokkaido",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "1ef67606",
+   "navn": "hvedekerner",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "c9d1dd19",
+   "navn": "hvid chokolade",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "df1fc0f8",
+   "navn": "hvidtøl",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "f88c6b04",
+   "navn": "hyben",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "1642216d",
+   "navn": "hyldebær",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "e41afce7",
+   "navn": "hyldeblomst",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "e4d153a8",
+   "navn": "jordskokker",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "4cfaaca1",
+   "navn": "kahlua",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "fa0a11cb",
+   "navn": "kakao",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "c165d4f1",
+   "navn": "kakaonibs",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "8cee244d",
+   "navn": "kalkun",
+   "kategori": "Kød"
+  },
+  {
+   "id": "db6a7587",
+   "navn": "kalv",
+   "kategori": "Kød"
+  },
+  {
+   "id": "8429f2b7",
+   "navn": "kantareller",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "4222176f",
+   "navn": "kapers",
+   "kategori": "Konserves"
+  },
+  {
+   "id": "e8c7dafe",
+   "navn": "kærnemælk",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "da5ae2a3",
+   "navn": "kirsebær",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "8b6f13da",
+   "navn": "kiwi",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "952d0bab",
+   "navn": "klementin",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "ff158dd6",
+   "navn": "knoldselleri",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "578462ce",
+   "navn": "kokos",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "4d9d56c2",
+   "navn": "kokossukker",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "7f500da1",
+   "navn": "kondenseret mælk",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "f5bd62a4",
+   "navn": "korender",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "83a38145",
+   "navn": "kvæde",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "f7655379",
+   "navn": "lakrids",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "7f5076a2",
+   "navn": "lam",
+   "kategori": "Kød"
+  },
+  {
+   "id": "ecaa70ac",
+   "navn": "limoncello",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "bc82e68f",
+   "navn": "lys chokolade",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "5f403c67",
+   "navn": "makrel",
+   "kategori": "Fisk og skaldyr"
+  },
+  {
+   "id": "622b945a",
+   "navn": "mandelmælk",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "0b650492",
+   "navn": "mandelmel",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "2907127f",
+   "navn": "marcipan",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "e99b7be7",
+   "navn": "marsala",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "7baced2f",
+   "navn": "mascarpone",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "64d0bb21",
+   "navn": "melon",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "df9120ef",
+   "navn": "mousserende vin",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "c0229627",
+   "navn": "muscovado",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "3b272fb3",
+   "navn": "muslinger",
+   "kategori": "Fisk og skaldyr"
+  },
+  {
+   "id": "ade4c282",
+   "navn": "natron",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "092b3273",
+   "navn": "nigella",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "9986f5f6",
+   "navn": "nougat",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "d3686640",
+   "navn": "nødder",
+   "kategori": "Ikke sorteret"
+  },
+  {
+   "id": "c1d20512",
+   "navn": "oksekød",
+   "kategori": "Kød"
+  },
+  {
+   "id": "5c28b3a3",
+   "navn": "padron",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "6309c90b",
+   "navn": "parmaskinke",
+   "kategori": "Kød"
+  },
+  {
+   "id": "b425dd45",
+   "navn": "passionsfrugt",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "73d2e793",
+   "navn": "pastinak",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "e2168c74",
+   "navn": "peberrod",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "c966bae5",
+   "navn": "persillerod",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "246e0f8f",
+   "navn": "pistacie",
+   "kategori": "Ikke sorteret"
+  },
+  {
+   "id": "7053dea1",
+   "navn": "popcorn",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "2193fe73",
+   "navn": "portobello",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "d0a2f841",
+   "navn": "portvin",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "025e1922",
+   "navn": "potaske",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "6b4e21f3",
+   "navn": "pølser",
+   "kategori": "Kød"
+  },
+  {
+   "id": "35676bec",
+   "navn": "rabarber",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "f6fef944",
+   "navn": "ramsløg",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "1f890736",
+   "navn": "ribs",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "c4f09546",
+   "navn": "risottoris",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "2f13ed51",
+   "navn": "rodfrugter",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "ceac6ffe",
+   "navn": "rom",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "a3878150",
+   "navn": "romaine",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "551cfe2d",
+   "navn": "romanesco kål",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "94a3f914",
+   "navn": "rosenkål",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "791fd72e",
+   "navn": "rosiner",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "31ad43b7",
+   "navn": "rødspætte",
+   "kategori": "Fisk og skaldyr"
+  },
+  {
+   "id": "11b5d649",
+   "navn": "rugflager",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "25b93343",
+   "navn": "ruggryn",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "7e32c0e8",
+   "navn": "rugkerner",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "d83acfdc",
+   "navn": "rygeost",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "0ed3f0f3",
+   "navn": "safran",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "80497e6f",
+   "navn": "salvie",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "e716c9f5",
+   "navn": "serrano skinke",
+   "kategori": "Kød"
+  },
+  {
+   "id": "49502eed",
+   "navn": "sild",
+   "kategori": "Fisk og skaldyr"
+  },
+  {
+   "id": "b23b670c",
+   "navn": "skyr",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "22792688",
+   "navn": "snaps",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "85d42f49",
+   "navn": "solbær",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "4fb42e42",
+   "navn": "søde kartofler",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "a7025401",
+   "navn": "speltkerner",
+   "kategori": "Pasta, ris og korn"
+  },
+  {
+   "id": "5ae65212",
+   "navn": "speltmel",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "bc1fe50a",
+   "navn": "spiselige blomster",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "a158c971",
+   "navn": "stenbiderrogn",
+   "kategori": "Fisk og skaldyr"
+  },
+  {
+   "id": "aa407673",
+   "navn": "stikkelsbær",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "7fa366d0",
+   "navn": "stjerneanis",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "396f214c",
+   "navn": "sukat",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "4c9316be",
+   "navn": "sumak",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "a97f96f0",
+   "navn": "suppehøne",
+   "kategori": "Kød"
+  },
+  {
+   "id": "08aeee59",
+   "navn": "svampe",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "4d1a2585",
+   "navn": "svesker",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "20669c47",
+   "navn": "tamarind",
+   "kategori": "Olie, sauce og bouillon"
+  },
+  {
+   "id": "fec9e6f0",
+   "navn": "tequila",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "a3884b7d",
+   "navn": "tipo 00",
+   "kategori": "Bagning"
+  },
+  {
+   "id": "2f4f39b4",
+   "navn": "torskerogn",
+   "kategori": "Fisk og skaldyr"
+  },
+  {
+   "id": "7c2c69b9",
+   "navn": "trøffel",
+   "kategori": "Grøntsager"
+  },
+  {
+   "id": "592ac129",
+   "navn": "tykmælk",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "c34c70b4",
+   "navn": "vandmelon",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "733ba060",
+   "navn": "vanilje",
+   "kategori": "Krydderier"
+  },
+  {
+   "id": "45ba653f",
+   "navn": "vindruer",
+   "kategori": "Frugt"
+  },
+  {
+   "id": "4c69763f",
+   "navn": "vodka",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "595ceff1",
+   "navn": "whiskey",
+   "kategori": "Drikkevarer"
+  },
+  {
+   "id": "428d3e4f",
+   "navn": "ymer",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "fe2f4ce0",
+   "navn": "yoghurt",
+   "kategori": "Mejeri og æg"
+  },
+  {
+   "id": "92abbe8f",
+   "slet": true
+  },
+  {
+   "id": "714becb3",
+   "slet": true
+  },
+  {
+   "id": "6f91dfc7",
+   "slet": true
+  },
+  {
+   "id": "240d9bce",
+   "slet": true
+  },
+  {
+   "id": "426c329b",
+   "slet": true
+  },
+  {
+   "id": "ae3b032f",
+   "slet": true
+  },
+  {
+   "id": "a8311a82",
+   "slet": true
+  },
+  {
+   "id": "6dcf1654",
+   "slet": true
+  },
+  {
+   "id": "22c46e0f",
+   "slet": true
+  },
+  {
+   "id": "e3866bea",
+   "slet": true
+  },
+  {
+   "id": "9e15749b",
+   "slet": true
+  },
+  {
+   "id": "ea4bb2ef",
+   "slet": true
+  },
+  {
+   "id": "847d5298",
+   "slet": true
+  },
+  {
+   "id": "1c1b18ac",
+   "slet": true
+  },
+  {
+   "id": "cea8dfbc",
+   "slet": true
+  },
+  {
+   "id": "252f0a0f",
+   "slet": true
+  },
+  {
+   "id": "1beafb3b",
+   "slet": true
+  },
+  {
+   "id": "6431bbd9",
+   "slet": true
+  },
+  {
+   "id": "55219f52",
+   "slet": true
+  },
+  {
+   "id": "ab59b65a",
+   "slet": true
+  },
+  {
+   "id": "8784f61b",
+   "slet": true
+  },
+  {
+   "id": "be4418f2",
+   "slet": true
+  },
+  {
+   "id": "225a08d8",
+   "slet": true
+  },
+  {
+   "id": "93cb4441",
+   "slet": true
+  },
+  {
+   "id": "5156bc94",
+   "slet": true
+  },
+  {
+   "id": "ad82e524",
+   "slet": true
+  },
+  {
+   "id": "d973f992",
+   "slet": true
+  },
+  {
+   "id": "e53b8668",
+   "slet": true
+  },
+  {
+   "id": "e80c0633",
+   "slet": true
+  },
+  {
+   "id": "2990d386",
+   "slet": true
+  },
+  {
+   "id": "4593ff0b",
+   "slet": true
+  },
+  {
+   "id": "ae0db110",
+   "slet": true
+  },
+  {
+   "id": "15f51b42",
+   "slet": true
+  },
+  {
+   "id": "9d958eb0",
+   "slet": true
+  },
+  {
+   "id": "70e81966",
+   "slet": true
+  },
+  {
+   "id": "b0d206a1",
+   "slet": true
+  },
+  {
+   "id": "9551e8d5",
+   "slet": true
+  },
+  {
+   "id": "cb5d7228",
+   "slet": true
+  },
+  {
+   "id": "de314034",
+   "slet": true
+  },
+  {
+   "id": "b3831897",
+   "slet": true
+  },
+  {
+   "id": "3f56d3e3",
+   "slet": true
+  },
+  {
+   "id": "c656a7a4",
+   "slet": true
+  },
+  {
+   "id": "af0b1689",
+   "slet": true
+  },
+  {
+   "id": "dd22fcda",
+   "slet": true
+  },
+  {
+   "id": "158964d0",
+   "slet": true
+  },
+  {
+   "id": "b52a21f2",
+   "slet": true
+  },
+  {
+   "id": "8164ef7d",
+   "slet": true
+  },
+  {
+   "id": "d75eb9b1",
+   "slet": true
+  },
+  {
+   "id": "5ebadaaf",
+   "slet": true
+  },
+  {
+   "id": "1c550203",
+   "slet": true
+  },
+  {
+   "id": "0fbe7c2c",
+   "slet": true
+  },
+  {
+   "id": "0a655ac6",
+   "slet": true
+  },
+  {
+   "id": "3a08337d",
+   "slet": true
+  },
+  {
+   "id": "327f9a11",
+   "slet": true
+  },
+  {
+   "id": "93bbf213",
+   "slet": true
+  },
+  {
+   "id": "262bd830",
+   "slet": true
+  },
+  {
+   "id": "ec399630",
+   "slet": true
+  },
+  {
+   "id": "0736ca7c",
+   "slet": true
+  },
+  {
+   "id": "b2125d84",
+   "slet": true
+  },
+  {
+   "id": "c087e097",
+   "slet": true
+  },
+  {
+   "id": "d4ff1851",
+   "slet": true
+  },
+  {
+   "id": "437ed29e",
+   "slet": true
+  },
+  {
+   "id": "aa85a4e9",
+   "slet": true
+  },
+  {
+   "id": "2ddc4065",
+   "slet": true
+  },
+  {
+   "id": "6a9a12b9",
+   "slet": true
+  },
+  {
+   "id": "c2cd747f",
+   "slet": true
+  },
+  {
+   "id": "31d8cdec",
+   "slet": true
+  },
+  {
+   "id": "5b5e65bc",
+   "slet": true
+  },
+  {
+   "id": "1bf8473a",
+   "slet": true
+  },
+  {
+   "id": "9d07c373",
+   "slet": true
+  },
+  {
+   "id": "bbad5b4f",
+   "slet": true
+  },
+  {
+   "id": "9cc07504",
+   "slet": true
+  },
+  {
+   "id": "b29c74ab",
+   "slet": true
+  },
+  {
+   "id": "47e5be63",
+   "slet": true
+  },
+  {
+   "id": "5c53bb59",
+   "slet": true
+  },
+  {
+   "id": "ca65cbcd",
+   "slet": true
+  },
+  {
+   "id": "09e7f32e",
+   "slet": true
+  },
+  {
+   "id": "961ae501",
+   "slet": true
+  },
+  {
+   "id": "fc4a4b84",
+   "slet": true
+  },
+  {
+   "id": "5717c029",
+   "slet": true
+  },
+  {
+   "id": "78c4462a",
+   "slet": true
+  },
+  {
+   "id": "bbf5e4af",
+   "slet": true
+  },
+  {
+   "id": "2534c909",
+   "slet": true
+  },
+  {
+   "id": "ad3ab5ac",
+   "slet": true
+  },
+  {
+   "id": "2bcb4a05",
+   "slet": true
+  },
+  {
+   "id": "6eaeba27",
+   "slet": true
+  },
+  {
+   "id": "bcf539e6",
+   "slet": true
+  },
+  {
+   "id": "967a380c",
+   "slet": true
+  },
+  {
+   "id": "7ed3952b",
+   "slet": true
+  },
+  {
+   "id": "38cc8bd0",
+   "slet": true
+  },
+  {
+   "id": "afa78da1",
+   "slet": true
+  },
+  {
+   "id": "5b7f8078",
+   "slet": true
+  },
+  {
+   "id": "ad334580",
+   "slet": true
+  },
+  {
+   "id": "6f247969",
+   "slet": true
+  },
+  {
+   "id": "297cae89",
+   "slet": true
+  },
+  {
+   "id": "919f9d6e",
+   "slet": true
+  },
+  {
+   "id": "a4850c40",
+   "slet": true
+  },
+  {
+   "id": "dfccb181",
+   "slet": true
+  },
+  {
+   "id": "fa9e30bd",
+   "slet": true
+  },
+  {
+   "id": "fbcabd9e",
+   "slet": true
+  },
+  {
+   "id": "b28b92a5",
+   "slet": true
+  },
+  {
+   "id": "9bd2ecdd",
+   "slet": true
+  },
+  {
+   "id": "15a69660",
+   "slet": true
+  },
+  {
+   "id": "e5a8eb1b",
+   "slet": true
+  },
+  {
+   "id": "0a7f4f37",
+   "slet": true
+  },
+  {
+   "id": "bf81ee0a",
+   "slet": true
+  },
+  {
+   "id": "01aeb7cb",
+   "slet": true
+  },
+  {
+   "id": "3446b094",
+   "slet": true
+  },
+  {
+   "id": "72bdbff7",
+   "slet": true
+  },
+  {
+   "id": "4ea85ae3",
+   "slet": true
+  },
+  {
+   "id": "e6ad7819",
+   "slet": true
+  },
+  {
+   "id": "7d7b0bc2",
+   "slet": true
+  },
+  {
+   "id": "685eac99",
+   "slet": true
+  },
+  {
+   "id": "9c4b109e",
+   "slet": true
+  },
+  {
+   "id": "e34b0a53",
+   "slet": true
+  },
+  {
+   "id": "8cf739fc",
+   "slet": true
+  },
+  {
+   "id": "11e61f73",
+   "slet": true
+  },
+  {
+   "id": "da965885",
+   "slet": true
+  },
+  {
+   "id": "341208ea",
+   "slet": true
+  },
+  {
+   "id": "de0383b8",
+   "slet": true
+  },
+  {
+   "id": "f64a96d4",
+   "slet": true
+  },
+  {
+   "id": "03f5c4f4",
+   "slet": true
+  },
+  {
+   "id": "1fb9d8ba",
+   "slet": true
+  },
+  {
+   "id": "2c03f3cf",
+   "slet": true
+  },
+  {
+   "id": "abb21384",
+   "slet": true
+  },
+  {
+   "id": "3b100086",
+   "slet": true
+  },
+  {
+   "id": "7af3d371",
+   "slet": true
+  },
+  {
+   "id": "fe1c5b5b",
+   "slet": true
+  },
+  {
+   "id": "ccc3269b",
+   "slet": true
+  },
+  {
+   "id": "9630e75d",
+   "slet": true
+  },
+  {
+   "id": "a5073c52",
+   "slet": true
+  },
+  {
+   "id": "622aea15",
+   "slet": true
+  },
+  {
+   "id": "da082fa3",
+   "slet": true
+  },
+  {
+   "id": "13aa1f9b",
+   "slet": true
+  },
+  {
+   "id": "d60fab32",
+   "slet": true
+  },
+  {
+   "id": "0fc97cd7",
+   "slet": true
+  },
+  {
+   "id": "b7b5a21d",
+   "slet": true
+  },
+  {
+   "id": "0af93793",
+   "slet": true
+  },
+  {
+   "id": "d2888808",
+   "slet": true
+  }
+ ]
+}
