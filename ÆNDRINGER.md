@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.10.0 · Overskrifter i trin
+- Trin kan deles op med overskrifter, fx «Kødboller», «Sovs» og «Servering». En overskrift gælder for trinnet under den og de næste, til der kommer en ny.
+- **Opskriften:** overskriften står over sin gruppe af trin. Numrene fortsætter hele vejen (1, 2, 3 ...). **Trin for trin:** overskriften står lille over trinnet, og «Trin 3 af 5» tæller kun trin. **Tilpas:** knappen «overskrift» på et trin sætter en overskrift over det (samme knap som ved ingredienser). På smal skærm har trinnets knapper en linje for sig.
+- **Valg:** ingen ny kolonne. Overskriften gemmes som en linje `# Sovs` i `fremgangsmaade`, og trinnet får `g` i `trinAf` (som `{ g }` ved ingredienser). Overskrifter er ikke trin, så billeder, nummerering og «Trin x af y» er uændrede. Gamle opskrifter virker uden ændring.
+- «Tilføj med Claude» og «Opdater med Claude» beder nu om «overskrift» på første trin i hver del. Hjemmesideimporten er uændret (den laver stadig trin med deltrin ud af overskrifter).
+- Ikke prøvet på iPhone eller med skærmlæser. Trin med en overskrift uden trin under sig mister overskriften ved «Gem».
+
 ## 2.9.3 · Lange trin deles i deltrin
 - Et trin med flere sætninger (fra en hjemmeside) bliver til et trin med første sætning som tekst og resten som deltrin. Under en overskrift bliver hver sætning et deltrin. Trin med én sætning er uændrede.
 

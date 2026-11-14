@@ -322,6 +322,9 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 }
 .ing li.grp:first-child { height: 32px; padding-top: 0; }
 .ing.tjek li:last-child { min-height: 32px; padding: 0; }
+.trin-over { font: 26px/27px var(--hoved); font-weight: 400; margin: 0; padding: 32px 0 0; height: 64px; background: linear-gradient(var(--smor), var(--smor)) left 0 bottom calc(32px - var(--l0) - 1px) / 100% 2px no-repeat; }
+#trin > .trin-over:first-child { height: 32px; padding-top: 0; }
+.lav-over { margin: 0; font: 22px/32px var(--hoved); color: var(--blyant); }
 .deltrin { list-style: none; margin: 0; padding: 0; }
 .deltrin li { position: relative; padding: 0 0 0 24px; }
 .deltrin li::before { content: ""; position: absolute; left: 6px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--gryde); }
@@ -357,6 +360,10 @@ form > .knap.stor, main > .knap.stor { width: 100%; margin: var(--m) 0 var(--pt)
 .rk[data-niv="0"] .rk-mark::before { content: counter(t); }
 .rk[data-niv="1"] .rk-mark { background: var(--mynte); color: var(--paa-lys); font-size: 14px; }
 .rk[data-niv="1"] .rk-mark::before { content: counter(t) "." counter(d); }
+@media (max-width: 743px) { /* smal skærm: trinnets tre knapper får en linje for sig, så teksten ikke presses sammen */
+  .ed-trin .rk[data-niv="0"]:not(.over) { flex-wrap: wrap; justify-content: flex-end; }
+  .ed-trin .rk[data-niv="0"]:not(.over) .rk-felt { flex: 1 0 100%; }
+}
 @media (hover: hover) { .rk-knap:hover { background: rgba(var(--lys-rgb), .8); } }
 
 /* Trin for trin */

@@ -68,7 +68,7 @@ const TYPER = {
       { n: 'portioner', l: 'Antal portioner', t: 'number' },
       { n: 'tid_minutter', l: 'Tid i minutter', t: 'number' },
       { n: 'ingredienser', l: 'Ingredienser', t: 'ingredienser', hint: 'Én ingrediens i hvert felt. Skriv mængden først, fx «2 dl mælk». Skal den hakkes eller skæres, så skriv det efter et komma, fx «2 løg, finthakket». Tryk på «overskrift» for at sætte en overskrift over en ingrediens, fx Sovs eller Kødboller.' },
-      { n: 'fremgangsmaade', l: 'Trin', t: 'trin', hint: 'Ét trin i hvert felt. Tryk på «deltrin» for at lave små skridt under et trin. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' },
+      { n: 'fremgangsmaade', l: 'Trin', t: 'trin', hint: 'Ét trin i hvert felt. Tryk på «deltrin» for at lave små skridt under et trin, og på «overskrift» for at dele trinene op, fx i sovs og kød. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' },
       { n: 'skjul_forslag', l: 'Foreslå ikke denne ret i «Hvad kan jeg lave?»', t: 'tjek', hint: 'Sæt kryds, hvis retten ikke skal dukke op som forslag.' }
     ]
   },
@@ -271,17 +271,31 @@ function ingGrupper(r) {
   return ud.filter((g, i) => g.ing.length || (i > 0 && g.navn));
 }
 // fremgangsmaade er tekst: ét trin pr. linje. En linje, der starter med mellemrum, er et deltrin under trinnet over.
+// En linje, der starter med «# », er en overskrift (fx «# Sovs»). Den gælder for alle trin under sig, til næste overskrift: trinnet får g = «Sovs».
+// Overskrifter er ikke trin: de tæller ikke med i nummereringen, i «Trin 2 af 6» eller i billedernes trin.
 const TRINRENS = /^(\d+[.)]|[-•*])\s+/;
 function trinAf(r) {
   const ud = [];
+  let g = null;
   for (const raa of String(r.fremgangsmaade || '').split('\n')) {
+    const over = /^\s*#\s*(\S.*)$/.exec(raa);
+    if (over) { g = over[1].trim(); continue; }
     const t = raa.trim().replace(TRINRENS, '');
     if (!t) continue;
-    if (/^\s/.test(raa) && ud.length) ud[ud.length - 1].del.push(t); else ud.push({ t, del: [] });
+    if (/^\s/.test(raa) && ud.length) ud[ud.length - 1].del.push(t); else ud.push({ t, del: [], ...(g && { g }) });
   }
   return ud;
 }
-const trinTilTekst = trin => trin.map(t => [t.t, ...t.del.map(d => '  ' + d)].join('\n')).join('\n');
+const trinTilTekst = trin => trin.map((t, i) => [...(t.g && t.g !== (trin[i - 1] || {}).g ? ['# ' + t.g] : []), t.t, ...t.del.map(d => '  ' + d)].join('\n')).join('\n');
+// [{ navn: null | "Sovs", trin: [{ ...trin, i }] }, ...]: trinene i rækkefølge, delt op ved hver ny overskrift. «i» er trinnets nummer (fra 0) i hele retten.
+function trinGrupper(trin) {
+  const ud = [];
+  trin.forEach((t, i) => {
+    if (!ud.length || ud[ud.length - 1].navn !== (t.g || null)) ud.push({ navn: t.g || null, trin: [] });
+    ud[ud.length - 1].trin.push({ ...t, i });
+  });
+  return ud;
+}
 function visTal(n) {
   const d = n >= 100 ? 0 : n >= 1 ? 1 : 2;
   return String(Math.round(n * 10 ** d) / 10 ** d).replace('.', ',');
@@ -622,8 +636,8 @@ function tegnIng() {
 }
 function tegnTrin() {
   const trin = trinAf(S.r), b = kendteBegreber;
-  $('#trin').innerHTML = trin.length ? `<ol class="trin">${trin.map((t, i) => `<li>${medBegreber(t.t, b)}${
-    t.del.length ? `<ul class="deltrin">${t.del.map(d => `<li>${medBegreber(d, b)}</li>`).join('')}</ul>` : ''}${Billeder.trinHtml(S.bil || [], i)}</li>`).join('')}</ol>`
+  $('#trin').innerHTML = trin.length ? trinGrupper(trin).map(g => `${g.navn ? `<h3 class="trin-over">${esc(g.navn)}</h3>` : ''}<ol class="trin" style="counter-reset: trin ${g.trin[0].i}">${g.trin.map(t => `<li>${medBegreber(t.t, b)}${
+    t.del.length ? `<ul class="deltrin">${t.del.map(d => `<li>${medBegreber(d, b)}</li>`).join('')}</ul>` : ''}${Billeder.trinHtml(S.bil || [], t.i)}</li>`).join('')}</ol>`).join('')
     : '<p class="lille">Der er ingen trin endnu. Tryk på «Tilpas» for at skrive dem.</p>';
 }
 function stjerneHtml(stj) {
@@ -677,7 +691,7 @@ function tegnLav() {
   } else if (i < n) {
     const t = trin[i], navn = `${r.titel}, trin ${i + 1}`;
     // Trinnet og dets deltrin står på samme side. Deltrin kan man sætte flueben ved, og de kan have eget ur.
-    midte = `${Billeder.trinHtml(K.bil, i)}<p class="lav-trin">${medBegreber(t.t, kendteBegreber)}</p>${urKnap(t.t, navn, true)}
+    midte = `${t.g ? `<p class="lav-over">${esc(t.g)}</p>` : ''}${Billeder.trinHtml(K.bil, i)}<p class="lav-trin">${medBegreber(t.t, kendteBegreber)}</p>${urKnap(t.t, navn, true)}
       ${t.del.length ? `<ul class="ing tjek lav-del">${t.del.map((d, j) => `<li><label><input type="checkbox" data-del="${i}:${j}" ${K.afkr[i + ':' + j] ? 'checked' : ''}> <span>${medBegreber(d, kendteBegreber)}</span></label>${urKnap(d, `${navn}.${j + 1}`)}</li>`).join('')}</ul>` : ''}`;
     if (i === n - 1) naeste = `Færdig ${ik('tjek')}`;
   } else {
@@ -716,9 +730,13 @@ function rkHtml(ed, { art = 'ing', niv = 0, tekst = '' } = {}) {
       <button type="button" class="rk-knap" data-h="rkSkift" aria-label="Skift til ${o ? 'ingrediens' : ORD_OVERSKRIFT}"><b>${o ? ik('gulerod') : 'Aa'}</b><small>${o ? 'ingrediens' : ORD_OVERSKRIFT}</small></button>
       <button type="button" class="rk-knap" data-h="rkNy" aria-label="Tilføj ingrediens"><b>＋</b><small>ingrediens</small></button></div>`;
   }
+  if (art === 'over') return `<div class="rk over" data-art="over" data-niv="h">
+    <div class="rk-felt"><textarea class="rk-tekst" rows="1" enterkeyhint="next" autocomplete="off" aria-label="Overskrift" placeholder="Overskrift, fx Sovs">${esc(tekst)}</textarea>${fjern}</div>
+    <button type="button" class="rk-knap" data-h="rkSkift" aria-label="Skift til trin"><b>＋</b><small>trin</small></button></div>`;
   return `<div class="rk" data-niv="${niv}">
     <div class="rk-felt"><span class="rk-mark" aria-hidden="true"></span><textarea class="rk-tekst" rows="1" enterkeyhint="next" autocomplete="off"
       aria-label="${niv ? 'Deltrin' : 'Trin'}" placeholder="${niv ? 'Deltrin, fx Hak løget' : 'Skriv et trin'}">${esc(tekst)}</textarea>${fjern}</div>
+    ${niv ? '' : `<button type="button" class="rk-knap" data-h="rkSkift" aria-label="Tilføj ${ORD_OVERSKRIFT} over trinnet"><b>Aa</b><small>${ORD_OVERSKRIFT}</small></button>`}
     <button type="button" class="rk-knap" data-h="rkNy" data-v="trin" aria-label="Tilføj trin"><b>＋</b><small>trin</small></button>
     <button type="button" class="rk-knap" data-h="rkNy" data-v="del" aria-label="Tilføj deltrin"><b>${ik('deltrin')}</b><small>deltrin</small></button></div>`;
 }
@@ -726,7 +744,7 @@ function edFelt(f, rad) {
   const ed = f.t === 'trin' ? 'trin' : 'ing';
   let rader;
   if (ed === 'ing') rader = ingListe(rad).map(x => 'g' in x ? { art: 'over', tekst: x.g } : { art: 'ing', tekst: visIng(x) });
-  else rader = trinAf(rad).flatMap(t => [{ niv: 0, tekst: t.t }, ...t.del.map(d => ({ niv: 1, tekst: d }))]);
+  else rader = trinAf(rad).flatMap((t, i, alle) => [...(t.g && t.g !== (alle[i - 1] || {}).g ? [{ art: 'over', tekst: t.g }] : []), { niv: 0, tekst: t.t }, ...t.del.map(d => ({ niv: 1, tekst: d }))]);
   if (!rader.length) rader = [{}];
   return `<div class="edfelt"><h3 class="ed-titel">${f.l}</h3>${f.hint ? `<small>${f.hint}</small>` : ''}
     <div class="ed ed-${ed}" data-ed="${ed}" data-tpid="ed-${ed === 'ing' ? 'ingredienser' : 'trin'}" id="ed_${f.n}">${rader.map(r => rkHtml(ed, r)).join('')}</div></div>`;
@@ -762,7 +780,7 @@ function rkInput(t) { // vokser med teksten, og delt tekst med linjeskift (indsa
   const dele = t.value.split('\n').map(x => x.trim().replace(trin ? TRINRENS : /^[-•*]\s+/, '')).filter(Boolean);
   t.value = dele.shift() || ''; rkVokser(t);
   let efter = rk;
-  for (const d of dele) efter = rkIndsaet(ed, efter, { art: rk.dataset.art, niv: rk.dataset.niv, tekst: d }, false);
+  for (const d of dele) efter = rkIndsaet(ed, efter, { art: trin ? undefined : rk.dataset.art, niv: rk.dataset.niv === 'h' ? 0 : rk.dataset.niv, tekst: d }, false);
   rkFokus(efter);
 }
 function laesIngEd(ed) {
@@ -775,12 +793,13 @@ function laesIngEd(ed) {
 }
 function laesTrinEd(ed) {
   const ud = [];
-  let ejer = false; // hører deltrinnet til et trin med tekst?
+  let ejer = false, g = null; // hører deltrinnet til et trin med tekst? Og under hvilken overskrift står trinnet?
   for (const rk of ed.querySelectorAll('.rk')) {
     const t = rkFelt(rk).value.replace(/\s*\n\s*/g, ' ').trim().replace(TRINRENS, '');
-    if (rk.dataset.niv !== '1') ejer = !!t;
+    if (rk.dataset.niv !== '1') ejer = !!t && rk.dataset.niv !== 'h';
+    if (rk.dataset.niv === 'h') { g = t || null; continue; }
     if (!t) continue;
-    if (rk.dataset.niv === '1' && ejer && ud.length) ud[ud.length - 1].del.push(t); else ud.push({ t, del: [] });
+    if (rk.dataset.niv === '1' && ejer && ud.length) ud[ud.length - 1].del.push(t); else ud.push({ t, del: [], ...(g && { g }) });
   }
   return ud.length ? trinTilTekst(ud) : null;
 }
@@ -1043,6 +1062,7 @@ Regler:
 - Korte sætninger.
 - Skriv konkrete værdier: komfurets varme fra 1 til 9, om ovnen skal forvarmes (og til hvor mange grader), og hvor lang tid det tager. Skriv tiden i den sætning, den hører til, fx "Kog i 10 minutter".
 - Har retten flere dele, fx sovs og kødboller, så del ingredienserne op i grupper med en overskrift. Har den kun én del, så brug én gruppe med "overskrift": null.
+- Har retten flere dele, så giv det første trin i hver del en "overskrift", fx "Sovs" eller "Kød". Den gælder for trinnet og de trin, der kommer efter, til næste overskrift. Har den kun én del, så skriv ingen overskrifter i trinene.
 - Mængder skal være tal, fx 2,5 dl skrives som 2.5. Mangler der en mængde (fx "salt"), så udelad "mængde" og "enhed".
 - Skriv ingen forkortelser i navne. Skriv "hakket", ikke "hakk", og "revet", ikke "rev".
 - En ingrediens' "navn" er kun selve varen, fx "løg". Skal den hakkes, rives eller skæres, så skriv det i "forberedelse", fx "finthakket". Er det et produkt, man køber sådan, så behold navnet, fx "hakkede tomater".
@@ -1067,12 +1087,12 @@ Svar KUN med JSON i en kodeblok, uden anden tekst, i præcis dette format:
       { "navn": "salt", "kategori": "Krydderier" } ] }
   ],
   "trin": [
-    { "tekst": "Lav kødbollerne.", "deltrin": ["Skræl og hak løget.", "Bland kød, løg og æg i en skål."] },
+    { "overskrift": "Kødboller", "tekst": "Lav kødbollerne.", "deltrin": ["Skræl og hak løget.", "Bland kød, løg og æg i en skål."] },
     { "tekst": "Steg kødbollerne ved varme 6 i 10 minutter.", "deltrin": [] },
-    "Kog spaghettien efter anvisningen på posen."
+    { "overskrift": "Sovs", "tekst": "Kog fløden med salt i 5 minutter." }
   ]
 }
-"sværhed" er et tal fra 1 til 5. "tid" er minutter i alt. Et trin uden deltrin kan skrives som ren tekst.
+"sværhed" er et tal fra 1 til 5. "tid" er minutter i alt. Et trin uden deltrin og overskrift kan skrives som ren tekst.
 
 Her er opskriften:
 `;
@@ -1127,10 +1147,13 @@ function laesEn(j) {
   }
   if (!ing.some(x => !('g' in x))) mangler.push('ingredienser');
   const trin = [];
+  let g = null; // overskriften gælder for dette trin og dem efter, til næste overskrift
   for (const x of Array.isArray(j.trin) ? j.trin : []) {
+    const o = x && typeof x === 'object' ? enLinje(x.overskrift ?? x.gruppe ?? '') : '';
+    if (o) g = o;
     const t = enLinje(tekstAf(x));
     const del = (x && Array.isArray(x.deltrin ?? x.delt) ? (x.deltrin ?? x.delt) : []).map(d => enLinje(tekstAf(d))).filter(Boolean);
-    if (t) trin.push({ t, del }); else del.forEach(d => trin.push({ t: d, del: [] }));
+    if (t) trin.push({ t, del, ...(g && { g }) }); else del.forEach(d => trin.push({ t: d, del: [], ...(g && { g }) }));
   }
   if (!trin.length) mangler.push('trin');
   if (mangler.length) return { fejl: `Svaret mangler: ${mangler.join(', ')}. Bed Claude om at svare igen i det rigtige format.` };
@@ -1347,10 +1370,10 @@ const H = {
     if (el.dataset.v === 'del') rkIndsaet(ed, rkGruppeSlut(rk), { niv: 1 });
     else rkIndsaet(ed, rkGruppeSlut(rk), { niv: 0 });
   },
-  rkSkift(el) { // en ingrediens med tekst får en overskrift over sig. Ellers skifter linjen mellem ingrediens og overskrift.
+  rkSkift(el) { // en ingrediens eller et trin med tekst får en overskrift over sig. Ellers skifter linjen mellem ingrediens (trin) og overskrift.
     const rk = el.closest('.rk'), ed = rk.closest('.ed'), over = rk.dataset.art === 'over', tekst = rkFelt(rk).value;
     if (!over && tekst.trim()) return rkIndsaet(ed, rk, { art: 'over' }, true, true);
-    const ny = rkIndsaet(ed, rk, { art: over ? 'ing' : 'over', tekst }, false);
+    const ny = rkIndsaet(ed, rk, over ? (ed.dataset.ed === 'trin' ? { niv: 0, tekst } : { art: 'ing', tekst }) : { art: 'over', tekst }, false);
     rk.remove(); rkVokser(rkFelt(ny)); rkFokus(ny);
   },
   async rkFjern(el) {
