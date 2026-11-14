@@ -175,33 +175,45 @@ const Hjaelper = (() => {
   // sig('tekst', { peg: element, glad: true, nu: true, stor: true, knap: { tekst, href } })
   function sig(t, valg = {}) {
     if (!rod || !t || (skjult() && !valg.hurtig)) return;
-    if (skjult() && !gaest) gaestIn();
+    const nyGaest = skjult() && !gaest;
+    if (nyGaest) gaestIn();
     if (tur && !valg.tur) stopTur(false); // en vigtig besked afbryder rundvisningen
     if (valg.nu) koe = [];
     koe.push({ tekst: String(t), peg: valg.peg || null, hurtig: !!valg.hurtig, glad: !!valg.glad, stor: !!valg.stor, knap: valg.knap || null, tur: !!valg.tur, under: !!valg.under, nr: valg.nr, af: valg.af });
     if (!aktiv || valg.nu) naeste();
+    if (nyGaest) gaestFly();
   }
   function glad(t) { if (tur) stopTur(false); if (t) sig(t, { glad: true, nu: true }); else if (rod && !skjult()) { saetTilstand('glad'); Lyd.spil('glad'); setTimeout(() => { if (!aktiv) saetTilstand('hvile'); }, 1100); } }
 
-  // Et tip, mens Grydelil er skjult: han popper op ved ?-knappen, forklarer og popper væk igen. Alt tager ca. 0,12 sekund.
+  // Et tip, mens Grydelil er skjult: han kommer flyvende op fra hjørnet, forklarer og flyver ned i hjørnet igen. Hurtigt: ca. 0,2 sekund hver vej.
+  let gaestKf = null; // hvor hjørnet er uden for skærmen: { dx, dy, s }
+  function hjoerne() { // s = 1: Grydelil bor til højre (telefon), -1: til venstre (sidebjælke)
+    const f = figur.getBoundingClientRect(), s = f.left + f.width / 2 > innerWidth / 2 ? 1 : -1;
+    return { s, dx: s > 0 ? innerWidth - f.left + 10 : -(f.right + 10), dy: innerHeight - f.top + 10 };
+  }
   function gaestIn() {
-    gaest = true; if (gaestA) gaestA.cancel();
-    rod.hidden = false; visKnap.hidden = true;
-    if (!rolig()) rod.animate([{ transform: 'translateY(26px) scale(.6)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 120, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
+    gaest = true; if (gaestA) gaestA.cancel(); gaestA = null;
+    rod.hidden = false; visKnap.hidden = true; gaestKf = hjoerne();
+  }
+  function gaestFly() { // startes efter, at boblen er placeret, så pegevinklen regnes fra hvilestedet
+    if (rolig() || !gaestKf) return;
+    const { dx, dy, s } = gaestKf;
+    rod.animate([{ transform: `translate(${dx}px, ${dy}px) rotate(${-s * 40}deg)` }, { transform: 'none' }], { duration: 230, easing: 'cubic-bezier(.2,.8,.3,1.08)' });
   }
   function gaestVaek() {
     gaest = false;
-    if (rolig()) return opdater();
-    gaestA = rod.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(26px) scale(.6)', opacity: 0 }], { duration: 110, easing: 'ease-in', fill: 'forwards' });
+    if (rolig() || !gaestKf) return opdater();
+    const { dx, dy, s } = gaestKf;
+    gaestA = rod.animate([{ transform: 'none' }, { transform: `translate(${dx}px, ${dy}px) rotate(${s * 40}deg)` }], { duration: 190, easing: 'ease-in', fill: 'forwards' });
     const a = gaestA;
     a.finished.then(() => { if (!gaest) opdater(); a.cancel(); }, () => {});
   }
 
-  // ---------- ?-knappen er en bold: Grydelil hopper op og kaster den væk, og går så direkte i gang med turen ----------
+  // ---------- ?-knappen er en bold: Grydelil kommer flyvende fra hjørnet, rammer den, så den flyver ud af skærmen, og går så direkte i gang med turen ----------
   async function kastKnap() {
     if (flytter) return;
     flytter = true; lager.gem('hjaelper_skjult', false); gaest = false; koe = []; stop();
-    rod.hidden = false; // ?-knappen bliver stående, mens bolden kastes
+    rod.hidden = false; // ?-knappen bliver stående, mens bolden rammes
     const mit = ++bevNr;
     if (!rolig()) await kast(mit);
     flytter = false; opdater(); stopAnim();
@@ -209,37 +221,48 @@ const Hjaelper = (() => {
     if (Array.isArray(sideTekst)) startTur(); else sig(sideTekst || 'Hej igen! Tryk på mig, så viser jeg dig rundt.');
   }
   async function kast(mit) {
-    const v = visKnap.getBoundingClientRect(), cx = v.left + v.width / 2, dir = cx > innerWidth / 2 ? -1 : 1;
-    const bane = (dir < 0 ? cx : innerWidth - cx) + 70; // så langt, før bolden er ude af skærmen
-    const svg = figur.querySelector('svg'), H = Math.max(0, Math.min(60, figur.getBoundingClientRect().top - 12)), D = 900, N = 45;
-    const rk = [], sk = [], bk = [], gk = [];
+    const v = visKnap.getBoundingClientRect(), { s, dx, dy } = hjoerne(), svg = figur.querySelector('svg'), D = 1200, N = 72;
+    const bane = (s > 0 ? innerWidth - (v.left + v.width / 2) : v.left + v.width / 2) + 70; // så langt, før bolden er ude af skærmen
+    const P1 = [-s * 70, -70], P2 = [-s * 34, -4]; // toppen af flyvningen, og stedet hvor han rammer bolden fra siden
+    const rk = [], sk = [], bk = [];
     for (let i = 0; i <= N; i++) {
-      const t = i / N, k = Math.sin(Math.PI * seg(t, 0, .2)), op = seg(t, .2, .48), ned = seg(t, .5, .72), s = Math.sin(Math.PI * op), l = Math.sin(Math.PI * seg(t, .72, .9));
-      const loft = t < .5 ? H * Math.sin(Math.PI / 2 * op) : H * Math.cos(Math.PI / 2 * ned);
-      const sx = 1 + .18 * k - .08 * s + .2 * l, sy = 1 - .22 * k + .14 * s - .25 * l;
-      rk.push({ transform: `translate(0px, ${-loft}px)` });
-      sk.push({ transform: `translateY(${(1 - sy) * 30}px) rotate(${-dir * 9 * s}deg) scale(${sx}, ${sy})` });
-      gk.push(skyggeKf(0, 0, loft));
-      const w = Math.max(0, (t - .5) / .5); // bolden følger med op og slippes øverst
-      bk.push({ transform: t < .5 ? `translate(0px, ${-loft + 3 * k}px) rotate(${dir * 20 * s}deg)` : `translate(${dir * bane * w}px, ${-H - 420 * w + 700 * w * w}px) rotate(${dir * 540 * w}deg)` });
+      const t = i / N, u1 = seg(t, 0, .34), u2 = seg(t, .34, .5), u3 = seg(t, .5, .84);
+      let x, y, r;
+      if (t < .34) { x = dx + (P1[0] - dx) * (1 - (1 - u1) ** 2); y = dy + (P1[1] - dy) * (1 - (1 - u1) ** 3); r = -s * 360 * io(u1); }
+      else if (t < .5) { x = P1[0] + (P2[0] - P1[0]) * u2 * u2; y = P1[1] + (P2[1] - P1[1]) * u2 * u2; r = -s * 360 + s * 16 * u2; }
+      else { const e = 1 - (1 - u3) ** 3; x = P2[0] * (1 - e); y = P2[1] * (1 - e); r = -s * 360 + s * 16 * (1 - e); }
+      const hit = Math.max(0, 1 - Math.abs(t - .5) / .05), lan = Math.max(0, 1 - Math.abs(t - .84) / .06);
+      const sx = 1 + .25 * hit + .2 * lan, sy = 1 - .25 * hit - .25 * lan;
+      rk.push({ transform: `translate(${x}px, ${y}px)` });
+      sk.push({ transform: `translateY(${(1 - sy) * 30}px) rotate(${r}deg) scale(${sx}, ${sy})` });
+      const w = Math.max(0, (t - .5) / .5);
+      bk.push({ transform: `translate(${s * bane * w}px, ${-330 * w + 520 * w * w}px) rotate(${s * 720 * w}deg)` });
     }
-    skyggeStart(); saetTilstand('flyv');
-    setTimeout(() => { if (mit === bevNr) Lyd.spil('hop'); }, D * .2);
-    setTimeout(() => { if (mit === bevNr) Lyd.spil('salto'); }, D * .5);
-    setTimeout(() => { if (mit === bevNr) { Lyd.spil('bump'); const [a, b] = fodpunkt(); partikler(a, b, 'stoev'); } }, D * .74);
-    await Promise.all([anim(rod, rk, { duration: D, easing: 'linear' }), anim(svg, sk, { duration: D, easing: 'linear' }), anim(visKnap, bk, { duration: D, easing: 'linear' }), anim(skyg, gk, { duration: D, easing: 'linear' })]);
-    skyggeSlut();
+    saetTilstand('flyv'); rod.classList.add('iluften'); // skyggen i tegningen skjules, mens han flyver
+    setTimeout(() => { if (mit === bevNr) Lyd.spil('hop'); }, D * .08);
+    setTimeout(() => { if (mit === bevNr) { Lyd.spil('bump'); partikler(v.left + v.width / 2, v.top + v.height / 2, 'stjerne'); } }, D * .5);
+    setTimeout(() => { if (mit === bevNr) { Lyd.spil('bump'); const [a, b] = fodpunkt(); partikler(a, b, 'stoev'); } }, D * .84);
+    await Promise.all([anim(rod, rk, { duration: D, easing: 'linear' }), anim(svg, sk, { duration: D, easing: 'linear' }), anim(visKnap, bk, { duration: D, easing: 'linear' })]);
   }
-  // Slut på turen: Grydelil hopper ud af skærmen (til siden, hvor han bor) og sætter ?-knappen tilbage
+  // Slut på turen: Grydelil hopper ud af skærmen (til siden, hvor han bor), og en arm med en hånd rækker ind og sætter ?-knappen på plads
   async function afsted() {
     const f = figur.getBoundingClientRect(), hjem = f.left - offX, venstre = hjem + f.width / 2 < innerWidth / 2;
     await flyt(venstre ? -(hjem + f.width + 16) : innerWidth - hjem + 16, 0, 'hop', true);
     stopAnim(); offX = offY = 0; rod.style.transform = ''; saetTilstand('hvile');
-    lager.gem('hjaelper_skjult', true); opdater();
-    if (rolig()) return;
-    Lyd.spil('bump');
-    visKnap.animate([{ transform: 'translateY(-90px) scale(.6)', opacity: 0, easing: 'ease-in' }, { transform: 'none', opacity: 1, offset: .45, easing: 'ease-out' }, { transform: 'translateY(-20px)', offset: .62, easing: 'ease-in' },
-      { transform: 'none', offset: .78, easing: 'ease-out' }, { transform: 'translateY(-6px)', offset: .9, easing: 'ease-in' }, { transform: 'none' }], { duration: 650 });
+    lager.gem('hjaelper_skjult', true);
+    if (rolig()) return opdater();
+    // Knappen starter uden for skærmen, i hånden på armen. Armen sænker den på plads, slipper og trækker sig tilbage.
+    visKnap.hidden = false; rod.hidden = true;
+    const v = visKnap.getBoundingClientRect(), cx = v.left + v.width / 2, s = cx > innerWidth / 2 ? 1 : -1, X = s * ((s > 0 ? innerWidth - cx : cx) + 40), D = 1000;
+    const arm = document.createElement('div');
+    arm.className = 'h-armind'; arm.style.cssText = `left:${v.left}px;top:${v.top}px;width:${v.width}px;height:${v.height}px`;
+    arm.innerHTML = `<svg width="520" height="${v.height}" viewBox="0 0 520 ${v.height}" aria-hidden="true" style="transform-origin:${v.width / 2}px 50%;transform:scaleX(${s})"><path d="M${v.width * .85} ${v.height * .15}Q150 -26 500 -14"/><circle cx="${v.width * .85}" cy="${v.height * .15}" r="8"/></svg>`;
+    document.body.append(arm);
+    const ind = [{ transform: `translate(${X}px, -34px)`, easing: 'cubic-bezier(.2,.7,.3,1)' }, { transform: 'translate(0px, -16px)', offset: .55, easing: 'ease-in' }, { transform: 'translate(0px, 0px)', offset: .68, easing: 'ease-out' }];
+    Lyd.spil('hop'); setTimeout(() => Lyd.spil('bump'), D * .68);
+    const kn = visKnap.animate([...ind, { transform: 'translate(0px, 0px)' }], { duration: D });
+    const am = arm.animate([...ind, { transform: `translate(${X}px, -34px)` }], { duration: D, fill: 'forwards' });
+    await am.finished.catch(() => {}); arm.remove(); opdater();
   }
 
   // ---------- Rundvisning: Grydelil hopper hen til emnet og peger ----------

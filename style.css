@@ -443,6 +443,11 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 .h-boble.stor p { white-space: pre-line; }
 .h-videre { display: none; font-size: 15px; color: var(--blyant); }
 .h-boble.flere .h-videre { display: block; }
+/* Armen, der sætter ?-knappen tilbage efter turen */
+.h-armind { position: fixed; z-index: 41; pointer-events: none; }
+.h-armind svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.h-armind path { fill: none; stroke: var(--gryde-mork); stroke-width: 11; stroke-linecap: round; }
+.h-armind circle { fill: var(--gryde-mork); }
 /* Tips: Grydelil er hurtig, så man ikke venter midt i madlavningen */
 #hjaelper.hurtig .h-boble { animation-duration: .1s; }
 #hjaelper.hurtig .h-pegearm { transition-duration: .1s; }

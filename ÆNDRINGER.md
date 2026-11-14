@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.11.1 · Grydelil flyver ind og rammer bolden
+- **?-knappen:** Grydelil kommer flyvende (med en salto) fra det nederste hjørne, rammer knappen, så den flyver ud af skærmen, og lander på sin plads. Så starter turen.
+- **Slut på turen:** efter hoppet ud af skærmen rækker en arm med en hånd ind og sænker ?-knappen på plads, slipper og trækker sig tilbage.
+- **Tips med skjult hjælper:** Grydelil flyver op fra hjørnet (0,23 s) og ned igen (0,19 s).
+- Hjørnet er det, Grydelil bor i: til højre på telefon, til venstre ved sidebjælken (så flyver bolden ud til venstre).
+- Med «reducer bevægelse» springes alt over. Ikke prøvet på iPhone eller iPad.
+
 ## 2.11.0 · Tips kun hos hjælperen, og ny animation til ?
 - **Tips:** et blåt ord forklares kun af Grydelil. Tekstfeltet under ordet er væk, og «Tips til retten» står ikke længere nederst i opskriften. Et tryk mere på samme ord lukker forklaringen.
 - **Tips-listen** viser «Bruges i:» med alle opskrifter, hvor tippets navn står i et trin, samt den opskrift, tippet er valgt til (`tipsOpskrifter` i `app.js`).
