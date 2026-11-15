@@ -2,6 +2,12 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.20.2 · Til gennemgang og oversigt
+- **Til gennemgang** øverst i Ingrediensværktøjet. Nye ingredienser, aliaser og regler, der laves uden for værktøjet, og «tæt på»-rettelser, appen laver selv ved import, står der med kilde (formular, opskrift, import, «Derhjemme») og dato. **Godkend** fjerner kun rækken (valg 3), **Se** finder ingrediensen i listen, **Godkend alle** tømmer listen.
+- Ny tabel `ingrediens_gennemgang` (SQL står i `supabase/ingredienser.sql`, kørt i Supabase). Appen skriver rækkerne selv (`Katalog.log`); fejler det, stopper intet. Mangler tabellen, er listen tom.
+- **Se oversigt:** ingredienser pr. kategori med aliaser og varianter, og de navne, der ligner hinanden.
+- Værktøjets egne ændringer (Ny ingrediens, alias, Egen ingrediens, Claude-rettelser) kommer ikke på listen.
+
 ## 2.20.1 · «Og»/«eller» i linjer og krydderier
 - **Teksten bliver stående, varerne er hver for sig** (kom med i 2.20.0): «salt og peber» kræver begge, «smør eller margarine» kræver én. Det gælder også tilberedningen: «eller græskarkerner», «finthakket, og forårsløg». Linjen får `og: [id]` eller `el: [id]`; teksten ændres ikke. Sker stille, når en opskrift åbnes, og kun når ordene efter «og»/«eller» er en kendt vare (3 af de 14 linjer i dag).
 - **«Ignorér krydderier»** gælder nu også madplanen og linjer uden id, hvis navn er en kendt krydderivare. Hele kategorien «Krydderier» springes over.

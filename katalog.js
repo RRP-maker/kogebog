@@ -26,6 +26,13 @@ const Katalog = (() => {
   }
   // Navnet, en linje står under i kataloget: selve varen («finthakket løg» står under «løg»)
   const noegle = navn => rens(simpel(navn)) || norm(String(navn).replace(/[(),;]/g, ' '));
+  // «Til gennemgang» (2.20.2): det, der laves uden for Ingrediensværktøjet, skrives til tabellen ingrediens_gennemgang. Fejler det, er det ikke vigtigt nok til at stoppe noget.
+  // poster: [{ slags: 'ny' | 'alias' | 'taet', tekst, ingrediens_id, note }]
+  async function log(poster, kilde) {
+    const rk = poster.filter(p => p && p.tekst).map(p => ({ slags: p.slags, tekst: p.tekst, ingrediens_id: p.ingrediens_id || null, note: p.note || null, kilde }));
+    if (!rk.length) return;
+    try { await api('ingrediens_gennemgang', { method: 'POST', body: rk }); } catch (e) { console.warn('Til gennemgang:', e.message); }
+  }
   // Den ene vej til nye ingredienser (valg 10): databasefunktionen «ingrediens_opret». nye: [{ navn, kategori_id }].
   // Findes et navn allerede (en anden enhed nåede først), bruges det, der findes.
   async function opret(nye) {
@@ -54,6 +61,7 @@ const Katalog = (() => {
   async function knyt(liste, svar = {}, imp = null) {
     await hent();
     if (imp) await katFraClaude(liste, imp.claude || {});
+    if (imp) log(liste.filter(x => x && !('g' in x) && !Array.isArray(x.eller)).map(x => { const l = laes(x.n); return l.udfald === 'taet' && l.varer[0] ? { slags: 'taet', tekst: dele(x.n).n, ingrediens_id: l.varer[0].id, note: 'rettet til «' + ingNavn(l.varer[0].id) + '»' } : null; }), 'import');
     return liste.flatMap(x => knytLinje(x, svar, imp));
   }
   function knytLinje(x, svar, imp) {
@@ -290,13 +298,15 @@ const Katalog = (() => {
         const andre = []; // regler, en anden enhed nåede at lave først: den, der findes, gælder
         try {
           await opret(nye);
+          const kilde = imp ? 'import' : hjemme ? 'derhjemme' : ordn ? 'opskrift (åbnet)' : 'opskrift (gemt)', poster = nye.map(n => ({ slags: 'ny', tekst: n.navn, ingrediens_id: (ing.find(c => c.navn_norm === norm(n.navn)) || {}).id }));
           for (const it of sp) { const u = ud[it.n]; if (u && u.navn) ud[it.n] = { id: ing.find(c => c.navn_norm === u.navn).id, ny: u.ny }; }
           for (const r of regl) {
             const resultat = r.ny ? [{ id: ing.find(c => c.navn_norm === r.ny).id }] : r.resultat;
             const g = await api('rpc/ingrediens_regel_gem', { method: 'POST', body: { p: { tekst: r.tekst, slags: r.slags, resultat } } });
-            if (!g.ok && g.grund === 'findes') andre.push(r.tekst);
+            if (!g.ok && g.grund === 'findes') andre.push(r.tekst); else if (g.ok) poster.push({ slags: 'alias', tekst: r.tekst, ingrediens_id: resultat[0] && resultat[0].id, note: r.slags });
           }
           await hent();
+          log(poster, kilde);
         } catch (err) {
           console.error(err);
           knap.disabled = false; kt.textContent = ' ' + gem;
@@ -477,5 +487,5 @@ const Katalog = (() => {
       $('.ark-bag', d).addEventListener('click', lukArk);
     }
   });
-  return { hent, sikr, klar, opret, erAlias, krav, kravAf, flereAf, skalOrdnes, venter, tekstAf, ordnStille, ordn, rens, noegle, afklar, hjemmeId, knyt, laes, kategorier, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
+  return { hent, sikr, klar, opret, log, erAlias, krav, kravAf, flereAf, skalOrdnes, venter, tekstAf, ordnStille, ordn, rens, noegle, afklar, hjemmeId, knyt, laes, kategorier, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
 })();

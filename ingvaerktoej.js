@@ -3,7 +3,7 @@
 // Gangen: kopiér listen til Claude, sæt Claudes rettelser ind, se forhåndsvisningen, gem. Alt regnes ud her (beregn) og sendes som én pakke til
 // databasefunktionen «ingrediens_ret» (supabase/ingredienser.sql), som først gemmer en kopi og så retter det hele eller intet.
 const IngVaerktoej = (() => {
-  let D = null, R = null, valg = {}, kopiListe = [], rettelse = null;
+  let D = null, R = null, valg = {}, kopiListe = [], rettelse = null, G = []; // G: «Til gennemgang»
   const aabne = new Set(['linjer']);
   const norm = s => String(s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
   const KORT = 8; // så mange tegn af et id står i listen til Claude
@@ -422,11 +422,41 @@ ${linjer.join('\n')}
   const kopiHtml = () => kopiListe.length ? kopiListe.map(k => `<div class="iv-kopi"><p class="tekst">${esc(tid(k.oprettet))} · ${esc(k.note || 'kopi')} · ${flertal(k.antal ?? 0, 'ingrediens', 'ingredienser')}</p>
       <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-gendan" data-h="ivGendan" data-v="${k.id}">${ik('genindlaes')} Gendan</button><button type="button" class="knap mini slet" data-tpid="iv-slet-kopi" data-h="ivSletKopi" data-v="${k.id}">${ik('slet')} Slet kopien</button></div></div>`).join('')
     : '<p class="lille">Der er ingen kopier endnu. Den første gemmes, når du retter noget.</p>';
+  // «Til gennemgang»: det, der er lavet uden for værktøjet. «Godkend» fjerner kun rækken fra listen.
+  const GSLAGS = { ny: 'Ny ingrediens', alias: 'Nyt alias eller regel', taet: 'Rettet, fordi den lignede' };
+  function gennemgangHtml() {
+    if (!G.length) return '<h2>Til gennemgang</h2><p class="lille">Intet at gennemgå. Nye ingredienser og aliaser, der laves andre steder, kommer til at stå her.</p>';
+    const række = g => {
+      const i = g.ingrediens_id && D.ing.find(x => x.id === g.ingrediens_id), hen = i ? ' → ' + i.navn : '';
+      return `<div class="iv-regel"><p class="tekst-s" data-tpdata>${GSLAGS[g.slags] || g.slags}: «${esc(g.tekst)}»${esc(hen)}${g.note ? ' (' + esc(g.note) + ')' : ''}</p>
+        <p class="lille" data-tpdata>${esc(g.kilde)} · ${esc(tid(g.oprettet))}</p>
+        <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-gg-se" data-h="ivSe" data-v="${g.id}" aria-label="Se ${esc(g.tekst)} i listen">Se</button>
+          <button type="button" class="knap mini gem" data-tpid="iv-gg-ok" data-h="ivGodkend" data-v="${g.id}" aria-label="Godkend ${esc(g.tekst)}">${ik('tjek')} Godkend</button></div></div>`;
+    };
+    return `<h2>Til gennemgang (${G.length})</h2><p class="lille">Laves der en ingrediens, et alias eller en rettelse uden for værktøjet, står den her. Tryk «Godkend», når den er i orden. Det ændrer ikke ingredienserne.</p>
+      ${G.map(række).join('')}${G.length > 1 ? `<div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-gg-alle" data-h="ivGodkendAlle">${ik('tjek')} Godkend alle</button></div>` : ''}`;
+  }
+  const tegnGennemgang = () => { const b = $('#iv-gennemgang'); if (b) b.innerHTML = gennemgangHtml(); };
+  // Oversigt: ingredienser med aliaser og varianter, og de navne, der ligner hinanden
+  function oversigtHtml() {
+    const al = new Map();
+    for (const r of D.regler) if ((r.slags === 'vare' || r.slags === 'eller') && r.resultat.every(v => !v.f)) for (const v of r.resultat) al.set(v.id, [...(al.get(v.id) || []), r.tekst]);
+    const grupper = new Map(D.kat.sort((a, b) => a.raekkefolge - b.raekkefolge).map(k => [k.id, { navn: katNavn(k), liste: [] }])), andet = { navn: IKKE_SORTERET, liste: [] };
+    for (const i of D.ing) (grupper.get(i.kategori_id) || andet).liste.push(i);
+    const række = i => { const a = (al.get(i.id) || []).sort((x, y) => x.localeCompare(y, 'da')), v = D.ing.filter(x => x.faelles_id === i.id).map(x => x.navn);
+      return `<p class="tekst-s" data-tpdata><strong>${esc(i.navn)}</strong>${a.length ? ' · også: ' + esc(a.join(', ')) : ''}${v.length ? ' · varianter: ' + esc(v.join(', ')) : ''}</p>`; };
+    const dele = [...grupper.values(), andet].filter(g => g.liste.length).map(g => del('o:' + g.navn, esc(g.navn), g.liste.length, g.liste.sort((x, y) => x.navn.localeCompare(y.navn, 'da')).map(række).join('')));
+    const l = ligner(D.ing), ligHtml = l.length ? del('o:ligner', 'Navne, der ligner hinanden', l.length, `<p class="lille">Er det den samme vare, så læg dem sammen med Claude, eller lav det ene til et alias.</p>${l.map(g => `<p class="tekst-s" data-tpdata>${esc(g.join(' · '))}</p>`).join('')}`) : '<p class="lille">Ingen navne ligner hinanden.</p>';
+    const tal = `${flertal(D.ing.length, 'ingrediens', 'ingredienser')}, ${flertal([...al.values()].reduce((n, a) => n + a.length, 0), 'alias', 'aliaser')}.`;
+    return `<h2>Oversigt</h2><p class="lille">${tal}</p>${ligHtml}${dele.join('')}<div class="rakke">${Ikoner.rund('luk', 'Luk', 'data-tpid="luk" data-h="lukArk"')}</div>`;
+  }
   function tegn() {
     app.innerHTML = `${Ikoner.tilbage('#/vaerksted')}
       <h2>Ingrediensværktøj</h2>
       <p class="lille">Her opretter du ingredienser og styrer deres aliaser.</p>
       ${status()}
+      <div id="iv-gennemgang">${gennemgangHtml()}</div>
+      <div class="rakke venstre"><button type="button" class="knap" data-tpid="iv-oversigt" data-h="ivOversigt">${ik('tag')} Se oversigt</button></div>
       ${reglerHtml()}
       <h2>Ret mange ingredienser med Claude</h2>
       <p class="lille">Til at lægge dubletter sammen og flytte ord som «finthakket» fra navnet. Intet gemmes, før du har set ændringerne.</p>
@@ -450,7 +480,8 @@ ${linjer.join('\n')}
     tegnVis();
   }
   async function hentSiden() {
-    [D, kopiListe] = await Promise.all([hentAlt(), api('ingrediens_backup?select=id,oprettet,note,antal&order=oprettet.desc&limit=20')]);
+    [D, kopiListe, G] = await Promise.all([hentAlt(), api('ingrediens_backup?select=id,oprettet,note,antal&order=oprettet.desc&limit=20'),
+      api('ingrediens_gennemgang?select=*&order=oprettet.desc&limit=200').catch(() => [])]); // uden tabellen er listen tom
   }
   async function side() {
     app.innerHTML = `${Ikoner.tilbage('#/vaerksted')}<h2>Ingrediensværktøj</h2><p class="lille">Henter…</p>`;
@@ -514,6 +545,20 @@ ${linjer.join('\n')}
       aabnNy(r.tekst, i && i.kategori_id, r);
     },
     ivNy() { aabnNy('', null, null); },
+    ivOversigt() { const d = ark(oversigtHtml()); $('.ark-bag', d).addEventListener('click', lukArk); },
+    async ivGodkend(el) {
+      try { await api(`ingrediens_gennemgang?id=eq.${enc(el.dataset.v)}`, { method: 'DELETE' }); } catch (e) { return fejlbesked('Det blev ikke godkendt. Tjek internettet, og prøv igen.'); }
+      G = G.filter(g => g.id !== el.dataset.v); tegnGennemgang();
+    },
+    async ivGodkendAlle() {
+      if (!await bekraeft(`Vil du godkende alle ${G.length}? De fjernes fra listen. Ingredienserne ændres ikke.`, 'Godkend')) return;
+      try { await api('ingrediens_gennemgang?id=not.is.null', { method: 'DELETE' }); } catch (e) { return fejlbesked('Det blev ikke godkendt. Tjek internettet, og prøv igen.'); }
+      G = []; tegnGennemgang();
+    },
+    ivSe(el) { // find ingrediensen i listen over aliaser
+      const g = G.find(x => x.id === el.dataset.v), i = g && (g.ingrediens_id && D.ing.find(x => x.id === g.ingrediens_id));
+      soeg = i ? i.navn_norm : (g ? norm(g.tekst) : ''); const f = $('#ivsoeg'); if (f) { f.value = soeg; $('#iv-regler').innerHTML = reglerListe(); f.scrollIntoView({ block: 'center' }); }
+    },
     async ivNyGem() {
       const navn = norm($('#nyNavn').value), kategori_id = $('#nyKat').value || null;
       if (!navn || /[(),;]/.test(navn)) return arkFejl([!navn ? 'Skriv et navn.' : 'Et navn må ikke have komma eller parentes.']);

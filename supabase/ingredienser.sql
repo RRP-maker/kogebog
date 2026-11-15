@@ -255,3 +255,20 @@ end $$;
 grant execute on function ingrediens_kopi(text), ingrediens_ret(jsonb), ingrediens_gendan(uuid), ingrediens_opret(jsonb), ingrediens_regel_gem(jsonb), ingrediens_regel_slet(uuid, int) to anon, authenticated;
 notify pgrst, 'reload schema';
 select (select count(*) from ingredienser) as ingredienser, (select count(*) from ingrediens_regler) as regler, (select count(*) from ingrediens_backup) as kopier;
+
+-- 2.20.2: «Til gennemgang». Appen skriver en række, når en ingrediens eller et alias laves uden for Ingrediensværktøjet
+-- (formular, åbning af en opskrift, import, «Derhjemme») eller en «tæt på» rettes af sig selv. «Godkend» sletter rækken.
+create table if not exists ingrediens_gennemgang (
+  id uuid primary key default gen_random_uuid(),
+  oprettet timestamptz not null default now(),
+  slags text not null check (slags in ('ny', 'alias', 'taet')),
+  tekst text not null,
+  ingrediens_id uuid references ingredienser(id) on delete cascade,
+  kilde text not null default 'app',
+  note text
+);
+alter table ingrediens_gennemgang enable row level security;
+drop policy if exists "aaben" on ingrediens_gennemgang;
+create policy "aaben" on ingrediens_gennemgang for all using (true) with check (true);
+grant select, insert, delete on ingrediens_gennemgang to anon, authenticated;
+notify pgrst, 'reload schema';
