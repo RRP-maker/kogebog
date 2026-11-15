@@ -253,7 +253,8 @@ function normIng(x) {
   if (!n) return null;
   const f = String(x.f ?? x.forberedelse ?? x.tilberedning ?? '').trim(), id = typeof x.id === 'string' ? x.id : '', t = id && typeof x.t === 'string' ? x.t.trim() : ''; // t: et alias, som det står i opskriften
   const eller = Array.isArray(x.eller) ? x.eller.filter(v => typeof v === 'string') : null; // en af flere varer (Styr på ingredienser)
-  return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n, ...(f && { f }), ...(id && { id }), ...(t && { t }), ...(eller && eller.length && { eller }) };
+  const el = id && Array.isArray(x.el) ? x.el.filter(v => typeof v === 'string') : null, og = id && Array.isArray(x.og) ? x.og.filter(v => typeof v === 'string') : null; // el: eller-varer, og: og-varer ved siden af id (teksten står, som den er)
+  return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n, ...(f && { f }), ...(id && { id }), ...(t && { t }), ...(el && el.length && { el }), ...(og && og.length && { og }), ...(eller && eller.length && { eller }) };
 }
 // ingredienser gemmes som en liste. Et element { g: "Sovs" } er en overskrift, resten er ingredienser.
 // En ingrediens er { m: mængde, e: enhed, n: navn, id: ingrediensens id i kataloget, f: forberedelse, t: teksten, som den står i opskriften }. «id» og «n» sættes ved «Gem» (Katalog.knyt).
@@ -651,7 +652,7 @@ async function gemLinjer(r, liste) {
 async function ordnVedAabning(r) {
   if (!Katalog.klar()) return []; // kataloget er ikke hentet (fx uden net): så ligner alle linjer uordnede
   let liste = ingListe(r);
-  if (!liste.some(Katalog.venter)) return [];
+  if (!liste.some(Katalog.skalOrdnes)) return [];
   try {
     await Katalog.hent(); // et frisk katalog, før noget ændres eller spørges om
     const s = Katalog.ordnStille(liste);
@@ -1040,10 +1041,15 @@ const erBasis = n => BASIS.some(b => n === b || n.endsWith(b) || n.split(' ').in
 // mangler: varens navn i kataloget (samme vare tæller kun én gang). tekst: vare -> teksten, som den står i opskriften (et alias, fx «kyllingefilet»).
 function beregnForslag(opskrifter, har, udenKrydderier) {
   const rader = opskrifter.map(r => {
-    const brug = ingAf(r).filter(i => !erBasis(simpel(Katalog.navn(i, true).toLowerCase())) && !(udenKrydderier && Katalog.krydderi(i)));
+    // Hver linje har ét krav pr. gruppe: «og» giver flere krav, «eller» er ét krav. Basisvarer og (hvis valgt) krydderier tæller ikke med.
     const set = new Set(), mangler = [], tekst = {};
-    for (const i of brug) { const k = Katalog.noegleAf(i); if (!Katalog.opfyldt(i, har) && !set.has(k)) { set.add(k); const v = Katalog.navn(i, true); mangler.push(v); tekst[v] = Katalog.navn(i); } }
-    return { r, antal: brug.length, mangler, tekst };
+    let antal = 0;
+    for (const i of ingAf(r)) {
+      const krav = Katalog.kravAf(i, har).filter(g => !erBasis(simpel(g.navn.toLowerCase())) && !(udenKrydderier && g.kryd));
+      if (krav.length) antal++;
+      for (const g of krav) if (!g.ok && !set.has(g.k)) { set.add(g.k); mangler.push(g.navn); tekst[g.navn] = g.tekst; }
+    }
+    return { r, antal, mangler, tekst };
   }).filter(x => x.antal > 0);
   const kan = rader.filter(x => !x.mangler.length), naesten = rader.filter(x => x.mangler.length);
   // Find 1 og 2 ting at købe, som giver flest nye retter
@@ -1091,7 +1097,7 @@ function tegnForslag() {
   if (!har.size) { nu.innerHTML = '<h2>Det kan du lave nu</h2><p class="tomt">Skriv mindst én ting i feltet ovenfor, så finder jeg retter.</p>'; rest.innerHTML = ''; return; }
   const f = beregnForslag(F, har, udenKryd()), maks = maksMangler(), naesten = f.naesten.filter(x => x.mangler.length <= maks);
   nu.innerHTML = `<div class="mangler-top"><h2>Det kan du lave nu</h2>
-      <label class="skift" data-tpid="uden-krydderier"><input type="checkbox" id="udenkryd" ${udenKryd() ? 'checked' : ''}> <span>Uden krydderier</span></label></div>
+      <label class="skift" data-tpid="uden-krydderier"><input type="checkbox" id="udenkryd" ${udenKryd() ? 'checked' : ''}> <span>Ignorér krydderier</span></label></div>
     ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe længere nede.</p>'}`;
   rest.innerHTML = `${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.map(m => visMangler(m, f.naesten.map(x => x.tekst[m]))).join(' og '))}</strong>
       <span>Så kan du også lave: ${k.retter.map(r => `<a href="#/opskrifter/${r.id}">${esc(r.titel)}</a>`).join(', ')}</span></div>`).join('')}` : ''}

@@ -232,7 +232,7 @@ const Hjemme = (() => {
     for (const x of liste) {
       if (!(x.m > 0)) continue;
       let bedst = null;
-      for (const id of Katalog.varerAf(x)) {
+      for (const id of (Katalog.krav(x) || [Katalog.varerAf(x)])[0]) { // mængden trækkes fra den første vare (ved «eller» den første, der er hjemme)
         const d = Katalog.daekker(id);
         bedst = med.find(h => h.ingrediens_id === id) || med.find(h => d.includes(h.ingrediens_id));
         if (bedst) break;

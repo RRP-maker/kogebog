@@ -2,6 +2,14 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.20.0 · Ingrediensværktøjet: aliaser og nye ingredienser
+- **Aliaser øverst** på siden (før Claude-trinene). Hver ingrediens har et kort med sine aliaser, et felt til «Nyt alias» og knapperne **Tilpas**, **Fjern** og **Egen ingrediens**.
+- **Ny ingrediens** med navn og kategori (`Katalog.opret`, altså `ingrediens_opret`).
+- **Egen ingrediens:** et alias eller en regel (fx «aspargessnitter») bliver en ingrediens for sig. Reglen slettes først og sættes tilbage, hvis oprettelsen fejler. Gemte opskrifter ændres ikke.
+- **Delt alias:** samme tekst kan høre til flere ingredienser. Det gemmes som en «eller»-regel (én af dem er nok). Ingen ændring i databasen. «Fjern» tager kun den ene ingrediens ud; er der én tilbage, bliver det et almindeligt alias.
+- **Ingredienslisten** («Se alle ingredienser») viser aliaser: «kyllingebryst (også: kyllingefilet)».
+- Ikke med endnu: «og/eller»-linjer og krydderi-tjekboksen (2.20.1) samt «Til gennemgang» (2.20.2).
+
 ## 2.19.2 · «Sortér med Claude» er fjernet
 - Knappen «Sortér med Claude» i «Hvad kan jeg lave?» er væk, med arket, beskeden og læsningen af Claudes svar (`Katalog.sorterAndet`, `laesKat`) og `IngVaerktoej.ret`, som kun den brugte. «Tilføj med Claude» og «Se alle ingredienser» står, som de var.
 - Kategorier og navne rettes nu kun i Ingrediensværktøjet. Dets egne Claude-trin er ikke rørt.

@@ -62,8 +62,8 @@ const Katalog = (() => {
     if (!d.n) return []; // en linje uden navn falder væk
     const l = laes(x.n), s = svar[d.n];
     const r = l.udfald === 'kendt' || (imp && l.udfald === 'taet') ? l : s && s.id ? { slags: 'vare', alias: d.k !== norm(ingNavn(s.id)) ? d.k : '', varer: [{ id: s.id, ...(d.f && { f: d.f }) }] } : null; // et valgt alias bevarer teksten
-    if (!r) { const { id, eller, t, ...rest } = x; return [rest]; }
-    return anvend(x, r);
+    if (!r) { const fa = l.udfald !== 'kendt' && flereAf(d.k); if (fa) return [fler({ ...x, f: d.f || x.f }, fa, x.n)]; const { id, eller, el, og, t, ...rest } = x; return [rest]; } // «salt eller peber»: varerne er kendte, så der er intet at spørge om
+    return anvend(x, r).map(l => flerLinje(l) || l);
   }
   // Et svar eller en regel lagt på en linje. Ved «del» får den første vare mængden.
   function anvend(x, r) {
@@ -71,20 +71,59 @@ const Katalog = (() => {
     const linje = (v, m, e, t) => { const f = ff(v); return { m, e, n: navnPaa(v.id), id: v.id, ...(f && { f }), ...(t && { t }) }; };
     if (r.slags === 'slet') return [];
     if (r.slags === 'eller') { const f = [...new Set(r.varer.map(v => v.f).concat(x.f).filter(Boolean))].join(', '); return [{ m: x.m, e: x.e, n: r.varer.map(v => navnPaa(v.id)).join(' eller '), eller: r.varer.map(v => v.id), ...(f && { f }) }]; }
-    if (r.slags === 'del') return r.varer.map((v, i) => linje(v, i ? null : x.m, i ? '' : x.e));
+    if (r.slags === 'del') {
+      if (r.varer.length > 1 && !r.varer.some(v => v.f)) return [fler(x, { slags: 'og', ids: r.varer.map(v => v.id) }, x.t || tekstAf(x))]; // teksten bliver stående, varerne er hver for sig
+      return r.varer.map((v, i) => linje(v, i ? null : x.m, i ? '' : x.e));
+    }
     return [linje(r.varer[0], x.m, x.e, r.alias)]; // r.alias: et alias bevarer teksten, som den står i opskriften (t)
+  }
+
+  // ---------- Flere varer i én linje (2.19.3) ----------
+  // Teksten i opskriften bliver, som den står. Varerne er hver for sig: «og» (el: ingen, og: [id, …]) kræver dem alle, «eller» (el: [id, …]) kræver én.
+  // Linjens id er den første vare. Tilberedningen kan også sige det: «eller græskarkerner», «finthakket, og forårsløg».
+  const kendId = t => { const l = laes(t); return l.udfald === 'kendt' && l.slags === 'vare' && l.varer.length === 1 && !l.varer[0].f ? l.varer[0].id : null; };
+  function flereAf(navn) { // «salt og peber» -> { slags: 'og', ids }, «smør eller margarine» -> { slags: 'eller', ids }. Hver del skal være en kendt vare.
+    const t = norm(navn), eller = / eller /.test(t);
+    const dele = t.split(eller ? / eller / : / og |\s*[,&+/]\s*/).map(x => x.trim()).filter(Boolean);
+    if (dele.length < 2 || (eller && / og |[,&+/]/.test(t))) return null;
+    const ids = dele.map(kendId);
+    return ids.every(Boolean) && new Set(ids).size === ids.length ? { slags: eller ? 'eller' : 'og', ids } : null;
+  }
+  function flereFraF(x) { // «eller græskarkerner» / «Finthakket, og forårsløg»: kun når ordene efter «eller»/«og» begynder med en kendt vare
+    const m = String(x.f || '').match(/(?:^|[\s,])(eller|og)\s+(.+)$/i);
+    if (!m) return null;
+    const ord = m[2].trim().split(/\s+/);
+    for (let k = ord.length; k >= 1; k--) { const id = kendId(ord.slice(0, k).join(' ').replace(/[,.;]$/, '')); if (id) return id === x.id ? null : { slags: m[1].toLowerCase() === 'og' ? 'og' : 'eller', ids: [id] }; }
+    return null;
+  }
+  // Samler en linje med flere varer. tekst: teksten, der skal stå i opskriften (kun når varernes navne ikke er teksten).
+  function fler(x, s, tekst) {
+    const [foerst, ...rest] = s.ids, nm = id => (ing.find(i => i.id === id) || {}).navn;
+    return { m: x.m, e: x.e, n: nm(foerst), id: foerst, ...(x.f && { f: x.f }), ...(tekst && { t: tekst }), [s.slags === 'og' ? 'og' : 'el']: rest };
+  }
+  // Giver en linje, der skal ordnes, sin nye form. null: intet at gøre.
+  function flerLinje(x) {
+    if (!x || 'g' in x || Array.isArray(x.eller) || x.og || x.el) return null;
+    const i = x.id && I().id.get(x.id);
+    if (i && OGELLER.test(i.navn_norm)) { const s = flereAf(i.navn_norm); return s ? fler(x, s, x.t || i.navn) : null; }
+    if (!i) return null;
+    const s = flereFraF(x);
+    return s ? { ...x, [s.slags === 'og' ? 'og' : 'el']: s.ids } : null;
   }
 
   // ---------- Eksisterende opskrifter (Styr på ingredienser, fase 7) ----------
   // En linje venter, når den ikke peger på en ingrediens i kataloget, eller når ingrediensens navn står for flere varer («salt og peber»).
   // «Eller»-linjer og overskrifter er ordnet. Samme regel som «Opskrifter, der venter på svar» i Ingrediensværktøjet.
   const klar = () => hentet && ing.length > 0; // uden et hentet katalog ligner alle linjer uordnede, så der røres intet
-  const venter = x => { if (!x || 'g' in x || Array.isArray(x.eller)) return false; const i = x.id && I().id.get(x.id); return !i || OGELLER.test(i.navn_norm); };
+  const venter = x => { if (!x || 'g' in x || Array.isArray(x.eller)) return false; const i = x.id && I().id.get(x.id); return !i || (OGELLER.test(i.navn_norm) && !flereAf(i.navn_norm)); };
+  const skalOrdnes = x => venter(x) || !!flerLinje(x); // venter: spørges der om. Resten ordnes stille.
   const tekstAf = x => { const i = x.id && I().id.get(x.id); return i ? i.navn : x.n; }; // teksten, der spørges om
   // Ved åbning: en tekst, appen kender (navn, alias eller regel), bruges uden spørgsmål. Intet gættes («tæt på» spørges der om).
   function ordnStille(liste) {
     let aendret = false;
     const ud = liste.flatMap(x => {
+      const f = flerLinje(x);
+      if (f) { aendret = true; return [f]; }
       if (!venter(x) || (x.id && I().id.has(x.id)) || laes(x.n).udfald !== 'kendt') return [x];
       aendret = true;
       return knytLinje(x, {}, null);
@@ -126,8 +165,9 @@ const Katalog = (() => {
       set.add(d.n);
       const l = laes(t);
       if (imp && l.udfald === 'taet') continue;
+      if (!hjemme && l.udfald !== 'kendt' && flereAf(d.k)) continue; // alle dele er kendte varer: linjen samles uden spørgsmål
       let valg = l.lignende, fast = false;
-      const fler = ordn && l.udfald === 'kendt' && l.via === 'navn' && OGELLER.test(d.k);
+      const fler = ordn && l.udfald === 'kendt' && l.via === 'navn' && OGELLER.test(d.k) && !flereAf(d.k);
       if (l.udfald === 'kendt' && !fler) {
         if (!hjemme) continue;
         const ids = l.varer.map(v => v.id);
@@ -362,7 +402,7 @@ const Katalog = (() => {
   function varerAf(x) {
     if (!x || 'g' in x) return [];
     if (Array.isArray(x.eller)) return x.eller.filter(id => I().id.has(id));
-    if (x.id && I().id.has(x.id)) return [x.id];
+    if (x.id && I().id.has(x.id)) return [...new Set([x.id, ...(x.el || []), ...(x.og || [])])].filter(id => I().id.has(id));
     const t = String(x.n || ''), ix = I();
     if (!ix.tekst.has(t)) {
       const n = rens(t), k = noegle(t), r = regler.find(r => (r.tekst === n || r.tekst === k) && (r.slags === 'vare' || r.slags === 'eller')), i = !r && ing.find(i => i.navn_norm === n || i.navn_norm === k);
@@ -375,14 +415,35 @@ const Katalog = (() => {
   function navn(x, katalog = false) {
     if (x.t && !katalog && !Array.isArray(x.eller)) return x.t;
     const v = varerAf(x);
-    return v.length && (x.id || Array.isArray(x.eller)) ? v.map(id => I().id.get(id).navn).join(' eller ') : x.n;
+    if (!v.length || !(x.id || Array.isArray(x.eller))) return x.n;
+    const nm = id => I().id.get(id).navn, har = id => I().id.has(id);
+    if (Array.isArray(x.eller) || !(x.el || x.og)) return v.map(nm).join(' eller ');
+    return [[x.id, ...(x.el || [])].filter(har).map(nm).join(' eller '), ...(x.og || []).filter(har).map(nm)].join(' og ');
   }
   const medNavn = x => x && !('g' in x) ? { ...x, n: navn(x) } : x;
   // Det, der dækker en vare: varen selv og, er den et fællesnavn, dets varianter. Tørret timian dækker ikke frisk timian.
   const daekker = id => [id, ...(I().var.get(id) || [])];
   // Er linjen opfyldt af det, der er derhjemme (et Set af id'er)? En «eller»-linje er opfyldt af én af varerne.
   // En linje uden kendt vare er opfyldt, hvis det samme navn står derhjemme.
-  const opfyldt = (x, har) => { const v = varerAf(x); return v.length ? v.some(id => daekker(id).some(d => har.has(d))) : [...har].some(id => { const i = I().id.get(id); return i && i.navn_norm === noegle(x.n); }); };
+  // Krav: hvad linjen skal have. En liste af grupper, hvor én vare i hver gruppe er nok: «eller» er én gruppe, «og» er en gruppe pr. vare. null: ingen kendt vare.
+  function krav(x) {
+    if (!x || 'g' in x) return null;
+    if (Array.isArray(x.eller)) { const v = varerAf(x); return v.length ? [v] : null; }
+    if (!(x.id && I().id.has(x.id))) { const v = varerAf(x); return v.length ? [v] : null; }
+    const har = id => I().id.has(id);
+    return [[...new Set([x.id, ...(x.el || [])])].filter(har), ...(x.og || []).filter(har).map(id => [id])];
+  }
+  const dækket = (g, har) => g.some(id => daekker(id).some(d => har.has(d)));
+  const opfyldt = (x, har) => { const k = krav(x); return k ? k.every(g => dækket(g, har)) : [...har].some(id => { const i = I().id.get(id); return i && i.navn_norm === noegle(x.n); }); };
+  // Krydderier: varer i kategorien «Krydderier»
+  const krydderiId = id => { const i = I().id.get(id), k = i && kat.find(c => c.id === i.kategori_id); return !!k && k.navn_norm === 'krydderier'; };
+  // Det, linjen kræver, ét punkt pr. gruppe: { k: nøgle (samme vare tæller kun én gang), navn: varens navn i kataloget, tekst: som det står i opskriften, ok: er det derhjemme, kryd: er det et krydderi }
+  function kravAf(x, har) {
+    const k = krav(x), nm = id => I().id.get(id).navn;
+    if (!k) return [{ k: noegle(x.n), navn: x.n, tekst: x.n, ok: opfyldt(x, har), kryd: false }];
+    const enkelt = k.length === 1;
+    return k.map((g, i) => ({ k: g.join('|'), navn: g.map(nm).join(' eller '), tekst: enkelt ? navn(x) : g.map(nm).join(' eller '), ok: dækket(g, har), kryd: g.every(krydderiId) }));
+  }
   const noegleAf = x => varerAf(x).join('|') || noegle(x.n); // samme vare tæller kun én gang som manglende
   // Ord, en linje kan findes på: linjens navn, varerne, deres varianter og fællesnavn, og aliaser
   function soegeord(x) {
@@ -392,14 +453,16 @@ const Katalog = (() => {
     return [...ud];
   }
   // Er linjen et krydderi? Kategorien kommer fra kataloget. Ukendte ingredienser tæller ikke som krydderier.
-  const krydderi = x => { const v = varerAf(x); return !!v.length && v.every(id => { const k = kat.find(c => c.id === I().id.get(id).kategori_id); return !!k && k.navn_norm === 'krydderier'; }); };
+  const krydderi = x => { const v = varerAf(x); return !!v.length && v.every(krydderiId); };
 
   // Skema over alle ingredienser i databasen: kategori og ingredienserne under den
   function oversigtHtml() {
     const grupper = new Map();
     for (const c of sorteret()) grupper.set(c.id, { navn: katNavn(c), liste: [] });
     const ak = kat.find(c => c.navn_norm === 'andet'), andet = (ak && grupper.get(ak.id)) || { navn: IKKE_SORTERET, liste: [] };
-    for (const i of ing) (grupper.get(i.kategori_id) || andet).liste.push(i.navn);
+    const al = new Map(); // aliaser pr. ingrediens (kun alias: én eller flere varer uden tilberedning)
+    for (const r of regler) if ((r.slags === 'vare' || r.slags === 'eller') && r.resultat.every(v => !v.f)) for (const v of r.resultat) al.set(v.id, [...(al.get(v.id) || []), r.tekst]);
+    for (const i of ing) (grupper.get(i.kategori_id) || andet).liste.push(i.navn + (al.has(i.id) ? ' (også: ' + al.get(i.id).sort((x, y) => x.localeCompare(y, 'da')).join(', ') + ')' : ''));
     const alle = [...grupper.values(), andet].filter(g => g.liste.length);
     return alle.length ? `<table class="ing-tabel tekst-s" data-tpid="ing-tabel"><thead><tr><th>Kategori</th><th>Ingredienser</th></tr></thead><tbody>${alle.map(g =>
       `<tr><th scope="row">${esc(g.navn)}<span>${g.liste.length}</span></th><td>${g.liste.sort((x, y) => x.localeCompare(y, 'da')).map(esc).join(', ')}</td></tr>`).join('')}</tbody></table>`
@@ -414,5 +477,5 @@ const Katalog = (() => {
       $('.ark-bag', d).addEventListener('click', lukArk);
     }
   });
-  return { hent, sikr, klar, erAlias, venter, tekstAf, ordnStille, ordn, rens, noegle, afklar, hjemmeId, knyt, laes, kategorier, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
+  return { hent, sikr, klar, opret, erAlias, krav, kravAf, flereAf, skalOrdnes, venter, tekstAf, ordnStille, ordn, rens, noegle, afklar, hjemmeId, knyt, laes, kategorier, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
 })();

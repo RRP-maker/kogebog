@@ -95,9 +95,12 @@ const IngVaerktoej = (() => {
         // Et alias bevarer teksten (t). Lægges to ingredienser sammen, beholder linjerne det gamle navn som tekst (valg 1 A, 2.19.1). Kun fremad.
         const alias = !gl && !grupper.has(k) && regler.some(a => a.tekst === k && Katalog.erAlias(a)); // en linje, hvis tekst er et alias, bevarer teksten
         const t = r && r.navn != null ? '' : x.t || (alias ? k : gl && gl.vinder !== gl && !grupper.has(gl.i.navn_norm) ? gl.i.navn_norm : '');
-        const linje = { m: r && 'm' in r ? tal(r.m) : x.m, e: r && r.e != null ? String(r.e).trim() : x.e, n: p.navn, id: p.i.id, ...(f && { f }), ...(t && { t }) };
+        // Flere varer på linjen (el/og): de følger med, når en ingrediens lægges sammen med en anden. Teksten står, som den er.
+        const ekstra = liste => [...new Set((liste || []).map(id => { const q = plan.get(id); return q ? q.vinder.i.id : id; }))].filter(id => id !== p.i.id);
+        const el = ekstra(x.el), og = ekstra(x.og);
+        const linje = { m: r && 'm' in r ? tal(r.m) : x.m, e: r && r.e != null ? String(r.e).trim() : x.e, n: p.navn, id: p.i.id, ...(f && { f }), ...(t && { t }), ...(el.length && { el }), ...(og.length && { og }) };
         const vis = l => visIng(l.t ? { ...l, n: l.t } : l); // som det står i opskriften
-        if (['m', 'e', 'n', 'id', 'f', 't'].some(a => (linje[a] ?? '') !== (x[a] ?? '')) || typeof raa[nr] !== 'object') {
+        if (['m', 'e', 'n', 'id', 'f', 't', 'el', 'og'].some(a => JSON.stringify(linje[a] ?? '') !== JSON.stringify(x[a] ?? '')) || typeof raa[nr] !== 'object') {
           aendret = true;
           if (vis(x) === vis(linje)) knyttet++; else linjer.push({ opskrift: o.titel, foer: vis(x), efter: vis(linje) });
         }
@@ -218,26 +221,54 @@ ${linjer.join('\n')}
     const soegt = q.length >= 2, hit = r => r.tekst.includes(q);
     const alle = D.ing.filter(i => soegt ? i.navn_norm.includes(q) || (pr.get(i.id) || []).some(hit) : pr.has(i.id)).sort((a, b) => a.navn.localeCompare(b.navn, 'da'));
     const vis = alle.slice(0, 30), sletRegler = uden.filter(r => !soegt || hit(r));
-    const regel = r => `<div class="iv-regel"><p class="tekst-s" data-tpdata>«${esc(r.tekst)}» → ${esc(regelTekst(r))}</p><div class="rakke venstre">
+    const regel = (r, nr) => `<div class="iv-regel"><p class="tekst-s" data-tpdata>«${esc(r.tekst)}» → ${esc(regelTekst(r))}${r.slags === 'eller' && r.resultat.length > 1 && !r.resultat.some(v => v.f) ? ' (alias, der deles)' : ''}</p><div class="rakke venstre">
       <button type="button" class="knap mini" data-tpid="iv-regel-tilpas" data-h="ivRegel" data-v="${r.id}" aria-label="Tilpas reglen ${esc(r.tekst)}">Tilpas</button>
-      <button type="button" class="knap mini slet" data-tpid="iv-regel-slet" data-h="ivRegelSlet" data-v="${r.id}" aria-label="Slet reglen ${esc(r.tekst)}">${ik('slet')} Slet</button></div></div>`;
+      <button type="button" class="knap mini slet" data-tpid="iv-regel-slet" data-h="ivRegelSlet" data-v="${r.id}" data-n="${nr}" aria-label="Fjern ${esc(r.tekst)}${nr ? ' fra ' + esc(ingNavn(nr)) : ''}">${ik('slet')} Fjern</button>
+      ${r.slags === 'slet' ? '' : `<button type="button" class="knap mini" data-tpid="iv-regel-egen" data-h="ivEgen" data-v="${r.id}" aria-label="Gør ${esc(r.tekst)} til en egen ingrediens">Egen ingrediens</button>`}</div></div>`;
     const dele = vis.map(i => {
       const rs = pr.get(i.id) || [], fae = i.faelles_id && ingNavn(i.faelles_id), vars = D.ing.filter(x => x.faelles_id === i.id).map(x => x.navn);
       const info = [`Kategori: ${katNavn(D.kat.find(k => k.id === i.kategori_id))}.`, fae && `Variant af «${fae}».`, vars.length && `Varianter: ${vars.join(', ')}.`].filter(Boolean).join(' ');
-      return del('r:' + i.id, `<span data-tpdata>${esc(i.navn)}</span>`, rs.length, `<p class="lille" data-tpdata>${esc(info)}</p>${rs.map(regel).join('') || '<p class="lille">Ingen regler endnu.</p>'}
-        <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-alias-nyt" data-h="ivRegel" data-n="${i.id}" aria-label="Nyt alias til ${esc(i.navn)}">${ik('plus')} Nyt alias</button></div>`, true);
+      return del('r:' + i.id, `<span data-tpdata>${esc(i.navn)}</span>`, rs.length, `<p class="lille" data-tpdata>${esc(info)}</p>${rs.map(r => regel(r, i.id)).join('') || '<p class="lille">Ingen aliaser endnu.</p>'}
+        <label for="al-${i.id}">Nyt alias til «${esc(i.navn)}»</label>
+        <input id="al-${i.id}" class="felt felt-m" placeholder="fx kyllingefilet" autocomplete="off" autocapitalize="off" spellcheck="false" data-alias="${i.id}">
+        <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-alias-nyt" data-h="ivAliasNy" data-n="${i.id}" aria-label="Tilføj alias til ${esc(i.navn)}">${ik('plus')} Tilføj alias</button></div>`, true);
     }).join('');
-    const slet = sletRegler.length ? del('r:slet', 'Regler uden vare', sletRegler.length, sletRegler.map(regel).join('')) : '';
-    const tom = !dele && !slet ? `<p class="lille">${soegt ? 'Ingen ingredienser eller regler passer.' : 'Der er ingen regler endnu.'}</p>` : '';
+    const slet = sletRegler.length ? del('r:slet', 'Regler uden vare', sletRegler.length, sletRegler.map(r => regel(r, '')).join('')) : '';
+    const tom = !dele && !slet ? `<p class="lille">${soegt ? 'Ingen ingredienser eller regler passer.' : 'Der er ingen aliaser endnu.'}</p>` : '';
     return dele + slet + tom + (alle.length > vis.length ? `<p class="lille">${flertal(alle.length - vis.length, 'ingrediens', 'ingredienser')} mere. Skriv mere i feltet for at indsnævre.</p>` : '');
   }
-  const reglerHtml = () => `<h2>Regler og aliaser</h2>
-    <p class="lille">En regel fortæller appen, hvad en tekst i en opskrift betyder. Et alias er et andet navn for den samme ingrediens, fx «kyllingefilet» for «kyllingebryst».</p>
-    <label for="ivsoeg">Find en ingrediens eller en regel</label>
+  const reglerHtml = () => `<h2>Ingredienser og aliaser</h2>
+    <p class="lille">Et alias er et andet navn for samme ingrediens, fx «kyllingefilet» for «kyllingebryst». Står det i en opskrift, bliver teksten stående. Et alias kan høre til flere ingredienser: så er én nok.</p>
+    <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-ing-ny" data-h="ivNy">${ik('plus')} Ny ingrediens</button></div>
+    <label for="ivsoeg">Find en ingrediens eller et alias</label>
     <input id="ivsoeg" type="search" class="felt felt-m" value="${esc(soeg)}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="ivsoeg-h" aria-controls="iv-regler">
-    <p class="lille" id="ivsoeg-h">Skriv mindst to bogstaver. Uden søgning ses de ingredienser, der har en regel.</p>
+    <p class="lille" id="ivsoeg-h">Skriv mindst to bogstaver. Uden søgning ses de ingredienser, der har et alias.</p>
     <div id="iv-regler">${reglerListe()}</div>
-    <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-regel-ny" data-h="ivRegel">${ik('plus')} Ny regel</button></div>`;
+    <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-regel-ny" data-h="ivRegel">${ik('plus')} Ny regel (flere varer, én af flere)</button></div>`;
+
+  // Gem en regel og tegn listen igen. Er den ændret af en anden, vises den andens udgave først.
+  async function gemRegel(p, besked) {
+    let r;
+    try { r = await api('rpc/ingrediens_regel_gem', { method: 'POST', body: { p } }); } catch (e) { return fejlbesked(regelFejl(e, 'Aliaset blev ikke gemt.')); }
+    if (r.ok) return efterRegel(besked);
+    if (r.grund === 'aendret' || r.grund === 'slettet' || r.grund === 'findes') { await efterRegel(); return toast('Reglen er ændret af en anden. Prøv igen.'); }
+    toast(r.grund === 'navn' ? 'Teksten er allerede navnet på en ingrediens' : 'Aliaset blev ikke gemt');
+  }
+  // Vinduet til en ny ingrediens, eller til et alias, der bliver en ingrediens (fra)
+  let ny_fra = null;
+  function aabnNy(navn, kat, fra) {
+    ny_fra = fra;
+    const valgt = kat || '', d = ark(`<h2>${fra ? 'Gør til egen ingrediens' : 'Ny ingrediens'}</h2>
+      ${fra ? `<small>«${esc(fra.tekst)}» er ikke længere et alias. Opskrifter, der allerede er gemt, ændres ikke.</small>` : '<small>Skriv selve varen, fx «løg», ikke «hakket løg».</small>'}
+      <label for="nyNavn">Navn</label>
+      <input id="nyNavn" class="felt felt-m" value="${esc(navn)}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="nyKat">Kategori</label>
+      <select id="nyKat" class="felt felt-m"><option value="">${IKKE_SORTERET}</option>${[...D.kat].filter(k => k.navn_norm !== 'andet').sort((a, b) => a.raekkefolge - b.raekkefolge).map(k => `<option value="${k.id}"${k.id === valgt ? ' selected' : ''}>${esc(katNavn(k))}</option>`).join('')}</select>
+      <div id="arkfejl"></div>
+      <div class="rakke"><button type="button" class="knap annuller" data-tpid="annuller" data-h="lukArk">Annuller</button><button type="button" class="knap gem" data-tpid="gem" data-h="ivNyGem">${ik('tjek')} Opret</button></div>`);
+    $('.ark-bag', d).addEventListener('click', lukArk);
+    $('#nyNavn').focus();
+  }
 
   // Vinduet, hvor en regel laves eller tilpasses
   const raekker = () => {
@@ -288,7 +319,7 @@ ${linjer.join('\n')}
     return { t, resultat, fejl };
   }
   async function efterRegel(besked) { // hent reglerne igen, og tegn listen og forhåndsvisningen forfra
-    D.regler = await api('ingrediens_regler?select=*');
+    D = await hentAlt();
     await Katalog.hent().catch(e => console.error(e));
     lukArk();
     const l = $('#iv-regler'); if (l) l.innerHTML = reglerListe();
@@ -349,7 +380,7 @@ ${linjer.join('\n')}
       for (const x of ingListe(o)) {
         if ('g' in x || Array.isArray(x.eller)) continue;
         const i = x.id && iId.get(x.id);
-        if (!i) l.push(x.n); else if (Katalog.flereVarer(i.navn_norm)) l.push(i.navn);
+        if (!i) l.push(x.n); else if (Katalog.flereVarer(i.navn_norm) && !Katalog.flereAf(i.navn_norm)) l.push(i.navn); // «salt og peber» med kendte dele samles stille
       }
       if (l.length) ud.push({ id: o.id, titel: o.titel, linjer: l });
     }
@@ -394,8 +425,11 @@ ${linjer.join('\n')}
   function tegn() {
     app.innerHTML = `${Ikoner.tilbage('#/vaerksted')}
       <h2>Ingrediensværktøj</h2>
-      <p class="lille">Her rydder du op i ingredienserne. Dubletter lægges sammen, og ord som «finthakket» flyttes fra navnet til linjen i opskriften.</p>
+      <p class="lille">Her opretter du ingredienser og styrer deres aliaser.</p>
       ${status()}
+      ${reglerHtml()}
+      <h2>Ret mange ingredienser med Claude</h2>
+      <p class="lille">Til at lægge dubletter sammen og flytte ord som «finthakket» fra navnet. Intet gemmes, før du har set ændringerne.</p>
       <ol class="trin vejledning">
         <li>Kopiér listen over ingredienser, og giv den til Claude.
           <div class="rakke iv-knapper"><button type="button" class="knap mini" data-tpid="iv-kopier" data-h="ivKopier">${ik('gnist')} Kopiér listen</button>
@@ -409,7 +443,6 @@ ${linjer.join('\n')}
       </ol>
       <div id="iv-fejl"></div>
       <section id="iv-vis" class="iv-vis"></section>
-      ${reglerHtml()}
       <h2>Sikkerhedskopier</h2>
       <p class="lille">En kopi har ingredienserne, «Derhjemme» og opskrifternes ingredienser, som de var. «Gendan» sætter dem tilbage og gemmer først en kopi af det, der er nu.</p>
       <div id="iv-kopier">${kopiHtml()}</div>`;
@@ -451,10 +484,51 @@ ${linjer.join('\n')}
       if (el.dataset.v && !r) return toast('Reglen findes ikke mere');
       aabnVindue(r ? regelAf(r) : { id: null, version: null, tekst: '', slags: 'vare', varer: [{ navn: el.dataset.n ? ingNavn(el.dataset.n) : '', f: '' }] });
     },
-    async ivRegelSlet(el) {
-      const r = D.regler.find(x => x.id === el.dataset.v);
-      if (!r || !await bekraeft(`Vil du slette reglen «${r.tekst}»? Opskrifter, der allerede er gemt, ændres ikke.`)) return;
+    async ivRegelSlet(el) { // fjern et alias fra en ingrediens. Deles det med en anden, fjernes kun denne ingrediens.
+      const r = D.regler.find(x => x.id === el.dataset.v), nr = el.dataset.n;
+      if (!r) return toast('Reglen findes ikke mere');
+      const rest = nr ? r.resultat.filter(v => v.id !== nr) : [];
+      if (rest.length && rest.length < r.resultat.length) {
+        if (!await bekraeft(`Vil du fjerne «${r.tekst}» fra «${ingNavn(nr)}»? Det gælder stadig for ${rest.map(v => '«' + ingNavn(v.id) + '»').join(', ')}. Opskrifter, der allerede er gemt, ændres ikke.`, 'Fjern')) return;
+        return gemRegel({ id: r.id, version: r.version, tekst: r.tekst, slags: rest.length > 1 ? r.slags : r.slags === 'eller' ? 'vare' : r.slags, resultat: rest }, 'Aliaset er fjernet');
+      }
+      if (!await bekraeft(`Vil du fjerne «${r.tekst}»? Opskrifter, der allerede er gemt, ændres ikke.`, 'Fjern')) return;
       await sletRegel(r.id, r.version);
+    },
+    async ivAliasNy(el) { // et nyt alias til en ingrediens (data-n). Findes teksten som alias for en anden, deles det: så er én af dem nok.
+      const id = el.dataset.n, felt = document.querySelector(`[data-alias="${id}"]`), t = norm(felt && felt.value);
+      if (!t) { toast('Skriv det nye alias først'); return felt && felt.focus(); }
+      if (/[(),;]/.test(t)) return toast('Et alias må ikke have komma eller parentes');
+      if (D.ing.some(x => x.navn_norm === t)) return toast(`«${t}» er allerede en ingrediens. Læg dem sammen med Claude, eller brug «Egen ingrediens».`);
+      const r = D.regler.find(x => x.tekst === t);
+      if (!r) return gemRegel({ tekst: t, slags: 'vare', resultat: [{ id }] }, 'Aliaset er gemt');
+      if (r.resultat.some(v => v.id === id)) return toast(`«${t}» er allerede et alias for «${ingNavn(id)}»`);
+      if (!(r.slags === 'vare' || r.slags === 'eller') || r.resultat.some(v => v.f)) return toast(`«${t}» er allerede en regel med en anden betydning. Tilpas den under «Ny regel».`);
+      if (!await bekraeft(`«${t}» er allerede et alias for ${r.resultat.map(v => '«' + ingNavn(v.id) + '»').join(', ')}. Skal det også gælde «${ingNavn(id)}»? Så er én af dem nok i en opskrift.`, 'Del aliaset')) return;
+      await gemRegel({ id: r.id, version: r.version, tekst: t, slags: 'eller', resultat: [...r.resultat, { id }] }, 'Aliaset deles nu');
+    },
+    ivEgen(el) { // et alias eller en regel bliver til en ingrediens for sig selv
+      const r = D.regler.find(x => x.id === el.dataset.v);
+      if (!r) return toast('Reglen findes ikke mere');
+      const i = r.resultat.length && D.ing.find(x => x.id === r.resultat[0].id);
+      aabnNy(r.tekst, i && i.kategori_id, r);
+    },
+    ivNy() { aabnNy('', null, null); },
+    async ivNyGem() {
+      const navn = norm($('#nyNavn').value), kategori_id = $('#nyKat').value || null;
+      if (!navn || /[(),;]/.test(navn)) return arkFejl([!navn ? 'Skriv et navn.' : 'Et navn må ikke have komma eller parentes.']);
+      if (D.ing.some(x => x.navn_norm === navn)) return arkFejl([`«${navn}» findes allerede som ingrediens.`]);
+      const knap = $('[data-h="ivNyGem"]'); knap.disabled = true;
+      const fra = ny_fra; let slettet = false;
+      try {
+        if (fra) { const s = await api('rpc/ingrediens_regel_slet', { method: 'POST', body: { id: fra.id, version: fra.version } }); if (!s.ok) { knap.disabled = false; await efterRegel(); return toast('Reglen er ændret af en anden. Prøv igen.'); } slettet = true; }
+        await Katalog.opret([{ navn, kategori_id }]);
+      } catch (e) {
+        console.error(e); knap.disabled = false;
+        if (slettet) try { await api('rpc/ingrediens_regel_gem', { method: 'POST', body: { tekst: fra.tekst, slags: fra.slags, resultat: fra.resultat } }); } catch (x) { console.error(x); } // sæt reglen tilbage
+        return arkFejl([`«${navn}» blev ikke oprettet${slettet ? ', og reglen er sat tilbage' : ''}. Tjek internettet, og prøv igen.`]);
+      }
+      await efterRegel(fra ? `«${navn}» er nu en ingrediens` : 'Ingrediensen er oprettet');
     },
     rgTilfoej() { laesVinduet(); ed.varer.push({ navn: '', f: '' }); tegnRaekker(); const i = $('#rgv' + (ed.varer.length - 1)); if (i) i.focus(); },
     rgFjern(el) { laesVinduet(); ed.varer.splice(Number(el.dataset.v), 1); tegnRaekker(); },
