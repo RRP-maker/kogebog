@@ -54,17 +54,16 @@ const Katalog = (() => {
   async function knyt(liste, svar = {}, imp = null) {
     await hent();
     if (imp) await katFraClaude(liste, imp.claude || {});
-    const ud = [];
-    for (const x of liste) {
-      if ('g' in x || Array.isArray(x.eller)) { ud.push(x); continue; } // en «eller»-linje har sine varer i forvejen
-      const d = dele(x.n);
-      if (!d.n) continue; // en linje uden navn falder væk
-      const l = laes(x.n), s = svar[d.n];
-      const r = l.udfald === 'kendt' || (imp && l.udfald === 'taet') ? l : s && s.id ? { slags: 'vare', varer: [{ id: s.id, ...(d.f && { f: d.f }) }] } : null;
-      if (!r) { const { id, eller, ...rest } = x; ud.push(rest); continue; }
-      ud.push(...anvend(x, r));
-    }
-    return ud;
+    return liste.flatMap(x => knytLinje(x, svar, imp));
+  }
+  function knytLinje(x, svar, imp) {
+    if ('g' in x || Array.isArray(x.eller)) return [x]; // en «eller»-linje har sine varer i forvejen
+    const d = dele(x.n);
+    if (!d.n) return []; // en linje uden navn falder væk
+    const l = laes(x.n), s = svar[d.n];
+    const r = l.udfald === 'kendt' || (imp && l.udfald === 'taet') ? l : s && s.id ? { slags: 'vare', varer: [{ id: s.id, ...(d.f && { f: d.f }) }] } : null;
+    if (!r) { const { id, eller, ...rest } = x; return [rest]; }
+    return anvend(x, r);
   }
   // Et svar eller en regel lagt på en linje. Ved «del» får den første vare mængden.
   function anvend(x, r) {
@@ -76,12 +75,40 @@ const Katalog = (() => {
     return [linje(r.varer[0], x.m, x.e)];
   }
 
+  // ---------- Eksisterende opskrifter (Styr på ingredienser, fase 7) ----------
+  // En linje venter, når den ikke peger på en ingrediens i kataloget, eller når ingrediensens navn står for flere varer («salt og peber»).
+  // «Eller»-linjer og overskrifter er ordnet. Samme regel som «Opskrifter, der venter på svar» i Ingrediensværktøjet.
+  const klar = () => hentet && ing.length > 0; // uden et hentet katalog ligner alle linjer uordnede, så der røres intet
+  const venter = x => { if (!x || 'g' in x || Array.isArray(x.eller)) return false; const i = x.id && I().id.get(x.id); return !i || OGELLER.test(i.navn_norm); };
+  const tekstAf = x => { const i = x.id && I().id.get(x.id); return i ? i.navn : x.n; }; // teksten, der spørges om
+  // Ved åbning: en tekst, appen kender (navn, alias eller regel), bruges uden spørgsmål. Intet gættes («tæt på» spørges der om).
+  function ordnStille(liste) {
+    let aendret = false;
+    const ud = liste.flatMap(x => {
+      if (!venter(x) || (x.id && I().id.has(x.id)) || laes(x.n).udfald !== 'kendt') return [x];
+      aendret = true;
+      return knytLinje(x, {}, null);
+    });
+    return { liste: ud, aendret };
+  }
+  // Svar fra afklar (med ordn) lagt på de linjer, der venter. «Ikke nu» og ubesvarede linjer står, som de er.
+  // Et svar med slags gælder kun denne opskrift (navnet på en ingrediens kan ikke blive en regel).
+  function ordn(liste, svar) {
+    return liste.flatMap(x => {
+      const s = venter(x) && svar[dele(tekstAf(x)).n];
+      if (!s) return [x];
+      return s.slags ? anvend(x, s) : knytLinje(x, svar, null);
+    });
+  }
+
   // ---------- Spørgsmålet ved «Gem» (Styr på ingredienser, fase 5) ----------
   // Ét ark med alle tekster, appen ikke kender. Svarene: en af de lignende, «Opret ny», «Del selv» og «Ikke nu».
   // Svarene huskes som regel (et alias eller en regel), så der ikke spørges igen. «Ikke nu» spørger igen næste gang.
   // hjemme: «Derhjemme» spørger også, når teksten er et fællesnavn (vælg frisk eller tørret). Der er ingen «Del selv».
   // imp: import, som selv retter «tæt på» og ikke spørger om dem. kat: Claudes kategorier (navn -> kategorinavn). titel: opskriften, der spørges for. note: ekstra tekst øverst.
   // Svar: tekst -> { id } (valgt eller oprettet), true (en regel er gemt) eller false («Ikke nu»). null: man gik tilbage.
+  // felt: et element, spørgsmålet står i (en eksisterende opskrift, fase 7) i stedet for i et ark. «Skjul» giver null.
+  // ordn: spørg også om navnet på en ingrediens, der står for flere varer («salt og peber»). Svaret gælder kun den opskrift: { slags, varer }, for teksten kan ikke blive en regel.
   const husk = new Map(); // svarene, til arket åbnes igen (fx efter «Tilbage»)
   const AFSLAGS = [['vare', 'Én vare med tilberedning'], ['del', 'Flere varer, linjen deles'], ['eller', 'Én af flere varer'], ['slet', 'Ikke en vare, linjen slettes']];
   const varianter = id => ing.filter(i => i.faelles_id === id).map(i => i.id);
@@ -90,7 +117,7 @@ const Katalog = (() => {
     const eller = / eller /.test(t), dele = t.split(eller ? / eller / : / og |\s*[,&+/]\s*/).map(x => x.trim()).filter(Boolean);
     return { slags: dele.length > 1 ? (eller ? 'eller' : 'del') : 'vare', varer: (dele.length > 1 ? dele : [t]).map(x => { const i = ing.find(c => c.navn_norm === x); return { navn: i ? i.navn : '', f: '' }; }) };
   }
-  async function afklar(tekster, { hjemme = false, imp = false, kat: ck = {}, titel = '', note = '', gem = 'Gem', tilbage = 'Tilbage' } = {}) {
+  async function afklar(tekster, { hjemme = false, imp = false, kat: ck = {}, titel = '', note = '', gem = 'Gem', tilbage = 'Tilbage', felt = null, ordn = false } = {}) {
     await hent();
     const sp = [], set = new Set();
     for (const t of tekster) {
@@ -100,7 +127,8 @@ const Katalog = (() => {
       const l = laes(t);
       if (imp && l.udfald === 'taet') continue;
       let valg = l.lignende, fast = false;
-      if (l.udfald === 'kendt') {
+      const fler = ordn && l.udfald === 'kendt' && l.via === 'navn' && OGELLER.test(d.k);
+      if (l.udfald === 'kendt' && !fler) {
         if (!hjemme) continue;
         const ids = l.varer.map(v => v.id);
         if (l.slags === 'vare' && !varianter(ids[0]).length) continue;
@@ -108,14 +136,14 @@ const Katalog = (() => {
       }
       if (hjemme) valg = [...new Set(valg.flatMap(id => varianter(id).length ? varianter(id) : [id]))].slice(0, 6);
       const gl = husk.get(d.n);
-      sp.push({ ...d, l, valg, fast, s: gl || { valg: 'ikke', navn: d.k, kat: katId(ck[d.k] || ck[d.n] || '') || gaet(d.k) || '', ...forslagDel(d.n) } });
+      sp.push({ ...d, l, valg, fast, fler, s: gl || { valg: 'ikke', navn: d.k, kat: katId(ck[d.k] || ck[d.n] || '') || gaet(d.k) || '', ...forslagDel(d.n) } });
     }
     if (!sp.length) return {};
     const katValg = v => `<option value="">${IKKE_SORTERET}</option>` + sorteret().filter(k => k.navn_norm !== 'andet').map(k => `<option value="${k.id}"${k.id === v ? ' selected' : ''}>${esc(katNavn(k))}</option>`).join('');
     const hint = it => {
       if (it.fast) return it.l.slags === 'vare' ? 'Det er et fællesnavn. Vælg, hvilken du har derhjemme.' : 'Teksten står for flere varer. Vælg den, du har derhjemme.';
-      const ens = it.l.udfald === 'taet' ? `Appen kender den ikke. Den ligner «${ingNavn(it.valg[0])}».` : it.valg.length ? 'Appen kender den ikke. Måske er det en af disse.' : 'Appen kender den ikke, og ingen ingredienser ligner.';
-      return [ens, it.l.ogEller && !hjemme && 'Der står flere varer. Vælg «Del selv» for at dele linjen.', it.f && `«${it.f}» bliver stående på linjen.`].filter(Boolean).join(' ');
+      const ens = it.fler ? 'Det er en ingrediens i kataloget, men den står for flere varer.' : it.l.udfald === 'taet' ? `Appen kender den ikke. Den ligner «${ingNavn(it.valg[0])}».` : it.valg.length ? 'Appen kender den ikke. Måske er det en af disse.' : 'Appen kender den ikke, og ingen ingredienser ligner.';
+      return [ens, it.fler ? 'Vælg «Del selv» for at dele linjen. Det gælder kun denne opskrift.' : it.l.ogEller && !hjemme && 'Der står flere varer. Vælg «Del selv» for at dele linjen.', it.f && `«${it.f}» bliver stående på linjen.`].filter(Boolean).join(' ');
     };
     const radio = (i, v, tekst, s) => `<label class="skift"><input type="radio" name="af${i}" value="${v}"${s.valg === v ? ' checked' : ''}> <span>${tekst}</span></label>`;
     const delRaekker = (i, s) => {
@@ -131,7 +159,7 @@ const Katalog = (() => {
     const item = (it, i) => `<fieldset class="iv-valg af-sp" data-i="${i}"><legend>Hvad er «<span data-tpdata>${esc(it.n)}</span>»?</legend>
       <p class="lille">${esc(hint(it))}</p>
       ${it.valg.map(id => radio(i, 'v:' + id, `<span data-tpdata>${esc(ingNavn(id))}</span>`, it.s)).join('')}
-      ${it.fast ? '' : radio(i, 'ny', 'Opret ny ingrediens', it.s)}
+      ${it.fast || it.fler ? '' : radio(i, 'ny', 'Opret ny ingrediens', it.s)}
       <div class="af-ny" ${it.s.valg === 'ny' ? '' : 'hidden'}>
         <label for="afn${i}">Navn på den nye ingrediens</label>
         <input id="afn${i}" class="felt felt-m" value="${esc(it.s.navn)}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="afnh${i}">
@@ -144,13 +172,20 @@ const Katalog = (() => {
         <div class="af-varer">${delRaekker(i, it.s)}</div></div>`}
       ${radio(i, 'ikke', hjemme ? 'Tilføj den ikke' : 'Ikke nu', it.s)}</fieldset>`;
     return new Promise(svar => {
-      const d = ark(`<h2>Hvad betyder ${sp.length === 1 ? 'teksten' : 'teksterne'}?</h2>
+      const en = sp.length === 1, top = felt
+        ? `<h2 id="ordn-h">${en ? 'Appen er i tvivl om en ingrediens' : `Appen er i tvivl om ${sp.length} ingredienser`}</h2>
+        <small>Vælg, hvad ${en ? 'den' : 'de'} er, så virker søgningen og «Hvad kan jeg lave?» rigtigt. Vælger du «Ikke nu», spørger appen igen, næste gang du åbner opskriften.</small>`
+        : `<h2>Hvad betyder ${en ? 'teksten' : 'teksterne'}?</h2>
         ${titel ? `<p class="tekst-m">I opskriften «<span data-tpdata>${esc(titel)}</span>»</p>` : ''}
-        <small>${sp.length === 1 ? 'Appen kender ikke denne ingrediens' : `Appen kender ikke ${sp.length} af ingredienserne`}. Vælg, hvad ${sp.length === 1 ? 'den' : 'de'} er. ${hjemme ? '' : 'Dit svar huskes, så du ikke bliver spurgt igen. Vælger du «Ikke nu», gemmes linjen, som den står, og du bliver spurgt igen næste gang.'}${note ? ' ' + esc(note) : ''}</small>
+        <small>${en ? 'Appen kender ikke denne ingrediens' : `Appen kender ikke ${sp.length} af ingredienserne`}. Vælg, hvad ${en ? 'den' : 'de'} er. ${hjemme ? '' : 'Dit svar huskes, så du ikke bliver spurgt igen. Vælger du «Ikke nu», gemmes linjen, som den står, og du bliver spurgt igen næste gang.'}${note ? ' ' + esc(note) : ''}</small>`;
+      const html = `${top}
         ${sp.map(item).join('')}
         <datalist id="afliste">${[...ing].filter(i => !hjemme || !varianter(i.id).length).sort((a, b) => a.navn.localeCompare(b.navn, 'da')).map(i => `<option value="${esc(i.navn)}"></option>`).join('')}</datalist>
         <div id="arkfejl"></div>
-        <div class="rakke"><button type="button" class="knap annuller" data-tpid="annuller" data-af="tilbage">${esc(tilbage)}</button><button type="button" class="knap gem" data-tpid="gem" data-af="gem">${ik('tjek')} ${esc(gem)}</button></div>`);
+        <div class="rakke"><button type="button" class="knap annuller" data-tpid="${felt ? 'ordn-skjul' : 'annuller'}" data-af="tilbage">${esc(tilbage)}</button><button type="button" class="knap gem" data-tpid="${felt ? 'ordn-gem' : 'gem'}" data-af="gem">${ik('tjek')} ${esc(gem)}</button></div>`;
+      let d;
+      if (felt) { d = document.createElement('section'); d.setAttribute('aria-labelledby', 'ordn-h'); d.innerHTML = html; felt.replaceChildren(d); }
+      else d = ark(html);
       const laesIt = (it, i) => { // arkets felter ind i svaret
         const s = it.s, v = $(`input[name="af${i}"]:checked`, d), sl = $(`input[name="afs${i}"]:checked`, d);
         if (v) s.valg = v.value;
@@ -169,7 +204,7 @@ const Katalog = (() => {
         const dl = $('.af-del', fs); if (dl) dl.hidden = it.s.valg !== 'del';
         if (e.target.name === 'afs' + i) $('.af-varer', fs).innerHTML = delRaekker(i, it.s);
       });
-      const luk = ud => { lukArk(); svar(ud); };
+      const luk = ud => { if (felt) felt.replaceChildren(); else lukArk(); svar(ud); };
       d.addEventListener('click', async e => {
         const a = e.target.closest('[data-af]');
         if (!a && e.target.closest('.ark-bag')) { alleLaes(); return luk(null); }
@@ -204,6 +239,7 @@ const Katalog = (() => {
             if (res.some(x => x.id === m.id)) return fejl.push(`${hvad}: «${m.navn}» står to gange.`);
             res.push({ id: m.id, ...(v.f.trim() && { f: v.f.trim() }) });
           });
+          if (it.fler) { ud[it.n] = { slags: s.slags, varer: res }; return; } // gælder kun denne opskrift
           if (s.slags === 'vare' && res.length === 1 && !res[0].f && it.k === ingNavn(res[0].id)) { ud[it.n] = { id: res[0].id }; return; }
           regl.push({ tekst: it.n, slags: s.slags, resultat: res });
           ud[it.n] = true;
@@ -478,5 +514,5 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
       if (efterSortering) efterSortering();
     }
   });
-  return { hent, sikr, rens, noegle, afklar, hjemmeId, knyt, laes, kategorier, sorterAndet, laesKat, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
+  return { hent, sikr, klar, venter, tekstAf, ordnStille, ordn, rens, noegle, afklar, hjemmeId, knyt, laes, kategorier, sorterAndet, laesKat, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
 })();

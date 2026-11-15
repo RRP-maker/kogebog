@@ -600,11 +600,13 @@ async function opskriftSide(rid, maal = app) {
   if (id !== visning) return;
   const r = rr[0];
   if (!r) { if (maal !== app) maal.innerHTML = '<p class="tomt">Opskriften findes ikke længere. Vælg en anden i listen.</p>'; else info('Opskriften findes ikke længere.<br><a href="#/opskrifter">Tilbage til Opskrifter</a>'); return; }
+  const venter = await ordnVedAabning(r); // regler bruges stille; resten spørges der om i et felt øverst
   S = { r, tips, fav: fav.length > 0, stj, bil, port: portValg[rid] || r.portioner || 4 };
   kendteBegreber = begreberAf(tips);
   const c = chips(r);
   maal.innerHTML = `${iRude ? rudeLuk() : Ikoner.tilbage(opskriftFra || '#/opskrifter', 'skaerm')}
     ${vaerktoej(`<a class="knap tilpas" data-tpid="rediger" href="#/opskrifter/${r.id}/rediger">${ik('blyant')} Tilpas</a>`)}
+    ${venter.length ? '<div id="ordn" class="opsk-felt skaerm" data-tpid="opsk-ordn"></div>' : ''}
     <div class="titelrakke opsk-felt" data-tpid="opsk-titel"><h1>${esc(r.titel)}</h1>
       <button id="favknap" data-tpid="favorit" class="favknap skaerm" data-h="favorit" aria-pressed="${S.fav}" aria-label="Favorit">${ik(S.fav ? 'stjerne' : 'stjerne0')}</button></div>
     ${c.length ? `<p class="chips opsk-felt" data-tpid="opsk-chips">${c.map(x => x.kl ? `<span class="${x.kl}">${x.t}</span>` : `<span>${x}</span>`).join('')}</p>` : ''}
@@ -627,11 +629,48 @@ async function opskriftSide(rid, maal = app) {
       <button class="knap" data-h="print">Print</button></div>
     <div class="rakke skaerm sletrakke"><button class="knap slet" data-tpid="slet" data-h="slet" data-v="opskrifter:${r.id}">${ik('slet')} Slet opskriften</button></div>`;
   tegnIng(); tegnTrin(); tegnStjerner();
+  if (venter.length) ordnFelt(r, venter, maal);
   Hjaelper.side([
     { tekst: 'Tryk på stjernen. Så bliver retten en favorit.', maal: 'favorit', bev: 'salto' },
     { tekst: 'Skal I være flere? Tryk på plus og minus.', maal: 'portioner', bev: 'skridt' },
     { tekst: 'Tryk på et blåt ord. Så forklarer jeg det.', maal: 'begreb', bev: 'dans', valgfri: true },
     { tekst: 'Klar? Tryk her, så går vi trin for trin.', maal: 'opskrifter/:id|lav-retten-trin-for-trin', bev: 'rul' }]);;
+}
+// ---------- Eksisterende opskrifter (Styr på ingredienser, fase 7) ----------
+// Ved åbning bruges regler stille på linjer uden vare. Linjer, der venter (uden vare, eller med en vare, hvis navn står for flere: «salt og peber»), spørges der om i et felt øverst.
+// «Ikke nu» og «Skjul» ændrer intet, så der spørges igen næste gang. Intet gemmes uden en regel eller et svar.
+// En ændring gemmes kun, hvis opskriften ikke er ændret, siden den blev hentet (to enheder).
+async function gemLinjer(r, liste) {
+  const nu = await api(`opskrifter?id=eq.${enc(r.id)}&select=ingredienser`);
+  if (!nu[0] || JSON.stringify(nu[0].ingredienser) !== JSON.stringify(r.ingredienser)) return false;
+  const res = await api(`opskrifter?id=eq.${enc(r.id)}`, { method: 'PATCH', body: { ingredienser: liste } });
+  r.ingredienser = res[0].ingredienser;
+  return true;
+}
+async function ordnVedAabning(r) {
+  if (!Katalog.klar()) return []; // kataloget er ikke hentet (fx uden net): så ligner alle linjer uordnede
+  let liste = ingListe(r);
+  if (!liste.some(Katalog.venter)) return [];
+  try {
+    await Katalog.hent(); // et frisk katalog, før noget ændres eller spørges om
+    const s = Katalog.ordnStille(liste);
+    if (s.aendret && await gemLinjer(r, s.liste)) liste = ingListe(r);
+  } catch (e) { console.error(e); return []; }
+  return liste.filter(Katalog.venter).map(Katalog.tekstAf);
+}
+function ordnFelt(r, tekster, maal) {
+  const felt = $('#ordn', maal);
+  if (!felt) return;
+  Katalog.afklar(tekster, { felt, ordn: true, gem: 'Gem svar', tilbage: 'Skjul' }).then(async svar => {
+    if (!svar) return felt.remove(); // «Skjul»
+    const foer = ingListe(r), liste = Katalog.ordn(foer, svar), aendret = JSON.stringify(liste) !== JSON.stringify(foer);
+    try {
+      if (aendret && !(await gemLinjer(r, liste))) { toast('Opskriften er ændret, mens du svarede. Svarene er ikke gemt.'); return opskriftSide(r.id, maal); }
+    } catch (e) { console.error(e); toast('Svarene blev ikke gemt. Tjek internettet, og prøv igen.'); return opskriftSide(r.id, maal); }
+    felt.remove(); tegnIng();
+    if (aendret) toast('Gemt');
+    const h = $('h2.opsk', maal); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+  });
 }
 // To ruder: den store side til højre har Luk (listen alene) og fuld skærm (skjuler listen midlertidigt) i stedet for Tilbage
 const rudeLuk = () => `<div class="rude-luk skaerm"><a class="tilbage luk direkte" data-tpid="rude-luk" href="#/opskrifter" aria-label="Luk" title="Luk">${ik('luk')}</a>${Ikoner.rund(rudeFuld ? 'lilleskaerm' : 'fuldskaerm', rudeFuld ? 'Vis listen igen' : 'Fuld skærm', `data-tpid="rude-fuld" data-h="rudeFuld" aria-pressed="${rudeFuld}"`)}</div>`;

@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.19.0 · Styr på ingredienser, fase 7: eksisterende opskrifter
+- **Ved åbning bruges regler stille.** En linje uden vare, hvis tekst appen kender (navn, alias eller regel), får sin vare, bliver delt, bliver en «eller»-linje eller fjernes, og opskriften gemmes (`ordnVedAabning`). Intet gættes: «tæt på» spørges der om.
+- **Resten spørges der om i et felt øverst i opskriften,** ikke i et vindue (valg 8). Det er samme spørgsmål som ved «Gem» (`Katalog.afklar` med `felt`). En linje venter, når den ikke peger på en ingrediens, eller når ingrediensens navn står for flere varer («salt og peber»). «Eller»-linjer og overskrifter røres ikke.
+- **«Ikke nu» og «Skjul» ændrer intet,** så der spørges igen næste gang opskriften åbnes.
+- **Svar til «salt og peber» gælder kun den opskrift.** Navnet er en ingrediens, så det kan ikke blive en regel (databasen afviser det). Hver opskrift spørger derfor én gang.
+- **To enheder:** en ændring gemmes kun, hvis opskriften ikke er ændret, siden den blev hentet. Ellers vises en besked, og der spørges igen.
+- **Uden net** (kataloget ikke hentet) røres og spørges der ikke om noget.
+- `Katalog.knyt` er delt i `knytLinje` (én linje), som åbningen genbruger.
+
 ## 2.18.0 · Styr på ingredienser, fase 6: import spørger
 - **Import opretter ikke længere selv.** Links, tekst og «Opdater med Claude» bruger samme ark som formularen (`Katalog.afklar` med `imp`). Ingen ny ingrediens uden «Opret ny ingrediens».
 - **Ét sikkert match rettes selv:** ligner en tekst præcis én ingrediens («tomatr», «tomater» → tomat), bruges den uden spørgsmål (valg 6). Flere eller ingen: der spørges. Claudes kategori står på forhånd ved «Opret ny».
