@@ -20,7 +20,7 @@ const Madplan = (() => {
   const foer = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]; return false; };
   // En ret hører til én slags: tilbehør, salat eller hovedret. Drikke og dessert er aldrig med. En salat kendes på ordet «salat» i navnet eller kategorien.
   const slotAf = r => /tilbehør/i.test(r.kategori || '') ? 'tilbehoer' : /drik|dessert/i.test(r.kategori || '') ? null : /salat/i.test((r.kategori || '') + ' ' + (r.titel || '')) ? 'salat' : 'hoved';
-  const pool = filter => { const f = beregnForslag(F.filter(r => slotAf(r) && filter(r)), har);
+  const pool = filter => { const f = beregnForslag(F.filter(r => slotAf(r) && filter(r)), har, udenKryd());
     return [...f.kan.map(r => ({ r, mangler: [] })), ...f.naesten].map(x => ({ ...x, n: [...new Set(x.mangler)] })); }; // ét navn pr. vare (kataloget)
   // Prøv hver ret som den første. Læg derefter den ret til, der giver færrest nye varer at købe
   // (og bruger flest af dem, der allerede skal købes). Den plan med flest dage og kortest indkøbsliste vinder.

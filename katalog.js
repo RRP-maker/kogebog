@@ -440,7 +440,7 @@ const Katalog = (() => {
   // Det, linjen kræver, ét punkt pr. gruppe: { k: nøgle (samme vare tæller kun én gang), navn: varens navn i kataloget, tekst: som det står i opskriften, ok: er det derhjemme, kryd: er det et krydderi }
   function kravAf(x, har) {
     const k = krav(x), nm = id => I().id.get(id).navn;
-    if (!k) return [{ k: noegle(x.n), navn: x.n, tekst: x.n, ok: opfyldt(x, har), kryd: false }];
+    if (!k) { const l = laes(x.n), v = l.udfald === 'kendt' ? l.varer.map(w => w.id) : []; return [{ k: noegle(x.n), navn: x.n, tekst: x.n, ok: opfyldt(x, har), kryd: !!v.length && v.every(krydderiId) }]; } // en linje uden id: krydderi, hvis navnet er en kendt krydderivare
     const enkelt = k.length === 1;
     return k.map((g, i) => ({ k: g.join('|'), navn: g.map(nm).join(' eller '), tekst: enkelt ? navn(x) : g.map(nm).join(' eller '), ok: dækket(g, har), kryd: g.every(krydderiId) }));
   }

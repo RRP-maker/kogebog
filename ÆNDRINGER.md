@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.20.1 · «Og»/«eller» i linjer og krydderier
+- **Teksten bliver stående, varerne er hver for sig** (kom med i 2.20.0): «salt og peber» kræver begge, «smør eller margarine» kræver én. Det gælder også tilberedningen: «eller græskarkerner», «finthakket, og forårsløg». Linjen får `og: [id]` eller `el: [id]`; teksten ændres ikke. Sker stille, når en opskrift åbnes, og kun når ordene efter «og»/«eller» er en kendt vare (3 af de 14 linjer i dag).
+- **«Ignorér krydderier»** gælder nu også madplanen og linjer uden id, hvis navn er en kendt krydderivare. Hele kategorien «Krydderier» springes over.
+- Ikke ændret: basisvarer (salt, peber m.fl.) tæller stadig ikke med.
+
 ## 2.20.0 · Ingrediensværktøjet: aliaser og nye ingredienser
 - **Aliaser øverst** på siden (før Claude-trinene). Hver ingrediens har et kort med sine aliaser, et felt til «Nyt alias» og knapperne **Tilpas**, **Fjern** og **Egen ingrediens**.
 - **Ny ingrediens** med navn og kategori (`Katalog.opret`, altså `ingrediens_opret`).
