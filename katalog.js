@@ -3,6 +3,7 @@
 const Katalog = (() => {
   let kat = [], ing = [], regler = [], hentet = false, idx = null;
   const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const erAlias = r => r.slags === 'vare' && r.resultat.length === 1 && !r.resultat[0].f; // et alias: én vare uden tilberedning
   const rens = n => norm(String(n).replace(/\([^)]*\)/g, ' ').replace(/[.,;:]+$/, ''));
   const katId = navn => { const n = norm(navn), k = kat.find(x => x.navn_norm === (n === 'ikke sorteret' ? 'andet' : n)); return k ? k.id : null; }; // «Ikke sorteret» er kategorien «Andet»
   const ikkeSorteret = i => { if (!i.kategori_id) return true; const k = kat.find(c => c.id === i.kategori_id); return !k || k.navn_norm === 'andet'; };
@@ -61,18 +62,18 @@ const Katalog = (() => {
     const d = dele(x.n);
     if (!d.n) return []; // en linje uden navn falder væk
     const l = laes(x.n), s = svar[d.n];
-    const r = l.udfald === 'kendt' || (imp && l.udfald === 'taet') ? l : s && s.id ? { slags: 'vare', varer: [{ id: s.id, ...(d.f && { f: d.f }) }] } : null;
-    if (!r) { const { id, eller, ...rest } = x; return [rest]; }
+    const r = l.udfald === 'kendt' || (imp && l.udfald === 'taet') ? l : s && s.id ? { slags: 'vare', alias: d.k !== norm(ingNavn(s.id)) ? d.k : '', varer: [{ id: s.id, ...(d.f && { f: d.f }) }] } : null; // et valgt alias bevarer teksten
+    if (!r) { const { id, eller, t, ...rest } = x; return [rest]; }
     return anvend(x, r);
   }
   // Et svar eller en regel lagt på en linje. Ved «del» får den første vare mængden.
   function anvend(x, r) {
     const navnPaa = id => (ing.find(i => i.id === id) || {}).navn, ff = v => [v.f, x.f].filter(Boolean).join(', ');
-    const linje = (v, m, e) => { const f = ff(v); return { m, e, n: navnPaa(v.id), id: v.id, ...(f && { f }) }; };
+    const linje = (v, m, e, t) => { const f = ff(v); return { m, e, n: navnPaa(v.id), id: v.id, ...(f && { f }), ...(t && { t }) }; };
     if (r.slags === 'slet') return [];
     if (r.slags === 'eller') { const f = [...new Set(r.varer.map(v => v.f).concat(x.f).filter(Boolean))].join(', '); return [{ m: x.m, e: x.e, n: r.varer.map(v => navnPaa(v.id)).join(' eller '), eller: r.varer.map(v => v.id), ...(f && { f }) }]; }
     if (r.slags === 'del') return r.varer.map((v, i) => linje(v, i ? null : x.m, i ? '' : x.e));
-    return [linje(r.varer[0], x.m, x.e)];
+    return [linje(r.varer[0], x.m, x.e, r.alias)]; // r.alias: et alias bevarer teksten, som den står i opskriften (t)
   }
 
   // ---------- Eksisterende opskrifter (Styr på ingredienser, fase 7) ----------
@@ -301,7 +302,7 @@ const Katalog = (() => {
   }
   // Det, et navn kan ligne: ingrediensernes navne og aliaser (en regel med én vare uden tilberedning)
   const kandidater = (liste, rl) => [...liste.map(i => ({ t: i.navn_norm, id: i.id })),
-    ...rl.filter(r => r.slags === 'vare' && r.resultat.length === 1 && !r.resultat[0].f).map(r => ({ t: r.tekst, id: r.resultat[0].id }))];
+    ...rl.filter(erAlias).map(r => ({ t: r.tekst, id: r.resultat[0].id }))];
   function taetPaa(k, c) {
     const a = samlet(k), b = samlet(c);
     if (a.replace(/\D/g, '') !== b.replace(/\D/g, '')) return null; // «cremefraiche 38 %» er ikke «cremefraiche 18 %»
@@ -335,7 +336,7 @@ const Katalog = (() => {
     const medF = (varer, ekstra) => varer.map(v => { const ff = [ekstra, v.f].filter(Boolean).join(', '); return { id: v.id, ...(ff && { f: ff }) }; });
     for (const [t, ff] of k === n ? [[n, '']] : [[n, ''], [k, f]]) {
       const r = rl.find(x => x.tekst === t);
-      if (r) return { udfald: 'kendt', via: 'regel', slags: r.slags, regel: r, varer: medF(r.resultat, ff), lignende: [] };
+      if (r) return { udfald: 'kendt', via: 'regel', slags: r.slags, regel: r, alias: erAlias(r) ? r.tekst : '', varer: medF(r.resultat, ff), lignende: [] };
       const i = liste.find(x => x.navn_norm === t);
       if (i) return { udfald: 'kendt', via: 'navn', slags: 'vare', varer: medF([{ id: i.id }], ff), lignende: [] };
     }
@@ -355,7 +356,7 @@ const Katalog = (() => {
     if (idx) return idx;
     idx = { id: new Map(ing.map(i => [i.id, i])), var: new Map(), alias: new Map(), tekst: new Map() };
     for (const i of ing) if (i.faelles_id) { if (!idx.var.has(i.faelles_id)) idx.var.set(i.faelles_id, []); idx.var.get(i.faelles_id).push(i.id); }
-    for (const r of regler) if (r.slags === 'vare' && r.resultat.length === 1 && !r.resultat[0].f) { const id = r.resultat[0].id; if (!idx.alias.has(id)) idx.alias.set(id, []); idx.alias.get(id).push(r.tekst); }
+    for (const r of regler) if (erAlias(r)) { const id = r.resultat[0].id; if (!idx.alias.has(id)) idx.alias.set(id, []); idx.alias.get(id).push(r.tekst); }
     return idx;
   }
   // Varerne på en linje: «eller»-listen, linjens id, eller (uden id) det, navnet præcis svarer til som navn, vare eller regel
@@ -370,8 +371,10 @@ const Katalog = (() => {
     }
     return ix.tekst.get(t);
   }
-  // Navnet fra kataloget («frisk timian», «timian», «smør eller margarine»). Kendes en vare ikke, bruges navnet på linjen.
-  function navn(x) {
+  // Navnet, der vises: et alias står, som det står i opskriften (t). Ellers navnet fra kataloget («frisk timian», «timian», «smør eller margarine»). Kendes en vare ikke, bruges navnet på linjen.
+  // katalog: kun navnet fra kataloget (til at kende den samme vare, fx i «Hvad kan jeg lave?» og madplanen).
+  function navn(x, katalog = false) {
+    if (x.t && !katalog && !Array.isArray(x.eller)) return x.t;
     const v = varerAf(x);
     return v.length && (x.id || Array.isArray(x.eller)) ? v.map(id => I().id.get(id).navn).join(' eller ') : x.n;
   }
@@ -384,7 +387,7 @@ const Katalog = (() => {
   const noegleAf = x => varerAf(x).join('|') || noegle(x.n); // samme vare tæller kun én gang som manglende
   // Ord, en linje kan findes på: linjens navn, varerne, deres varianter og fællesnavn, og aliaser
   function soegeord(x) {
-    const ud = new Set([norm(x.n)]), ids = new Set();
+    const ud = new Set([norm(x.n), ...(x.t ? [norm(x.t)] : [])]), ids = new Set();
     for (const id of varerAf(x)) { daekker(id).forEach(d => ids.add(d)); const f = I().id.get(id).faelles_id; if (f) ids.add(f); }
     for (const id of ids) { const i = I().id.get(id); if (i) ud.add(i.navn_norm); (I().alias.get(id) || []).forEach(t => ud.add(t)); }
     return [...ud];
@@ -514,5 +517,5 @@ ${andre.map(i => '- ' + i.navn + (modus === 'alle' && i.kategori_id ? ` (${katNa
       if (efterSortering) efterSortering();
     }
   });
-  return { hent, sikr, klar, venter, tekstAf, ordnStille, ordn, rens, noegle, afklar, hjemmeId, knyt, laes, kategorier, sorterAndet, laesKat, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
+  return { hent, sikr, klar, erAlias, venter, tekstAf, ordnStille, ordn, rens, noegle, afklar, hjemmeId, knyt, laes, kategorier, sorterAndet, laesKat, varerAf, navn, medNavn, flereVarer: n => OGELLER.test(n), daekker, opfyldt, noegleAf, soegeord, krydderi };
 })();

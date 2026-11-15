@@ -76,7 +76,7 @@ const Madplan = (() => {
       dd.forEach((d, j) => { d[s] = r.valgt[j] ? r.valgt[j].r.id : null; });
     });
   }
-  const manglerTekst = x => x.mangler.length ? 'Mangler: ' + x.mangler.join(', ') : 'Du har det hele';
+  const manglerTekst = x => x.mangler.length ? 'Mangler: ' + x.mangler.map(m => x.tekst[m] || m).join(', ') : 'Du har det hele';
   function slotHtml(d, i, s) {
     if (!d.paa[s]) return `<div class="kort mp-ret mp-av tekst-m" data-tpid="mp-ret-${s}" data-tpinst="${DAGORD[i]}"><strong>${NAVN[s]}</strong><span>Er ikke med</span><div class="rakke"></div></div>`;
     const x = d[s] ? P.get(d[s]) : null, info = x ? NAVN[s] + ' · ' + manglerTekst(x) : NAVN[s];
@@ -96,11 +96,11 @@ const Madplan = (() => {
       <button type="button" class="knap felt felt-s slet" data-tpid="mp-ryd" data-h="mpRyd">Ryd madplan</button>`;
     $('#mp-alle').innerHTML = SLOTS.map(s => { const n = pl.filter(d => d.paa[s]).length; return `<button type="button" class="chip${n === pl.length ? ' valgt' : n ? ' delvis' : ''}" data-tpid="mp-alle-${s}" data-h="mpAlle" data-v="${s}" aria-pressed="${n === pl.length}">${NAVN[s]}</button>`; }).join('')
       + (blandet() ? '<span class="chip valgt mp-blandet">Blandet</span>' : '');
-    const koeb = new Map(); // navn -> { navn, antal }
-    pl.forEach(d => SLOTS.forEach(s => { const x = d[s] && P.get(d[s]); if (x) x.mangler.forEach(m => { const k = koeb.get(m); if (k) k.antal++; else koeb.set(m, { navn: m, antal: 1 }); }); }));
+    const koeb = new Map(); // navn -> { navn, antal, tekster } (tekster: som de står i opskrifterne)
+    pl.forEach(d => SLOTS.forEach(s => { const x = d[s] && P.get(d[s]); if (x) x.mangler.forEach(m => { const k = koeb.get(m) || koeb.set(m, { navn: m, antal: 0, tekster: [] }).get(m); k.antal++; k.tekster.push(x.tekst[m]); }); }));
     $('#mp-plan').innerHTML = `<div class="mp-grid">${pl.map(dagHtml).join('')}</div>
       <h2>Det skal du købe</h2>
-      ${koeb.size ? `<div class="kort"><ul class="ing">${[...koeb.values()].map(k => `<li><span>${esc(k.navn)}${k.antal > 1 ? ` (til ${k.antal} retter)` : ''}</span></li>`).join('')}</ul></div>`
+      ${koeb.size ? `<div class="kort"><ul class="ing">${[...koeb.values()].map(k => `<li><span>${esc(visMangler(k.navn, k.tekster))}${k.antal > 1 ? ` (til ${k.antal} retter)` : ''}</span></li>`).join('')}</ul></div>`
         : `<p class="lille">${har1 ? 'Ingenting. Du har alt, hvad du skal bruge.' : 'Tryk på «Generer ny madplan», så finder jeg retter.'}</p>`}`;
   }
   // Retter, der kan komme i stedet: de samme regler som valgene (højst mangler pr. ret og i alt), og ikke en ret, der allerede er med.

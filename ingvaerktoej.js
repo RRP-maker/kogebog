@@ -69,7 +69,7 @@ const IngVaerktoej = (() => {
     const maal = navn => { // ingrediensen med det navn efter rettelserne. Er teksten et alias, bruges ingrediensen bag. Findes den ikke, oprettes den.
       const g = grupper.get(navn);
       if (g) return g[0].vinder;
-      const a = regler.find(x => x.tekst === navn && x.slags === 'vare' && !x.resultat[0].f), m = a && plan.get(a.resultat[0].id);
+      const a = regler.find(x => x.tekst === navn && Katalog.erAlias(x)), m = a && plan.get(a.resultat[0].id);
       if (m && m.vinder) return m.vinder;
       if (reglerTekst.has(navn)) { fejl.push(`«${navn}» er en regel, som ikke kan bruges her. Ret linjen i opskriften.`); return { ny: true, i: { id: crypto.randomUUID() }, navn, kat: null }; }
       if (!nye.has(navn)) nye.set(navn, { ny: true, i: { id: crypto.randomUUID() }, navn, kat: null });
@@ -92,10 +92,14 @@ const IngVaerktoej = (() => {
         else if (!gl && !k) { aendret = true; return null; } // en linje uden navn falder væk
         else { p = gl ? gl.vinder : maal(k); f = [...new Set([kendt ? '' : delIng(x.n).f, x.f, gl ? gl.f : ''].filter(Boolean))].join(', '); }
         if (r && r.f != null) f = String(r.f).trim();
-        const linje = { m: r && 'm' in r ? tal(r.m) : x.m, e: r && r.e != null ? String(r.e).trim() : x.e, n: p.navn, id: p.i.id, ...(f && { f }) };
-        if (['m', 'e', 'n', 'id', 'f'].some(a => (linje[a] ?? '') !== (x[a] ?? '')) || typeof raa[nr] !== 'object') {
+        // Et alias bevarer teksten (t). Lægges to ingredienser sammen, beholder linjerne det gamle navn som tekst (valg 1 A, 2.19.1). Kun fremad.
+        const alias = !gl && !grupper.has(k) && regler.some(a => a.tekst === k && Katalog.erAlias(a)); // en linje, hvis tekst er et alias, bevarer teksten
+        const t = r && r.navn != null ? '' : x.t || (alias ? k : gl && gl.vinder !== gl && !grupper.has(gl.i.navn_norm) ? gl.i.navn_norm : '');
+        const linje = { m: r && 'm' in r ? tal(r.m) : x.m, e: r && r.e != null ? String(r.e).trim() : x.e, n: p.navn, id: p.i.id, ...(f && { f }), ...(t && { t }) };
+        const vis = l => visIng(l.t ? { ...l, n: l.t } : l); // som det står i opskriften
+        if (['m', 'e', 'n', 'id', 'f', 't'].some(a => (linje[a] ?? '') !== (x[a] ?? '')) || typeof raa[nr] !== 'object') {
           aendret = true;
-          if (visIng(x) === visIng(linje)) knyttet++; else linjer.push({ opskrift: o.titel, foer: visIng(x), efter: visIng(linje) });
+          if (vis(x) === vis(linje)) knyttet++; else linjer.push({ opskrift: o.titel, foer: vis(x), efter: vis(linje) });
         }
         return linje;
       }).filter(Boolean);

@@ -251,12 +251,13 @@ function normIng(x) {
   if (!x || typeof x !== 'object') return null;
   const n = String(x.n ?? x.navn ?? x.name ?? '').trim();
   if (!n) return null;
-  const f = String(x.f ?? x.forberedelse ?? x.tilberedning ?? '').trim(), id = typeof x.id === 'string' ? x.id : '';
+  const f = String(x.f ?? x.forberedelse ?? x.tilberedning ?? '').trim(), id = typeof x.id === 'string' ? x.id : '', t = id && typeof x.t === 'string' ? x.t.trim() : ''; // t: et alias, som det står i opskriften
   const eller = Array.isArray(x.eller) ? x.eller.filter(v => typeof v === 'string') : null; // en af flere varer (Styr på ingredienser)
-  return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n, ...(f && { f }), ...(id && { id }), ...(eller && eller.length && { eller }) };
+  return { m: tal(x.m ?? x.maengde ?? x['mængde'] ?? x.antal), e: String(x.e ?? x.enhed ?? '').trim(), n, ...(f && { f }), ...(id && { id }), ...(t && { t }), ...(eller && eller.length && { eller }) };
 }
 // ingredienser gemmes som en liste. Et element { g: "Sovs" } er en overskrift, resten er ingredienser.
-// En ingrediens er { m: mængde, e: enhed, n: navn, id: ingrediensens id i kataloget, f: forberedelse }. «id» og «n» sættes ved «Gem» (Katalog.knyt).
+// En ingrediens er { m: mængde, e: enhed, n: navn, id: ingrediensens id i kataloget, f: forberedelse, t: teksten, som den står i opskriften }. «id» og «n» sættes ved «Gem» (Katalog.knyt).
+// «t» sættes kun, når teksten er et alias (fx «kyllingefilet» for kyllingebryst). Så vises teksten, som den står, mens søgning og «Hvad kan jeg lave?» går på ingrediensen.
 // En linje med en af flere varer har «eller»: [id, …] i stedet for «id». Navnet, der vises, kommer fra kataloget (Katalog.navn). «n» er en kopi, hvis kataloget ikke er hentet.
 // (Ældre kode ignorerer overskrifterne, så de gør ingen skade.)
 function ingListe(r) {
@@ -1036,12 +1037,13 @@ const BASIS = ['salt', 'olie', 'vand', 'peber'];
 const stamme = s => { s = s.toLowerCase().replace(/[^a-zæøåéü ]/g, '').trim(); return s.length > 4 ? s.replace(/(erne|ene|er|en|et|e|r)$/, '') : s; };
 const erBasis = n => BASIS.some(b => n === b || n.endsWith(b) || n.split(' ').includes(b));
 // har: et Set med id'er på det, der er derhjemme. En linje er opfyldt efter Katalog.opfyldt (samme regel som madplanen og «træk fra»).
+// mangler: varens navn i kataloget (samme vare tæller kun én gang). tekst: vare -> teksten, som den står i opskriften (et alias, fx «kyllingefilet»).
 function beregnForslag(opskrifter, har, udenKrydderier) {
   const rader = opskrifter.map(r => {
-    const brug = ingAf(r).filter(i => !erBasis(simpel(Katalog.navn(i).toLowerCase())) && !(udenKrydderier && Katalog.krydderi(i)));
-    const set = new Set(), mangler = []; // samme vare tæller kun én gang
-    for (const i of brug) { const k = Katalog.noegleAf(i); if (!Katalog.opfyldt(i, har) && !set.has(k)) { set.add(k); mangler.push(Katalog.navn(i)); } }
-    return { r, antal: brug.length, mangler };
+    const brug = ingAf(r).filter(i => !erBasis(simpel(Katalog.navn(i, true).toLowerCase())) && !(udenKrydderier && Katalog.krydderi(i)));
+    const set = new Set(), mangler = [], tekst = {};
+    for (const i of brug) { const k = Katalog.noegleAf(i); if (!Katalog.opfyldt(i, har) && !set.has(k)) { set.add(k); const v = Katalog.navn(i, true); mangler.push(v); tekst[v] = Katalog.navn(i); } }
+    return { r, antal: brug.length, mangler, tekst };
   }).filter(x => x.antal > 0);
   const kan = rader.filter(x => !x.mangler.length), naesten = rader.filter(x => x.mangler.length);
   // Find 1 og 2 ting at købe, som giver flest nye retter
@@ -1055,6 +1057,8 @@ function beregnForslag(opskrifter, har, udenKrydderier) {
   }
   return { kan: kan.map(x => x.r), naesten: naesten.sort((a, b) => a.mangler.length - b.mangler.length), koeb: [en, to].filter(Boolean) };
 }
+// Det, der vises for en vare, der mangler: teksten, som den står i opskrifterne. Står den på flere måder, vises varens navn og de andre tekster i parentes.
+const visMangler = (vare, tekster) => { const d = [...new Set(tekster.filter(Boolean))]; return d.length <= 1 ? d[0] || vare : `${vare} (${d.filter(t => t !== vare).join(', ')})`; };
 let F = [];
 async function forslagSide() {
   const id = visning;
@@ -1091,7 +1095,7 @@ function tegnForslag() {
   nu.innerHTML = `<div class="mangler-top"><h2>Det kan du lave nu</h2>
       <label class="skift" data-tpid="uden-krydderier"><input type="checkbox" id="udenkryd" ${udenKryd() ? 'checked' : ''}> <span>Uden krydderier</span></label></div>
     ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe længere nede.</p>'}`;
-  rest.innerHTML = `${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.join(' og '))}</strong>
+  rest.innerHTML = `${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.map(m => visMangler(m, f.naesten.map(x => x.tekst[m]))).join(' og '))}</strong>
       <span>Så kan du også lave: ${k.retter.map(r => `<a href="#/opskrifter/${r.id}">${esc(r.titel)}</a>`).join(', ')}</span></div>`).join('')}` : ''}
     <div class="mangler-top"><h2>Du mangler lidt</h2>
       <div class="stepper" role="group" aria-label="Højst så mange ingredienser må mangle">
@@ -1099,7 +1103,7 @@ function tegnForslag() {
         <input id="maks" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="${maks}" aria-label="Højst så mange ingredienser må mangle">
         <button type="button" class="rund felt felt-s" data-h="maksOp" aria-label="Flere">+</button></div></div>
     <small>Højst ${maks} ${maks === 1 ? 'ingrediens' : 'ingredienser'} må mangle.${naesten.length > visNaesten ? ` Viser ${visNaesten} af ${naesten.length} retter.` : ''}</small>
-    ${naesten.length ? naesten.slice(0, visNaesten).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.join(', '))}</span></a>`).join('') : '<p class="lille">Ingen retter mangler så få. Skriv et højere tal.</p>'}
+    ${naesten.length ? naesten.slice(0, visNaesten).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.map(m => x.tekst[m] || m).join(', '))}</span></a>`).join('') : '<p class="lille">Ingen retter mangler så få. Skriv et højere tal.</p>'}
     ${naesten.length > visNaesten ? '<button type="button" class="knap felt felt-m" data-tpid="vis-flere" data-h="visFlere">Vis flere</button>' : ''}`;
 }
 function saetMaks(n) { lager.gem('maxMangler', Math.max(0, Math.min(20, Math.round(Number(n)) || 0))); visNaesten = 20; tegnForslag(); }

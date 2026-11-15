@@ -2,6 +2,14 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.19.1 · Styr på ingredienser: aliasteksten bliver stående
+- **Et alias ændrer ikke, hvad der står i opskriften.** Skrives «kyllingefilet», og det er et alias for «kyllingebryst», får linjen varen (`id`, `n`), men beholder teksten i `t` (kun alias, kun fremad). Opskriften viser `t`, mens søgning, «Hvad kan jeg lave?», madplan og indkøb regner på varen.
+- **Søgeord** er både varens navn og `t`.
+- **Indkøb og «Mangler»** viser det skrevne i parentes, fx «kyllingebryst (kyllingefilet)». Identiteten er stadig katalogets navn.
+- **Sammenlægning i Ingrediensværktøjet** (valg A): linjer med det gamle navn beholder det som `t`. Omdøbning følger kataloget (ingen `t`).
+- **Uændret:** «tæt på»-rettelser skriver stadig katalogets navn. Eksisterende opskrifter ændres ikke bagud.
+- `Katalog.erAlias` er delt mellem katalog og Ingrediensværktøj.
+
 ## 2.19.0 · Styr på ingredienser, fase 7: eksisterende opskrifter
 - **Ved åbning bruges regler stille.** En linje uden vare, hvis tekst appen kender (navn, alias eller regel), får sin vare, bliver delt, bliver en «eller»-linje eller fjernes, og opskriften gemmes (`ordnVedAabning`). Intet gættes: «tæt på» spørges der om.
 - **Resten spørges der om i et felt øverst i opskriften,** ikke i et vindue (valg 8). Det er samme spørgsmål som ved «Gem» (`Katalog.afklar` med `felt`). En linje venter, når den ikke peger på en ingrediens, eller når ingrediensens navn står for flere varer («salt og peber»). «Eller»-linjer og overskrifter røres ikke.
