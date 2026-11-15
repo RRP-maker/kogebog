@@ -189,6 +189,11 @@ const LinkImport = (() => {
       { tekst: 'Her ser du, hvor langt jeg er.', maal: 'importer-status', bev: 'dans' }]);
   }
 
+  // Ingredienser, appen ikke kender, spørges der om i samme ark som i formularen (Katalog.afklar). Én, der ligner præcis én, rettes selv.
+  // spring: tekster, man har svaret «Ikke nu» til i denne import. Giver svarene, eller null, hvis man gik tilbage.
+  const spoerg = (r, valg, spring = new Set()) => Katalog.afklar(ingAf(r.data).map(i => i.n).filter(n => !spring.has(Katalog.rens(n))),
+    { imp: true, kat: r.kat, titel: r.data.titel, gem: 'Gem opskriften', ...valg });
+
   // Tekst, man har sat ind eller skrevet: én opskrift, som gemmes med det samme og åbnes, så den kan tjekkes
   async function gemTekst(el, tekst) {
     const t = tekstTilOpskrift(tekst);
@@ -199,7 +204,9 @@ const LinkImport = (() => {
     try {
       const o = findNavn(await api('opskrifter?select=id,titel'), r.data.titel);
       if (o && !(await spoergDublet([{ ...o, titel: r.data.titel }], 1))) return;
-      r.data.ingredienser = await Katalog.knyt(r.data.ingredienser, {}, { claude: r.kat });
+      const svar = await spoerg(r, { tilbage: 'Tilbage' });
+      if (!svar) return; // tilbage: intet er gemt, og teksten står i feltet
+      r.data.ingredienser = await Katalog.knyt(r.data.ingredienser, svar, { claude: r.kat });
       const [ny] = await api('opskrifter', { method: 'POST', body: { ...r.data, kilde: 'importeret' } });
       lager.gem('importTekst', '');
       toast('Opskriften er gemt. Tjek, at alt står rigtigt'); Hjaelper.glad('Opskriften er gemt!');
@@ -224,7 +231,8 @@ const LinkImport = (() => {
     const fejlListe = [], buf = [];
     let nu = []; try { nu = await api('opskrifter?select=id,titel'); } catch (e) { console.error(e); }
     const set = [];
-    let fatal = null;
+    let fatal = null, afbrudt = false; // afbrudt: man trykkede «Stop importen» i arket. Det, der ikke er gemt, hentes igen ved «Fortsæt».
+    const ikkeNu = new Set();
 
     const vis = () => {
       const s = $('#status'), b = $('#barfyld'); if (!s || !b) return;
@@ -233,11 +241,23 @@ const LinkImport = (() => {
       b.style.width = pct + '%'; b.parentElement.setAttribute('aria-valuenow', pct);
     };
     const husk = () => lager.gem('linksFaerdig', [...klar]);
-    const flush = async () => {
-      if (!buf.length) return;
-      const b = buf.splice(0);
+    // Bundterne gemmes ét ad gangen, så der kun er ét ark åbent. Før et bundt gemmes, spørges der pr. opskrift.
+    let kaede = Promise.resolve();
+    const flush = () => (kaede = kaede.then(flushNu));
+    const flushNu = async () => {
+      if (afbrudt || !buf.length) return;
+      const b = [];
+      for (const x of buf.splice(0)) {
+        if (afbrudt) break; // resten er ikke gemt og hentes igen næste gang
+        try { x.svar = await spoerg(x.r, { tilbage: alle.length > 1 ? 'Stop importen' : 'Tilbage', ...(alle.length > 1 && { note: 'I resten af importen bliver du ikke spurgt om den igen.' }) }, ikkeNu); }
+        catch (e) { console.error(e); tael.fejlede++; fejlListe.push([x.url, 'Ingredienserne kunne ikke tjekkes. Tjek internettet.']); continue; }
+        if (!x.svar) { afbrudt = stop = true; break; }
+        Object.entries(x.svar).forEach(([t, v]) => { if (v === false) ikkeNu.add(t); });
+        b.push(x);
+      }
+      if (!b.length) return vis();
       const gem = async dele => {
-        for (const x of dele) x.r.data.ingredienser = await Katalog.knyt(x.r.data.ingredienser, {}, { claude: x.r.kat }); // hver linje får ingrediensens id
+        for (const x of dele) x.r.data.ingredienser = await Katalog.knyt(x.r.data.ingredienser, x.svar, { claude: x.r.kat }); // hver linje får ingrediensens id
         const rader = await api('opskrifter', { method: 'POST', body: dele.map(x => ({ ...x.r.data, kilde: 'importeret' })) });
         dele.forEach((x, n) => { klar.add(x.url); tael.gemt++; x.id = rader[n] && rader[n].id; sidsteId = x.id || sidsteId; });
         for (const x of dele) if (x.r.billede && x.id) { try { await hentBillede(x.r.billede, x.id); } catch (e) { console.error(e); tael.udenBillede++; } } // opskriften er gemt, også hvis billedet fejler
@@ -274,8 +294,9 @@ const LinkImport = (() => {
     catch (e) { console.error(e); fatal = fatal || 'Noget gik galt: ' + (e.message || e); }
     koerer = false;
     if (id !== visning) return; // brugeren er gået væk: det, der er hentet, er gemt
-    vis(); el.hidden = false; stopKnap.hidden = true; el.lastChild.textContent = i < todo.length ? ' Fortsæt' : ' Importér';
+    vis(); el.hidden = false; stopKnap.hidden = true; el.lastChild.textContent = i < todo.length || (afbrudt && alle.length > 1) ? ' Fortsæt' : ' Importér';
     if (fatal) fejlboks(fatal);
+    else if (afbrudt) fejlboks(alle.length > 1 ? 'Importen er stoppet. Det, der er gemt, er gemt. Tryk på «Fortsæt» for at tage resten.' : 'Opskriften er ikke gemt. Tryk på «Importér», når du vil prøve igen.');
     if (fejlListe.length) {
       const o = $('#fejlomraade');
       o.innerHTML = `<p class="tekst-m">Disse links kunne ikke hentes:</p>

@@ -39,33 +39,28 @@ const Katalog = (() => {
     }
     await hent();
   }
-  // Import (links, tekst og «Opdater med Claude») opretter stadig selv, til den får spørgsmålet i 2.18.0. Den går gennem «opret».
-  // claude: Claudes forslag (navn -> kategorinavn).
-  async function opretUkendte(liste, claude = {}) {
-    const nye = new Map(), opdat = [];
+  // Import (links, tekst og «Opdater med Claude»): Claudes kategori lægges på en kendt ingrediens, der ikke har nogen. claude: navn -> kategorinavn.
+  async function katFraClaude(liste, claude = {}) {
     for (const x of liste) {
       if (!x || 'g' in x || Array.isArray(x.eller)) continue;
-      const l = laes(x.n), { k } = dele(x.n), ck = claude[k] ? katId(claude[k]) : null;
-      if (l.udfald === 'kendt') { const i = l.slags === 'vare' && ing.find(c => c.id === l.varer[0].id); if (i && !i.kategori_id && ck) opdat.push([i.id, ck]); continue; }
-      if (k && !/[(),;]/.test(k)) nye.set(k, { navn: k, kategori_id: ck || gaet(k) || null });
+      const l = laes(x.n), { k } = dele(x.n), ck = claude[k] ? katId(claude[k]) : null, i = ck && l.udfald === 'kendt' && l.slags === 'vare' && ing.find(c => c.id === l.varer[0].id);
+      if (i && !i.kategori_id) { await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: ck } }); i.kategori_id = ck; }
     }
-    for (const [id, k] of opdat) await api(`ingredienser?id=eq.${enc(id)}`, { method: 'PATCH', body: { kategori_id: k } });
-    await opret([...nye.values()]);
   }
   // Ved «Gem» (opdatering 4c, fase 5): hver linje får ingrediensens id og navn fra kataloget.
   // En tekst, appen kender (navn, alias eller regel), bruges uden spørgsmål: en regel kan dele linjen, gøre den til «eller» eller slette den.
   // Ukendte linjer er spurgt om i forvejen (afklar). Svarede man «Ikke nu», gemmes linjen, som den står, uden vare, og der spørges igen næste gang.
-  // svar: fra afklar. import: { claude } fra import, som stadig opretter selv (se opretUkendte).
+  // svar: fra afklar. imp: { claude } fra import. Import retter selv ved præcis én, der ligner («tæt på», valg 6). Den opretter intet.
   async function knyt(liste, svar = {}, imp = null) {
     await hent();
-    if (imp) await opretUkendte(liste, imp.claude || {});
+    if (imp) await katFraClaude(liste, imp.claude || {});
     const ud = [];
     for (const x of liste) {
       if ('g' in x || Array.isArray(x.eller)) { ud.push(x); continue; } // en «eller»-linje har sine varer i forvejen
       const d = dele(x.n);
       if (!d.n) continue; // en linje uden navn falder væk
       const l = laes(x.n), s = svar[d.n];
-      const r = l.udfald === 'kendt' ? l : s && s.id ? { slags: 'vare', varer: [{ id: s.id, ...(d.f && { f: d.f }) }] } : null;
+      const r = l.udfald === 'kendt' || (imp && l.udfald === 'taet') ? l : s && s.id ? { slags: 'vare', varer: [{ id: s.id, ...(d.f && { f: d.f }) }] } : null;
       if (!r) { const { id, eller, ...rest } = x; ud.push(rest); continue; }
       ud.push(...anvend(x, r));
     }
@@ -85,6 +80,7 @@ const Katalog = (() => {
   // Ét ark med alle tekster, appen ikke kender. Svarene: en af de lignende, «Opret ny», «Del selv» og «Ikke nu».
   // Svarene huskes som regel (et alias eller en regel), så der ikke spørges igen. «Ikke nu» spørger igen næste gang.
   // hjemme: «Derhjemme» spørger også, når teksten er et fællesnavn (vælg frisk eller tørret). Der er ingen «Del selv».
+  // imp: import, som selv retter «tæt på» og ikke spørger om dem. kat: Claudes kategorier (navn -> kategorinavn). titel: opskriften, der spørges for. note: ekstra tekst øverst.
   // Svar: tekst -> { id } (valgt eller oprettet), true (en regel er gemt) eller false («Ikke nu»). null: man gik tilbage.
   const husk = new Map(); // svarene, til arket åbnes igen (fx efter «Tilbage»)
   const AFSLAGS = [['vare', 'Én vare med tilberedning'], ['del', 'Flere varer, linjen deles'], ['eller', 'Én af flere varer'], ['slet', 'Ikke en vare, linjen slettes']];
@@ -94,7 +90,7 @@ const Katalog = (() => {
     const eller = / eller /.test(t), dele = t.split(eller ? / eller / : / og |\s*[,&+/]\s*/).map(x => x.trim()).filter(Boolean);
     return { slags: dele.length > 1 ? (eller ? 'eller' : 'del') : 'vare', varer: (dele.length > 1 ? dele : [t]).map(x => { const i = ing.find(c => c.navn_norm === x); return { navn: i ? i.navn : '', f: '' }; }) };
   }
-  async function afklar(tekster, { hjemme = false, gem = 'Gem', tilbage = 'Tilbage' } = {}) {
+  async function afklar(tekster, { hjemme = false, imp = false, kat: ck = {}, titel = '', note = '', gem = 'Gem', tilbage = 'Tilbage' } = {}) {
     await hent();
     const sp = [], set = new Set();
     for (const t of tekster) {
@@ -102,6 +98,7 @@ const Katalog = (() => {
       if (!d.n || set.has(d.n)) continue;
       set.add(d.n);
       const l = laes(t);
+      if (imp && l.udfald === 'taet') continue;
       let valg = l.lignende, fast = false;
       if (l.udfald === 'kendt') {
         if (!hjemme) continue;
@@ -111,7 +108,7 @@ const Katalog = (() => {
       }
       if (hjemme) valg = [...new Set(valg.flatMap(id => varianter(id).length ? varianter(id) : [id]))].slice(0, 6);
       const gl = husk.get(d.n);
-      sp.push({ ...d, l, valg, fast, s: gl || { valg: 'ikke', navn: d.k, kat: gaet(d.k) || '', ...forslagDel(d.n) } });
+      sp.push({ ...d, l, valg, fast, s: gl || { valg: 'ikke', navn: d.k, kat: katId(ck[d.k] || ck[d.n] || '') || gaet(d.k) || '', ...forslagDel(d.n) } });
     }
     if (!sp.length) return {};
     const katValg = v => `<option value="">${IKKE_SORTERET}</option>` + sorteret().filter(k => k.navn_norm !== 'andet').map(k => `<option value="${k.id}"${k.id === v ? ' selected' : ''}>${esc(katNavn(k))}</option>`).join('');
@@ -148,7 +145,8 @@ const Katalog = (() => {
       ${radio(i, 'ikke', hjemme ? 'Tilføj den ikke' : 'Ikke nu', it.s)}</fieldset>`;
     return new Promise(svar => {
       const d = ark(`<h2>Hvad betyder ${sp.length === 1 ? 'teksten' : 'teksterne'}?</h2>
-        <small>${sp.length === 1 ? 'Appen kender ikke denne ingrediens' : `Appen kender ikke ${sp.length} af ingredienserne`}. Vælg, hvad ${sp.length === 1 ? 'den' : 'de'} er. ${hjemme ? '' : 'Dit svar huskes, så du ikke bliver spurgt igen. Vælger du «Ikke nu», gemmes linjen, som den står, og du bliver spurgt igen næste gang.'}</small>
+        ${titel ? `<p class="tekst-m">I opskriften «<span data-tpdata>${esc(titel)}</span>»</p>` : ''}
+        <small>${sp.length === 1 ? 'Appen kender ikke denne ingrediens' : `Appen kender ikke ${sp.length} af ingredienserne`}. Vælg, hvad ${sp.length === 1 ? 'den' : 'de'} er. ${hjemme ? '' : 'Dit svar huskes, så du ikke bliver spurgt igen. Vælger du «Ikke nu», gemmes linjen, som den står, og du bliver spurgt igen næste gang.'}${note ? ' ' + esc(note) : ''}</small>
         ${sp.map(item).join('')}
         <datalist id="afliste">${[...ing].filter(i => !hjemme || !varianter(i.id).length).sort((a, b) => a.navn.localeCompare(b.navn, 'da')).map(i => `<option value="${esc(i.navn)}"></option>`).join('')}</datalist>
         <div id="arkfejl"></div>

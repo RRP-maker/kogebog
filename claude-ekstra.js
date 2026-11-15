@@ -83,10 +83,14 @@ const ClaudeEkstra = (() => {
       if (svar.liste) return fejlboks('Svaret har flere opskrifter. Her skal der kun være én.');
       const d = svar.data, r = O.r, ny = { titel: d.titel, ingredienser: d.ingredienser, fremgangsmaade: d.fremgangsmaade };
       ['kategori', 'koekken', 'svaerhed', 'tid_minutter', 'portioner'].forEach(k => { if (d[k] != null) ny[k] = d[k]; });
+      let afsvar; // ukendte ingredienser: samme ark som i formularen. Én, der ligner præcis én, rettes selv
+      try { afsvar = await Katalog.afklar(ny.ingredienser.filter(x => !('g' in x)).map(x => x.n), { imp: true, kat: svar.kat, gem: 'Opdater opskriften', tilbage: 'Tilbage' }); }
+      catch (err) { console.error(err); return fejlboks('Ingredienserne kunne ikke tjekkes, og intet er gemt. Tjek internettet, og prøv igen.'); }
+      if (!afsvar) return;
       el.disabled = true;
       try {
         lager.gem('opdatFoer', { id: r.id, data: Object.fromEntries(FELTER.map(k => [k, r[k] ?? null])) }); // så man kan fortryde
-        ny.ingredienser = await Katalog.knyt(ny.ingredienser, {}, { claude: svar.kat }); // hver linje får ingrediensens id
+        ny.ingredienser = await Katalog.knyt(ny.ingredienser, afsvar, { claude: svar.kat }); // hver linje får ingrediensens id
         await api(`opskrifter?id=eq.${enc(r.id)}`, { method: 'PATCH', body: ny });
         lager.gem('opdaterEgen', ''); lager.gem('opdaterEgenSvar', '');
         toast('Opskriften er opdateret'); Hjaelper.glad('Opskriften er opdateret!');

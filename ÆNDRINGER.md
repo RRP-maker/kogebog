@@ -2,6 +2,12 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.18.0 · Styr på ingredienser, fase 6: import spørger
+- **Import opretter ikke længere selv.** Links, tekst og «Opdater med Claude» bruger samme ark som formularen (`Katalog.afklar` med `imp`). Ingen ny ingrediens uden «Opret ny ingrediens».
+- **Ét sikkert match rettes selv:** ligner en tekst præcis én ingrediens («tomatr», «tomater» → tomat), bruges den uden spørgsmål (valg 6). Flere eller ingen: der spørges. Claudes kategori står på forhånd ved «Opret ny».
+- **Flere links: der spørges pr. opskrift,** og arket viser opskriftens navn. Bundterne gemmes ét ad gangen, så der kun er ét ark åbent. «Ikke nu» gælder resten af importen. «Stop importen» gemmer det, der er svaret på, og resten hentes igen ved «Fortsæt».
+- `opretUkendte` er fjernet. Tilbage er kun, at Claudes kategori lægges på en kendt ingrediens uden kategori (`katFraClaude`).
+
 ## 2.17.0 · Styr på ingredienser, fase 5: spørgsmålet i formular, «Tilpas» og «Derhjemme»
 - **Ét ark ved «Gem»** med alle ingredienser, appen ikke kender (`Katalog.afklar`). For hver: en af de lignende, «Opret ny ingrediens» (navn og kategori), «Del selv» (én vare med tilberedning, flere varer, én af flere, ikke en vare) eller «Ikke nu». Arket afløser spørgsmålet om kategori. «Tilbage til opskriften» gemmer intet, og svarene står der, når arket åbnes igen.
 - **Svar huskes som regel:** en valgt lignende eller et ændret navn bliver et alias, «Del selv» bliver en regel. Har en anden enhed lige lavet reglen, gælder den, der findes. «Ikke nu»: linjen gemmes uden vare, og der spørges igen næste gang.
