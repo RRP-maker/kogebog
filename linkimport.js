@@ -1,5 +1,5 @@
 // «Importér opskrift»: ét felt til det hele. Links hentes én efter én via Supabase-funktionen «hent-opskrift» (hjemmesider med billede,
-// og TikTok, Instagram og Facebook, når opskriften står i teksten under opslaget). Tekst, man sætter ind eller selv skriver, læses her i appen (tekstTilOpskrift).
+// og TikTok, Instagram og Facebook, når opskriften står i teksten under opslaget). Tekst, man sætter ind eller selv skriver, læses her i appen (Tekstlaeser, se tekstlaeser.js).
 // Alt gemmes som almindelige opskrifter. Ingen nøgler i koden (kun den offentlige).
 const LinkImport = (() => {
   const SAMTIDIG = 4, BATCH = 10, FUNKTION = SUPABASE_URL + '/functions/v1/hent-opskrift';
@@ -10,106 +10,9 @@ const LinkImport = (() => {
   const LINK = /https?:\/\/[^\s<>"']+/g;
 
   // ---------- Fri tekst -> opskrift ----------
-  // Finder navn, ingredienser og trin i en tekst, man har sat ind eller skrevet. Overskrifterne «Ingredienser» og «Sådan gør du» (eller de engelske) deler teksten.
-  // Uden overskrifter: linjer, der begynder med et tal, er ingredienser, og det, der står efter dem, er trin. Giver { j } til laesEn eller { fejl }.
-  const ING_H = /^(ingredienser|ingredients|det skal du bruge|du skal bruge|what you need|you'?ll need)\b\s*:?\s*/i;
-  const TRIN_H = /^(fremgangsmåde|sådan gør du|tilberedning|instruktioner|instructions|method|directions|preparation|how to make it)\b\s*:?\s*/i;
-  const TAL = /^(\d|[½¼¾])/;
-  // Linjer på hjemmesider, der ikke er opskrift: knapper under opskriften, tips, forslag og kommentarer. Trinnene slutter ved den første.
-  const SLUT = /^(føj til|sæt på madplan|udskriv\b|send$|hold min skærm|næringsindhold|mine noter|tips?\b|tip til|forslag til servering|prøv også|relaterede|læs også|del opskriften|spørgsmål til|\d+\s+kommentarer|kommentarer\b|bedøm)/i;
-  const STOEJ = /^(tilmeld|log ind|menu|søg\b|premium|cookies?|accepter|gå til indhold|skip to)/i; // menuer og tilbud, der kan stå før opskriften
-  const rensTitel = t => String(t || '').split(/\s+[|•]\s+/)[0].replace(/\s+[-–—]\s+(valdemarsro|[^-–—]*opskrift)\s*$/i, '').trim(); // «Navn | Side» -> «Navn»
-  // Kategori og køkken findes først i mærkerne over opskriften, ellers i rettens navn
-  const KAT_ORD = [[/dessert|kage|bagværk/, 'Dessert'], [/drik|cocktail|smoothie/, 'Drikke'], [/^salat|\bsalat\b/, 'Salat'], [/forret/, 'Forret'], [/tilbehør/, 'Tilbehør'], [/aftensmad|frokost|middag|hovedret|hverdagsmad|bålmad|simremad/, 'Hovedret']];
-  const KOEKKEN_ORD = [[/taco|burrito|fajita|enchilada|quesadilla/, 'Mexicansk'], [/teriyaki|sushi|wok|ramen|pad thai/, 'Asiatisk'], [/pasta|spaghetti|carbonara|bolognese|lasagne|risotto|pizza|gnocchi|alfredo|pesto/, 'Italiensk'], [/frikadelle|millionbøf|medister|stegt flæsk|hakkebøf|tarteletter|leverpostej/, 'Dansk']];
-  const UDEN_MAENGDE = /^(salt|peber|friskkværnet|sort peber|olie|olivenolie|smør|vand|sukker|mel|chili|persille|dild|basilikum|timian|oregano|koriander|citron|lime|løg|hvidløg)\b/i;
-  const ingOverskrift = l => /^[A-ZÆØÅ]/.test(l) && l.length <= 50 && !/[,.;()]/.test(l) && !UDEN_MAENGDE.test(l);
-  const BROEK_T = { '½': 0.5, '¼': 0.25, '¾': 0.75 };
-  // «1 ½ kg kartofler» -> «1.5 kg kartofler», «salt og friskkværnet peber» -> to linjer, «(eller anden pasta)» væk
-  const ingLinjer = l => {
-    const t = renIng(String(l).trim().replace(/^(\d+)\s*([½¼¾])/, (m, a, b) => String(Number(a) + BROEK_T[b])) // «1 ½»
-      .replace(/^(\d+)\s+(\d+)\/(\d+)(?=\s)/, (m, a, b, c) => String(Number(a) + b / c)) // «1 1/2»
-      .replace(/^(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)(?=\s)/, '$2') // «1 - 2 stk.» -> 2
-      .replace(/^([\d.,½¼¾/]+)\s+ds\.?(?=\s)/i, '$1 dåse'));
-    const sa = t.match(/^saft(?:en)? af\s+(?:[¼½¾\d./]+\s*-\s*)?([¼½¾\d./]+)\s+(.+)$/i); if (sa) return ingLinjer(`${BROEK_T[sa[1]] ?? sa[1]} ${sa[2]}, saften`); // «Saften af ¼ - ½ citron»
-    const c = t.match(/^(.*?\S),\s*(.*)$/); if (c && (c[2].length > 40 || /^[-–]/.test(c[2]))) return ingLinjer(c[1]); // lang bisætning: ikke forberedelse
-    const g = t.match(/^(.*?\S),\s*(\S+)$/); if (g && g[1].toLowerCase().includes(g[2].toLowerCase())) return [g[1]]; // «teriyakisauce, sauce»
-    const sp = t.match(/^(salt)\s+og\s+(.*peber.*)$/i);
-    return sp ? [sp[1].toLowerCase(), sp[2]] : [t];
-  };
-  // Korte linjer uden slutpunktum («Mangosalsa», «Anret salaten») er overskrifter: de bliver et trin, og linjerne under bliver deltrin
-  const trinOverskrift = t => t.length <= 45 && t.split(/\s+/).length <= 5 && !/[.!?:,;]$/.test(t) && /^[A-ZÆØÅ]/.test(t);
-  const saetninger = t => t.split(/(?<=[.!?])\s+(?=[A-ZÆØÅ])/).map(x => x.trim()).filter(Boolean);
-  // poster: [{ h: «Sovs» }, { t: «trinnets tekst» }, …]. En overskrift hører til det trin, der kommer lige efter, og gælder til næste overskrift.
-  // Flere sætninger i ét trin: første sætning er trinnet, resten er deltrin. Står der kun én overskrift, og den står først, er retten ikke delt op, og den udelades.
-  function byggTrin(poster) {
-    const antal = poster.filter(x => x.h).length, foerst = poster.findIndex(x => x.h);
-    const ud = []; let over = null;
-    for (const x of poster) {
-      if (x.h) { over = String(x.h).replace(/[:：]+$/, '').trim(); continue; }
-      const dele = saetninger(x.t), o = { tekst: dele[0] || x.t, deltrin: dele.slice(1) };
-      if (over && !(antal === 1 && foerst === 0)) o.overskrift = over;
-      over = null;
-      ud.push(o.overskrift || o.deltrin.length ? o : o.tekst);
-    }
-    return ud;
-  }
-  // Korte linjer uden slutpunktum («Mangosalsa», «Anret salaten») er overskrifter
-  const trinMedDele = trin => byggTrin(trin.map((t, i) => trinOverskrift(t) && trin[i + 1] && !trinOverskrift(trin[i + 1]) ? { h: t } : { t }));
-  // Funktionen sender «# Navn» før trinene i en HowToSection
-  const trinFraFunktion = liste => byggTrin((liste || []).map(t => /^#\s+/.test(t) ? { h: t.replace(/^#\s+/, '') } : { t }));
-  const svaerhedAf = (antalVarer, tid) => Math.min(4, 1 + (antalVarer > 8) + (antalVarer > 14) + ((tid || 30) > 60)); // et skøn, der kan rettes
-  const pænNavn = n => String(n || '').split(/\s+[-–—|]\s+|\s+I\s+(?=[a-zæøå])/)[0].trim();
-  function tekstTilOpskrift(tekst, titel) {
-    const linjer = String(tekst || '').replace(/\r/g, '')
-      .replace(/[ \t]+(?=(?:ingredienser|ingredients|fremgangsmåde|sådan gør du|instructions|method|directions)\s*:)/gi, '\n') // overskrifter midt i en linje (opslag uden linjeskift)
-      .split('\n').map(l => l.replace(LINK, '').replace(/#[\p{L}\d_]+/gu, '').replace(/^[\s•\-–—*·▢☐▪●○✅✔☑]+/u, '').trim()).filter(Boolean);
-    let iIng = linjer.findIndex(l => ING_H.test(l)), slutIng, ing = [], foer;
-    const iTrin = linjer.findIndex((l, i) => i > iIng && TRIN_H.test(l));
-    if (iIng >= 0) {
-      foer = linjer.slice(0, iIng);
-      const rest = linjer[iIng].replace(ING_H, '');
-      if (rest) ing.push(...rest.split(/\s*[,;]\s*|\s+[•·]\s+/).filter(Boolean));
-      slutIng = iTrin >= 0 ? iTrin : linjer.findIndex((l, i) => i > iIng && !TAL.test(l) && (l.length > 45 || /[.!]$/.test(l)));
-      if (slutIng < 0) slutIng = linjer.length;
-      ing.push(...linjer.slice(iIng + 1, slutIng));
-    } else { // ingen overskrift: den første række af linjer med tal forrest
-      iIng = linjer.findIndex((l, i) => TAL.test(l) && linjer[i + 1] && TAL.test(linjer[i + 1]) && (iTrin < 0 || i < iTrin));
-      if (iIng < 0) return { fejl: 'Jeg kunne ikke finde ingredienserne. Skriv «Ingredienser» på en linje for sig selv, og skriv så én ingrediens på hver linje.' };
-      slutIng = linjer.findIndex((l, i) => i > iIng && !TAL.test(l)); if (slutIng < 0) slutIng = linjer.length;
-      if (iTrin >= 0 && iTrin < slutIng) slutIng = iTrin;
-      foer = linjer.slice(0, iIng); ing = linjer.slice(iIng, slutIng);
-    }
-    let trin = iTrin >= 0 ? [linjer[iTrin].replace(TRIN_H, ''), ...linjer.slice(iTrin + 1)].filter(Boolean) : linjer.slice(slutIng);
-    if (trin.length === 1 && /\s\d{1,2}[.)]\s/.test(trin[0])) trin = trin[0].split(/\s+(?=\d{1,2}[.)]\s)/); // «1. … 2. …» på én linje
-    else if (trin.length === 1 && trin[0].length > 160) trin = trin[0].split(/(?<=[.!?])\s+(?=[A-ZÆØÅ])/);
-    const stopI = trin.findIndex((t, i) => i > 0 && SLUT.test(t)); if (stopI > 0) trin = trin.slice(0, stopI); // sidens knapper, tips, kommentarer og forslag hører ikke til trinnene
-    trin = trin.map(t => t.replace(/^(?:trin|step)?\s*\d{1,2}\s*[.):]\s*/i, '').trim()).filter(t => t.length > 2);
-    // Ingredienser: en linje, der slutter med kolon, eller en kort linje uden tal og med stort begyndelsesbogstav («Til servering»), er en overskrift til en gruppe
-    const ud = []; let gruppe = null;
-    for (const [i, l] of ing.entries()) {
-      if (!TAL.test(l) && (/:$/.test(l) || (ingOverskrift(l) && ing[i + 1] && TAL.test(ing[i + 1])))) { gruppe = { overskrift: l.replace(/:$/, '').trim(), varer: [] }; ud.push(gruppe); continue; }
-      (gruppe ? gruppe.varer : ud).push(...ingLinjer(l));
-    }
-    const trinUd = trinMedDele(trin);
-    if (!ud.some(x => typeof x === 'string' || x.varer.length)) return { fejl: 'Jeg kunne ikke finde ingredienserne. Skriv én ingrediens på hver linje under «Ingredienser».' };
-    if (!trinUd.length) return { fejl: 'Jeg kunne ikke finde, hvordan retten laves. Skriv «Sådan gør du» på en linje for sig selv, og skriv trinnene under.' };
-    const hoved = foer.join(' '), iOpsk = foer.findIndex(l => /^opskrift$/i.test(l)); // på nogle sider står kategori og mærker lige over «Opskrift», og rettens navn lige under
-    const port = hoved.match(/\bantal\s+(\d+)\s*(?:pers|portion)/i) || hoved.match(/(\d+)\s*(?:portioner|personer|pers\b|servings|people)/i) || hoved.match(/(?:serves|rækker til)\s*(\d+)/i);
-    const tidLinje = (hoved.match(/tid i alt\s+((?:\d+\s*(?:timer|time|t)\b\.?\s*)?(?:\d+\s*min\w*\.?)?)/i) || [])[1] || hoved;
-    const min = tidLinje.match(/(\d+)\s*(?:min\b|minutter|minutes)/i), timer = tidLinje.match(/(\d+)\s*(?:timer?|hours?)\b/i);
-    const tid = (timer ? Number(timer[1]) * 60 : 0) + (min ? Number(min[1]) : 0) || null;
-    const efterOpsk = iOpsk >= 0 ? foer[iOpsk + 1] : '', titelDel = rensTitel(titel).split(/\s+[-–—|]\s+|\s+I\s+(?=[a-zæøå])/)[0];
-    const navn = ((efterOpsk && efterOpsk.split(/\s+[-–—]\s+/)[0]) || titelDel || foer.find(l => !/^\d/.test(l) && l.length > 2 && !STOEJ.test(l)) || '').replace(/[:.!]+$/, '').slice(0, 80).trim();
-    if (!navn) return { fejl: 'Jeg mangler rettens navn. Skriv navnet på den øverste linje.' };
-    const maerker = iOpsk >= 0 ? foer.slice(Math.max(0, iOpsk - 2), iOpsk).join(', ').split(/\s*,\s*/).map(x => x.toLowerCase()) : [];
-    const kategori = (KAT_ORD.find(([re]) => maerker.some(m => re.test(m))) || KAT_ORD.find(([re]) => !maerker.length && re.test(navn.toLowerCase())) || [])[1] || null;
-    const koekken = (maerker.map(m => OPSKRIFT_KOEKKEN.find(k => k.toLowerCase() === m)).find(Boolean)) || (KOEKKEN_ORD.find(([re]) => re.test(navn.toLowerCase())) || [])[1] || null;
-    const antalVarer = ud.reduce((n, x) => n + (typeof x === 'string' ? 1 : x.varer.length), 0);
-    const svaerhed = svaerhedAf(antalVarer, tid);
-    return { j: { navn, kategori, 'køkken': koekken, 'sværhed': svaerhed, portioner: port ? Number(port[1]) : null, tid, ingredienser: ud, trin: trinUd } };
-  }
-
+  // Læsningen af fri tekst ligger i tekstlaeser.js (Tekstlaeser): den forstår tekst med og uden overskrifter, uden mængder, med stavefejl og i mange stile.
+  // Her bruges den til tekst, man har sat ind eller skrevet, og til ingredienser og trin fra hjemmesider.
+  const { ingLinjer, trinFraFunktion, svaerhedAf, pænNavn } = Tekstlaeser, tekstTilOpskrift = Tekstlaeser.tilOpskrift;
 
   const KAT = [[/forret|starter|appetizer|snack/i, 'Forret'], [/salat|salad/i, 'Salat'], [/dessert|kage|cake|cookie|bag|sweet|sød/i, 'Dessert'],
     [/tilbehør|side/i, 'Tilbehør'], [/drik|drink|beverage|smoothie|cocktail/i, 'Drikke'], [/hoved|main|aften|middag|dinner|lunch|supper/i, 'Hovedret']];

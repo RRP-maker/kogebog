@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.21.0 · Importen forstår fri tekst
+- **Ny `tekstlaeser.js` (`Tekstlaeser`)** læser tekst, man sætter ind i «Importér opskrift»: med eller uden overskrifter, uden mængder (fx kun en titel og trin), med stavefejl, versaler, emojis, nummererede trin, alt i ét afsnit, ingredienser i en sætning («Man skal bruge …») og flere ingrediensgrupper.
+- Står der ingen ingredienser, finder den dem i trinene (fx «hak løg og 2 hvidløg»). Navne og mængder bliver stadig rettet af kataloget (`Katalog.afklar`) bagefter, som før.
+- `linkimport.js` bruger nu `Tekstlaeser` i stedet for sin egen læsning (samme funktioner og samme resultat til `laesEn`). Funktionen `hent-opskrift` i Supabase er uændret.
+- Testet med 20 opskrifter i 11 stile (220 tilfælde), 20 håndskrevne tekster og de originale kildefiler.
+- Ikke med endnu: valg af filer (pdf, Word, md m.fl.). Udkast ligger i `filleser.js`, men er ikke koblet på.
+
 ## 2.20.2 · Til gennemgang og oversigt
 - **Til gennemgang** øverst i Ingrediensværktøjet. Nye ingredienser, aliaser og regler, der laves uden for værktøjet, og «tæt på»-rettelser, appen laver selv ved import, står der med kilde (formular, opskrift, import, «Derhjemme») og dato. **Godkend** fjerner kun rækken (valg 3), **Se** finder ingrediensen i listen, **Godkend alle** tømmer listen.
 - Ny tabel `ingrediens_gennemgang` (SQL står i `supabase/ingredienser.sql`, kørt i Supabase). Appen skriver rækkerne selv (`Katalog.log`); fejler det, stopper intet. Mangler tabellen, er listen tom.
