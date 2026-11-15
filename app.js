@@ -1069,8 +1069,7 @@ async function forslagSide() {
   // Brede skærme med «to ruder»: ingredienserne i et kort til venstre, forslagene til højre. Ellers én kolonne, som før.
   const tilbage = Ikoner.tilbage('#/'), titel = '<h1>Hvad kan jeg lave?</h1>',
     madplan = rude => `<a class="knap felt felt-m" data-tpid="${rude ? 'madplan-rude' : 'madplan'}" href="#/forslag/madplan">${ik('gryde')} Madplan</a>`, // i ruden står knappen på en anden plads end i én kolonne, så den har sit eget id
-    claude = `<div class="rakke to-knapper"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button>
-      <button type="button" class="knap" data-tpid="sorter-claude" data-h="sorterAndet">${ik('gnist')} Sortér med Claude</button></div>`,
+    claude = `<div class="rakke"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button></div>`,
     oversigt = `<button type="button" class="knap" data-h="ingOversigt">${ik('tag')} Se alle ingredienser</button>`;
   app.innerHTML = ruderAktiv()
     ? `<div class="ruder ruder-forslag"><section class="rude-liste" aria-label="Det, du har derhjemme">${titel}<div id="hj-boks" data-tpid="hj-boks"></div><div id="hj-liste-boks"></div>${claude}${oversigt}</section>
@@ -1079,8 +1078,7 @@ async function forslagSide() {
   Hjaelper.side([
     { tekst: 'Skriv det, du har derhjemme. Ét ord i hvert felt.', maal: 'hj-boks', bev: 'salto' },
     { tekst: 'Her kommer de retter, du kan lave nu.', maal: 'forslag-nu', bev: 'skridt', valgfri: true },
-    { tekst: 'Tag billeder af dit køleskab. Så skriver Claude listen for dig.', maal: 'hj-claude', bev: 'skridt' },
-    { tekst: 'Står der noget skævt? Claude kan rydde op.', maal: 'sorter-claude', bev: 'dans' }]);;
+    { tekst: 'Tag billeder af dit køleskab. Så skriver Claude listen for dig.', maal: 'hj-claude', bev: 'skridt' }]);
   await visHjemme();
 }
 const visHjemme = () => Hjemme.vis($('#hj-boks'), tegnForslag, $('#hj-liste-boks'));
@@ -1295,7 +1293,6 @@ document.addEventListener('select', e => {
 const H = {
   rudeFuld() { rudeFuld = !rudeFuld; document.body.classList.toggle('rude-fuld', rudeFuld); const l = $('.rude-luk'); if (l) l.outerHTML = rudeLuk(); rasterIgen(); $('.rude-luk .rund')?.focus(); },
   igen: () => route(),
-  sorterAndet: () => Katalog.sorterAndet(visHjemme),
   vaelgKat(el) { const f = $('#f_' + (el.dataset.f || 'kategori')); if (!f) return; f.value = el.dataset.v; markerKat(); f.dispatchEvent(new Event('input', { bubbles: true })); }, // input: så Fortryd i bjælken ser valget
   visFlere: () => { visNaesten += 20; tegnForslag(); },
   maksNed: () => saetMaks(maksMangler() - 1),

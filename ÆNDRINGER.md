@@ -2,6 +2,10 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.19.2 · «Sortér med Claude» er fjernet
+- Knappen «Sortér med Claude» i «Hvad kan jeg lave?» er væk, med arket, beskeden og læsningen af Claudes svar (`Katalog.sorterAndet`, `laesKat`) og `IngVaerktoej.ret`, som kun den brugte. «Tilføj med Claude» og «Se alle ingredienser» står, som de var.
+- Kategorier og navne rettes nu kun i Ingrediensværktøjet. Dets egne Claude-trin er ikke rørt.
+
 ## 2.19.1 · Styr på ingredienser: aliasteksten bliver stående
 - **Et alias ændrer ikke, hvad der står i opskriften.** Skrives «kyllingefilet», og det er et alias for «kyllingebryst», får linjen varen (`id`, `n`), men beholder teksten i `t` (kun alias, kun fremad). Opskriften viser `t`, mens søgning, «Hvad kan jeg lave?», madplan og indkøb regner på varen.
 - **Søgeord** er både varens navn og `t`.

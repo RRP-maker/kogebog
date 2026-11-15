@@ -199,14 +199,6 @@ ${linjer.join('\n')}
     if (a === -1 || b <= a) return null;
     try { const j = JSON.parse(s.slice(a, b + 1)); return j && typeof j === 'object' && !Array.isArray(j) ? j : null; } catch (e) { return null; }
   }
-  // Bruges af «Sortér og ret med Claude» (katalog.js): samme regler og samme sikkerhedskopi, uden forhåndsvisning
-  async function ret(rettelse, note) {
-    const r = beregn(await hentAlt(), rettelse);
-    if (r.fejl.length) { const e = new Error(r.fejl.join(' ')); e.vis = r.fejl[0]; throw e; }
-    if (!r.tom) await api('rpc/ingrediens_ret', { method: 'POST', body: { p: { ...r.payload, note } } });
-    return r.oversigt;
-  }
-
   // ---------- Regler og aliaser (Styr på ingredienser, fase 4) ----------
   // En regel er «skrevet tekst → resultat» (tabellen ingrediens_regler). Et alias er en regel med én vare uden tilberedning: «kyllingefilet» → kyllingebryst.
   // Regler ændres kun gennem ingrediens_regel_gem og ingrediens_regel_slet. De tjekker versionen: er reglen ændret, siden den blev hentet, vises den andens udgave først.
@@ -520,5 +512,5 @@ ${linjer.join('\n')}
     }
   });
   const ivFaerdig = besked => { lager.gem('ivSvar', ''); return igen(besked); };
-  return { side, ret, beregn, eksport, laes };
+  return { side, beregn, eksport, laes };
 })();
