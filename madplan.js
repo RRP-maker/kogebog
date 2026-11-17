@@ -77,15 +77,17 @@ const Madplan = (() => {
     });
   }
   const manglerTekst = x => x.mangler.length ? 'Mangler: ' + x.mangler.map(m => x.tekst[m] || m).join(', ') : 'Du har det hele';
-  // Hver plads (MealplanCard): navnet og en kontakt øverst, derunder retten og «Udskift». Kontakten slår pladsen til og fra på dagen.
+  // Dagskortet (MealplanCard, opdatering 7): hver plads er en række (felt M) med + til venstre, pladsens navn og retten i midten og en kontakt til højre.
+  // + vælger eller udskifter retten. Er pladsen slået fra, slår + den til og finder en ret.
   const kontakt = (d, i, s) => `<button type="button" role="switch" class="kontakt-knap" aria-checked="${!!d.paa[s]}" aria-label="${NAVN[s]} på dag ${i + 1}" data-tpid="mp-dag-${s}" data-h="mpDagSlot" data-v="${i}:${s}"></button>`;
   function slotHtml(d, i, s) {
-    const top = `<div class="mp-top"><span>${NAVN[s]}</span>${kontakt(d, i, s)}</div>`;
-    if (!d.paa[s]) return `<div class="kort mp-ret mp-av tekst-m" data-tpid="mp-ret-${s}" data-tpinst="${DAGORD[i]}">${top}<strong>Er ikke med</strong><span>Slå til for at få en ${NAVN[s].toLowerCase()}</span><div class="rakke"></div></div>`;
-    const x = d[s] ? P.get(d[s]) : null, info = x ? manglerTekst(x) : '';
-    return `<div class="kort mp-ret tekst-m" data-tpid="mp-ret-${s}" data-tpinst="${DAGORD[i]}">${top}<strong>${x ? `<a href="#/opskrifter/${x.r.id}" title="${esc(x.r.titel)}">${esc(x.r.titel)}</a>` : d[s] ? 'Retten findes ikke mere' : 'Ingen ret endnu'}</strong>
-      <span title="${esc(info)}">${esc(info)}</span>
-      <div class="rakke"><button type="button" class="knap mini" data-tpid="${d[s] ? 'mp-udskift' : 'mp-vaelg-ret'}" data-h="mpUdskift" data-v="${i}:${s}">${d[s] ? 'Udskift' : 'Vælg ret'}</button></div></div>`;
+    const paa = !!d.paa[s], x = paa && d[s] ? P.get(d[s]) : null, info = NAVN[s] + (x ? ' · ' + manglerTekst(x) : '');
+    const ret = !paa ? 'Ikke valgt' : x ? `<a href="#/opskrifter/${x.r.id}" title="${esc(x.r.titel)}">${esc(x.r.titel)}</a>` : d[s] ? 'Retten findes ikke mere' : 'Ingen ret endnu';
+    const handling = !paa ? 'Tilføj' : d[s] ? 'Udskift' : 'Vælg';
+    return `<div class="mp-plads${paa ? '' : ' slukket'}" data-tpid="mp-ret-${s}" data-tpinst="${DAGORD[i]}">
+      <button type="button" class="rund rund-s gem mp-vaelg" data-tpid="${d[s] ? 'mp-udskift' : 'mp-vaelg-ret'}" data-h="${paa ? 'mpUdskift' : 'mpDagSlot'}" data-v="${i}:${s}" aria-label="${handling} ${NAVN[s].toLowerCase()} på dag ${i + 1}" title="${handling}">${ik('plus')}</button>
+      <div class="mp-plads-tekst"><span title="${esc(info)}">${esc(info)}</span><strong>${ret}</strong></div>
+      ${kontakt(d, i, s)}</div>`;
   }
   const DAGORD = ['en', 'to', 'tre', 'fire', 'fem', 'seks', 'syv', 'otte', 'ni', 'ti', 'elleve', 'tolv', 'tretten', 'fjorten']; // id'er har ingen tal
   const dagHtml = (d, i) => `<section class="kort mp-dagfelt tekst-l" data-tpid="mp-dag" data-tpinst="${DAGORD[i]}"><h3 class="tekst-l">${ik('kalender')} Dag ${i + 1}</h3>
@@ -157,7 +159,7 @@ const Madplan = (() => {
       { tekst: 'Tryk på «Generer ny madplan», så vælger jeg retterne.', maal: 'mp-generer', bev: 'salto' },
       { tekst: 'Slå hovedret, salat og tilbehør til eller fra her. Eller vælg for hver dag.', maal: 'bjaelke-madplan', bev: 'skridt' },
       { tekst: 'Vælg, hvor mange dage og hvor meget der må mangle eller købes.', maal: 'mp-valg', bev: 'hop' },
-      { tekst: 'Passer en ret ikke? Tryk på «Udskift», og vælg en anden.', maal: ['mp-udskift', 'mp-vaelg-ret'], bev: 'dans', valgfri: true }]);
+      { tekst: 'Passer en ret ikke? Tryk på plus ved retten, og vælg en anden.', maal: ['mp-udskift', 'mp-vaelg-ret'], bev: 'dans', valgfri: true }]);
   }
   const saet = (k, v) => {
     const ny = Math.max(VALG[k][2], Math.min(VALG[k][3], Math.round(Number(v)) || 0));

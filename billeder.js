@@ -73,7 +73,6 @@ const Billeder = (() => {
     const mine = rader.filter(b => b.trin === i);
     return mine.length ? `<div class="bil-trin">${mine.map(b => `<button type="button" class="bil-knap" data-bil-stor="${url(b.sti)}" aria-label="Se billedet til trin ${i + 1} stort"><img src="${url(b.sti)}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>` : '';
   };
-  const miniature = sti => `<img class="oprk-bil" src="${url(sti, true)}" alt="" loading="lazy" decoding="async">`;
 
   // Stort billede: tryk på det eller på Luk (eller Esc) for at lukke
   let stortFoer = null;
@@ -240,5 +239,5 @@ const Billeder = (() => {
   }
   async function ryd(uden) { for (let i = 0; i < uden.length; i += 50) await sletStier(uden.slice(i, i + 50).map(f => f.sti)); }
 
-  return { url, kb, hentFor, hentForsider, toppen, trinHtml, miniature, formular, gem, fraFil, sletFor, gennemgang, ryd };
+  return { url, kb, hentFor, hentForsider, toppen, trinHtml, formular, gem, fraFil, sletFor, gennemgang, ryd };
 })();

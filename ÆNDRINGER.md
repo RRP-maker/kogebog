@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.24.0 · Opskriftsoversigten, steppere, madplan og lagerlinjen
+- **Opskriftsoversigten** bruger opskriftskortet (billede, kategori, navn, tid, sværhed, favorit og «Lav retten»), også i ruden til venstre. Den åbne opskrift er markeret. Rækkerne fra før (`opskriftRaekke`, `.oprk`, `Billeder.miniature`) er fjernet.
+- **Stepper** også i formularen (Antal portioner, Tid i minutter i trin på 5) og i gennemgangen af det, Claude fandt. Fortryd i bjælken ser ændringerne.
+- **Madplanens hoved:** knapperne og «Generer ny madplan» (i fuld bredde) i en kolonne på 256 px til venstre, valgene til højre.
+- **Dagskortet:** hver plads er en række med + (vælg, udskift eller slå til), pladsens navn og hvad der mangler, retten og en kontakt. «Udskift»-knappen er afløst af +.
+- **Lagerlinjen:** står direkte på linjerne (navn og enhed er kun felter, når man peger eller skriver), kategorien som knap med navnet og «Fjern» i rødt med skraldespand. På smal skærm står navnet øverst og knapperne under (felt M), og kun ikonerne vises.
+
 ## 2.23.0 · Komponenterne helt ind, farvehjulet i Designer
 - **Stepper:** glaspille med runde glasknapper og repoets ikoner (`fjern`, `plus`) i stedet for − og + (portioner, madplan, «Du mangler lidt» og Designers højde).
 - **Søg og filtrer:** søgefeltet er én glasrække med en knap, der skifter mellem Begge, Navn og Ingredienser. Kategori og køkken står i en glaspille, hvor boblen glider. «Favoritter» står foran kategorierne.
