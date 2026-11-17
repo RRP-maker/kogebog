@@ -94,9 +94,10 @@ const Vaerksted = (() => {
       <button class="knap annuller" id="tilpasnul">Nulstil alle tekster</button>
       <p class="lille" data-tpid="mere|hvor-højt-vinduet-til-at-tilpasse-et-felt-må-blive-i-procent-af-skærmen">Hvor højt Designers vindue må blive, i procent af skærmen.</p>
       <div class="stepper" data-tpid="mere-tilpashoejde" role="group" aria-label="Højde på Designers vindue">
-        <button type="button" class="rund felt felt-s" data-tpid="mere-minus" id="tphned" aria-label="Lavere">−</button>
+        <button type="button" class="rund felt felt-s" data-tpid="mere-minus" id="tphned" aria-label="Lavere">${ik('fjern')}</button>
         <input id="tphoejde" class="felt felt-s" data-tpid="mere-tal" type="text" inputmode="numeric" autocomplete="off" value="${tilpasHoejde()}" aria-label="Højde i procent">
-        <button type="button" class="rund felt felt-s" data-tpid="mere-plus" id="tpop" aria-label="Højere">+</button><span class="stepper-enhed">%</span></div>
+        <button type="button" class="rund felt felt-s" data-tpid="mere-plus" id="tpop" aria-label="Højere">${ik('plus')}</button><span class="stepper-enhed">%</span></div>
+      ${Farver.html()}
       <h2>Ingredienser</h2>
       <p class="lille">Ryd op i ingredienserne: læg dubletter sammen, og flyt ord som «finthakket» fra navnet til linjen i opskriften.</p>
       <a class="knap" data-tpid="vaerksted-ingredienser" href="#/vaerksted/ingredienser">${ik('gulerod')} Åbn Ingrediensværktøjet</a>
@@ -161,6 +162,7 @@ const Vaerksted = (() => {
       } catch (err) { console.error(err); bilSvar.innerHTML = '<p class="fejlboks">Lageret kunne ikke tjekkes. Er billedlageret sat op? Tjek internettet, og prøv igen.</p>'; }
     };
     $('#bil-tjek').addEventListener('click', bilTjek);
+    Farver.start(app);
     $('#tilpastil').addEventListener('change', e => Tilpas.saet(e.target.checked));
     $('#tilpastip').addEventListener('click', () => Tilpas.tipIgen());
     const saetHoejde = n => { const v = Math.max(20, Math.min(90, Math.round(Number(n)) || 33)); lager.gem('tilpasHoejde', v); $('#tphoejde').value = v; };

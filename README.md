@@ -14,7 +14,8 @@ En delt kogebog som statisk web app: opskrifter og tips i et kladdehæfte, med h
 | `hjaelper.js` | Hjælperen og lyde |
 | `katalog.js` | Katalog over ingredienser og kategorier: gem, spørg, sortér med Claude |
 | `ingvaerktoej.js` | Ingrediensværktøjet i Værkstedet: ryd op i kataloget med forhåndsvisning, kopi og gendan (SQL i `supabase/ingredienser.sql`) |
-| `glas.js` | Glas under Indstillinger: frost, sløring og glastone (farvehjul). Gemmes kun på enheden |
+| `glas.js` | Glas under Indstillinger: frost og sløring. Gemmes kun på enheden |
+| `farver.js` | Standardfarver i Designer: farvehjulet justerer rollerne og kategorierne (rækken «standardfarver» i `madplan`) |
 | `hjemme.js` | Listen «Hvad har du derhjemme?» på siden Hvad kan jeg lave? (SQL i `hjemme.sql`) |
 | `sw.js`, `manifest.webmanifest` | Installér på hjemmeskærm, læs uden internet |
 

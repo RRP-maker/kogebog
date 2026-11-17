@@ -475,10 +475,10 @@ async function forside() {
     { tekst: 'Har du varer derhjemme? Tryk her, så finder jeg en ret.', maal: 'forside|hvad-kan-jeg-lave', bev: 'dans' },
     { tekst: 'Dine favoritter står her. Tryk på stjernen i en opskrift.', maal: 'forside|favoritter', bev: 'rul' }]);;
   tilfoejTilHjem();
-  const [fav, ops] = await Promise.all([api('favoritter?select=opskrift_id'), api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter&order=titel')]);
+  const [fav, ops, bil] = await Promise.all([api('favoritter?select=opskrift_id'), api('opskrifter?select=id,titel,kategori,koekken,svaerhed,tid_minutter&order=titel'), Billeder.hentForsider()]);
   if (id !== visning) return;
   const ids = new Set(fav.map(f => f.opskrift_id)), liste = ops.filter(o => ids.has(o.id));
-  $('#favoritter').innerHTML = liste.length ? liste.map(r => opskriftKort(r, true)).join('')
+  $('#favoritter').innerHTML = liste.length ? liste.map(r => opskriftKort(r, { fav: true, bil: bil[r.id] })).join('')
     : '';
 }
 // iPhone/iPad i en browser (ikke som app på hjemmeskærmen): Hjælperen viser, hvordan man lægger Kogebog på hjemmeskærmen. Én gang pr. gang siden åbnes.
@@ -490,8 +490,15 @@ function tilfoejTilHjem() {
   hjemVist = true;
   Hjaelper.sig('Læg Kogebog på hjemmeskærmen, så åbner den som en rigtig app:\n1. Tryk på Del-knappen i Safari (firkanten med en pil op).\n2. Rul ned, og tryk på «Føj til hjemmeskærm».\n3. Tryk på «Tilføj» øverst til højre.', { stor: true });
 }
-const opskriftKort = (r, fav) => `<a class="kort" href="#/opskrifter/${r.id}"><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
-  ${chips(r).length ? `<span class="chips">${chips(r).map(c => c.kl ? `<span class="${c.kl}">${c.t}</span>` : `<span>${c}</span>`).join('')}</span>` : ''}</a>`;
+// Opskriftskort (opdatering 6): billede, kategori og køkken, navnet, tid og sværhed, favorit og «Lav retten». Hele kortet åbner opskriften.
+// mangler: varer, der mangler (Hvad kan jeg lave?). fav: true/false viser favoritknappen. bil: forsidebilledets sti.
+const opskriftKort = (r, { fav, bil, mangler } = {}) => `<article class="kort opskort${r.kategori ? ' ' + katKl(r.kategori) : ''}" data-tpid="opskrift-kort">
+  <div class="opskort-top">${bil ? `<img class="opskort-bil" src="${Billeder.url(bil, true)}" alt="" loading="lazy">` : `<span class="opskort-bil tom" aria-hidden="true">${ik('gryde')}</span>`}
+    <div class="opskort-tekst">${mangler ? `<span class="opskort-mangler">Mangler ${mangler.length === 1 ? 'kun 1 vare' : mangler.length + ' varer'}</span>` : `<span>${r.kategori ? `<span class="kat-maerke">${esc(r.kategori)}</span> ` : ''}${esc(r.koekken || '')}</span>`}
+      <a class="opskort-link" href="#/opskrifter/${r.id}">${esc(r.titel)}</a>
+      <span>${mangler ? esc('Mangler: ' + mangler.join(', ')) : [r.tid_minutter && `${ik('ur')} ${r.tid_minutter} min`, r.svaerhed && `<span aria-label="Sværhed ${r.svaerhed} af 5">${stjernetekst(r.svaerhed)}</span>`].filter(Boolean).join(' · ')}</span></div>
+    ${fav === undefined ? '' : `<button type="button" class="rund rund-s opskort-fav" data-h="kortFav" data-v="${r.id}" aria-pressed="${!!fav}" aria-label="Favorit: ${esc(r.titel)}">${ik(fav ? 'stjerne' : 'stjerne0')}</button>`}</div>
+  <div class="rakke opskort-knapper"><a class="knap mini hoved" data-tpid="opskort-lav" href="#/opskrifter/${r.id}/lav">▶ Lav retten trin for trin</a></div></article>`;
 
 // En tæt række i opskriftslisten: navn og en linje med kategori, køkken og tid. Notesbogens linjer skiller rækkerne.
 const opskriftRaekke = (r, fav, valgt, bil) => `<a class="oprk${r.kategori ? ' ' + katKl(r.kategori) : ''}${bil ? ' med-bil' : ''}" data-tpid="opskrift-raekke" href="#/opskrifter/${r.id}"${valgt ? ' aria-current="true"' : ''}>${bil ? Billeder.miniature(bil) : ''}<div class="oprk-tekst"><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
@@ -547,11 +554,13 @@ async function liste(type, maal = app) {
   if (L.kat && !kat.includes(L.kat)) L.kat = '';
   if (L.koekken && !koek.includes(L.koekken)) L.koekken = '';
   const valg = (id, h, navn, alle, liste, nu) => `<select id="${id}" data-hs="${h}" aria-label="${navn}"><option value="">${alle}</option>${liste.map(k => `<option${k === nu ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select>`;
-  const soegChips = `<div class="filter soegtype" data-tpid="bjaelke-soeg" data-glid=".chip.valgt" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>`;
+  const soegKnap = `<button type="button" class="knap mini soeg-omfang" data-tpid="soeg-omfang" data-h="soegSkift" aria-label="Søg i: ${SOEG[L.soeg][0]}. Tryk for at skifte.">${SOEG[L.soeg][0]}</button>`;
   const favChip = `<button type="button" class="chip${L.kunFav ? ' valgt' : ''}" data-tpid="kun-favoritter" data-h="kunFav" aria-pressed="${L.kunFav}">${ik('stjerne')} Favoritter</button>`;
-  const egneChip = `<div class="filter filter-egne" data-tpid="bjaelke-egne" role="group" aria-label="Mine egne"><button type="button" class="chip${L.kunEgne ? ' valgt' : ''}" data-tpid="kun-egne" data-h="kunEgne" aria-pressed="${L.kunEgne}">${ik('blyant')} Mine egne</button></div>`;
+  // Søg og filtrer (opdatering 6): «Mine egne» og «Favoritter» har en ring i deres farve. «Favoritter» står foran kategorierne (i ruden for sig, under valgfelterne).
+  const egneChip = `<div class="filter filter-egne" data-tpid="bjaelke-egne" role="group" aria-label="Filtre"><button type="button" class="chip${L.kunEgne ? ' valgt' : ''}" data-tpid="kun-egne" data-h="kunEgne" aria-pressed="${L.kunEgne}">${ik('blyant')} Mine egne</button></div>`;
   // Søgefeltet og «Begge / Navn / Ingredienser» hænger sammen i ét felt: valgene sidder lige under søgefeltet
-  const soeg = `${egneChip}<div class="soegblok"><input id="soeg" data-tpid="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off" value="${esc(fil.qr || '')}">${soegChips}</div>`;
+  // Søgefeltet er én glasrække (felt M): skrivefeltet og en knap, der skifter mellem Begge, Navn og Ingredienser
+  const soeg = `${egneChip}<div class="soegblok"><input id="soeg" data-tpid="soeg" type="search" placeholder="${SOEG[L.soeg][1]}" aria-label="Søg i opskrifter" autocomplete="off" value="${esc(fil.qr || '')}">${soegKnap}</div>`;
   // I ruden til venstre er der kun smal plads: ingen «Tilbage» (navigationen findes), én «Importér»-menu og valgfelter i stedet for rækker af chips, der ruller væk
   const hoved = rude && type === 'opskrifter' ? `<h1>${T.navn}</h1>
     <div class="rakke rude-knapper">
@@ -568,8 +577,8 @@ async function liste(type, maal = app) {
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `${soeg}
-      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" data-glid=".chip.valgt:not([aria-pressed])" role="group" aria-label="Kategori"><button class="chip${L.kat ? '' : ' valgt'}" data-h="kat" data-v="">Alle</button>${favChip}${kat.map(k => `<button class="chip ${katKl(k)}${k === L.kat ? ' valgt' : ''}" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
-      ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" data-glid=".chip.valgt" role="group" aria-label="Køkken"><button class="chip${L.koekken ? '' : ' valgt'}" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip${k === L.koekken ? ' valgt' : ''}" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}`;
+      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" role="group" aria-label="Kategori">${favChip}<div class="kapsel" data-glid=".chip.valgt"><button class="chip${L.kat ? '' : ' valgt'}" data-h="kat" data-v="">Alle</button>${kat.map(k => `<button class="chip ${katKl(k)}${k === L.kat ? ' valgt' : ''}" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div></div>` : ''}
+      ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" role="group" aria-label="Køkken"><div class="kapsel" data-glid=".chip.valgt"><button class="chip${L.koekken ? '' : ' valgt'}" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip${k === L.koekken ? ' valgt' : ''}" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div></div>` : ''}` : ''}`;
   maal.innerHTML = `${hoved}
     <div id="liste"${type === 'opskrifter' ? ' class="oplist"' : ''}></div>`;
   Glid.alle(maal);
@@ -649,9 +658,9 @@ async function opskriftSide(rid, maal = app) {
     <div class="opsk-ruder" data-tpid="opsk-ruder"><section class="opsk-felt" data-tpid="opsk-ingredienser">
     <h2 class="opsk">Ingredienser</h2>
     <div class="portioner skaerm" data-tpid="portioner"><div class="stepper" role="group" aria-label="Antal portioner">
-      <button type="button" class="rund felt felt-s" data-h="port" data-v="-1" aria-label="Færre portioner">−</button>
+      <button type="button" class="rund felt felt-s" data-h="port" data-v="-1" aria-label="Færre portioner">${ik('fjern')}</button>
       <input id="portinp" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="" aria-label="Antal portioner">
-      <button type="button" class="rund felt felt-s" data-h="port" data-v="1" aria-label="Flere portioner">+</button></div>
+      <button type="button" class="rund felt felt-s" data-h="port" data-v="1" aria-label="Flere portioner">${ik('plus')}</button></div>
       <small id="portvis"></small></div>
     <ul class="ing" id="ing"></ul></section><section class="opsk-felt" data-tpid="opsk-trin">
     <h2 class="opsk">Sådan gør du</h2>
@@ -1096,11 +1105,12 @@ function beregnForslag(opskrifter, har, udenKrydderier) {
 }
 // Det, der vises for en vare, der mangler: teksten, som den står i opskrifterne. Står den på flere måder, vises varens navn og de andre tekster i parentes.
 const visMangler = (vare, tekster) => { const d = [...new Set(tekster.filter(Boolean))]; return d.length <= 1 ? d[0] || vare : `${vare} (${d.filter(t => t !== vare).join(', ')})`; };
-let F = [];
+let F = [], FAV = new Set(), BIL = {}; // Hvad kan jeg lave?: opskrifterne, favoritterne og forsidebillederne
 async function forslagSide() {
   const id = visning;
   henter();
-  F = (await api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel')).filter(r => !r.skjul_forslag);
+  const [ops, fav, bil] = await Promise.all([api('opskrifter?select=id,titel,kategori,koekken,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel'), api('favoritter?select=opskrift_id'), Billeder.hentForsider()]);
+  F = ops.filter(r => !r.skjul_forslag); FAV = new Set(fav.map(f => f.opskrift_id)); BIL = bil;
   await Katalog.hent().catch(() => {}); // linjerne læses på id, og kategorierne bruges til at kende krydderier
   if (id !== visning) return;
   // Brede skærme med «to ruder»: ingredienserne i et kort til venstre, forslagene til højre. Ellers én kolonne, som før.
@@ -1129,16 +1139,16 @@ function tegnForslag() {
   const f = beregnForslag(F, har, udenKryd()), maks = maksMangler(), naesten = f.naesten.filter(x => x.mangler.length <= maks);
   nu.innerHTML = `<div class="mangler-top"><h2>Det kan du lave nu</h2>
       <label class="skift" data-tpid="uden-krydderier"><input type="checkbox" id="udenkryd" ${udenKryd() ? 'checked' : ''}> <span>Ignorér krydderier</span></label></div>
-    ${f.kan.length ? f.kan.map(r => opskriftKort(r)).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe længere nede.</p>'}`;
+    ${f.kan.length ? f.kan.map(r => opskriftKort(r, { fav: FAV.has(r.id), bil: BIL[r.id] })).join('') : '<p class="lille">Ingen retter endnu. Se, hvad du kan købe længere nede.</p>'}`;
   rest.innerHTML = `${f.koeb.length ? `<h2>Køb lidt, og lav mere</h2>${f.koeb.map(k => `<div class="kort koebsforslag"><strong>Køb ${esc(k.koeb.map(m => visMangler(m, f.naesten.map(x => x.tekst[m]))).join(' og '))}</strong>
       <span>Så kan du også lave: ${k.retter.map(r => `<a href="#/opskrifter/${r.id}">${esc(r.titel)}</a>`).join(', ')}</span></div>`).join('')}` : ''}
     <div class="mangler-top"><h2>Du mangler lidt</h2>
       <div class="stepper" role="group" aria-label="Højst så mange ingredienser må mangle">
-        <button type="button" class="rund felt felt-s" data-h="maksNed" aria-label="Færre">−</button>
+        <button type="button" class="rund felt felt-s" data-h="maksNed" aria-label="Færre">${ik('fjern')}</button>
         <input id="maks" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="${maks}" aria-label="Højst så mange ingredienser må mangle">
-        <button type="button" class="rund felt felt-s" data-h="maksOp" aria-label="Flere">+</button></div></div>
+        <button type="button" class="rund felt felt-s" data-h="maksOp" aria-label="Flere">${ik('plus')}</button></div></div>
     <small>Højst ${maks} ${maks === 1 ? 'ingrediens' : 'ingredienser'} må mangle.${naesten.length > visNaesten ? ` Viser ${visNaesten} af ${naesten.length} retter.` : ''}</small>
-    ${naesten.length ? naesten.slice(0, visNaesten).map(x => `<a class="kort" href="#/opskrifter/${x.r.id}"><strong>${esc(x.r.titel)}</strong><span>Mangler: ${esc(x.mangler.map(m => x.tekst[m] || m).join(', '))}</span></a>`).join('') : '<p class="lille">Ingen retter mangler så få. Skriv et højere tal.</p>'}
+    ${naesten.length ? naesten.slice(0, visNaesten).map(x => opskriftKort(x.r, { bil: BIL[x.r.id], mangler: x.mangler.map(m => x.tekst[m] || m) })).join('') : '<p class="lille">Ingen retter mangler så få. Skriv et højere tal.</p>'}
     ${naesten.length > visNaesten ? '<button type="button" class="knap felt felt-m" data-tpid="vis-flere" data-h="visFlere">Vis flere</button>' : ''}`;
 }
 function saetMaks(n) { lager.gem('maxMangler', Math.max(0, Math.min(20, Math.round(Number(n)) || 0))); visNaesten = 20; tegnForslag(); }
@@ -1366,12 +1376,21 @@ const H = {
     Glid.saet(el.parentNode, el);
     tegnListe();
   },
-  soegType(el) {
-    L.soeg = el.dataset.v; lager.gem('soegtype', L.soeg);
-    el.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('valgt', c === el));
-    Glid.saet(el.parentNode, el);
+  soegSkift(el) {
+    const k = Object.keys(SOEG); L.soeg = k[(k.indexOf(L.soeg) + 1) % k.length]; lager.gem('soegtype', L.soeg);
+    el.textContent = SOEG[L.soeg][0]; el.setAttribute('aria-label', `Søg i: ${SOEG[L.soeg][0]}. Tryk for at skifte.`);
     $('#soeg').placeholder = SOEG[L.soeg][1];
     tegnListe();
+  },
+  async kortFav(el) { // favoritknappen på et opskriftskort
+    const id = el.dataset.v, til = el.getAttribute('aria-pressed') !== 'true';
+    try {
+      if (til) await api('favoritter?on_conflict=opskrift_id,bruger_id', { method: 'POST', flet: true, body: { opskrift_id: id, bruger_id: FAELLES } });
+      else await api(`favoritter?opskrift_id=eq.${enc(id)}`, { method: 'DELETE' });
+    } catch (e) { console.error(e); return fejlbesked('Favoritten blev ikke gemt. Tjek internettet, og prøv igen.'); }
+    if (til) FAV.add(id); else FAV.delete(id);
+    el.setAttribute('aria-pressed', til); el.innerHTML = ik(til ? 'stjerne' : 'stjerne0');
+    toast(til ? 'Den er nu en favorit' : 'Ikke længere favorit');
   },
   async favorit() {
     const q = `favoritter?opskrift_id=eq.${enc(S.r.id)}`;

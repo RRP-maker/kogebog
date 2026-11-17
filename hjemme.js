@@ -30,13 +30,17 @@ const Hjemme = (() => {
     rk.querySelector('.hj-mgd').focus();
   }
   // Synlige navne over felterne (felterne selv har kun aria-label). Står øverst i formularen og i listen.
-  const LABELS = '<div class="hj-labels" aria-hidden="true"><span>Antal</span><span>Enhed</span><span>Ingrediens</span></div>';
+  const LABELS = '<div class="hj-labels" aria-hidden="true"><span>Mængde</span><span>Enhed</span><span>Ingrediens</span></div>';
+  // Mængden som stepper (opdatering 6): − og + går i trin efter enheden. Feltet kan stadig skrives i.
+  const TRIN = { g: 25, ml: 25, kg: 0.5, dl: 0.5, l: 0.5 };
+  const trinKnap = (d, l) => `<button type="button" class="rund" data-h="hjTrin" data-v="${d}" aria-label="${l}">${Ikoner.svg(d < 0 ? 'fjern' : 'plus')}</button>`;
+  const mgdStepper = v => `<div class="stepper hj-stepper" role="group" aria-label="Mængde">${trinKnap(-1, 'Mindre')}<input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" value="${v}" placeholder="–">${trinKnap(1, 'Mere')}</div>`;
   const nej = (n, id) => { toast(`«${n}» står allerede på listen. Ret mængden her.`); fremhaev(id); };
 
   function raekke(h) {
     const i = ingAf(h.ingrediens_id);
     return `<div class="hj-rk felt felt-s" data-id="${h.id}">
-      <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" value="${Number(h.maengde) > 0 ? esc(visTal(Number(h.maengde))) : ''}">
+      ${mgdStepper(Number(h.maengde) > 0 ? esc(visTal(Number(h.maengde))) : '')}
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
       <button type="button" class="rund hj-ikon" data-h="hjKat" aria-label="Skift kategori">${ik('tag')}</button>
@@ -84,6 +88,7 @@ const Hjemme = (() => {
       if (d2) { felt.value = ''; return nej(ing.navn, d2.id); }
       const [ny] = await api('hjemme', { method: 'POST', body: { ingrediens_id: ing.id, maengde: m, enhed: enh.value } });
       D.hj.push(ny);
+      const ok = $('#hj-ny .hj-ok'); if (ok) ok.textContent = `✓ ${m != null ? visTal(m) + ' ' + enh.value + ' ' : ''}${ing.navn} tilføjet`;
       felt.value = ''; mgd.value = ''; enh.value = 'stk';
       tegn();
     } catch (e) {
@@ -128,15 +133,16 @@ const Hjemme = (() => {
     const [kat, ing, hj] = await Promise.all([api('ingrediens_kategorier?select=*'), api('ingredienser?select=*'), api('hjemme?select=*&order=oprettet')]);
     if (id !== visning) return;
     D = { kat, ing, hj }; ved = aendret;
-    boks.innerHTML = `<h2>Tilføj ingrediens</h2>
+    // Tilføj ingrediens (opdatering 6): et kort med navnet, mængden som stepper, enheden og «Tilføj». Retur virker som før.
+    boks.innerHTML = `<section class="kort hj-ny" id="hj-ny" data-tpid="hj-tilfoej-kort" aria-labelledby="hj-ny-titel">
+      <h2 id="hj-ny-titel">Tilføj ingrediens</h2>
       <small>Retur gemmer og går videre til næste. Mængden er kun til din egen oversigt, ikke til at finde retter.</small>
-      ${LABELS}
-      <div class="hj-rk felt felt-m hj-ny" id="hj-ny">
-        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="fx 2">
-        <select class="hj-enh" aria-label="Enhed">${enhHtml('stk')}</select>
-        <input id="hj-ny-navn" class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ny ingrediens" placeholder="fx gulerødder">
-        <button type="button" class="knap gem hj-tilfoej" data-tpid="hj-tilfoej" data-h="hjTilfoej">${ik('plus')} Tilføj</button>
-      </div>
+      <label for="hj-ny-navn">Ingrediens</label>
+      <input id="hj-ny-navn" class="hj-navn felt" type="text" autocomplete="off" enterkeyhint="next" placeholder="fx gulerødder">
+      <div class="hj-ny-rk">${mgdStepper('')}<select class="hj-enh" aria-label="Enhed">${enhHtml('stk')}</select>
+        <button type="button" class="knap gem mini hj-tilfoej" data-tpid="hj-tilfoej" data-h="hjTilfoej">${ik('plus')} Tilføj</button></div>
+      <p class="hj-ok" role="status"></p>
+    </section>
       ${listeBoks ? '' : LISTE}`;
     if (listeBoks) listeBoks.innerHTML = listeBoks.closest('.rude-liste') ? LISTE.replace('<h2>', '<h2 data-tpid="hj-liste-rude">') : LISTE; // i ruden står overskriften på sin egen plads
     tegn();
@@ -159,6 +165,14 @@ const Hjemme = (() => {
       $('.ark-bag', d).addEventListener('click', lukArk);
     },
     hjVaelgKat(el) { return gemKat(valgtIng, el.dataset.v || null); },
+    hjTrin(el) { // − og + i mængden. På listen gemmes det med det samme (som når feltet ændres).
+      const rk = el.closest('.hj-rk, #hj-ny'), inp = rk.querySelector('.hj-mgd'), t = TRIN[rk.querySelector('.hj-enh').value] || 1;
+      const nu = inp.value.trim() ? tal(inp.value) : 0;
+      if (nu == null) { inp.focus(); return; }
+      const v = Math.max(0, Math.round((nu + Number(el.dataset.v) * t) * 100) / 100);
+      inp.value = v > 0 ? visTal(v) : '';
+      if (rk.id !== 'hj-ny') inp.dispatchEvent(new Event('change', { bubbles: true }));
+    },
     hjTilfoej() { return tilfoej().catch(err => { console.error(err); fejlbesked('Det blev ikke gemt. Tjek internettet, og tryk på «Tilføj» igen.'); }); },
     async hjNyKat() {
       const navn = $('#hj_nykat').value.trim().replace(/\s+/g, ' '), n = norm(navn);
@@ -187,7 +201,7 @@ const Hjemme = (() => {
   document.addEventListener('keydown', async e => {
     if (e.key !== 'Enter' || e.isComposing) return;
     if (e.target.id === 'hj_nykat') { e.preventDefault(); return H.hjNyKat().catch(() => fejlbesked('Kategorien blev ikke oprettet. Tjek internettet, og tryk retur igen.')); }
-    const rk = e.target.closest && e.target.closest('.hj-rk');
+    const rk = e.target.closest && e.target.closest('.hj-rk, #hj-ny');
     if (!rk || !app.contains(rk)) return;
     e.preventDefault();
     try {
@@ -199,11 +213,11 @@ const Hjemme = (() => {
   });
   // Ændringer gemmes, når man forlader feltet
   document.addEventListener('change', async e => {
-    const rk = e.target.closest && e.target.closest('.hj-rk');
+    const rk = e.target.closest && e.target.closest('.hj-rk, #hj-ny');
     if (!rk || !app.contains(rk)) return;
     const ny = rk.id === 'hj-ny', h = ny ? null : D.hj.find(x => x.id === rk.dataset.id);
     try {
-      if (e.target.classList.contains('hj-navn')) { if (ny) await tilfoej(); else await gemNavn(rk); }
+      if (e.target.classList.contains('hj-navn')) { if (!ny) await gemNavn(rk); } // det nye navn gemmes med retur eller «Tilføj», ikke når man trykker videre til mængden
       else if (h && e.target.classList.contains('hj-enh')) { await api(`hjemme?id=eq.${enc(h.id)}`, { method: 'PATCH', body: { enhed: e.target.value } }); h.enhed = e.target.value; }
       else if (h && e.target.classList.contains('hj-mgd')) {
         const t = e.target.value.trim();

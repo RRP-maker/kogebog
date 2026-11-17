@@ -2,6 +2,16 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.23.0 · Komponenterne helt ind, farvehjulet i Designer
+- **Stepper:** glaspille med runde glasknapper og repoets ikoner (`fjern`, `plus`) i stedet for − og + (portioner, madplan, «Du mangler lidt» og Designers højde).
+- **Søg og filtrer:** søgefeltet er én glasrække med en knap, der skifter mellem Begge, Navn og Ingredienser. Kategori og køkken står i en glaspille, hvor boblen glider. «Favoritter» står foran kategorierne.
+- **Opskriftskort:** billede (eller grydeikon), kategori og køkken, navn, tid og sværhed, favoritknap og «Lav retten trin for trin». Bruges på forsiden og i «Hvad kan jeg lave?». «Du mangler lidt» bruger samme kort med «Mangler …».
+- **Tilføj ingrediens:** et kort med navn, mængde som stepper, enhed og «Tilføj», og «✓ … tilføjet» bagefter. Navnet gemmes med retur eller «Tilføj», ikke længere når man trykker videre (så man kan nå mængden).
+- **Lagerlinjen:** mængden er en stepper, der går i trin efter enheden (g og ml 25, kg, dl og l 0,5, ellers 1) og gemmer med det samme.
+- **Taleboblen:** navnet «Grydelil» øverst og en glashale mod Grydelil. Indholdet ruller inde i boblen. Grydelil er uændret.
+- **Farvehjulet** er flyttet fra Indstillinger til Designer (Værkstedet > Standardfarver, ny `farver.js`). Det justerer rollerne (Gem, Tilpas, Slet, Annuller, Hjælp, Hovedhandling) og kategorierne i det tema, man ser. Tekst og kant regnes ud, og «Gem farven» kan kun trykkes, når teksten har 4,5:1 og kanten 3:1. Gemmes i `madplan`, rækken «standardfarver», og gælder alle.
+- **Glas** under Indstillinger har nu kun frost og sløring.
+
 ## 2.22.0 · Komponenter fra designsystemet
 - **Motion:** fjedrene (spring, soft, glide) står som CSS-kurver i `:root` (`--fjeder`, `--bloed`, `--glid`). Knapper og chips skalerer 1,018 ved hover og 0,965 ved tryk; runde knapper 1,05 og 0,94. Reduceret bevægelse som før.
 - **NavBar, SearchFilter og ThemeSwitch:** en glasboble glider hen under det valgte (`Glid` i `app.js`). I bjælken har den destinationens farve (ikonfladerne), i filtrene kategoriens. Virker i bundbjælken, sidebjælken og bjælken i siden.
