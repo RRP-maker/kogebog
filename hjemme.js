@@ -135,6 +135,7 @@ const Hjemme = (() => {
         <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" placeholder="fx 2">
         <select class="hj-enh" aria-label="Enhed">${enhHtml('stk')}</select>
         <input id="hj-ny-navn" class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ny ingrediens" placeholder="fx gulerødder">
+        <button type="button" class="knap gem hj-tilfoej" data-tpid="hj-tilfoej" data-h="hjTilfoej">${ik('plus')} Tilføj</button>
       </div>
       ${listeBoks ? '' : LISTE}`;
     if (listeBoks) listeBoks.innerHTML = listeBoks.closest('.rude-liste') ? LISTE.replace('<h2>', '<h2 data-tpid="hj-liste-rude">') : LISTE; // i ruden står overskriften på sin egen plads
@@ -158,6 +159,7 @@ const Hjemme = (() => {
       $('.ark-bag', d).addEventListener('click', lukArk);
     },
     hjVaelgKat(el) { return gemKat(valgtIng, el.dataset.v || null); },
+    hjTilfoej() { return tilfoej().catch(err => { console.error(err); fejlbesked('Det blev ikke gemt. Tjek internettet, og tryk på «Tilføj» igen.'); }); },
     async hjNyKat() {
       const navn = $('#hj_nykat').value.trim().replace(/\s+/g, ' '), n = norm(navn);
       if (!n) { $('#arkfejl').innerHTML = '<div class="fejlboks">Skriv et navn til kategorien.</div>'; return; }

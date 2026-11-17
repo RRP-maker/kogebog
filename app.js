@@ -105,6 +105,35 @@ const fejlbesked = tekst => toast(tekst, { bliv: true });
 const IKKE_SORTERET = 'Ikke sorteret';
 const katNavn = k => !k || k.navn_norm === 'andet' ? IKKE_SORTERET : k.navn;
 window.addEventListener('hashchange', () => { const el = $('#toast'); if (el.classList.contains('fejl')) el.classList.remove('vis'); });
+// Glasboble, der glider hen under det valgte (NavBar, SearchFilter og ThemeSwitch fra designsystemet, opdatering 5).
+// Gruppen skal have position (relative, fixed). data-glid på gruppen er vælgeren for det valgte. straks: uden bevægelse (første gang og ved ny størrelse).
+const Glid = (() => {
+  const roligt = matchMedia('(prefers-reduced-motion: reduce)');
+  function saet(gruppe, aktiv, straks) {
+    if (!gruppe) return;
+    let b = gruppe.querySelector(':scope > .glidboble');
+    if (!b) { b = document.createElement('span'); b.className = 'glidboble'; b.setAttribute('aria-hidden', 'true'); b.innerHTML = '<span></span>'; gruppe.prepend(b); straks = true; }
+    gruppe.classList.add('glid-klar');
+    if (!aktiv || aktiv.offsetParent !== gruppe) { b.classList.remove('vist'); return; } // skjult (fx Tilpas) eller ikke i gruppen
+    const chip = aktiv.classList.contains('chip'), ind = chip ? 2 : 0; // chippens flade sidder 2 px inde foroven og forneden
+    b.classList.toggle('straks', !!straks || !b.classList.contains('vist'));
+    b.style.transform = `translate(${aktiv.offsetLeft}px, ${aktiv.offsetTop + ind}px)`;
+    b.style.width = aktiv.offsetWidth + 'px'; b.style.height = (aktiv.offsetHeight - 2 * ind) + 'px';
+    b.style.borderRadius = getComputedStyle(aktiv, chip ? '::before' : null).borderRadius;
+    b.style.setProperty('--bf', getComputedStyle(aktiv).getPropertyValue('--bf'));
+    if (b.classList.contains('straks')) { void b.offsetWidth; requestAnimationFrame(() => b.classList.remove('straks')); }
+    else if (!roligt.matches) { b.classList.add('flytter'); clearTimeout(b.tid); b.tid = setTimeout(() => b.classList.remove('flytter'), 260); }
+    b.classList.add('vist');
+  }
+  const alle = (rod = document, straks = true) => rod.querySelectorAll('[data-glid]').forEach(g => saet(g, g.querySelector(g.dataset.glid), straks));
+  const nav = straks => saet($('#nav'), $('#nav a[aria-current=page]'), straks);
+  // Bjælken skifter størrelse og knapper (sidebjælke, Tilpas, Designer): boblen følger med uden at glide
+  new ResizeObserver(() => nav(true)).observe($('#nav'));
+  new MutationObserver(() => nav(true)).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  addEventListener('resize', () => alle(document, true));
+  if (document.fonts) document.fonts.ready.then(() => { nav(true); alle(document, true); });
+  return { saet, alle, nav };
+})();
 const info = t => { app.innerHTML = `<p class="tomt">${t}</p>`; };
 const henter = () => { app.innerHTML = '<p class="tomt henter">Henter…</p>'; };
 
@@ -405,6 +434,7 @@ async function route() {
   // Navigationen viser, hvor man er
   const sted = a === 'forslag' && b === 'madplan' ? 'madplan' : ({ opskrifter: 'opskrifter', opdater: 'opskrifter', import: 'opskrifter', tips: 'tips', tipsimport: 'tips', forslag: 'forslag', hjemme: 'forslag', mere: 'mere', vaerksted: 'mere' })[a] || 'forside';
   document.querySelectorAll('#nav a').forEach(l => { if (l.dataset.nav === sted) l.setAttribute('aria-current', 'page'); else l.removeAttribute('aria-current'); });
+  Glid.nav();
   try {
     if (a === 'forslag' && b === 'madplan') return await Madplan.side();
     if (a === 'forslag' && b === 'nye') return await Hjemme.gennemgang();
@@ -517,7 +547,7 @@ async function liste(type, maal = app) {
   if (L.kat && !kat.includes(L.kat)) L.kat = '';
   if (L.koekken && !koek.includes(L.koekken)) L.koekken = '';
   const valg = (id, h, navn, alle, liste, nu) => `<select id="${id}" data-hs="${h}" aria-label="${navn}"><option value="">${alle}</option>${liste.map(k => `<option${k === nu ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select>`;
-  const soegChips = `<div class="filter soegtype" data-tpid="bjaelke-soeg" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>`;
+  const soegChips = `<div class="filter soegtype" data-tpid="bjaelke-soeg" data-glid=".chip.valgt" role="group" aria-label="Søg i">${Object.entries(SOEG).map(([k, [navn]]) => `<button type="button" class="chip${k === L.soeg ? ' valgt' : ''}" data-tpid="soeg-${k}" data-h="soegType" data-v="${k}">${navn}</button>`).join('')}</div>`;
   const favChip = `<button type="button" class="chip${L.kunFav ? ' valgt' : ''}" data-tpid="kun-favoritter" data-h="kunFav" aria-pressed="${L.kunFav}">${ik('stjerne')} Favoritter</button>`;
   const egneChip = `<div class="filter filter-egne" data-tpid="bjaelke-egne" role="group" aria-label="Mine egne"><button type="button" class="chip${L.kunEgne ? ' valgt' : ''}" data-tpid="kun-egne" data-h="kunEgne" aria-pressed="${L.kunEgne}">${ik('blyant')} Mine egne</button></div>`;
   // Søgefeltet og «Begge / Navn / Ingredienser» hænger sammen i ét felt: valgene sidder lige under søgefeltet
@@ -538,10 +568,11 @@ async function liste(type, maal = app) {
       ${type === 'tips' ? `<a class="knap" data-tpid="tips-claude" href="#/tipsimport">${ik('gnist')} Tilføj med Claude</a>` : ''}
     </div>
     ${type === 'opskrifter' && rader.length ? `${soeg}
-      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" role="group" aria-label="Kategori"><button class="chip${L.kat ? '' : ' valgt'}" data-h="kat" data-v="">Alle</button>${favChip}${kat.map(k => `<button class="chip ${katKl(k)}${k === L.kat ? ' valgt' : ''}" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
-      ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" role="group" aria-label="Køkken"><button class="chip${L.koekken ? '' : ' valgt'}" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip${k === L.koekken ? ' valgt' : ''}" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}`;
+      ${kat.length ? `<div class="filter" data-r="kat" data-tpid="bjaelke-kategori" data-glid=".chip.valgt:not([aria-pressed])" role="group" aria-label="Kategori"><button class="chip${L.kat ? '' : ' valgt'}" data-h="kat" data-v="">Alle</button>${favChip}${kat.map(k => `<button class="chip ${katKl(k)}${k === L.kat ? ' valgt' : ''}" data-h="kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
+      ${koek.length ? `<div class="filter" data-r="koekken" data-tpid="bjaelke-koekken" data-glid=".chip.valgt" role="group" aria-label="Køkken"><button class="chip${L.koekken ? '' : ' valgt'}" data-tpid="koekken-alle" data-h="koekken" data-v="">Alle køkkener</button>${koek.map(k => `<button class="chip${k === L.koekken ? ' valgt' : ''}" data-h="koekken" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}` : ''}`;
   maal.innerHTML = `${hoved}
     <div id="liste"${type === 'opskrifter' ? ' class="oplist"' : ''}></div>`;
+  Glid.alle(maal);
   tegnListe();
   const s = $('#soeg');
   if (s) s.addEventListener('input', () => { L.q = s.value.trim().toLowerCase(); tegnListe(); });
@@ -1254,17 +1285,17 @@ function mereSide() {
   app.innerHTML = `${Ikoner.tilbage('#/')}
     <h2>Indstillinger</h2>
     <p class="lille">Udseende</p>
-    <div role="radiogroup" data-tpid="udseende" aria-label="Udseende">
-      <label class="skift"><input type="radio" name="tema" value="auto" ${Tema.valg() === 'auto' ? 'checked' : ''}> <span>Automatisk (som din telefon)</span></label>
-      <label class="skift"><input type="radio" name="tema" value="lys" ${Tema.valg() === 'lys' ? 'checked' : ''}> <span>Lyst</span></label>
-      <label class="skift"><input type="radio" name="tema" value="moerk" ${Tema.valg() === 'moerk' ? 'checked' : ''}> <span>Mørkt</span></label>
+    <div class="tema-valg felt" role="radiogroup" data-tpid="udseende" data-glid="label:has(input:checked)" aria-label="Udseende">
+      ${[['lys', 'Lys'], ['auto', 'Auto'], ['moerk', 'Mørk']].map(([v, n]) => `<label data-v="${v}"><input type="radio" name="tema" value="${v}" ${Tema.valg() === v ? 'checked' : ''}><span>${n}</span></label>`).join('')}
     </div>
+    <p class="lille">Auto følger din telefon.</p>
     <label class="skift"><input type="checkbox" data-tpid="vis-hjaelper" id="vishj" ${Hjaelper.skjult() ? '' : 'checked'}> <span>Vis hjælperen</span></label>
     <label class="skift"><input type="checkbox" data-tpid="lyde" id="lydtil" ${Lyd.til() ? 'checked' : ''}> <span>Lyde</span></label>
     <label class="skift"><input type="checkbox" data-tpid="egne-standard" id="egnestd" ${egneStandard() ? 'checked' : ''}> <span>Vis kun mine egne opskrifter som standard</span></label>
     <p class="lille">Knappen «Mine egne» over søgefeltet er tændt, hver gang du åbner opskrifterne. Slå fra, hvis de importerede også skal vises.</p>
     <div class="kun-bred"><label class="skift"><input type="checkbox" id="toruder" ${toRuder() ? 'checked' : ''}> <span>Vis to ruder</span></label>
     <p class="lille">Når du åbner en opskrift: listen til venstre og opskriften til højre.</p></div>
+    ${Glas.html()}
     <h2>Værkstedet</h2>
     <p class="lille">Værktøjerne, fx Designer. De er låst med en kode.</p>
     <a class="knap" data-tpid="vaerksted-link" href="#/vaerksted">${ik('laas')} Åbn Værkstedet</a>
@@ -1276,7 +1307,12 @@ function mereSide() {
     <button class="knap" data-h="eksport">${ik('hent')} Hent sikkerhedskopi</button>
     <p class="lille" id="versionstekst">${versionstekst()}</p>
 `;
-  document.querySelectorAll('input[name=tema]').forEach(r => r.addEventListener('change', e => Tema.saet(e.target.value)));
+  Glid.alle(app);
+  Glas.start(app);
+  document.querySelectorAll('input[name=tema]').forEach(r => r.addEventListener('change', e => {
+    Tema.saet(e.target.value); Glid.saet(e.target.closest('.tema-valg'), e.target.closest('label'));
+    $('#glas-frost')?.dispatchEvent(new Event('input')); // kontrasten under Glas følger temaet
+  }));
   $('#vishj').addEventListener('change', e => Hjaelper.vis(e.target.checked));
   $('#toruder').addEventListener('change', e => { lager.gem('toRuder', e.target.checked); toast(e.target.checked ? 'To ruder er slået til' : 'To ruder er slået fra'); });
   $('#egnestd').addEventListener('change', e => { lager.gem('egneStandard', e.target.checked); toast(e.target.checked ? 'Kun dine egne vises som standard' : 'Alle opskrifter vises som standard'); });
@@ -1321,16 +1357,19 @@ const H = {
   kat(el) {
     L.kat = el.dataset.v;
     el.parentNode.querySelectorAll('.chip[data-h=kat]').forEach(c => c.classList.toggle('valgt', c === el));
+    Glid.saet(el.parentNode, el);
     tegnListe();
   },
   koekken(el) {
     L.koekken = el.dataset.v;
     el.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('valgt', c === el));
+    Glid.saet(el.parentNode, el);
     tegnListe();
   },
   soegType(el) {
     L.soeg = el.dataset.v; lager.gem('soegtype', L.soeg);
     el.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('valgt', c === el));
+    Glid.saet(el.parentNode, el);
     $('#soeg').placeholder = SOEG[L.soeg][1];
     tegnListe();
   },

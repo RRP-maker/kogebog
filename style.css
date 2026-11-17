@@ -64,8 +64,9 @@
   --link: #0b5c9c; --stjerne-fra: #8089aa;
   --fejl-bg: #fff0ee; --fejl-tekst: #7a1f16;
   /* Rigtig Liquid Glass: næsten klart, med en svag hvid tone, sløring og lysbrydning af det bagved, en skarp lyskant foroven til venstre og en blød kant forneden til højre. Ingen farve af sig selv. */
-  --glas: linear-gradient(135deg, rgba(var(--lys-rgb), .42), rgba(var(--lys-rgb), .1) 55%, rgba(var(--lys-rgb), .24));
-  --glasfilter: blur(18px) saturate(1.9) brightness(1.05);
+  --glas: linear-gradient(135deg, rgba(var(--glas-rgb), calc(.42 * var(--glas-k))), rgba(var(--glas-rgb), calc(.1 * var(--glas-k))) 55%, rgba(var(--glas-rgb), calc(.24 * var(--glas-k))));
+  --glasfilter: blur(calc(18px * var(--glas-s))) saturate(1.9) brightness(1.05);
+  --glas-k: 1; --glas-s: 1; --glas-rgb: var(--lys-rgb); /* frost, sløring og tone fra Indstillinger > Glas (glas.js). 1, 1 og hvid er appens eget glas */
   --glaskant: rgba(var(--lys-rgb), .6);
   --rude: rgba(34, 56, 107, .1); --rude-kant: rgba(34, 56, 107, .16); /* kortet med opskriftslisten (to ruder): en let farvet flade, så glasfelterne i det kan ses */
   --skygge: 0 1px 2px rgba(34, 56, 107, .14), 0 10px 30px rgba(34, 56, 107, .14);
@@ -897,8 +898,8 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
   --fl-smoer: #8a6a12; --fl-mynte: #2f7a52; --fl-rosa: #9a4a56; --fl-himmel: #2f6f90; --fl-hvid: #2a3250; --fl-indigo: #3a58b4; --paa-felt: #fff;
   --link: #8fc6f7; --stjerne-fra: #5f6a8c;
   --fejl-bg: #3b2028; --fejl-tekst: #ffb9ac;
-  --glas: linear-gradient(135deg, rgba(var(--lys-rgb), .18), rgba(var(--lys-rgb), .05) 55%, rgba(var(--lys-rgb), .11)); /* Liquid Glass i mørkt: klart glas, ikke mørkeblåt */
-  --glasfilter: blur(20px) saturate(1.8) brightness(1.18);
+  --glas: linear-gradient(135deg, rgba(var(--glas-rgb), calc(.18 * var(--glas-k))), rgba(var(--glas-rgb), calc(.05 * var(--glas-k))) 55%, rgba(var(--glas-rgb), calc(.11 * var(--glas-k)))); /* Liquid Glass i mørkt: klart glas, ikke mørkeblåt */
+  --glasfilter: blur(calc(20px * var(--glas-s))) saturate(1.8) brightness(1.18);
   --glaskant: rgba(var(--lys-rgb), .2);
   --rude: rgba(var(--lys-rgb), .07); --rude-kant: rgba(var(--lys-rgb), .16);
   --skygge: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px rgba(0, 0, 0, .4);
@@ -960,7 +961,6 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 @media (min-width: 1024px) { .mp-grid { grid-template-columns: repeat(3, 1fr); grid-template-columns: repeat(3, round(down, calc((100% - 2 * var(--kol)) / 3), var(--kol))); } }
 .mp-dagfelt { display: flex; flex-direction: column; min-width: 0; }
 .mp-dagfelt h3 { margin: 0; }
-.mp-dagchips { display: flex; gap: 6px; flex-wrap: nowrap; position: relative; top: calc(var(--l0) - 32px); } /* chips: kanterne på to linjer */
 .mp-ret .knap.mini { position: relative; top: calc(var(--l0) - 32px); }
 .mp-ret.kort { margin: var(--m) 0 var(--pt); box-sizing: border-box; min-height: 128px; min-width: 0; } /* 4 rækker som mindst. Længere tekst vokser i hele rækker (linjehøjde 32 px) */
 .mp-ret strong { font-size: inherit; } /* teksten følger feltets størrelse, så den kan tilpasses */
@@ -1245,3 +1245,160 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .bil-menu .knap { justify-content: flex-start; white-space: nowrap; }
 @media (prefers-reduced-motion: no-preference) { .bil-menu:not([hidden]) { animation: bil-menu-ind .18s var(--ud, ease-out); } }
 @keyframes bil-menu-ind { from { opacity: 0; transform: translateY(-6px) scale(.96); } }
+
+/* ---------- Komponenter fra designsystemet (opdatering 5) ----------
+   NavBar, SearchFilter, ThemeSwitch, Switch, Stepper, IconButton, HelperToast, RecipeCard, MealplanHeader/-Card, AddIngredient, PantryMatch, GlassControls/-Tint og Motion.
+   Skaleret til notesbogens net: rækker à 32 px, kolonner à 16 px, felter 32/64/96 px, tekst 17–29 px. Farver kun fra rollerne ovenfor. */
+:root {
+  /* Motion: fjedrene fra designsystemet som CSS-kurver. spring 260/30/0,95 · soft 240/30/1 · glide 310/28/0,85 */
+  --fjeder: linear(0, .018, .0634, .1259, .198, .2741, .3504, .4242, .4938, .5583, .617, .6699, .717, .7586, .795, .8267, .8541, .8777, .8978, .915, .9295, .9418, .9521, .9607, .9679, .9739, .9788, .9829, .9862, .989, .9912, .993, .9945, .9957, .9966, .9974, 1);
+  --fjeder-tid: .44s;
+  --bloed: linear(0, .0202, .0704, .1386, .216, .2967, .3763, .4524, .5232, .5878, .646, .6977, .7432, .7828, .8172, .8467, .872, .8935, .9116, .9269, .9398, .9505, .9595, .9669, .9731, .9781, .9823, .9857, .9885, .9908, .9926, .9941, .9953, .9963, .9971, .9977, 1);
+  --bloed-tid: .5s;
+  --glid: linear(0, .0218, .0769, .1522, .2383, .3282, .417, .5014, .5793, .6496, .7119, .7661, .8126, .852, .8849, .912, .9341, .9518, .9659, .9768, .9853, .9916, .9963, .9996, 1.0019, 1.0033, 1.0042, 1.0046, 1.0047, 1.0046, 1.0043, 1.004, 1.0035, 1.0031, 1.0027, 1.0023, 1);
+  --glid-tid: .42s;
+  --farve-tid: .36s; /* flydende farveskift */
+}
+@supports not (transition-timing-function: linear(0, 1)) { :root { --fjeder: cubic-bezier(.22, 1, .36, 1); --bloed: cubic-bezier(.22, 1, .36, 1); --glid: cubic-bezier(.22, 1, .36, 1); } }
+
+/* Motion: hover 1,018 og tryk 0,965 med fjederen. Runde knapper (IconButton) 1,05 og 0,94. Glansen fra fingeren bliver. */
+.knap, .tilbage, .rund, .chip, .rk-knap, .favknap { transition: transform var(--fjeder-tid) var(--fjeder), box-shadow .2s var(--ud), background-color .16s; }
+.kort, .fane { transition: transform var(--fjeder-tid) var(--fjeder), box-shadow .2s var(--ud); }
+@media (hover: hover) {
+  :is(.knap, .chip, .rk-knap):hover:not(:disabled) { transform: scale(1.018); }
+  :is(.rund, .tilbage:not(.fortryd)):hover:not(:disabled) { transform: scale(1.05); }
+}
+.knap:active:not(:disabled), .chip:active, .rk-knap:active { transform: scale(.965); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
+:is(.rund, .tilbage:not(.fortryd)):active:not(:disabled) { transform: scale(.94); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
+
+/* Glasboble, der glider (NavBar, SearchFilter og ThemeSwitch). app.js (Glid) flytter den hen under det valgte. --bf er boblens farve. */
+.glidboble { position: absolute; left: 0; top: 0; z-index: -1; width: 0; height: 0; pointer-events: none; opacity: 0;
+  transition: transform var(--glid-tid) var(--glid), width var(--glid-tid) var(--glid), height var(--glid-tid) var(--glid), opacity .2s; }
+.glidboble.vist { opacity: 1; }
+.glidboble > span { position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(120% 90% at 30% 18%, rgba(var(--lys-rgb), .72), rgba(var(--lys-rgb), 0) 58%), color-mix(in srgb, var(--bf, var(--ik-gryde)) 58%, transparent);
+  border: 1px solid rgba(var(--lys-rgb), .7);
+  box-shadow: inset 0 2px 3px rgba(var(--lys-rgb), .9), inset 0 -2px 4px rgba(var(--skyg-rgb), .14), 0 4px 12px rgba(var(--skyg-rgb), .16);
+  transition: transform .26s var(--fjeder), background-color var(--farve-tid); }
+.glidboble.flytter > span { transform: scale(1.07, .94); }
+[data-tema=moerk] .glidboble > span { border-color: rgba(var(--lys-rgb), .3); box-shadow: inset 0 1px 2px rgba(var(--lys-rgb), .4), 0 4px 12px rgba(0, 0, 0, .3); }
+.glidboble.straks, .glidboble.straks > span { transition: none; }
+
+/* NavBar: boblen i destinationens farve (ikonfladerne) i stedet for den mørke flade. Teksten er blæk. */
+#nav { isolation: isolate; }
+#nav a[data-nav=opskrifter] { --bf: var(--ik-gryde); } #nav a[data-nav=tips] { --bf: var(--ik-smoer); } #nav a[data-nav=forslag] { --bf: var(--ik-rosa); }
+#nav a[data-nav=madplan] { --bf: var(--ik-mynte); } #nav a[data-nav=mere] { --bf: var(--ik-himmel); } #nav a[data-nav=forside] { --bf: var(--ik-smoer); }
+#nav.glid-klar a[aria-current=page] { background: none; color: var(--blaek); }
+@media (max-height: 520px) and (pointer: coarse), (max-height: 520px) and (max-width: 1023px) { body:not(.tilpas-form):not(.tilpas) #nav { position: relative; } }
+
+/* SearchFilter: søgefeltet er en glasrække (runding 22 px), valgene glider med boblen. «Mine egne» og «Favoritter» har en ring i deres farve. */
+.soegblok { border-radius: 22px; }
+.filter[data-glid] { isolation: isolate; }
+
+.filter.glid-klar .chip.valgt:not([aria-pressed]) { color: var(--blaek); }
+.filter.glid-klar .chip.valgt:not([aria-pressed])::before { background: transparent; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.filter .chip.kat { --bf: var(--k); } .filter .chip:not(.kat) { --bf: var(--ik-himmel); }
+.chip[data-h=kunEgne].valgt, .chip[data-h=kunFav].valgt { color: var(--blaek); }
+.chip[data-h=kunEgne].valgt::before { background: color-mix(in srgb, var(--ik-gryde) 45%, transparent); border: 2px solid var(--gryde-mork); }
+.chip[data-h=kunFav].valgt::before { background: color-mix(in srgb, var(--ik-smoer) 55%, transparent); border: 2px solid var(--tilpas-kant); }
+
+/* ThemeSwitch: Lys, Auto og Mørk i en glaspille (felt M, 64 px). Radioknapperne er der stadig, men usynlige. */
+.tema-valg { position: relative; isolation: isolate; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; box-sizing: border-box; width: 100%; max-width: 352px; padding: 4px; border-radius: 32px;
+  background: var(--glas); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); }
+.tema-valg label { position: relative; display: flex; align-items: center; justify-content: center; height: 54px; border-radius: 27px; cursor: pointer; font-size: 20px; line-height: 32px; transition: transform var(--fjeder-tid) var(--fjeder); }
+.tema-valg label:active { transform: scale(.965); }
+.tema-valg input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.tema-valg label:has(input:focus-visible) { outline: 3px solid var(--gryde-mork); outline-offset: -3px; }
+.tema-valg label[data-v=lys] { --bf: var(--ik-smoer); } .tema-valg label[data-v=auto] { --bf: var(--ik-mynte); } .tema-valg label[data-v=moerk] { --bf: var(--ik-himmel); }
+.tema-valg:not(.glid-klar) label:has(input:checked) { background: color-mix(in srgb, var(--bf) 58%, transparent); }
+
+/* Switch: afkrydsning er en kontakt, 48 × 28 px midt i en række på 32 px. Fra: Annuller-rollen, til: Gem-rollen. Tommelen glider med fjederen. */
+.skift { gap: 12px; }
+.skift span { line-height: 32px; }
+.skift input[type=checkbox], input[type=checkbox].kontakt { -webkit-appearance: none; appearance: none; position: relative; flex: none; box-sizing: border-box; width: 48px; height: 28px; margin: 2px 0; border-radius: 14px; cursor: pointer;
+  background: var(--annuller); border: 1px solid var(--annuller-kant); transition: background-color var(--farve-tid) var(--ud), border-color var(--farve-tid) var(--ud); vertical-align: middle; }
+.skift input[type=checkbox]::after, input[type=checkbox].kontakt::after { content: ""; position: absolute; left: 1px; top: 1px; width: 24px; height: 24px; border-radius: 50%; background: rgb(var(--lys-rgb)); box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform var(--fjeder-tid) var(--fjeder); }
+.skift input[type=checkbox]:checked, input[type=checkbox].kontakt:checked { background: var(--gem); border-color: var(--gem-kant); }
+.skift input[type=checkbox]:checked::after, input[type=checkbox].kontakt:checked::after { transform: translateX(20px); }
+.skift input[type=checkbox]:active, input[type=checkbox].kontakt:active { transform: none; }
+.skift input[type=checkbox]:focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 2px; }
+.mangler-top .skift, .gn-har .skift { gap: 8px; }
+
+/* Stepper: glaspille med − og + (32 px). Knapperne har et indre lys, fjedrer ved tryk, og er dæmpede ved grænsen. */
+.stepper .rund { background: rgba(var(--lys-rgb), .18); box-shadow: inset 0 1px 1.5px rgba(var(--lys-rgb), .72); }
+[data-tema=moerk] .stepper .rund { background: rgba(var(--lys-rgb), .08); box-shadow: inset 0 1px 1px rgba(var(--lys-rgb), .25); }
+@media (hover: hover) { .stepper .rund:hover:not(:disabled) { transform: scale(1.02); } }
+.stepper .rund:active:not(:disabled) { transform: scale(.96); }
+.stepper .rund:disabled { opacity: .4; cursor: default; }
+
+/* HelperToast: beskeden er en glaspille med blæk, «Fortryd» er en lille mørk knap. Den glider 6 px ned og toner ind med fjederen soft. */
+#toast:not(.fejl) { background: var(--boble); color: var(--blaek); border: 1px solid var(--glaskant); box-shadow: var(--skygge), var(--glans); -webkit-backdrop-filter: var(--glasfilter); backdrop-filter: var(--glasfilter); }
+#toast { transform: translateY(-6px); transition: opacity var(--bloed-tid) var(--bloed), transform var(--bloed-tid) var(--bloed); }
+#toast:not(.fejl) .toast-knap { background: var(--valgt); color: var(--paa-valgt); text-decoration: none; }
+/* Taleboblen: et kantlys løber rundt om den, mens Grydelil taler. Grydelil selv er uændret. */
+@property --kantlys { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+#hjaelper:is([data-tilstand=tale], [data-tilstand=peg]) .h-boble::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--kantlys), transparent 0 55%, var(--ik-himmel) 70%, rgb(var(--lys-rgb)) 80%, var(--ik-smoer) 88%, transparent 96%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: kantlys 3s linear infinite;
+}
+@keyframes kantlys { to { --kantlys: 360deg; } }
+@media (prefers-reduced-motion: reduce) { #hjaelper .h-boble::after { animation: none; } }
+
+/* RecipeCard: opskriftskortet i klart glas med kategorien som et lille fyldt mærke */
+.kort .chips > span.kat::before { background: var(--k); box-shadow: inset 0 0 0 1.5px var(--k-kant); }
+.kort { box-shadow: var(--skygge), inset 0 1px 1.5px rgba(var(--lys-rgb), .72), var(--glans); }
+
+/* MealplanCard: hver plads har en kontakt øverst til højre i stedet for dagens chips. Kalenderen står ved dagens navn. */
+.mp-dagfelt h3 { display: flex; align-items: center; gap: 8px; }
+.mp-dagfelt h3 .ikon { width: 24px; height: 24px; }
+.mp-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 32px; }
+.mp-top > span { color: var(--blyant); font-size: 17px; }
+.mp-ret strong { min-height: 32px; }
+.mp-ret.mp-av { opacity: 1; } .mp-ret.mp-av > :not(.mp-top) { opacity: .75; }
+.kontakt-knap { position: relative; flex: none; box-sizing: border-box; width: 48px; height: 28px; padding: 0; border-radius: 14px; cursor: pointer; background: var(--annuller); border: 1px solid var(--annuller-kant); transition: background-color var(--farve-tid) var(--ud); }
+.kontakt-knap::before { content: ""; position: absolute; left: 1px; top: 1px; width: 24px; height: 24px; border-radius: 50%; background: rgb(var(--lys-rgb)); box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform var(--fjeder-tid) var(--fjeder); }
+.kontakt-knap::after { content: ""; position: absolute; inset: -8px -4px; } /* tryk-flade på 44 px */
+.kontakt-knap[aria-checked=true] { background: var(--gem); border-color: var(--gem-kant); }
+.kontakt-knap[aria-checked=true]::before { transform: translateX(20px); }
+
+/* AddIngredient: «Tilføj» står i rækken med den nye ingrediens (Gem-rollen) */
+.hj-ny .hj-navn { grid-column: 3; }
+.hj-ny .hj-tilfoej { grid-column: 4 / -1; height: 64px; margin: 0; padding: 0 8px; border-radius: 20px; font-size: 18px; }
+.ruder-forslag .rude-liste .hj-ny { grid-template-columns: 40px 56px minmax(0, 1fr) 80px; }
+.ruder-forslag .rude-liste .hj-ny .hj-tilfoej { grid-column: 4; }
+
+/* PantryMatch: lagerlinjerne står på linjerne; «Fjern» fjedrer som de andre runde knapper */
+.hj-rk .hj-ikon { transition: transform var(--fjeder-tid) var(--fjeder), background-color .16s; }
+
+/* GlassControls og GlassTint (Indstillinger > Glas). Alt i hele rækker: etiket 32 px, skyder 32 px, hjul 160 px (5 rækker). */
+.glas-panel { display: flex; flex-direction: column; }
+.glas-rk { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.glas-rk label small { display: inline; }
+.glas-rk output { flex: none; font-variant-numeric: tabular-nums; color: var(--blyant); }
+.glas-panel input[type=range] { display: block; width: 100%; height: 32px; margin: 0; accent-color: var(--gryde-mork); cursor: pointer; }
+.glas-status { margin: 0; color: var(--blyant); font-size: 17px; line-height: 32px; }
+.glas-status.lav { color: var(--fejl-tekst); }
+.glas-panel h3 { margin: 32px 0 0; }
+.glas-tone { display: flex; align-items: flex-start; gap: 16px; margin: 0 0 32px; padding-top: 32px; }
+.glas-hjul { --lys: 1; position: relative; flex: none; width: 160px; height: 160px; border-radius: 50%; cursor: crosshair; touch-action: none; filter: brightness(var(--lys));
+  background: radial-gradient(circle, rgba(255, 255, 255, .96) 0%, rgba(255, 255, 255, .34) 26%, rgba(255, 255, 255, 0) 68%), conic-gradient(#fbbf24 0deg, #4ade80 65deg, #22d3ee 120deg, #3b82f6 168deg, #8b5cf6 218deg, #f43f5e 272deg, #fb923c 320deg, #fbbf24 360deg);
+  box-shadow: 0 10px 24px rgba(var(--skyg-rgb), .25), 0 0 0 1px var(--glaskant); } /* hjulets farver er selve farverummet, ikke farver med en rolle */
+.glas-hjul[data-mode=hvid] { background: radial-gradient(circle at 50% 50%, #fff 0%, rgba(255, 255, 255, .3) 45%, transparent 75%), linear-gradient(90deg, #fed7aa 0%, #f8fafc 50%, #bfdbfe 100%); }
+.glas-hjul:focus-visible { outline: 3px solid var(--gryde-mork); outline-offset: 4px; }
+.glas-draabe { position: absolute; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(120% 90% at 30% 18%, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0) 58%), rgb(var(--gf)); border: 1px solid rgba(255, 255, 255, .8);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, .9), inset 0 -2px 4px rgba(0, 0, 0, .18), 0 4px 12px rgba(10, 15, 40, .25);
+  transition: left var(--fjeder-tid) var(--fjeder), top var(--fjeder-tid) var(--fjeder), transform var(--fjeder-tid) var(--fjeder); }
+.glas-hjul.traek .glas-draabe { transition: transform var(--fjeder-tid) var(--fjeder); transform: scale(1.05); }
+.glas-side { display: flex; flex-direction: column; min-width: 0; }
+.glas-side .filter { position: static; top: auto; height: 32px; margin: 0; padding: 0; overflow: visible; }
+.glas-hex { display: flex; align-items: center; gap: 8px; margin: 32px 0 0; font-variant-numeric: tabular-nums; }
+.glas-hex i { flex: none; width: 20px; height: 20px; border-radius: 50%; background: rgb(var(--gf, 255, 255, 255)); box-shadow: 0 0 0 1px rgba(var(--blaek-rgb), .4); }
+.glas-side .knap.mini { align-self: flex-start; margin-top: 32px; }
+.glas-farver { display: flex; flex-wrap: wrap; gap: 0 8px; margin: 0 0 32px; }
+.glas-farve { position: relative; width: 24px; height: 24px; margin: 4px; padding: 0; border-radius: 50%; cursor: pointer; background: rgb(var(--gf)); border: 1px solid rgba(var(--blaek-rgb), .4); box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, .6); transition: transform var(--fjeder-tid) var(--fjeder); }
+.glas-farve::after { content: ""; position: absolute; inset: -10px; } /* tryk-flade på 44 px */
+@media (hover: hover) { .glas-farve:hover { transform: scale(1.1); } }
+.soegblok .filter.soegtype[data-glid] { position: relative; } /* boblen måles fra rækken */

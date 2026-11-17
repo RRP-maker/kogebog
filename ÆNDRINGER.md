@@ -2,6 +2,17 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.22.0 · Komponenter fra designsystemet
+- **Motion:** fjedrene (spring, soft, glide) står som CSS-kurver i `:root` (`--fjeder`, `--bloed`, `--glid`). Knapper og chips skalerer 1,018 ved hover og 0,965 ved tryk; runde knapper 1,05 og 0,94. Reduceret bevægelse som før.
+- **NavBar, SearchFilter og ThemeSwitch:** en glasboble glider hen under det valgte (`Glid` i `app.js`). I bjælken har den destinationens farve (ikonfladerne), i filtrene kategoriens. Virker i bundbjælken, sidebjælken og bjælken i siden.
+- **Udseende** er nu Lys, Auto og Mørk i én glaspille (felt M). Radioknapperne er der stadig.
+- **Switch:** afkrydsning med `.skift` er en kontakt (48 × 28 px i en række på 32 px). Teksten ved siden af overlapper ikke mere, når den brækker.
+- **Stepper og runde knapper:** indre lys, fjeder ved tryk.
+- **HelperToast:** beskeden er en glaspille med «Fortryd» som lille mørk knap. Taleboblen får et kantlys, mens Grydelil taler. Grydelil er uændret.
+- **MealplanCard:** hver plads (hovedret, salat, tilbehør) har en kontakt i stedet for dagens chips. Kalenderen står ved «Dag 1».
+- **AddIngredient:** «Tilføj» står i rækken med den nye ingrediens. Retur virker som før.
+- **GlassControls og GlassTint:** ny `glas.js` og afsnittet Glas under Indstillinger: frost, sløring og glastone med farvehjul, lysstyrke, farvestyrke og standardfarver. Gemmes kun på enheden. Standard er det glas, appen havde.
+
 ## 2.21.0 · Importen forstår fri tekst
 - **Ny `tekstlaeser.js` (`Tekstlaeser`)** læser tekst, man sætter ind i «Importér opskrift»: med eller uden overskrifter, uden mængder (fx kun en titel og trin), med stavefejl, versaler, emojis, nummererede trin, alt i ét afsnit, ingredienser i en sætning («Man skal bruge …») og flere ingrediensgrupper.
 - Står der ingen ingredienser, finder den dem i trinene (fx «hak løg og 2 hvidløg»). Navne og mængder bliver stadig rettet af kataloget (`Katalog.afklar`) bagefter, som før.
