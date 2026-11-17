@@ -80,9 +80,10 @@ const Hjaelper = (() => {
   function byg() {
     rod = document.createElement('div');
     rod.id = 'hjaelper';
-    rod.innerHTML = `<div class="h-boble" hidden><p></p><button class="h-knap" type="button" hidden></button>
+    // Taleboblen (opdatering 6): glas med en hale mod Grydelil og navnet øverst. Indholdet ruller inde i boblen, så halen kan stå uden for.
+    rod.innerHTML = `<div class="h-boble" hidden><div class="h-rul"><span class="h-navn" aria-hidden="true">Grydelil</span><p></p><button class="h-knap" type="button" hidden></button>
         <div class="h-tur" hidden><button class="h-tilbage" type="button">‹ Tilbage</button><span class="h-tal"></span><button class="h-naeste" type="button">Næste ›</button></div>
-        <span class="h-videre">Tryk for at fortsætte</span></div>
+        <span class="h-videre">Tryk for at fortsætte</span></div></div>
       <button class="h-figur" type="button" aria-label="Hjælperen. Tryk for hjælp.">${SVG}</button>
       <button class="h-skjul" type="button" aria-label="Skjul hjælperen">×</button>`;
     visKnap = document.createElement('button');

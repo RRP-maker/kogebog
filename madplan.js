@@ -127,9 +127,9 @@ const Madplan = (() => {
   const TRINID = { dage: 'dage', prRet: 'mangler', i_alt: 'varer' }; // id'er har ingen tal eller store bogstaver
   const raekke = k => `<div class="mp-rk"><span class="tekst-m" data-tpid="mp-navn-${TRINID[k]}">${VALG[k][0]}</span>
     <div class="stepper" data-tpid="mp-trin-${TRINID[k]}" role="group" aria-label="${VALG[k][0]}">
-      <button type="button" class="rund felt felt-s" data-tpid="mp-minus" data-h="mpTrin" data-v="${k}:-1" aria-label="Færre">−</button>
+      <button type="button" class="rund felt felt-s" data-tpid="mp-minus" data-h="mpTrin" data-v="${k}:-1" aria-label="Færre">${ik('fjern')}</button>
       <input class="felt felt-s mp-inp" data-tpid="mp-tal" data-k="${k}" type="text" inputmode="numeric" autocomplete="off" value="${vaerdi(k)}" aria-label="${VALG[k][0]}">
-      <button type="button" class="rund felt felt-s" data-tpid="mp-plus" data-h="mpTrin" data-v="${k}:1" aria-label="Flere">+</button></div></div>`;
+      <button type="button" class="rund felt felt-s" data-tpid="mp-plus" data-h="mpTrin" data-v="${k}:1" aria-label="Flere">${ik('plus')}</button></div></div>`;
   async function side() {
     const id = visning;
     henter();
