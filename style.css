@@ -215,7 +215,6 @@ main > .knap.stor { align-self: stretch; }
 .chips > span.kat { color: var(--paa-kat); }
 .chips > span.kat::before { background: var(--k); box-shadow: inset 0 0 0 1.5px var(--k-kant); }
 .kat-maerke { display: inline-block; padding: 0 8px; border-radius: 10px; line-height: 24px; color: var(--paa-kat); background: var(--k); box-shadow: inset 0 0 0 1.5px var(--k-kant); }
-.oprk.kat { box-shadow: inset 4px 0 0 var(--k-kant); }
 .chip.kat:not(.valgt)::before { background: var(--k); border: 1.5px solid var(--k-kant); }
 .chip.kat:not(.valgt) { color: var(--paa-kat); }
 .lille { color: var(--blyant); font-size: 17px; }
@@ -952,7 +951,7 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 #mp-plan { display: flex; flex-direction: column; }
 .mp-indst { display: flex; flex-direction: column; margin: var(--m) 0 var(--pt); }
 .mp-a, .mp-b { display: flex; flex-direction: column; min-width: 0; }
-.mp-a .knap.felt-m { align-self: flex-start; }
+.mp-a .knap.felt-m { align-self: stretch; } /* Generer ny madplan fylder sin kolonne (MealplanHeader) */
 @media (min-width: 744px) { .mp-indst { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-columns: repeat(2, round(down, calc((100% - var(--kol)) / 2), var(--kol))); gap: 0 var(--kol); align-items: start; } }
 .mp-knapper, #mp-knapper { display: flex; flex-wrap: wrap; gap: 0 8px; }
 .mp-grid { display: grid; grid-template-columns: 1fr; gap: 0 var(--kol); align-items: start; }
@@ -960,12 +959,6 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 @media (min-width: 1024px) { .mp-grid { grid-template-columns: repeat(3, 1fr); grid-template-columns: repeat(3, round(down, calc((100% - 2 * var(--kol)) / 3), var(--kol))); } }
 .mp-dagfelt { display: flex; flex-direction: column; min-width: 0; }
 .mp-dagfelt h3 { margin: 0; }
-.mp-ret .knap.mini { position: relative; top: calc(var(--l0) - 32px); }
-.mp-ret.kort { margin: var(--m) 0 var(--pt); box-sizing: border-box; min-height: 128px; min-width: 0; } /* 4 rækker som mindst. Længere tekst vokser i hele rækker (linjehøjde 32 px) */
-.mp-ret strong { font-size: inherit; } /* teksten følger feltets størrelse, så den kan tilpasses */
-.mp-ret strong, .mp-ret > span { overflow-wrap: anywhere; }
-.mp-ret .rakke { margin: 0; height: 32px; }
-.mp-av { opacity: .75; } /* «Er ikke med»: dæmpet, men stadig til at læse (kontrast) */
 .mp-valgliste { display: flex; flex-direction: column; }
 button.kort { width: 100%; text-align: left; font: inherit; cursor: pointer; }
 .kort.valgt { outline: 2px solid var(--gryde-mork); }
@@ -1108,15 +1101,6 @@ body.tilpas-menu[data-side=lav] #nav .nav-knap { flex-direction: column; gap: 0;
 /* ---------- Opskrifter og en opskrift (opdatering 3b) ---------- */
 /* Tæt liste: to tekstrækker pr. opskrift (navn + kategori, køkken og tid). Notesbogens linjer skiller dem, så der er ingen kort. */
 #liste.oplist { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 32px; }
-.oprk { display: block; min-width: 0; min-height: 64px; margin: 0 -8px; padding: 0 8px; border-radius: 12px; color: inherit; text-decoration: none; touch-action: manipulation; }
-.oprk strong, .oprk > span, .oprk-tekst > span { display: block; line-height: 32px; overflow-wrap: anywhere; } /* hele navnet vises: brækker i hele linjer à 32 px, så rækkerne bliver på linjerne */
-.oprk strong { font: 24px/32px var(--hoved); font-weight: 400; }
-.oprk > span, .oprk-tekst > span { font-size: 17px; color: var(--blyant); }
-.oprk .ikon { width: 20px; height: 20px; vertical-align: -.12em; }
-.oprk:active { background: rgba(var(--blaek-rgb), .08); }
-.oprk[aria-current] { background: var(--valgt); color: var(--paa-valgt); }
-.oprk[aria-current] > span, .oprk[aria-current] .oprk-tekst > span { color: inherit; }
-@media (hover: hover) { .oprk:hover:not([aria-current]) { background: rgba(var(--blaek-rgb), .06); } }
 .oplist-bogstav { grid-column: 1 / -1; margin: 32px 0 0; font: 24px/32px var(--hoved); font-weight: 400; color: var(--gryde-mork); }
 .oplist-bogstav:first-child { margin-top: 0; }
 .chip .ikon { width: 16px; height: 16px; vertical-align: -.1em; }
@@ -1185,9 +1169,6 @@ body.rude-fuld .ruder > .rude-liste { display: none; }
 @media print { .rude-liste { display: none; } .ruder { display: block; } }
 
 /* ---------- Billeder (opdatering 4e) ---------- */
-.oprk.med-bil { display: flex; align-items: center; gap: 12px; } /* listen: lille billede foran navnet. Rækken er stadig 64 px. */
-.oprk-tekst { min-width: 0; flex: 1; }
-.oprk-bil { flex: none; width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: var(--felt-bg); box-shadow: 0 0 0 1px var(--glaskant); }
 div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px + række 88 px + mellemrum 8 px = 10 rækker */
 .bil-knap { display: block; padding: 0; border: 0; border-radius: 16px; overflow: hidden; background: var(--felt-bg); cursor: zoom-in; box-shadow: 0 0 0 1px var(--glaskant); }
 .bil-knap img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -1337,10 +1318,6 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 /* MealplanCard: hver plads har en kontakt øverst til højre i stedet for dagens chips. Kalenderen står ved dagens navn. */
 .mp-dagfelt h3 { display: flex; align-items: center; gap: 8px; }
 .mp-dagfelt h3 .ikon { width: 24px; height: 24px; }
-.mp-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 32px; }
-.mp-top > span { color: var(--blyant); font-size: 17px; }
-.mp-ret strong { min-height: 32px; }
-.mp-ret.mp-av { opacity: 1; } .mp-ret.mp-av > :not(.mp-top) { opacity: .75; }
 .kontakt-knap { position: relative; flex: none; box-sizing: border-box; width: 48px; height: 28px; padding: 0; border-radius: 14px; cursor: pointer; background: var(--annuller); border: 1px solid var(--annuller-kant); transition: background-color var(--farve-tid) var(--ud); }
 .kontakt-knap::before { content: ""; position: absolute; left: 1px; top: 1px; width: 24px; height: 24px; border-radius: 50%; background: rgb(var(--lys-rgb)); box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform var(--fjeder-tid) var(--fjeder); }
 .kontakt-knap::after { content: ""; position: absolute; inset: -8px -4px; } /* tryk-flade på 44 px */
@@ -1432,9 +1409,6 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .hj-stepper input, .hj-rk.felt-s .hj-stepper input { width: 32px; height: 28px; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; font-size: 18px; text-align: center; }
 .hj-stepper .rund { width: 26px; height: 26px; }
 /* Lagerlinjen (PantryMatch): stepper, enhed, navnet, kategori og Fjern på én række à 32 px */
-.hj-rk.felt-s, .ruder-forslag .rude-liste .hj-rk.felt-s { grid-template-columns: 96px 64px minmax(0, 1fr) 40px 40px; }
-.hj-labels, .ruder-forslag .rude-liste .hj-labels { grid-template-columns: 96px 64px minmax(0, 1fr); }
-.hj-rk .hj-stepper { margin-right: 4px; }
 
 /* Taleboblen (SpeechBubbleGlass): glas med en hale mod Grydelil og navnet øverst. Indholdet ruller inde i boblen. */
 .h-boble { display: flex; flex-direction: column; overflow: visible; }
@@ -1452,3 +1426,51 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .sf-valgt { margin: 0; line-height: 32px; overflow-wrap: anywhere; }
 .sf-proeve { display: inline-block; height: 32px; box-sizing: border-box; margin-right: 8px; padding: 0 14px; border: 1px solid; border-radius: 16px; font-size: 18px; line-height: 30px; vertical-align: top; }
 .sf .glas-status { overflow-wrap: anywhere; }
+
+/* ---------- Opdatering 7: opskriftsoversigten, flere steppere, madplanens hoved og dagskort, lagerlinjen ---------- */
+/* Opskriftsoversigten bruger opskriftskortet. Den åbne opskrift (to ruder) er markeret, og i ruden er billedet to rækker højt. */
+.opskort[aria-current] { outline: 3px solid var(--gryde-mork); outline-offset: -1px; }
+.rude-liste .opskort-bil { width: 64px; height: 64px; }
+.rude-liste .opskort-bil.tom .ikon { width: 32px; height: 32px; }
+
+/* Stepper i formularen (Antal portioner, Tid i minutter): et lille felt på sin egen række */
+.trin-felt { position: relative; top: calc(var(--l0) - 32px); margin: 0; }
+.trin-felt input { width: 56px; }
+
+/* Lagerlinjen (PantryMatch): står direkte på notesbogens linjer. Navn og enhed er kun felter, når man peger eller skriver. Kategori og Fjern har tekst på brede skærme. */
+.hj-rk.felt-s, .ruder-forslag .rude-liste .hj-rk.felt-s { grid-template-columns: 96px 64px minmax(0, 1fr) auto auto; column-gap: 4px; }
+.hj-labels, .ruder-forslag .rude-liste .hj-labels { grid-template-columns: 96px 64px minmax(0, 1fr); column-gap: 4px; }
+.hj-rk.felt-s > .hj-navn, .hj-rk.felt-s > .hj-enh { margin: 0; background-color: transparent; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+@media (hover: hover) { .hj-rk.felt-s > :is(.hj-navn, .hj-enh):hover { border-color: var(--glaskant); } }
+.hj-rk.felt-s > .hj-enh { background-image: linear-gradient(45deg, transparent 50%, var(--blaek) 50%), linear-gradient(135deg, var(--blaek) 50%, transparent 50%); }
+.hj-kat, .hj-fjern { min-width: 40px; height: 32px; padding: 0 10px; gap: 4px; font-size: 17px; }
+.hj-kat .ikon, .hj-fjern .ikon { width: 18px; height: 18px; }
+.hj-kat span { max-width: 112px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hj-bred { display: none; }
+@media (min-width: 600px) { .hj-bred { display: inline; } .rude-liste .hj-bred { display: none; } }
+@media (max-width: 599px) { .hj-kat, .hj-fjern { padding: 0; } }
+
+/* Madplanens hoved (MealplanHeader): knapperne og «Generer» i en smal kolonne til venstre, valgene til højre */
+@media (min-width: 744px) { .mp-indst { grid-template-columns: 256px minmax(0, 1fr); } }
+
+/* Dagskortet (MealplanCard): hver plads er en række (felt M) med + (Gem-rollen), pladsens navn og retten, og en kontakt */
+.rund.gem { --r: var(--gem); --r-paa: var(--paa-gem); --r-kant: var(--gem-kant); }
+.mp-plads { display: grid; grid-template-columns: 44px minmax(0, 1fr) 48px; align-items: center; gap: 0 12px; box-sizing: border-box; height: 64px; margin: var(--m) 0 var(--pt); padding: 0 12px 0 9px;
+  border-radius: 20px; background-color: var(--felt-bg); border: 1px solid var(--glaskant); box-shadow: var(--glans); }
+.mp-plads .mp-vaelg { margin: 0; }
+.mp-plads-tekst { min-width: 0; display: flex; flex-direction: column; }
+.mp-plads-tekst > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 30px; }
+.mp-plads-tekst span { font-size: 17px; color: var(--blyant); }
+.mp-plads-tekst strong { font-size: 20px; font-weight: 400; }
+.mp-plads.slukket .mp-plads-tekst { opacity: .75; } /* «Ikke valgt»: dæmpet, men stadig til at læse */
+/* Smal skærm: lagerlinjen får to linjer (felt M), navnet øverst i fuld bredde og knapperne under, så navnet kan læses */
+@media (max-width: 599px) {
+  .hj-rk.felt-s { grid-template-rows: 32px 32px; height: 64px; }
+  .hj-rk.felt-s > .hj-navn { grid-column: 1 / -1; grid-row: 1; }
+  .hj-rk.felt-s > :not(.hj-navn) { grid-row: 2; }
+  .hj-rk.felt-s > .hj-kat { grid-column: 4; } .hj-rk.felt-s > .hj-fjern { grid-column: 5; }
+  .hj-gruppe .hj-rk.felt-s { margin-bottom: 0; } .hj-gruppe.ulige { padding-bottom: 0; }
+  .hj-labels { display: none; }
+}
+.opskort-meta { display: flex; flex-wrap: wrap; column-gap: 16px; }
+.opskort-meta > span { white-space: nowrap; }

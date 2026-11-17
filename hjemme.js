@@ -34,6 +34,9 @@ const Hjemme = (() => {
   // Mængden som stepper (opdatering 6): − og + går i trin efter enheden. Feltet kan stadig skrives i.
   const TRIN = { g: 25, ml: 25, kg: 0.5, dl: 0.5, l: 0.5 };
   const trinKnap = (d, l) => `<button type="button" class="rund" data-h="hjTrin" data-v="${d}" aria-label="${l}">${Ikoner.svg(d < 0 ? 'fjern' : 'plus')}</button>`;
+  // Lagerlinjen (opdatering 7): kategorien som knap med navnet og «Fjern» (rød, noget forsvinder fra listen). På smal skærm står kun ikonerne.
+  const katKnap = i => { const k = katNavn(i && i.kategori_id && katAf(i.kategori_id)); return `<button type="button" class="knap mini hj-kat" data-h="hjKat" aria-label="Kategori: ${esc(k)}. Tryk for at skifte." title="Skift kategori">${ik('tag')}<span class="hj-bred">${esc(k)}</span></button>`; };
+  const fjernKnap = (h, v, navn) => `<button type="button" class="knap mini slet hj-fjern" data-h="${h}"${v !== '' ? ` data-v="${v}"` : ''} aria-label="Fjern ${esc(navn)} fra listen" title="Fjern fra listen">${ik('slet')}<span class="hj-bred">Fjern</span></button>`;
   const mgdStepper = v => `<div class="stepper hj-stepper" role="group" aria-label="Mængde">${trinKnap(-1, 'Mindre')}<input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" value="${v}" placeholder="–">${trinKnap(1, 'Mere')}</div>`;
   const nej = (n, id) => { toast(`«${n}» står allerede på listen. Ret mængden her.`); fremhaev(id); };
 
@@ -43,8 +46,7 @@ const Hjemme = (() => {
       ${mgdStepper(Number(h.maengde) > 0 ? esc(visTal(Number(h.maengde))) : '')}
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
-      <button type="button" class="rund hj-ikon" data-h="hjKat" aria-label="Skift kategori">${ik('tag')}</button>
-      <button type="button" class="rund hj-ikon hj-x" data-h="hjFjern" aria-label="Fjern fra listen" title="Fjern fra listen">${Ikoner.svg('fjern')}</button></div>`;
+      ${katKnap(i)}${fjernKnap('hjFjern', '', i ? i.navn : '')}</div>`;
   }
   const LUKKET = new Set(lager.hent('hjLukket', [])); // kategorier, der er foldet sammen
   function tegn() {
@@ -171,7 +173,8 @@ const Hjemme = (() => {
       if (nu == null) { inp.focus(); return; }
       const v = Math.max(0, Math.round((nu + Number(el.dataset.v) * t) * 100) / 100);
       inp.value = v > 0 ? visTal(v) : '';
-      if (rk.id !== 'hj-ny') inp.dispatchEvent(new Event('change', { bubbles: true }));
+      inp.dispatchEvent(new Event('input', { bubbles: true })); // Gennemgang husker mængden ved input
+      if (rk.id !== 'hj-ny' && !rk.classList.contains('gn-rk')) inp.dispatchEvent(new Event('change', { bubbles: true }));
     },
     hjTilfoej() { return tilfoej().catch(err => { console.error(err); fejlbesked('Det blev ikke gemt. Tjek internettet, og tryk på «Tilføj» igen.'); }); },
     async hjNyKat() {
@@ -372,10 +375,10 @@ Hvis jeg glemmer billederne, så bed mig om at tage dem.`;
     G.forEach((x, i) => { const d = dublet(x.navn); (d ? har : nye).push({ x, i, d }); });
     el.innerHTML = `<h2>Nye ting <span class="gn-tal">${nye.length}</span></h2>
       ${nye.length ? `${LABELS}<div class="hj-gruppe${nye.length % 2 ? ' ulige' : ''}">${nye.map(({ x, i }) => `<div class="hj-rk gn-rk felt felt-s" data-i="${i}">
-        <input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" value="${Number(x.maengde) > 0 ? esc(visTal(Number(x.maengde))) : ''}">
+        ${mgdStepper(Number(x.maengde) > 0 ? esc(visTal(Number(x.maengde))) : '')}
         <select class="hj-enh" aria-label="Enhed">${enhHtml(x.enhed)}</select>
         <input class="hj-navn" type="text" autocomplete="off" aria-label="Ingrediens" value="${esc(x.navn)}">
-        <button type="button" class="rund hj-ikon hj-x" data-h="gnFjern" data-v="${i}" aria-label="Fjern fra listen" title="Fjern fra listen">${Ikoner.svg('fjern')}</button></div>`).join('')}</div>`
+        ${fjernKnap('gnFjern', i, x.navn)}</div>`).join('')}</div>`
         : '<p class="tomt">Alt, Claude fandt, står allerede i dit køkken.</p>'}
       ${har.length ? `<h2>Du har dem allerede <span class="gn-tal">${har.length}</span></h2>
         <small>De bliver ikke tilføjet igen. Sæt kryds, hvis du vil rette mængden til det, Claude så.</small>

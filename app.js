@@ -66,7 +66,7 @@ const TYPER = {
       { n: 'koekken', l: 'Køkken', t: 'koekken', hint: 'Hvor kommer retten fra? Vælg et af forslagene, eller skriv et nyt.' },
       { n: 'svaerhed', l: 'Sværhed', t: 'valg', valg: [[1, '1 · Meget let'], [2, '2 · Let'], [3, '3 · Middel'], [4, '4 · Svær'], [5, '5 · Meget svær']] },
       { n: 'portioner', l: 'Antal portioner', t: 'number' },
-      { n: 'tid_minutter', l: 'Tid i minutter', t: 'number' },
+      { n: 'tid_minutter', l: 'Tid i minutter', t: 'number', trin: 5, enhed: 'min' },
       { n: 'ingredienser', l: 'Ingredienser', t: 'ingredienser', hint: 'Én ingrediens i hvert felt. Skriv mængden først, fx «2 dl mælk». Skal den hakkes eller skæres, så skriv det efter et komma, fx «2 løg, finthakket». Tryk på «overskrift» for at sætte en overskrift over en ingrediens, fx Sovs eller Kødboller.' },
       { n: 'fremgangsmaade', l: 'Trin', t: 'trin', hint: 'Ét trin i hvert felt. Tryk på «deltrin» for at lave små skridt under et trin, og på «overskrift» for at dele trinene op, fx i sovs og kød. Skriv tiden med, fx «Kog i 10 minutter», så kan man starte et ur.' },
       { n: 'skjul_forslag', l: 'Foreslå ikke denne ret i «Hvad kan jeg lave?»', t: 'tjek', hint: 'Sæt kryds, hvis retten ikke skal dukke op som forslag.' }
@@ -491,18 +491,14 @@ function tilfoejTilHjem() {
   Hjaelper.sig('Læg Kogebog på hjemmeskærmen, så åbner den som en rigtig app:\n1. Tryk på Del-knappen i Safari (firkanten med en pil op).\n2. Rul ned, og tryk på «Føj til hjemmeskærm».\n3. Tryk på «Tilføj» øverst til højre.', { stor: true });
 }
 // Opskriftskort (opdatering 6): billede, kategori og køkken, navnet, tid og sværhed, favorit og «Lav retten». Hele kortet åbner opskriften.
-// mangler: varer, der mangler (Hvad kan jeg lave?). fav: true/false viser favoritknappen. bil: forsidebilledets sti.
-const opskriftKort = (r, { fav, bil, mangler } = {}) => `<article class="kort opskort${r.kategori ? ' ' + katKl(r.kategori) : ''}" data-tpid="opskrift-kort">
+// mangler: varer, der mangler (Hvad kan jeg lave?). fav: true/false viser favoritknappen. bil: forsidebilledets sti. valgt: opskriften, der står åben i ruden ved siden af.
+const opskriftKort = (r, { fav, bil, mangler, valgt } = {}) => `<article class="kort opskort${r.kategori ? ' ' + katKl(r.kategori) : ''}" data-tpid="opskrift-kort"${valgt ? ' aria-current="true"' : ''}>
   <div class="opskort-top">${bil ? `<img class="opskort-bil" src="${Billeder.url(bil, true)}" alt="" loading="lazy">` : `<span class="opskort-bil tom" aria-hidden="true">${ik('gryde')}</span>`}
     <div class="opskort-tekst">${mangler ? `<span class="opskort-mangler">Mangler ${mangler.length === 1 ? 'kun 1 vare' : mangler.length + ' varer'}</span>` : `<span>${r.kategori ? `<span class="kat-maerke">${esc(r.kategori)}</span> ` : ''}${esc(r.koekken || '')}</span>`}
       <a class="opskort-link" href="#/opskrifter/${r.id}">${esc(r.titel)}</a>
-      <span>${mangler ? esc('Mangler: ' + mangler.join(', ')) : [r.tid_minutter && `${ik('ur')} ${r.tid_minutter} min`, r.svaerhed && `<span aria-label="Sværhed ${r.svaerhed} af 5">${stjernetekst(r.svaerhed)}</span>`].filter(Boolean).join(' · ')}</span></div>
+      <span class="opskort-meta">${mangler ? esc('Mangler: ' + mangler.join(', ')) : [r.tid_minutter && `<span>${ik('ur')} ${r.tid_minutter} min</span>`, r.svaerhed && `<span aria-label="Sværhed ${r.svaerhed} af 5">${stjernetekst(r.svaerhed)}</span>`].filter(Boolean).join('')}</span></div>
     ${fav === undefined ? '' : `<button type="button" class="rund rund-s opskort-fav" data-h="kortFav" data-v="${r.id}" aria-pressed="${!!fav}" aria-label="Favorit: ${esc(r.titel)}">${ik(fav ? 'stjerne' : 'stjerne0')}</button>`}</div>
   <div class="rakke opskort-knapper"><a class="knap mini hoved" data-tpid="opskort-lav" href="#/opskrifter/${r.id}/lav">▶ Lav retten trin for trin</a></div></article>`;
-
-// En tæt række i opskriftslisten: navn og en linje med kategori, køkken og tid. Notesbogens linjer skiller rækkerne.
-const opskriftRaekke = (r, fav, valgt, bil) => `<a class="oprk${r.kategori ? ' ' + katKl(r.kategori) : ''}${bil ? ' med-bil' : ''}" data-tpid="opskrift-raekke" href="#/opskrifter/${r.id}"${valgt ? ' aria-current="true"' : ''}>${bil ? Billeder.miniature(bil) : ''}<div class="oprk-tekst"><strong>${fav ? `<span class="guld">${ik('stjerne')}</span> ` : ''}${esc(r.titel)}</strong>
-  <span>${r.kategori ? `<span class="kat-maerke">${esc(r.kategori)}</span> ` : ''}${esc([!L.kunEgne && r.kilde ? KILDER[kildeAf(r)] : '', r.koekken, r.tid_minutter ? r.tid_minutter + ' min' : ''].filter(Boolean).join(' · ') || (r.kategori ? '' : ' '))}</span></div></a>`;
 
 // ---------- Lister ----------
 let L = {}; // data til den liste, der vises
@@ -520,7 +516,7 @@ BRED.addEventListener('change', () => { if (toRuder() && (iOpskrifter() || /^#\/
 const HENTER = '<p class="tomt">Henter…</p>';
 // Ruller kun listen (ikke siden), så den valgte opskrift kan ses
 function visValgt() {
-  const p = $('#rude-liste'), v = p && p.querySelector('.oprk[aria-current]');
+  const p = $('#rude-liste'), v = p && p.querySelector('.opskort[aria-current]');
   if (!v) return;
   const a = v.getBoundingClientRect(), b = p.getBoundingClientRect();
   if (a.top < b.top + 64) p.scrollTop -= Math.ceil((b.top + 64 - a.top) / 32) * 32; else if (a.bottom > b.bottom - 96) p.scrollTop += Math.ceil((a.bottom - b.bottom + 96) / 32) * 32;
@@ -605,7 +601,7 @@ function tegnListe() {
   $('#liste').innerHTML = vis.length ? vis.map(r => {
     if (type === 'opskrifter') {
       const b = (r.titel || '').trim().charAt(0).toLocaleUpperCase('da'), ny = !q && b !== bogstav; bogstav = b;
-      return (ny ? `<h3 class="oplist-bogstav">${esc(b)}</h3>` : '') + opskriftRaekke(r, L.fav.has(r.id), r.id === L.valgt, L.bil[r.id]);
+      return (ny ? `<h3 class="oplist-bogstav">${esc(b)}</h3>` : '') + opskriftKort(r, { fav: L.fav.has(r.id), bil: L.bil[r.id], valgt: r.id === L.valgt });
     }
     const til = L.iOpskrifter[r.id] || [];
     return `<article class="kort" data-tpid="tip-kort" id="tip-${r.id}">${r.titel ? `<strong>${esc(r.titel)}</strong>` : ''}<p class="tekst">${esc(r.tekst)}</p>
@@ -907,7 +903,7 @@ function felt(f, rad, ekstra) {
   if (f.t === 'tjek') return `<label class="skift tjekfelt" for="f_${f.n}"><input id="f_${f.n}" name="${f.n}" type="checkbox"${v ? ' checked' : ''}> <span>${f.l}</span></label>
     ${f.hint ? `<small>${f.hint}</small>` : ''}`;
   if (f.t === 'textarea') input = `<textarea ${m} rows="${f.rows || 4}">${esc(v)}</textarea>`;
-  else if (f.t === 'number') input = `<input ${m} type="number" inputmode="numeric" min="0" step="1" value="${esc(v)}">`;
+  else if (f.t === 'number') input = `<div class="stepper trin-felt" role="group" aria-label="${f.l}"><button type="button" class="rund" data-h="trin" data-v="-1" aria-label="Færre">${ik('fjern')}</button><input ${m} type="text" inputmode="numeric" autocomplete="off" data-trin="${f.trin || 1}" value="${esc(v)}"><button type="button" class="rund" data-h="trin" data-v="1" aria-label="Flere">${ik('plus')}</button>${f.enhed ? `<span class="stepper-enhed">${f.enhed}</span>` : ''}</div>`; // Stepper (opdatering 7): − og + går i trin, og feltet kan stadig skrives i
   else if (f.t === 'valg') input = `<select ${m}><option value="">Vælg</option>${f.valg.map(([k, t]) => `<option value="${k}"${k === v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
   else if (f.t === 'opskrift') input = `<select ${m}><option value="">Ingen bestemt opskrift</option>${
     ekstra.map(o => `<option value="${o.id}"${o.id === v ? ' selected' : ''}>${esc(o.titel)}</option>`).join('')}</select>`;
@@ -1382,6 +1378,12 @@ const H = {
     $('#soeg').placeholder = SOEG[L.soeg][1];
     tegnListe();
   },
+  trin(el) { // − og + i en stepper i formularen. input: så Fortryd i bjælken ser ændringen
+    const i = el.closest('.stepper').querySelector('input'), t = Number(i.dataset.trin) || 1, nu = Number(i.value.trim() || 0);
+    if (!Number.isFinite(nu)) { i.focus(); return; }
+    const v = Math.max(0, Math.round(nu / t) * t + Number(el.dataset.v) * t);
+    i.value = v > 0 ? v : ''; i.dispatchEvent(new Event('input', { bubbles: true }));
+  },
   async kortFav(el) { // favoritknappen på et opskriftskort
     const id = el.dataset.v, til = el.getAttribute('aria-pressed') !== 'true';
     try {
@@ -1389,6 +1391,7 @@ const H = {
       else await api(`favoritter?opskrift_id=eq.${enc(id)}`, { method: 'DELETE' });
     } catch (e) { console.error(e); return fejlbesked('Favoritten blev ikke gemt. Tjek internettet, og prøv igen.'); }
     if (til) FAV.add(id); else FAV.delete(id);
+    if (L && L.fav) { if (til) L.fav.add(id); else L.fav.delete(id); if (L.kunFav && $('#liste')) return tegnListe(); } // opskriftslisten
     el.setAttribute('aria-pressed', til); el.innerHTML = ik(til ? 'stjerne' : 'stjerne0');
     toast(til ? 'Den er nu en favorit' : 'Ikke længere favorit');
   },
