@@ -655,9 +655,8 @@ async function opskriftSide(rid, maal = app) {
     <h2 class="opsk">Ingredienser</h2>
     <div class="portioner skaerm" data-tpid="portioner"><div class="stepper" role="group" aria-label="Antal portioner">
       <button type="button" class="rund felt felt-s" data-h="port" data-v="-1" aria-label="Færre portioner">${ik('fjern')}</button>
-      <input id="portinp" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="" aria-label="Antal portioner">
-      <button type="button" class="rund felt felt-s" data-h="port" data-v="1" aria-label="Flere portioner">${ik('plus')}</button></div>
-      <small id="portvis"></small></div>
+      <input id="portinp" class="felt felt-s" type="text" inputmode="numeric" autocomplete="off" value="" aria-label="Antal portioner"><span id="portvis" class="stepper-enhed inde"></span>
+      <button type="button" class="rund felt felt-s" data-h="port" data-v="1" aria-label="Flere portioner">${ik('plus')}</button></div></div>
     <ul class="ing" id="ing"></ul></section><section class="opsk-felt" data-tpid="opsk-trin">
     <h2 class="opsk">Sådan gør du</h2>
     <div id="trin"></div></section></div>
@@ -1112,12 +1111,11 @@ async function forslagSide() {
   // Brede skærme med «to ruder»: ingredienserne i et kort til venstre, forslagene til højre. Ellers én kolonne, som før.
   const tilbage = Ikoner.tilbage('#/'), titel = '<h1>Hvad kan jeg lave?</h1>',
     madplan = rude => `<a class="knap felt felt-m" data-tpid="${rude ? 'madplan-rude' : 'madplan'}" href="#/forslag/madplan">${ik('gryde')} Madplan</a>`, // i ruden står knappen på en anden plads end i én kolonne, så den har sit eget id
-    claude = `<div class="rakke"><button type="button" class="knap" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Tilføj med Claude</button></div>`,
     oversigt = `<button type="button" class="knap" data-h="ingOversigt">${ik('tag')} Se alle ingredienser</button>`;
   app.innerHTML = ruderAktiv()
-    ? `<div class="ruder ruder-forslag"><section class="rude-liste" aria-label="Det, du har derhjemme">${titel}<div id="hj-boks" data-tpid="hj-boks"></div><div id="hj-liste-boks"></div>${claude}${oversigt}</section>
+    ? `<div class="ruder ruder-forslag"><section class="rude-liste" aria-label="Det, du har derhjemme">${titel}<div id="hj-boks" data-tpid="hj-boks"></div><div id="hj-liste-boks"></div>${oversigt}</section>
       <div class="rude-indhold">${tilbage}${madplan(true)}<div id="forslag-nu" data-tpid="forslag-nu"></div><div id="forslag-resten"></div></div></div>`
-    : `${tilbage}${titel}<div id="hj-boks" data-tpid="hj-boks"></div><div id="forslag-nu" data-tpid="forslag-nu"></div>${madplan(false)}<div id="hj-liste-boks"></div>${claude}<div id="forslag-resten"></div>${oversigt}`;
+    : `${tilbage}${titel}<div id="hj-boks" data-tpid="hj-boks"></div><div id="forslag-nu" data-tpid="forslag-nu"></div>${madplan(false)}<div id="hj-liste-boks"></div><div id="forslag-resten"></div>${oversigt}`;
   Hjaelper.side([
     { tekst: 'Skriv det, du har derhjemme. Ét ord i hvert felt.', maal: 'hj-boks', bev: 'salto' },
     { tekst: 'Her kommer de retter, du kan lave nu.', maal: 'forslag-nu', bev: 'skridt', valgfri: true },

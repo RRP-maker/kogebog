@@ -9,7 +9,7 @@ const Madplan = (() => {
   };
   const RAEKKE = 'faelles', SLOTS = ['hoved', 'salat', 'tilbehoer'], NAVN = { hoved: 'Hovedret', salat: 'Salat', tilbehoer: 'Tilbehør' };
   const STD = { dage: 5, prRet: 2, i_alt: 4, plan: null }; // plan: [{ paa: { hoved, salat, tilbehoer }, hoved: id, salat: id, tilbehoer: id }]
-  let ST = { ...STD }, har = new Set(), P = new Map(), gemTimer, fortrydes = [], gentages = [], aaben = null;
+  let ST = { ...STD }, har = new Set(), P = new Map(), gemTimer, fortrydes = [], gentages = [], aaben = null, BILL = {}; // BILL: forsidebillederne
   const vaerdi = k => { const [, std, min, max] = VALG[k]; return Math.max(min, Math.min(max, Math.round(Number(ST[k])))) || (min > 0 ? std : 0); };
   const gem = straks => {
     clearTimeout(gemTimer);
@@ -86,6 +86,7 @@ const Madplan = (() => {
     const handling = !paa ? 'Tilføj' : d[s] ? 'Udskift' : 'Vælg';
     return `<div class="mp-plads${paa ? '' : ' slukket'}" data-tpid="mp-ret-${s}" data-tpinst="${DAGORD[i]}">
       <button type="button" class="rund rund-s gem mp-vaelg" data-tpid="${d[s] ? 'mp-udskift' : 'mp-vaelg-ret'}" data-h="${paa ? 'mpUdskift' : 'mpDagSlot'}" data-v="${i}:${s}" aria-label="${handling} ${NAVN[s].toLowerCase()} på dag ${i + 1}" title="${handling}">${ik('plus')}</button>
+      ${x && BILL[x.r.id] ? `<img class="mp-bil" src="${Billeder.url(BILL[x.r.id], true)}" alt="" loading="lazy">` : `<span class="mp-bil tom" aria-hidden="true">${ik('gryde')}</span>`}
       <div class="mp-plads-tekst"><span title="${esc(info)}">${esc(info)}</span><strong>${ret}</strong></div>
       ${kontakt(d, i, s)}</div>`;
   }
@@ -135,8 +136,9 @@ const Madplan = (() => {
   async function side() {
     const id = visning;
     henter();
-    const [opsk, hj, rk] = await Promise.all([api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel'), api('hjemme?select=ingrediens_id'), api(`madplan?id=eq.${RAEKKE}&select=data`).catch(e => { console.error(e); return []; }), Katalog.sikr()]);
+    const [opsk, hj, rk, bil] = await Promise.all([api('opskrifter?select=id,titel,kategori,svaerhed,tid_minutter,ingredienser,skjul_forslag&order=titel'), api('hjemme?select=ingrediens_id'), api(`madplan?id=eq.${RAEKKE}&select=data`).catch(e => { console.error(e); return []; }), Katalog.sikr(), Billeder.hentForsider()]);
     if (id !== visning) return;
+    BILL = bil || {};
     F = opsk.filter(r => !r.skjul_forslag); har = new Set(hj.map(h => h.ingrediens_id));
     ST = { ...STD, ...(rk[0] && rk[0].data) };
     ST.plan = normPlan(ST.plan);

@@ -137,7 +137,8 @@ const Hjemme = (() => {
     D = { kat, ing, hj }; ved = aendret;
     // Tilføj ingrediens (opdatering 6): et kort med navnet, mængden som stepper, enheden og «Tilføj». Retur virker som før.
     boks.innerHTML = `<section class="kort hj-ny" id="hj-ny" data-tpid="hj-tilfoej-kort" aria-labelledby="hj-ny-titel">
-      <h2 id="hj-ny-titel">Tilføj ingrediens</h2>
+      <div class="hj-ny-top"><h2 id="hj-ny-titel">Tilføj ingrediens</h2>
+        <button type="button" class="knap mini" data-tpid="hj-claude" data-h="hjClaude">${ik('gnist')} Med Claude</button></div>
       <small>Retur gemmer og går videre til næste. Mængden er kun til din egen oversigt, ikke til at finde retter.</small>
       <label for="hj-ny-navn">Ingrediens</label>
       <input id="hj-ny-navn" class="hj-navn felt" type="text" autocomplete="off" enterkeyhint="next" placeholder="fx gulerødder">

@@ -1474,3 +1474,26 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 }
 .opskort-meta { display: flex; flex-wrap: wrap; column-gap: 16px; }
 .opskort-meta > span { white-space: nowrap; }
+
+/* Opdatering 8 */
+/* Titelrækken: titel og stjerne side om side (opsk-felt gjorde den til en kolonne, så stjernen faldt ned på en ekstra række) */
+.titelrakke.opsk-felt { flex-direction: row; align-items: flex-start; }
+.titelrakke h1 { flex: 1 1 0; min-width: 0; }
+/* Portioner: enheden står inde i stepperen, mellem tallet og plus (Stepper med data-label) */
+.portioner .stepper { padding: 0 1px; }
+.portioner .stepper input { width: 28px; padding: 0; }
+.stepper-enhed.inde { padding: 0 6px 0 0; white-space: nowrap; }
+.portioner { align-items: flex-start; }
+/* Tilføj ingrediens: overskrift og «Med Claude» på samme række */
+.hj-ny-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.hj-ny-top h2 { flex: 1 1 auto; min-width: 0; }
+.hj-ny-top .knap.mini { position: relative; top: calc(var(--l0) - 32px); height: 32px; flex: none; }
+/* Dagkortet: lille billede af retten på rækken */
+.mp-plads { grid-template-columns: 44px 40px minmax(0, 1fr) 48px; gap: 0 10px; }
+.mp-bil { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; box-shadow: 0 0 0 1px var(--glaskant); display: grid; place-items: center; }
+.mp-bil.tom { background: color-mix(in srgb, var(--k, var(--ik-gryde)) 55%, transparent); }
+.mp-bil.tom .ikon { width: 22px; height: 22px; }
+.mp-plads.slukket .mp-bil { opacity: .5; }
+/* Madplanens hoved: chipsene bliver i kortet på smal skærm */
+.mp-alle { overflow: visible; flex-wrap: wrap; height: auto; row-gap: 0; }
+.mp-alle .chip { padding: 0 10px; }

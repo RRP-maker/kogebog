@@ -2,6 +2,12 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.25.0 · Rettelser efter 2.24.0
+- **Opskriftssiden:** titel og stjerne står side om side igen (stjernen faldt ned på en ekstra række og forskød alle linjer på iPhone). Portionerne står inde i stepperen: «− 2 portioner +» (1 portion, når der er én).
+- **Madplanens hoved:** valgene i kortet bliver inden for kortets bredde. Chipsene ombrydes i stedet for at blive skåret af.
+- **Dagskortet:** et lille billede af retten (40 px) på hver række, uden at rækken eller kortet ændrer størrelse. Uden billede står gryden.
+- **Tilføj ingrediens:** «Med Claude» er en lille knap i kortets overskrift. Den løse knap under listen er væk.
+
 ## 2.24.0 · Opskriftsoversigten, steppere, madplan og lagerlinjen
 - **Opskriftsoversigten** bruger opskriftskortet (billede, kategori, navn, tid, sværhed, favorit og «Lav retten»), også i ruden til venstre. Den åbne opskrift er markeret. Rækkerne fra før (`opskriftRaekke`, `.oprk`, `Billeder.miniature`) er fjernet.
 - **Stepper** også i formularen (Antal portioner, Tid i minutter i trin på 5) og i gennemgangen af det, Claude fandt. Fortryd i bjælken ser ændringerne.
