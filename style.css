@@ -1497,3 +1497,19 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 /* Madplanens hoved: chipsene bliver i kortet på smal skærm */
 .mp-alle { overflow: visible; flex-wrap: wrap; height: auto; row-gap: 0; }
 .mp-alle .chip { padding: 0 10px; }
+
+/* Ingrediensværktøjet: rækker i listen, vinduet til én ingrediens og glaslisten under skrivefelterne (2.30.0) */
+.iv-ing-raekke { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; height: 64px; margin: var(--m) 0 var(--pt); padding: 0 16px; border: 1px solid var(--glaskant); border-radius: 20px; background: var(--felt-bg); box-shadow: var(--glans); font: inherit; font-size: 20px; line-height: 32px; text-align: left; color: inherit; cursor: pointer; }
+.iv-ing-raekke:hover { background: var(--flade-hover); }
+.iv-ing-raekke:focus-visible { outline: 3px solid var(--gryde); outline-offset: 2px; }
+.iv-ing-navn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.iv-ing-raekke small { flex: none; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; color: var(--blyant); }
+.iv-ing-ark h3 { margin-bottom: 0; }
+.iv-ing-ark .lille { margin: 0; }
+.iv-vaelg { display: flex; flex-direction: column; }
+.iv-forslag { display: flex; flex-direction: column; margin: calc(var(--pt) * -1 + 4px) 0 calc(var(--pt) - 4px); border-radius: 20px; overflow: hidden; background: var(--felt-bg); border: 1px solid var(--glaskant); box-shadow: var(--glans); }
+.iv-forslag[hidden] { display: none; }
+.iv-forslag-r { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: 32px; box-sizing: border-box; padding: 0 16px; border: 0; border-radius: 0; background: none; font: inherit; font-size: 18px; line-height: 32px; text-align: left; color: inherit; cursor: pointer; }
+.iv-forslag-r + .iv-forslag-r { box-shadow: inset 0 1px 0 var(--glaskant); }
+.iv-forslag-r small { font-size: 14px; color: var(--blyant); }
+.iv-forslag-r:hover, .iv-forslag-r:focus-visible { background: var(--flade-hover); outline: 0; }

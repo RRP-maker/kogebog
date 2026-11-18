@@ -205,6 +205,7 @@ ${linjer.join('\n')}
   // ---------- Regler og aliaser (Styr på ingredienser, fase 4) ----------
   // En regel er «skrevet tekst → resultat» (tabellen ingrediens_regler). Et alias er en regel med én vare uden tilberedning: «kyllingefilet» → kyllingebryst.
   // Regler ændres kun gennem ingrediens_regel_gem og ingrediens_regel_slet. De tjekker versionen: er reglen ændret, siden den blev hentet, vises den andens udgave først.
+  let aaben = null; // ingrediensen, vinduet står åbent for: efter en handling derfra åbnes det igen
   let soeg = '', ed = null; // ed: reglen i vinduet: { id, version, tekst, slags, varer: [{ navn, f }], t, resultat }
   const SLAGS = [['vare', 'Én vare', 'Teksten er én ingrediens. Skriv en tilberedning, hvis den hører med, fx «finthakket».'], ['del', 'Flere varer', 'Linjen deles i flere linjer, fx «salt og peber».'],
     ['eller', 'Én af flere varer', 'Linjen er opfyldt, når én af varerne er derhjemme, fx «smør eller margarine».'], ['slet', 'Ingen vare', 'Linjen slettes, fx en overskrift, der ikke er en ingrediens.']];
@@ -220,21 +221,13 @@ ${linjer.join('\n')}
   // Koblinger går kun ét skridt. Navne og koblinger ændres kun gennem databasefunktionerne (kopi først).
   const finIng = t => D.ing.find(x => x.navn_norm === norm(t));
   // Feltet står lige før knappens række. Det kan stå flere steder for samme ingrediens (listen og de foreløbige), så det findes ud fra knappen.
-  const valgIng = (el, id, hvad) => { const fe = el.closest('.rakke').previousElementSibling, f = finIng(fe ? fe.value : ''); if (!f) { toast('Vælg ' + hvad + ' fra listen'); return null; } if (f.id === id) { toast('Vælg en anden ingrediens end den selv'); return null; } return f; };
+  const valgIng = (el, id, hvad) => { const fe = el.closest('.rakke').previousElementSibling, inp = fe && (fe.matches('input') ? fe : fe.querySelector('input')), f = finIng(inp ? inp.value : ''); if (!f) { toast('Vælg ' + hvad + ' fra listen'); return null; } if (f.id === id) { toast('Vælg en anden ingrediens end den selv'); return null; } return f; };
+  // Skrivefelt med en glasliste under: skriv, og de ingredienser der passer, vises. Tryk på en for at vælge den.
+  const vaelgFelt = (id, extra = '') => `<div class="iv-vaelg"><input id="${id}" class="felt felt-m" data-vaelg autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="${id}-liste"${extra}><div class="iv-forslag" id="${id}-liste" role="listbox" hidden></div></div>`;
   const kobling = (i, attr, tekst, knap, h, ikon, fb = '') => `<label for="${fb}${attr}-${i.id}">${tekst}</label>
-    <input id="${fb}${attr}-${i.id}" class="felt felt-m" list="ivliste" autocomplete="off" autocapitalize="off" spellcheck="false">
+    ${vaelgFelt(`${fb}${attr}-${i.id}`)}
     <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-${attr}" data-h="${h}" data-n="${i.id}">${ik(ikon)} ${knap}</button></div>`;
   const katValg = i => [...D.kat].sort((a, b) => a.raekkefolge - b.raekkefolge).map(k => `<option value="${k.id}"${k.id === i.kategori_id || (!i.kategori_id && k.navn_norm === 'andet') ? ' selected' : ''}>${esc(katNavn(k))}</option>`).join('');
-  const katSlet = (i, fb = '') => `<label for="${fb}kat-${i.id}">Kategori</label>
-    <select id="${fb}kat-${i.id}" class="felt felt-m">${katValg(i)}</select>
-    <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-kat" data-h="ivKat" data-n="${i.id}">${ik('tjek')} Gem kategori</button>
-      <button type="button" class="knap mini slet" data-tpid="iv-slet-ing" data-h="ivSletIng" data-n="${i.id}" aria-label="Slet ${esc(i.navn)}">${ik('slet')} Slet ingrediensen</button></div>`;
-  const handlinger = (i, fae, sam) => `${katSlet(i)}
-    ${kobling(i, 'slags', `«${esc(i.navn)}» er en slags …`, 'Gør til slags af', 'ivSlags', 'tjek')}
-    ${fae ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-slags-fjern" data-h="ivSlagsFjern" data-n="${i.id}">${ik('fjern')} Ikke en slags af «${esc(fae)}»</button></div>` : ''}
-    ${kobling(i, 'samme', `«${esc(i.navn)}» er samme som …`, 'Gør samme som', 'ivSamme', 'tjek')}
-    ${sam.length ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-samme-fjern" data-h="ivSammeFjern" data-n="${i.id}">${ik('fjern')} Ikke samme som de andre</button></div>` : ''}
-    ${kobling(i, 'tilalias', `Gør «${esc(i.navn)}» til alias af …`, 'Gør til alias', 'ivTilAlias', 'tjek')}`;
   // Foreløbige ingredienser: nye, lavet af appen uden spørgsmål. Godkend dem med en kategori, eller gør dem til alias af en, der findes.
   const foreloebigHtml = () => {
     const f = D.ing.filter(i => i.foreloebig).sort((a, b) => a.navn.localeCompare(b.navn, 'da')), brugt = new Map();
@@ -311,25 +304,69 @@ ${linjer.join('\n')}
       <button type="button" class="knap mini slet" data-tpid="iv-regel-slet" data-h="ivRegelSlet" data-v="${r.id}" data-n="${nr}" aria-label="Fjern ${esc(r.tekst)}${nr ? ' fra ' + esc(ingNavn(nr)) : ''}">${ik('slet')} Fjern</button>
       ${r.slags === 'slet' ? '' : `<button type="button" class="knap mini" data-tpid="iv-regel-egen" data-h="ivEgen" data-v="${r.id}" aria-label="Gør ${esc(r.tekst)} til en egen ingrediens">Egen ingrediens</button>`}</div></div>`;
     const dele = vis.map(i => {
-      const rs = pr.get(i.id) || [], fae = i.faelles_id && ingNavn(i.faelles_id), vars = D.ing.filter(x => x.faelles_id === i.id).map(x => x.navn);
-      const sam = i.ens_gruppe ? D.ing.filter(x => x.ens_gruppe === i.ens_gruppe && x.id !== i.id).map(x => x.navn) : [];
-      const info = [`Kategori: ${katNavn(D.kat.find(k => k.id === i.kategori_id))}.`, i.foreloebig && 'Foreløbig: ikke godkendt endnu.', fae && `Slags af «${fae}».`, vars.length && `Slags: ${vars.join(', ')}.`, sam.length && `Samme som: ${sam.join(', ')}.`].filter(Boolean).join(' ');
-      return del('r:' + i.id, `<span data-tpdata>${esc(i.navn)}</span>`, rs.length, `<p class="lille" data-tpdata>${esc(info)}</p>${rs.map(r => regel(r, i.id)).join('') || '<p class="lille">Ingen aliaser endnu.</p>'}
-        <label for="al-${i.id}">Nyt alias til «${esc(i.navn)}»</label>
-        <input id="al-${i.id}" class="felt felt-m" placeholder="fx kyllingefilet" autocomplete="off" autocapitalize="off" spellcheck="false" data-alias="${i.id}">
-        <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-alias-nyt" data-h="ivAliasNy" data-n="${i.id}" aria-label="Tilføj alias til ${esc(i.navn)}">${ik('plus')} Tilføj alias</button></div>${handlinger(i, fae, sam)}`, true);
+      const rs = pr.get(i.id) || [], k = D.kat.find(x => x.id === i.kategori_id);
+      return `<button type="button" class="iv-ing-raekke" data-tpid="iv-ing" data-h="ivIng" data-n="${i.id}"><span class="iv-ing-navn" data-tpdata>${esc(i.navn)}</span><small data-tpdata>${i.foreloebig ? 'Ikke godkendt · ' : ''}${esc(katNavn(k))}${rs.length ? ' · ' + flertal(rs.length, 'alias', 'aliaser') : ''}</small></button>`;
     }).join('');
     const slet = sletRegler.length ? del('r:slet', 'Regler uden vare', sletRegler.length, sletRegler.map(r => regel(r, '')).join('')) : '';
     const tom = !dele && !slet ? `<p class="lille">${soegt ? 'Ingen ingredienser eller regler passer.' : 'Der er ingen aliaser endnu.'}</p>` : '';
     return dele + slet + tom + (alle.length > vis.length ? `<p class="lille">${flertal(alle.length - vis.length, 'ingrediens', 'ingredienser')} mere. Skriv mere i feltet for at indsnævre.</p>` : '');
   }
+  // Vinduet til én ingrediens: alt, man kan ændre ved den, samlet og i rækkefølge. Knapperne er de samme som før.
+  function aabnIng(id) {
+    const i = D.ing.find(x => x.id === id);
+    if (!i) return;
+    const rs = D.regler.filter(r => r.resultat.some(v => v.id === i.id)), fae = i.faelles_id && ingNavn(i.faelles_id), vars = D.ing.filter(x => x.faelles_id === i.id).map(x => x.navn);
+    const sam = i.ens_gruppe ? D.ing.filter(x => x.ens_gruppe === i.ens_gruppe && x.id !== i.id).map(x => x.navn) : [];
+    const regel = r => `<div class="iv-regel"><p class="tekst-s" data-tpdata>«${esc(r.tekst)}» → ${esc(regelTekst(r))}</p><div class="rakke venstre">
+      <button type="button" class="knap mini" data-tpid="iv-regel-tilpas" data-h="ivRegel" data-v="${r.id}" aria-label="Tilpas reglen ${esc(r.tekst)}">Tilpas</button>
+      <button type="button" class="knap mini slet" data-tpid="iv-regel-slet" data-h="ivRegelSlet" data-v="${r.id}" data-n="${i.id}" aria-label="Fjern ${esc(r.tekst)} fra ${esc(i.navn)}">${ik('slet')} Fjern</button>
+      ${r.slags === 'slet' ? '' : `<button type="button" class="knap mini" data-tpid="iv-regel-egen" data-h="ivEgen" data-v="${r.id}" aria-label="Gør ${esc(r.tekst)} til en egen ingrediens">Egen ingrediens</button>`}</div></div>`;
+    const d = ark(`<div class="iv-ing-ark" data-ingid="${i.id}">
+      <div class="tp-top"><h2 data-tpdata>${esc(i.navn)}</h2><div class="rakke"><button type="button" class="knap annuller" data-tpid="iv-ing-luk" data-h="lukArk">Luk</button></div></div>
+      ${i.foreloebig ? '<p class="lille">Ny ingrediens, lavet af appen. Vælg en kategori og tryk «Godkend», eller gør den til alias af en, der findes.</p>' : ''}
+      <h3>Kategori</h3>
+      <select id="kat-${i.id}" class="felt felt-m">${katValg(i)}</select>
+      <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-kat" data-h="ivKat" data-n="${i.id}">${ik('tjek')} Gem kategori</button>
+        <button type="button" class="knap mini" data-tpid="iv-kat-ny" data-h="ivNyKat">${ik('plus')} Ny kategori</button></div>
+      <h3>Aliaser</h3>
+      <p class="lille">Andre navne i opskrifter, som betyder «${esc(i.navn)}».</p>
+      ${rs.map(regel).join('') || '<p class="lille">Ingen aliaser endnu.</p>'}
+      <label for="al-${i.id}">Nyt alias</label>
+      <input id="al-${i.id}" class="felt felt-m" placeholder="fx kyllingefilet" autocomplete="off" autocapitalize="off" spellcheck="false" data-alias="${i.id}">
+      <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-alias-nyt" data-h="ivAliasNy" data-n="${i.id}" aria-label="Tilføj alias til ${esc(i.navn)}">${ik('plus')} Tilføj alias</button></div>
+      <h3>Slags af</h3>
+      <p class="lille">${fae ? `Er en slags «${esc(fae)}».` : 'Er en variant af et fællesnavn, fx frisk timian er en slags timian.'}${vars.length ? ` Slags af denne: ${esc(vars.join(', '))}.` : ''}</p>
+      ${kobling(i, 'slags', `«${esc(i.navn)}» er en slags …`, 'Gør til slags af', 'ivSlags', 'tjek')}
+      ${fae ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-slags-fjern" data-h="ivSlagsFjern" data-n="${i.id}">${ik('fjern')} Ikke en slags af «${esc(fae)}»</button></div>` : ''}
+      <h3>Samme som</h3>
+      <p class="lille">${sam.length ? `Kan erstatte: ${esc(sam.join(', '))}.` : 'Kan erstatte en anden ingrediens 1:1, fx kyllingebryst og hønsebryst.'}</p>
+      ${kobling(i, 'samme', `«${esc(i.navn)}» er samme som …`, 'Gør samme som', 'ivSamme', 'tjek')}
+      ${sam.length ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-samme-fjern" data-h="ivSammeFjern" data-n="${i.id}">${ik('fjern')} Ikke samme som de andre</button></div>` : ''}
+      <h3>Saml med en anden</h3>
+      <p class="lille">«${esc(i.navn)}» bliver et alias. Opskrifter og Derhjemme flyttes med.</p>
+      ${kobling(i, 'tilalias', `Gør «${esc(i.navn)}» til alias af …`, 'Gør til alias', 'ivTilAlias', 'tjek')}
+      <h3>Slet</h3>
+      <div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-slet-ing" data-h="ivSletIng" data-n="${i.id}" aria-label="Slet ${esc(i.navn)}">${ik('slet')} Slet ingrediensen</button>
+        ${i.foreloebig ? `<button type="button" class="knap mini gem" data-tpid="iv-fb-ok" data-h="ivFbGodkend" data-n="${i.id}">${ik('tjek')} Godkend</button>` : ''}</div>
+    </div>`);
+    $('.ark-bag', d).addEventListener('click', lukArk);
+  }
+  // Ny kategori
+  function aabnNyKat() {
+    const d = ark(`<h2>Ny kategori</h2><small>Fx «Krydderurter». Den kommer nederst, før «Ikke sorteret».</small>
+      <label for="nyKatNavn">Navn</label>
+      <input id="nyKatNavn" class="felt felt-m" autocomplete="off" autocapitalize="sentences" spellcheck="false" maxlength="40">
+      <div id="arkfejl"></div>
+      <div class="rakke"><button type="button" class="knap annuller" data-tpid="annuller" data-h="lukArk">Annuller</button><button type="button" class="knap gem" data-tpid="gem" data-h="ivNyKatGem">${ik('tjek')} Opret</button></div>`);
+    $('.ark-bag', d).addEventListener('click', lukArk);
+    $('#nyKatNavn').focus();
+  }
   const reglerHtml = () => `<h2>Ingredienser og aliaser</h2>
-    <p class="lille">Et alias er et andet navn for samme ingrediens, fx «kyllingefilet» for «kyllingebryst». «Samme som» er to ingredienser, der kan erstatte hinanden 1:1 (kyllingebryst og hønsebryst). «Slags af» er en variant af et fællesnavn (frisk timian er en slags timian). Koblinger går kun ét skridt. Søg efter en ingrediens for at ændre den.</p>
-    <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-ing-ny" data-h="ivNy">${ik('plus')} Ny ingrediens</button></div>
+    <p class="lille">Et alias er et andet navn for samme ingrediens, fx «kyllingefilet» for «kyllingebryst». «Samme som» er to ingredienser, der kan erstatte hinanden 1:1 (kyllingebryst og hønsebryst). «Slags af» er en variant af et fællesnavn (frisk timian er en slags timian). Koblinger går kun ét skridt. Søg efter en ingrediens, og tryk på den for at ændre den.</p>
+    <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-ing-ny" data-h="ivNy">${ik('plus')} Ny ingrediens</button><button type="button" class="knap mini" data-tpid="iv-kat-ny-top" data-h="ivNyKat">${ik('plus')} Ny kategori</button></div>
     <label for="ivsoeg">Find en ingrediens eller et alias</label>
     <input id="ivsoeg" type="search" class="felt felt-m" value="${esc(soeg)}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="ivsoeg-h" aria-controls="iv-regler">
     <p class="lille" id="ivsoeg-h">Skriv mindst to bogstaver. Uden søgning ses de ingredienser, der har et alias.</p>
-    <datalist id="ivliste">${[...D.ing].sort((a, b) => a.navn.localeCompare(b.navn, 'da')).map(i => `<option value="${esc(i.navn)}"></option>`).join('')}</datalist>
     <div id="iv-regler">${reglerListe()}</div>
     <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-regel-ny" data-h="ivRegel">${ik('plus')} Ny regel (flere varer, én af flere)</button></div>`;
 
@@ -363,7 +400,7 @@ ${linjer.join('\n')}
     while (ed.varer.length < n) ed.varer.push({ navn: '', f: '' });
     ed.varer.length = n;
     return ed.varer.map((v, i) => `<div class="iv-vare"><label for="rgv${i}">${n > 1 ? 'Vare ' + (i + 1) : 'Vare'}</label>
-      <input id="rgv${i}" class="felt felt-m" list="rgliste" value="${esc(v.navn)}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      ${vaelgFelt('rgv' + i, ` value="${esc(v.navn)}"`)}
       <label for="rgf${i}">Tilberedning (valgfrit)</label>
       <input id="rgf${i}" class="felt felt-m" value="${esc(v.f)}" placeholder="fx finthakket" autocomplete="off" autocapitalize="off">
       ${n > 2 ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-vare-fjern" data-h="rgFjern" data-v="${i}" aria-label="Fjern vare ${i + 1}">${ik('fjern')} Fjern</button></div>` : ''}</div>`).join('')
@@ -385,7 +422,6 @@ ${linjer.join('\n')}
       <fieldset class="iv-valg"><legend>Så betyder det</legend>${SLAGS.map(([k, t]) => `<label class="skift"><input type="radio" name="rgslags" value="${k}"${ed.slags === k ? ' checked' : ''}> <span>${t}</span></label>`).join('')}</fieldset>
       <p class="lille" id="rghint"></p>
       <div id="rgvarer"></div>
-      <datalist id="rgliste">${[...D.ing].sort((a, b) => a.navn.localeCompare(b.navn, 'da')).map(i => `<option value="${esc(i.navn)}"></option>`).join('')}</datalist>
       <div id="arkfejl"></div>
       <div class="rakke"><button type="button" class="knap annuller" data-tpid="annuller" data-h="lukArk">Annuller</button><button type="button" class="knap gem" data-tpid="gem" data-h="rgGem">${ik('tjek')} Gem reglen</button></div>`);
     tegnRaekker();
@@ -412,6 +448,7 @@ ${linjer.join('\n')}
     const l = $('#iv-regler'); if (l) l.innerHTML = reglerListe();
     tegnForeloebig(); tegnTvivl();
     if (R) { R = beregn(D, rettelse, valg); tegnVis(); }
+    if (aaben && D.ing.some(x => x.id === aaben)) aabnIng(aaben);
     if (besked) toast(besked);
   }
   async function visKonflikt(hvad, deres) { // hvad: «gem», «slet» eller «slettet» (en anden har slettet reglen)
@@ -596,6 +633,35 @@ ${linjer.join('\n')}
     if (e.target.name !== 'rgslags' || !ed) return;
     laesVinduet(); ed.slags = e.target.value; tegnRaekker();
   });
+  // Glaslisten under skrivefelterne (data-vaelg): op til seks ingredienser, der passer til det, der skrives
+  const skjulForslag = l => { l.hidden = true; l.innerHTML = ''; const f = l.previousElementSibling; if (f) f.setAttribute('aria-expanded', 'false'); };
+  const visForslag = f => {
+    const l = f.nextElementSibling, q = norm(f.value);
+    if (!l || !l.classList.contains('iv-forslag')) return;
+    const hit = q ? D.ing.filter(i => i.navn_norm.includes(q)).sort((a, b) => (b.navn_norm.startsWith(q) - a.navn_norm.startsWith(q)) || a.navn.localeCompare(b.navn, 'da')).slice(0, 6) : [];
+    if (!hit.length || (hit.length === 1 && hit[0].navn_norm === q)) return skjulForslag(l);
+    l.innerHTML = hit.map(i => `<button type="button" class="iv-forslag-r" role="option" data-vf="${esc(i.navn)}"><span data-tpdata>${esc(i.navn)}</span><small data-tpdata>${esc(katNavn(D.kat.find(k => k.id === i.kategori_id)))}</small></button>`).join('');
+    l.hidden = false; f.setAttribute('aria-expanded', 'true');
+  };
+  document.addEventListener('input', e => { if (e.target.matches('input[data-vaelg]')) visForslag(e.target); });
+  document.addEventListener('focusin', e => { if (e.target.matches('input[data-vaelg]')) visForslag(e.target); });
+  document.addEventListener('focusout', e => {
+    const w = e.target.closest && e.target.closest('.iv-vaelg'); if (!w) return;
+    setTimeout(() => { const l = $('.iv-forslag', w); if (l && !w.contains(document.activeElement)) skjulForslag(l); }, 120);
+  });
+  document.addEventListener('pointerdown', e => { if (e.target.closest('.iv-forslag')) e.preventDefault(); }); // feltet beholder fokus, mens man vælger
+  document.addEventListener('click', e => {
+    const h = e.target.closest('[data-h]'); // en handling inde i ingrediens-vinduet åbner det igen, når den er gemt
+    if (h) aaben = h.closest('.iv-ing-ark') && h.dataset.h !== 'lukArk' ? h.closest('.iv-ing-ark').dataset.ingid : null;
+    const v = e.target.closest('[data-vf]'); if (!v) return;
+    const w = v.closest('.iv-vaelg'), f = $('input', w); f.value = v.dataset.vf; skjulForslag($('.iv-forslag', w)); f.focus({ preventScroll: true });
+  }, true);
+  document.addEventListener('keydown', e => {
+    const w = e.target.closest && e.target.closest('.iv-vaelg'); if (!w) return;
+    const l = $('.iv-forslag', w), r = l ? [...l.querySelectorAll('.iv-forslag-r')] : [];
+    if (e.key === 'Escape' && !l.hidden) { e.stopPropagation(); skjulForslag(l); $('input', w).focus(); }
+    else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && r.length) { e.preventDefault(); const nu = r.indexOf(document.activeElement), n = e.key === 'ArrowDown' ? nu + 1 : nu - 1; (n < 0 ? $('input', w) : r[Math.min(n, r.length - 1)]).focus(); }
+  }, true);
   document.addEventListener('input', e => { // søgningen i listen over regler
     if (e.target.id !== 'ivsoeg') return;
     soeg = e.target.value; $('#iv-regler').innerHTML = reglerListe();
@@ -661,7 +727,7 @@ ${linjer.join('\n')}
       await retPakke(r.payload, 'før alias', `«${a.navn}» er nu et alias af «${b.navn}»`);
     },
     async ivFbGodkend(el) { // en foreløbig ingrediens godkendes med den valgte kategori
-      const i = D.ing.find(x => x.id === el.dataset.n), k = document.querySelector(`[data-fkat="${i.id}"]`);
+      const i = D.ing.find(x => x.id === el.dataset.n), k = (el.closest('.iv-ing-ark') && $('select', el.closest('.iv-ing-ark'))) || document.querySelector(`[data-fkat="${i.id}"]`);
       try {
         await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { foreloebig: false, kategori_id: k && k.value || i.kategori_id } });
         await api(`ingrediens_gennemgang?ingrediens_id=eq.${enc(i.id)}&slags=eq.ny`, { method: 'DELETE' }).catch(() => {});
@@ -716,6 +782,19 @@ ${linjer.join('\n')}
       aabnNy(r.tekst, i && i.kategori_id, r);
     },
     ivNy() { aabnNy('', null, null); },
+    ivIng(el) { aabnIng(el.dataset.n); },
+    ivNyKat() { aabnNyKat(); },
+    async ivNyKatGem() {
+      const navn = $('#nyKatNavn').value.trim().replace(/\s+/g, ' ');
+      if (!navn) return arkFejl(['Skriv et navn.']);
+      if (/[(),;]/.test(navn)) return arkFejl(['Et navn må ikke have komma eller parentes.']);
+      if (D.kat.some(k => k.navn_norm === norm(navn))) return arkFejl([`«${navn}» findes allerede.`]);
+      const knap = $('[data-h="ivNyKatGem"]'); knap.disabled = true;
+      const sidste = Math.max(0, ...D.kat.filter(k => k.navn_norm !== 'andet').map(k => k.raekkefolge || 0));
+      try { await api('ingrediens_kategorier', { method: 'POST', body: { navn, navn_norm: norm(navn), raekkefolge: sidste + 1 } }); }
+      catch (e) { console.error(e); knap.disabled = false; return arkFejl(['Kategorien blev ikke oprettet. Tjek internettet, og prøv igen.']); }
+      await efterRegel(`Kategorien «${navn}» er oprettet`);
+    },
     ivOversigt() { const d = ark(oversigtHtml()); $('.ark-bag', d).addEventListener('click', lukArk); },
     async ivGodkend(el) {
       try { await api(`ingrediens_gennemgang?id=eq.${enc(el.dataset.v)}`, { method: 'DELETE' }); } catch (e) { return fejlbesked('Det blev ikke godkendt. Tjek internettet, og prøv igen.'); }

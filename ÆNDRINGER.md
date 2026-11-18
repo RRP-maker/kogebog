@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.30.0 · Vindue til hver ingrediens og Ny kategori
+- **Tryk på en ingrediens** i Ingrediensværktøjet, så åbner et vindue som i Designeren. Det samler kategori, aliaser, slags af, samme som, saml med en anden og slet i rækkefølge med en kort forklaring. Knapperne gør det samme som før, og vinduet åbner igen efter en handling, så man kan fortsætte.
+- **Glasfelter med glasliste:** skriv i et felt, og de ingredienser der passer, vises som en glasliste under feltet (op til seks). Tryk på en for at vælge den. Erstatter browserens egen rullende liste.
+- **Ny kategori:** knap øverst i værktøjet og i vinduet. Den kommer nederst, før «Ikke sorteret».
+
 ## 2.29.0 · Kategori og sletning kun i Ingrediensværktøjet
 - **Skift kategori** og **Slet ingrediensen** står ved hver ingrediens i værktøjet (og «Slet» ved de foreløbige). Sletning afvises, hvis ingrediensen står i en opskrift eller «Derhjemme», har aliaser eller er fællesnavn. Der gemmes en kopi først.
 - **Uden for værktøjet kan kategorien ikke ændres:** kategoriknappen i «Derhjemme» og arket til at skifte eller lave kategorier er væk, og import sætter ikke længere en kategori på en kendt ingrediens. Nye ingredienser får stadig en kategori, når de oprettes.
