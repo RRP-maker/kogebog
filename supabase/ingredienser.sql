@@ -1,3 +1,4 @@
+-- NB: efter 2.26 skal ingredienser-regler.sql køres bagefter (den erstatter nogle af funktionerne herunder).
 -- Ingrediensværktøjet (opdatering 4c) og «Styr på ingredienser». Kør i Supabase (SQL Editor). Kan køres flere gange. Kun tilføjelser.
 -- Rettelser køres som én funktion: enten sker det hele, eller også sker intet. Før hver rettelse gemmes en kopi, som kan gendannes.
 -- Tabellerne er åbne som resten af appen (bevidst valg). Det er ikke sikkerhed.
