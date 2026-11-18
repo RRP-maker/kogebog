@@ -228,7 +228,7 @@ function spoergDublet(dubletter, antal) {
 }
 
 // ---------- Ingredienser: mængde, enhed, navn ----------
-const ENHEDER = ['g', 'kg', 'ml', 'cl', 'dl', 'l', 'tsk', 'spsk', 'stk', 'knsp', 'nip', 'dåse', 'dåser', 'fed', 'bundt', 'pk', 'pakke', 'pakker', 'skive', 'skiver', 'håndfuld', 'glas', 'kop', 'kopper', 'pose', 'poser', 'bakke', 'bakker', 'stængel', 'stængler', 'knivspids', 'shot'];
+const ENHEDER = ['g', 'kg', 'rulle', 'ruller', 'stilk', 'stilke', 'dryp', 'ml', 'cl', 'dl', 'l', 'tsk', 'spsk', 'stk', 'knsp', 'nip', 'dåse', 'dåser', 'fed', 'bundt', 'pk', 'pakke', 'pakker', 'skive', 'skiver', 'håndfuld', 'glas', 'kop', 'kopper', 'pose', 'poser', 'bakke', 'bakker', 'stængel', 'stængler', 'knivspids', 'shot'];
 const BROEK = { '½': 0.5, '¼': 0.25, '¾': 0.75, '1/2': 0.5, '1/4': 0.25, '3/4': 0.75 };
 function tal(v) {
   if (typeof v === 'number') return isFinite(v) ? v : null;

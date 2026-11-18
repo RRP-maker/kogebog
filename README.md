@@ -12,6 +12,7 @@ En delt kogebog som statisk web app: opskrifter og tips i et kladdehæfte, med h
 | `style.css` | Notesbog-design |
 | `app.js` | Sider, database, begreber, ure, forslag, import |
 | `hjaelper.js` | Hjælperen og lyde |
+| `tekstlaeser.js`, `filleser.js`, `linkimport.js` | Importér opskrift: links (via funktionen `hent-opskrift`), indsat tekst og filer (Word, PDF, RTF, mail, html, JSON, CSV, tekst). Tekst og filer læses i appen |
 | `katalog.js` | Katalog over ingredienser og kategorier: gem, spørg, sortér med Claude |
 | `ingvaerktoej.js` | Ingrediensværktøjet i Værkstedet: ryd op i kataloget med forhåndsvisning, kopi og gendan (SQL i `supabase/ingredienser.sql`) |
 | `glas.js` | Glas under Indstillinger: frost og sløring. Gemmes kun på enheden |

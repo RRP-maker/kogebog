@@ -50,7 +50,7 @@ const LinkImport = (() => {
       r = laesEn(t.j);
     } else {
       const d = j.data;
-      const ingr = d.ingredienser.flatMap(ingLinjer);
+      const ingr = d.ingredienser.map(Tekstlaeser.retStavning).flatMap(ingLinjer);
       r = laesEn({ navn: pænNavn(d.navn), kategori: mapKat(d.kategori), koekken: mapKoekken(d.koekken), svaerhed: svaerhedAf(ingr.length, d.tid), portioner: d.portioner, tid: d.tid, ingredienser: ingr, trin: trinFraFunktion(d.trin) });
     }
     if (r.fejl) throw new Error('Opskriften mangler navn, ingredienser eller trin.');
@@ -71,7 +71,10 @@ const LinkImport = (() => {
         <li>Sæt et link ind, sæt teksten fra en side ind, eller skriv opskriften selv. Har du flere links, så skriv ét på hver linje.
           <textarea id="imp" data-tpid="importer-tekst" rows="6" data-husk="importTekst" placeholder="https://… eller din opskrift" aria-label="Link eller opskrift"></textarea>
           ${feltKnapper('importer', 'imp')}
-          <p class="lille">Skriver du selv? Navnet øverst. Så «Ingredienser» med én på hver linje, og «Sådan gør du» med trinnene.</p></li>
+          <p class="lille">Skriver du selv? Navnet øverst. Så «Ingredienser» med én på hver linje, og «Sådan gør du» med trinnene.</p>
+          <p class="lille">Har du opskriften i en fil? Word, PDF, tekst, mail eller en gemt hjemmeside. Tryk på «Vælg fil».</p>
+          <div class="rakke venstre"><button type="button" class="knap" data-tpid="importer-fil" data-h="vaelgFil">Vælg fil</button></div>
+          <input type="file" id="imp-fil" hidden accept=".txt,.md,.html,.htm,.eml,.json,.csv,.tsv,.rtf,.docx,.pdf,text/plain,text/html,application/pdf,message/rfc822,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></li>
         <li>Tryk på Importér. Links henter jeg fra nettet, også fra TikTok, Instagram og Facebook, når opskriften står i teksten under opslaget. Hold siden åben imens.
           <div class="rakke venstre">
             <button class="knap hoved stor" data-tpid="importer-start" data-h="startLinks">${ik('gryde')} Importér</button>
@@ -86,6 +89,7 @@ const LinkImport = (() => {
       ${gemt ? `<p class="lille">${gemt} links er allerede hentet fra før og springes over.</p>
       <button class="knap" data-tpid="importer-forfra" data-h="startForfra">Start forfra med alle links</button>` : ''}`;
     document.querySelectorAll('textarea[data-husk]').forEach(t => { t.value = lager.hent(t.dataset.husk, ''); });
+    $('#imp-fil').addEventListener('change', e => { const fil = e.target.files[0]; e.target.value = ''; if (fil) laesFil($('[data-tpid=importer-fil]'), fil); });
     Hjaelper.side([
       { tekst: 'Sæt et link eller en opskrift ind her. Du kan også skrive selv.', maal: 'importer-tekst', bev: 'salto' },
       { tekst: 'Tryk på Importér. Så gemmer jeg opskriften for dig.', maal: 'importer-start', bev: 'skridt' },
@@ -97,9 +101,25 @@ const LinkImport = (() => {
   const spoerg = (r, valg, spring = new Set()) => Katalog.afklar(ingAf(r.data).map(i => i.n).filter(n => !spring.has(Katalog.rens(n))),
     { imp: true, kat: r.kat, titel: r.data.titel, gem: 'Gem opskriften', ...valg });
 
-  // Tekst, man har sat ind eller skrevet: én opskrift, som gemmes med det samme og åbnes, så den kan tjekkes
-  async function gemTekst(el, tekst) {
-    const t = tekstTilOpskrift(tekst);
+  // Tekst, man har sat ind eller skrevet: én opskrift, som gemmes med det samme og åbnes, så den kan tjekkes.
+  // Særlige formater (JSON, HTML, RTF, mail, CSV) læses først af Filleser (filleser.js).
+  const mapper = { kat: mapKat, koekken: mapKoekken };
+  function gemTekst(el, tekst) {
+    const f = Filleser.fraTekst(tekst);
+    return gemJ(el, f ? Filleser.tilJ(f, mapper) : tekstTilOpskrift(tekst), true);
+  }
+  // En fil (Word, PDF, tekst, mail, gemt hjemmeside, JSON, CSV, RTF): læses her i appen, intet sendes ud
+  async function laesFil(el, fil) {
+    fejlboks('');
+    if (fil.size > 15e6) return fejlboks('Filen er for stor. Den må højst fylde 15 MB.');
+    let r;
+    el.disabled = true;
+    try { r = await Filleser.laes(fil.name, new Uint8Array(await fil.arrayBuffer())); }
+    catch (e) { console.error(e); return fejlboks('Filen kunne ikke læses. Kopiér teksten fra filen, og sæt den ind i feltet.'); }
+    finally { el.disabled = false; }
+    return gemJ(el, Filleser.tilJ(r, mapper), false);
+  }
+  async function gemJ(el, t, fraFelt) {
     if (t.fejl) return fejlboks(t.fejl);
     const r = laesEn(t.j);
     if (r.fejl) return fejlboks('Opskriften mangler navn, ingredienser eller trin.');
@@ -111,7 +131,7 @@ const LinkImport = (() => {
       if (!svar) return; // tilbage: intet er gemt, og teksten står i feltet
       r.data.ingredienser = await Katalog.knyt(r.data.ingredienser, svar, { claude: r.kat });
       const [ny] = await api('opskrifter', { method: 'POST', body: { ...r.data, kilde: 'importeret' } });
-      lager.gem('importTekst', '');
+      if (fraFelt) lager.gem('importTekst', '');
       toast('Opskriften er gemt. Tjek, at alt står rigtigt'); Hjaelper.glad('Opskriften er gemt!');
       location.hash = '#/opskrifter/' + ny.id;
     } finally { el.disabled = false; }
@@ -217,6 +237,7 @@ const LinkImport = (() => {
 
   Object.assign(H, {
     startLinks(el) { return koer(el); },
+    vaelgFil() { $('#imp-fil').click(); },
     stopLinks(el) { stop = true; el.disabled = true; toast('Stopper efter de links, jeg er i gang med'); },
     async kopierFejl() {
       const o = $('#fejlomraade'); let l = []; try { l = JSON.parse(o.dataset.links || '[]'); } catch (e) { /* tom */ }

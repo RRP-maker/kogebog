@@ -2,6 +2,15 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.32.0 · Import fra filer, og importen tåler mere rod
+- **«Vælg fil»** under «Importér opskrift»: Word (.docx), PDF med tekst, RTF, tekst og Markdown, mails (.eml), gemte hjemmesider (.html), JSON og CSV. Alt læses i appen (`filleser.js`) uden pakker, og intet sendes ud. En scannet PDF (et billede) giver en fejl, der siger det.
+- Sætter man JSON, HTML-kode, RTF, en mail eller en CSV ind i feltet, læses den på samme måde.
+- Læseren (`tekstlaeser.js`) er rettet ud fra 110 testfiler (22 opskrifter, hver i 5 slags rod): menuer, reklamer og kommentarer på siden, «Kan fryses i 3 måneder» læst som tid og antal, forfatterlinjer med tid og antal («30 min. · 4 personer»), chat-eksport (kun den, der skriver opskriften), mails med alle trin i ét afsnit, «Det tager vist 30 min.», tips til sidst, stavefejl i enheder («ss», «tskf», «spssk», «grm», «styk», «sp.sk.»), «daase» -> dåse, «vnd» -> vand, «– den bedste du kan opdrive» efter en vare, nummererede trin, der lignede overskrifter, og navnet øverst på kopierede sider.
+- Volapyk, dårlige scanninger og diktat uden tegnsætning afvises med en forklaring i stedet for at blive gemt som vrøvl.
+- Ingredienser fra hjemmesider med JSON-LD får nu også rettet stavefejl (som tekst altid har fået).
+- Før: hvis ingredienslisten startede med en gruppeoverskrift (fx «Pulled chicken»), kunne menuen «Indkøbsliste» blive læst som ingredienser. Rettet.
+- Funktionen `hent-opskrift` er ikke ændret og skal ikke lægges ind igen.
+
 ## 2.31.1 · Import: menuen på siden blev læst som ingredienser
 - På fx valdemarsro.dk står «Indkøbsliste» i menuen. Læseren tog den for overskriften «Ingredienser», så hele menuen og indledningen kom med som ingredienser. Nu vælges den overskrift, der står lige over en linje med mængde (som «2 dl bulgur»).
 - Før 2.26.0 spurgte appen om de ukendte ord («Hvad er favoritter?»). Nu bliver de stille til foreløbige ingredienser, og derfor blev fejlen først synlig nu.
