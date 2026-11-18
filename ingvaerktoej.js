@@ -352,7 +352,9 @@ ${linjer.join('\n')}
     $('.ark-bag', d).addEventListener('click', lukArk);
   }
   // Ny kategori
+  let katFra = null; // ingrediensen, vinduet blev åbnet fra
   function aabnNyKat() {
+    katFra = aaben;
     const d = ark(`<h2>Ny kategori</h2><small>Fx «Krydderurter». Den kommer nederst, før «Ikke sorteret».</small>
       <label for="nyKatNavn">Navn</label>
       <input id="nyKatNavn" type="text" class="felt felt-m" autocomplete="off" autocapitalize="sentences" spellcheck="false" maxlength="40">
@@ -790,10 +792,10 @@ ${linjer.join('\n')}
       if (/[(),;]/.test(navn)) return arkFejl(['Et navn må ikke have komma eller parentes.']);
       if (D.kat.some(k => k.navn_norm === norm(navn))) return arkFejl([`«${navn}» findes allerede.`]);
       const knap = $('[data-h="ivNyKatGem"]'); knap.disabled = true;
-      const sidste = Math.max(0, ...D.kat.filter(k => k.navn_norm !== 'andet').map(k => k.raekkefolge || 0));
+      const sidste = Math.max(0, ...D.kat.filter(k => k.navn_norm !== 'andet' && (k.raekkefolge || 0) < 1000).map(k => k.raekkefolge || 0));
       try { await api('ingrediens_kategorier', { method: 'POST', body: { navn, navn_norm: norm(navn), raekkefolge: sidste + 1 } }); }
       catch (e) { console.error(e); knap.disabled = false; return arkFejl(['Kategorien blev ikke oprettet. Tjek internettet, og prøv igen.']); }
-      await efterRegel(`Kategorien «${navn}» er oprettet`);
+      aaben = katFra; await efterRegel(`Kategorien «${navn}» er oprettet`);
     },
     ivOversigt() { const d = ark(oversigtHtml()); $('.ark-bag', d).addEventListener('click', lukArk); },
     async ivGodkend(el) {

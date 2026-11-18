@@ -1516,4 +1516,4 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .iv-sek { margin: var(--m) 0 var(--pt); display: flex; flex-direction: column; }
 .iv-sek h3 { margin-top: 0; }
 .iv-sek > .lille { margin: 0; }
-.iv-sek .rakke { flex-wrap: wrap; }
+.iv-sek .rakke { flex-wrap: wrap; margin-bottom: var(--m); }

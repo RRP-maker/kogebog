@@ -2,6 +2,9 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.30.2 · Ny kategori åbner ingrediensen igen
+- Efter «Ny kategori» åbner ingrediensens vindue igen. Nye kategorier lægges efter den sidste almindelige, ikke efter «Ikke sorteret». Lidt luft mellem knapper og felter i vinduet.
+
 ## 2.30.1 · Vinduet til ingrediensen rettet
 - Skrivefelterne var uden glas (manglede `type`). Nu er de glas.
 - Vinduet er delt i tre kort: Kategori, Aliaser og «Forbind med en anden» (ét felt og tre knapper: alias, slags af, samme som). Slet står nederst.
