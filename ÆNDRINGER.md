@@ -2,6 +2,10 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.28.0 · DTU-forslag i Ingrediensværktøjet og kildeangivelse
+- **DTU-forslag:** en ny sektion i værktøjet (tabellen `ingrediens_tvivl`, `supabase/dtu-tvivl.sql`) med de DTU-navne, scriptet ikke kunne afgøre. Ret navn og kategori og tryk «Opret», eller «Spring over». «Opret alle viste» tager de 25 viste på én gang. Søgefeltet indsnævrer listen.
+- **Kilder:** Indstillinger og README nævner DTU Fødevaredatabasen (Frida) 6.1 og licensen CC BY 4.0, og at navnene er ændret.
+
 ## 2.27.0 · Ingrediensværktøjet: foreløbige ingredienser, samme som og slags af
 - **Foreløbige ingredienser:** en ny sektion øverst i værktøjet med det, appen har oprettet uden at spørge. Vælg kategori og tryk «Godkend» (eller «Godkend alle»), eller gør dem til alias af en ingrediens, der findes.
 - **Ved hver ingrediens** (søg i «Ingredienser og aliaser»): «er en slags …» (fællesnavn, ét niveau), «er samme som …» (gruppe på mindst to, 1:1) og «Gør til alias af …». Alias bruger den gamle sammenlægning (`ingrediens_ret`): opskrifter og Derhjemme følger med, og det gamle navn bliver et alias. Sammenlægning findes kun her.

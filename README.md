@@ -39,3 +39,6 @@ alter table tilpasning add column felt text; -- feltets størrelse: s, m eller l
 alter table tilpasning add column laast boolean; -- feltet er låst
 alter table tilpasning add column ikkeflyt boolean; -- feltet kan ikke flyttes
 ```
+
+## Kilder og licens
+Mange af ingrediensnavnene stammer fra DTU Fødevareinstituttet, *Fødevaredatabasen (Frida)*, version 6.1, https://frida.fooddata.dk, udgivet under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.da). Navnene er ændret (tilstande som «rå» er fjernet, og navnene er sat i ental, sorteret i egne kategorier). Se `supabase/dtu-ingredienser.json` og `supabase/dtu-tvivl.json`.

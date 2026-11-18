@@ -1310,6 +1310,8 @@ function mereSide() {
     <p class="lille">Hent alt indhold som en fil. Gem den et sikkert sted.</p>
     <button class="knap" data-h="eksport">${ik('hent')} Hent sikkerhedskopi</button>
     <p class="lille" id="versionstekst">${versionstekst()}</p>
+    <h2>Kilder</h2>
+    <p class="lille" data-tpdata>Mange ingrediensnavne stammer fra DTU Fødevareinstituttet, Fødevaredatabasen (Frida), version 6.1, frida.fooddata.dk. Licens: <a href="https://creativecommons.org/licenses/by/4.0/deed.da" target="_blank" rel="noopener">CC BY 4.0</a>. Navnene er ændret: tilstande som «rå» er fjernet, og navnene er sat i ental.</p>
 `;
   Glid.alle(app);
   Glas.start(app);

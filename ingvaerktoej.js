@@ -3,7 +3,7 @@
 // Gangen: kopiér listen til Claude, sæt Claudes rettelser ind, se forhåndsvisningen, gem. Alt regnes ud her (beregn) og sendes som én pakke til
 // databasefunktionen «ingrediens_ret» (supabase/ingredienser.sql), som først gemmer en kopi og så retter det hele eller intet.
 const IngVaerktoej = (() => {
-  let D = null, R = null, valg = {}, kopiListe = [], rettelse = null, G = []; // G: «Til gennemgang»
+  let D = null, R = null, valg = {}, kopiListe = [], rettelse = null, G = [], T = [], tvSoeg = ''; // G: «Til gennemgang». T: DTU-forslag (ingrediens_tvivl)
   const aabne = new Set(['linjer']);
   const norm = s => String(s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
   const KORT = 8; // så mange tegn af et id står i listen til Claude
@@ -244,6 +244,48 @@ ${linjer.join('\n')}
       ${f.map(række).join('')}${f.length > 1 ? `<div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-fb-alle" data-h="ivFbAlle">${ik('tjek')} Godkend alle</button></div>` : ''}`;
   };
   const tegnForeloebig = () => { const b = $('#iv-foreloebig'); if (b) b.innerHTML = foreloebigHtml(); };
+  // ---------- DTU-forslag (2.28.0) ----------
+  // Forslag fra DTU Fødevaredatabasen, hvor navnet ikke kunne afgøres af et script (ingrediens_tvivl). Ret navnet og kategorien, og tryk «Opret», eller «Spring over».
+  // En række forsvinder, når den er oprettet eller sprunget over. Findes navnet allerede, oprettes intet, og rækken fjernes.
+  const TVSIDE = 25;
+  const tvKat = k => { const n = norm(k), f = D.kat.find(x => x.navn_norm === (n === 'ikke sorteret' ? 'andet' : n)); return f ? f.id : ''; };
+  const tvFiltreret = () => { const q = norm(tvSoeg); return q.length >= 2 ? T.filter(t => norm(`${t.forslag} ${t.eksempler || ''} ${t.kategori}`).includes(q)) : T; };
+  function tvListeHtml() {
+    const alle = tvFiltreret(), vis = alle.slice(0, TVSIDE), kat = [...D.kat].sort((a, b) => a.raekkefolge - b.raekkefolge);
+    if (!alle.length) return `<p class="lille">${T.length ? 'Ingen forslag passer.' : 'Ingen forslag at gennemgå.'}</p>`;
+    const række = t => { const k = tvKat(t.kategori); return `<div class="iv-regel" data-id="${t.id}"><p class="tekst-s" data-tpdata>Fra DTU: ${esc(t.eksempler || t.forslag)}${t.antal > 1 ? ` (${t.antal} rækker)` : ''}</p>
+      <label for="tvn-${t.id}">Navn</label>
+      <input id="tvn-${t.id}" class="felt felt-m" value="${esc(t.forslag)}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="tvk-${t.id}">Kategori</label>
+      <select id="tvk-${t.id}" class="felt felt-m">${kat.map(c => `<option value="${c.id}"${c.id === k ? ' selected' : ''}>${esc(katNavn(c))}</option>`).join('')}</select>
+      <div class="rakke venstre"><button type="button" class="knap mini gem" data-tpid="iv-tv-opret" data-h="ivTvOpret" aria-label="Opret ${esc(t.forslag)}">${ik('tjek')} Opret</button>
+        <button type="button" class="knap mini slet" data-tpid="iv-tv-spring" data-h="ivTvSpring" aria-label="Spring ${esc(t.forslag)} over">${ik('fjern')} Spring over</button></div></div>`; };
+    return vis.map(række).join('') + (alle.length > vis.length ? `<p class="lille">${alle.length - vis.length} forslag mere. Søg for at indsnævre, eller tag dem, når de første er gennemgået.</p>` : '')
+      + `<div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-tv-alle" data-h="ivTvAlle">${ik('tjek')} Opret alle ${vis.length} viste</button></div>`;
+  }
+  const tvivlHtml = () => !T.length ? '<h2>DTU-forslag</h2><p class="lille">Ingen DTU-forslag at gennemgå.</p>'
+    : `<h2>DTU-forslag (${T.length})</h2><p class="lille">Navne fra DTU Fødevaredatabasen, hvor scriptet ikke kunne afgøre navnet. Ret navnet og kategorien, og tryk «Opret». Er det bare en variant af en vare, du har, så tryk «Spring over». Navnet må ikke have komma eller parentes.</p>
+      <label for="ivtvsoeg">Find et forslag</label>
+      <input id="ivtvsoeg" type="search" class="felt felt-m" value="${esc(tvSoeg)}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-controls="iv-tvliste">
+      <div id="iv-tvliste">${tvListeHtml()}</div>`;
+  const tegnTvivl = () => { const b = $('#iv-tvivl'); if (b) b.innerHTML = tvivlHtml(); };
+  async function tvOpret(liste) { // liste: [{ t: forslaget, navn, kat }]
+    const fejl = [], nye = [], findes = [];
+    for (const x of liste) {
+      if (!x.navn || /[(),;]/.test(x.navn)) { fejl.push(`«${x.t.forslag}»: navnet må ikke være tomt eller have komma eller parentes.`); continue; }
+      if (D.ing.some(i => i.navn_norm === x.navn) || D.regler.some(r => r.tekst === x.navn) || nye.some(n => n.navn === x.navn)) { findes.push(x); continue; }
+      nye.push({ navn: x.navn, kategori_id: x.kat || null, x });
+    }
+    if (fejl.length) return fejlbesked(fejl.slice(0, 3).join(' '));
+    try {
+      await Katalog.opret(nye.map(({ navn, kategori_id }) => ({ navn, kategori_id })));
+      for (const x of [...nye.map(n => n.x), ...findes]) await api(`ingrediens_tvivl?id=eq.${enc(x.t.id)}`, { method: 'DELETE' });
+    } catch (e) { console.error(e); return fejlbesked(serverFejl(e) || 'Det blev ikke oprettet. Tjek internettet, og prøv igen.'); }
+    const ids = new Set(liste.map(x => x.t.id)); T = T.filter(t => !ids.has(t.id));
+    await efterRegel(`${flertal(nye.length, 'ingrediens er', 'ingredienser er')} oprettet${findes.length ? `, ${findes.length} fandtes allerede` : ''}`);
+  }
+  const tvRaekke = r => ({ t: T.find(x => x.id === r.dataset.id), navn: norm(r.querySelector('input').value), kat: r.querySelector('select').value });
+
   // Én pakke til ingrediens_ret (kopi først, alt eller intet)
   async function retPakke(p, note, besked) {
     try { await api('rpc/ingrediens_ret', { method: 'POST', body: { p: { antal: D.ing.length, note, ...p } } }); }
@@ -361,7 +403,7 @@ ${linjer.join('\n')}
     await Katalog.hent().catch(e => console.error(e));
     lukArk();
     const l = $('#iv-regler'); if (l) l.innerHTML = reglerListe();
-    tegnForeloebig();
+    tegnForeloebig(); tegnTvivl();
     if (R) { R = beregn(D, rettelse, valg); tegnVis(); }
     if (besked) toast(besked);
   }
@@ -495,6 +537,7 @@ ${linjer.join('\n')}
       <p class="lille">Her opretter du ingredienser og styrer deres aliaser.</p>
       ${status()}
       <div id="iv-foreloebig">${foreloebigHtml()}</div>
+      <div id="iv-tvivl">${tvivlHtml()}</div>
       <div id="iv-gennemgang">${gennemgangHtml()}</div>
       <div class="rakke venstre"><button type="button" class="knap" data-tpid="iv-oversigt" data-h="ivOversigt">${ik('tag')} Se oversigt</button></div>
       ${reglerHtml()}
@@ -520,8 +563,9 @@ ${linjer.join('\n')}
     tegnVis();
   }
   async function hentSiden() {
-    [D, kopiListe, G] = await Promise.all([hentAlt(), api('ingrediens_backup?select=id,oprettet,note,antal&order=oprettet.desc&limit=20'),
-      api('ingrediens_gennemgang?select=*&order=oprettet.desc&limit=200').catch(() => [])]); // uden tabellen er listen tom
+    [D, kopiListe, G, T] = await Promise.all([hentAlt(), api('ingrediens_backup?select=id,oprettet,note,antal&order=oprettet.desc&limit=20'),
+      api('ingrediens_gennemgang?select=*&order=oprettet.desc&limit=200').catch(() => []), // uden tabellen er listen tom
+      api('ingrediens_tvivl?select=*&order=kategori,forslag&limit=1000').catch(() => [])]);
   }
   async function side() {
     app.innerHTML = `${Ikoner.tilbage('#/vaerksted')}<h2>Ingrediensværktøj</h2><p class="lille">Henter…</p>`;
@@ -548,6 +592,10 @@ ${linjer.join('\n')}
   document.addEventListener('input', e => { // søgningen i listen over regler
     if (e.target.id !== 'ivsoeg') return;
     soeg = e.target.value; $('#iv-regler').innerHTML = reglerListe();
+  });
+  document.addEventListener('input', e => { // søgningen i DTU-forslagene
+    if (e.target.id !== 'ivtvsoeg') return;
+    tvSoeg = e.target.value; $('#iv-tvliste').innerHTML = tvListeHtml();
   });
   Object.assign(H, {
     ivRegel(el) { // tilpas en regel (data-v), lav et alias til en ingrediens (data-n) eller en ny regel
@@ -623,6 +671,17 @@ ${linjer.join('\n')}
       } catch (e) { console.error(e); return fejlbesked('Det blev ikke godkendt. Tjek internettet, og prøv igen.'); }
       G = G.filter(g => g.slags !== 'ny'); tegnGennemgang();
       await efterRegel('Alle er godkendt');
+    },
+    async ivTvOpret(el) { await tvOpret([tvRaekke(el.closest('.iv-regel'))]); },
+    async ivTvSpring(el) {
+      const r = el.closest('.iv-regel'), id = r.dataset.id;
+      try { await api(`ingrediens_tvivl?id=eq.${enc(id)}`, { method: 'DELETE' }); } catch (e) { console.error(e); return fejlbesked('Det blev ikke sprunget over. Tjek internettet, og prøv igen.'); }
+      T = T.filter(t => t.id !== id); tegnTvivl();
+    },
+    async ivTvAlle() {
+      const liste = [...document.querySelectorAll('#iv-tvliste .iv-regel')].map(tvRaekke);
+      if (!liste.length || !await bekraeft(`Vil du oprette alle ${liste.length} viste med navnene og kategorierne, som de står nu? Der gemmes ikke en kopi, men ingen eksisterende ingredienser ændres.`, 'Opret')) return;
+      await tvOpret(liste);
     },
     ivEgen(el) { // et alias eller en regel bliver til en ingrediens for sig selv
       const r = D.regler.find(x => x.id === el.dataset.v);
