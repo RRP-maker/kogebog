@@ -2,6 +2,10 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.31.1 · Import: menuen på siden blev læst som ingredienser
+- På fx valdemarsro.dk står «Indkøbsliste» i menuen. Læseren tog den for overskriften «Ingredienser», så hele menuen og indledningen kom med som ingredienser. Nu vælges den overskrift, der står lige over en linje med mængde (som «2 dl bulgur»).
+- Før 2.26.0 spurgte appen om de ukendte ord («Hvad er favoritter?»). Nu bliver de stille til foreløbige ingredienser, og derfor blev fejlen først synlig nu.
+
 ## 2.31.0 · Ingredienserne i kategorier
 - **Alle ingredienser står nu i kategorier** i Ingrediensværktøjet. Hver kategori er et afsnit, der er lukket til at begynde med, med antal i overskriften. Det erstatter «Se oversigt». Rækkerne ser ud som før, kun rækkefølgen er ny (kategori, så alfabetisk).
 - Søgningen åbner de kategorier, der har et hit. «Navne, der ligner hinanden» (fra oversigten) står nederst som eget afsnit.

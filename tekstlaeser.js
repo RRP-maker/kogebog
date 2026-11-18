@@ -305,7 +305,9 @@ salt|flagesalt|peber|sort peber|paprika|spidskommen|karry|kanel|muskatnød|gurke
     linjer = linjer.flatMap(l => { const o = overskrift(l); return o && o.rest ? [l.slice(0, l.length - o.rest.length).trim(), o.rest] : [l]; });
     linjer = udvid(linjer);
     const typer = linjer.map(l => { const o = overskrift(l); return o && !o.rest ? o.type : null; });
-    let iIng = typer.indexOf('ing'), iTrin = typer.findIndex((t, i) => t === 'trin' && (iIng < 0 || i > iIng));
+    // Menuer på siderne har ofte et ord som «Indkøbsliste», der ligner en overskrift. Den rigtige står lige over en linje med mængde.
+    const ingH = typer.map((t, i) => t === 'ing' ? i : -1).filter(i => i >= 0);
+    let iIng = ingH.length ? (ingH.find(i => linjer[i + 1] !== undefined && MAENGDE(linjer[i + 1])) ?? ingH[0]) : -1, iTrin = typer.findIndex((t, i) => t === 'trin' && (iIng < 0 || i > iIng));
     if (iIng >= 0 && iTrin < 0 && typer.indexOf('trin') >= 0) iTrin = typer.indexOf('trin'); // trin først, ingredienser bagefter
     let foer = [], ing = [], trinR = [], udledt = false;
     const kort = l => l !== undefined && !NUMMERERET.test(l) && l.split(/\s+/).length <= 5 && !/[.!?]$/.test(l) && !verbStart(l) && !TRINSTART.test(l) && !SLUT.test(l);
