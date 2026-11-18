@@ -1,0 +1,2714 @@
+[
+{
+"navn": "a38",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "aborre",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "abrikosmarmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "aioli",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "ale",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "ananas",
+"kategori": "Frugt"
+},
+{
+"navn": "ananas på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "ananasjuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "ananaskirsebær",
+"kategori": "Frugt"
+},
+{
+"navn": "and",
+"kategori": "Kød"
+},
+{
+"navn": "appelsin",
+"kategori": "Frugt"
+},
+{
+"navn": "appelsinjuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "appelsinmarmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "artiskok",
+"kategori": "Grøntsager"
+},
+{
+"navn": "asparges",
+"kategori": "Grøntsager"
+},
+{
+"navn": "asparges på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "aubergine",
+"kategori": "Grøntsager"
+},
+{
+"navn": "avocado",
+"kategori": "Frugt"
+},
+{
+"navn": "baby gulerødder",
+"kategori": "Grøntsager"
+},
+{
+"navn": "babymajs",
+"kategori": "Grøntsager"
+},
+{
+"navn": "babyspinat",
+"kategori": "Grøntsager"
+},
+{
+"navn": "bacon",
+"kategori": "Kød"
+},
+{
+"navn": "bacon i skiver",
+"kategori": "Kød"
+},
+{
+"navn": "bagegær",
+"kategori": "Bagning"
+},
+{
+"navn": "bagepulver",
+"kategori": "Bagning"
+},
+{
+"navn": "baked beans (hvide bønner i tomatsauce)",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "banan",
+"kategori": "Frugt"
+},
+{
+"navn": "batat",
+"kategori": "Grøntsager"
+},
+{
+"navn": "bayonneskinke",
+"kategori": "Kød"
+},
+{
+"navn": "birkes",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "bitter",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "bladbede",
+"kategori": "Grøntsager"
+},
+{
+"navn": "bladselleri",
+"kategori": "Grøntsager"
+},
+{
+"navn": "blandet frugt- og grøntsagsjuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "blandet frugtjuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "blandet grøntsagsjuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "blodpølse",
+"kategori": "Kød"
+},
+{
+"navn": "blomkål",
+"kategori": "Grøntsager"
+},
+{
+"navn": "blomme",
+"kategori": "Frugt"
+},
+{
+"navn": "blåbær",
+"kategori": "Frugt"
+},
+{
+"navn": "blåmusling",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "blæksprutte",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "boghvede",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "boghvedegryn",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "boghvedemel",
+"kategori": "Bagning"
+},
+{
+"navn": "bomuldsfrøolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "bondebrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "bondebrød med fedtrige frø",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "bouillon",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "brasen",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "brie",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "brisling",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "brisling (sardin)",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "brissel",
+"kategori": "Kød"
+},
+{
+"navn": "broccoli",
+"kategori": "Grøntsager"
+},
+{
+"navn": "brombær",
+"kategori": "Frugt"
+},
+{
+"navn": "brosme",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "brøndkarse",
+"kategori": "Krydderier"
+},
+{
+"navn": "bulgur",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "byggryn",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "bygmel",
+"kategori": "Bagning"
+},
+{
+"navn": "bækforel",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "bærmix",
+"kategori": "Frugt"
+},
+{
+"navn": "bønnemix",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "bønner",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "bønnespirer",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "cacaomælk",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "cacaomælk (uht)",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "cacaoskummetmælk",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "cacaoskummetmælk (uht)",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "camembert",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "campari",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "cantaloupe (melon)",
+"kategori": "Frugt"
+},
+{
+"navn": "cashewnød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "cayote",
+"kategori": "Grøntsager"
+},
+{
+"navn": "champignon",
+"kategori": "Grøntsager"
+},
+{
+"navn": "champignon på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "cheddar",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "cherimoya",
+"kategori": "Frugt"
+},
+{
+"navn": "cheshire",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "chiafrø",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "chilibønner (røde kidneybønner i chilisauce)",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "chokolade",
+"kategori": "Bagning"
+},
+{
+"navn": "citron",
+"kategori": "Frugt"
+},
+{
+"navn": "citron iste",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "citronsaft",
+"kategori": "Frugt"
+},
+{
+"navn": "citronskal",
+"kategori": "Frugt"
+},
+{
+"navn": "cognac",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "cornflakes",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "creme fraiche 18 %",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "creme fraiche 38 %",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "creme fraiche 50 %",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "croissant",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "danablu 50+",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "danablu 60+",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "danbo",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "dild",
+"kategori": "Krydderier"
+},
+{
+"navn": "dressing",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "drueagurk (sylteagurk)",
+"kategori": "Grøntsager"
+},
+{
+"navn": "druesaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "due",
+"kategori": "Kød"
+},
+{
+"navn": "edamamebønner (sojabønner)",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "eddike",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "elbo",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "emmentaler",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "energidrik",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "esrom",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "fasan",
+"kategori": "Kød"
+},
+{
+"navn": "fastfood dressing",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "fersken",
+"kategori": "Frugt"
+},
+{
+"navn": "fersken iste",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "fersken på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "feta",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "figen",
+"kategori": "Frugt"
+},
+{
+"navn": "fiskeboller på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "fiskefars",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "fiskefrikadelle",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "fiskeolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "fiskepinde",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "flydende olie margarine",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "fløde 13 %",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "fløde 13 % (uht)",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "fløde 18 %",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "fløde 38 %",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "fløde 50 %",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "fløde 9 %",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "flødeost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "flødeyoghurt med frugt",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "flødeyoghurt naturel",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "flûte",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "flûte med fedtrige frø",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "forårsløg",
+"kategori": "Grøntsager"
+},
+{
+"navn": "franskbrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "friturestegt kylling",
+"kategori": "Kød"
+},
+{
+"navn": "friturestegt paneret kylling",
+"kategori": "Kød"
+},
+{
+"navn": "frugt smoothie",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "frugt- og grøntsag smoothie",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "frugtkvark",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "frugtnektar",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "frugtpålæg",
+"kategori": "Frugt"
+},
+{
+"navn": "fruktose",
+"kategori": "Bagning"
+},
+{
+"navn": "frølår",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "fynbo",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "fårekød",
+"kategori": "Kød"
+},
+{
+"navn": "gaffelbidder",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "galia melon",
+"kategori": "Frugt"
+},
+{
+"navn": "gedde",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "gedemælk",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "gedeost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "gelatine",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "gin",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "grahamsbrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "grahamsmel",
+"kategori": "Bagning"
+},
+{
+"navn": "grana",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "granatæble",
+"kategori": "Frugt"
+},
+{
+"navn": "granatæblekerner",
+"kategori": "Frugt"
+},
+{
+"navn": "grapefrugt",
+"kategori": "Frugt"
+},
+{
+"navn": "grapefrugtjuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "grisefedt",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "grisefilet",
+"kategori": "Kød"
+},
+{
+"navn": "grisekød",
+"kategori": "Kød"
+},
+{
+"navn": "grisespæk",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "grovbolle",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "grovfranskbrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "gruyere",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "græskar",
+"kategori": "Grøntsager"
+},
+{
+"navn": "græskar på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "grønkål",
+"kategori": "Grøntsager"
+},
+{
+"navn": "grønkål på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "grønne bønner",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "grønne bønner (haricots verts)",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "grønne bønner på dåse",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "grønne ærter",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "grønne ærter på dåse",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "guavafrugt",
+"kategori": "Frugt"
+},
+{
+"navn": "gule ærter (flækærter)",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "gulerod",
+"kategori": "Grøntsager"
+},
+{
+"navn": "gulerod på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "gulerodsjuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "gulerødder",
+"kategori": "Grøntsager"
+},
+{
+"navn": "gås",
+"kategori": "Kød"
+},
+{
+"navn": "gåsefedt",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "gærekstrakt",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "hajmalle",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "hakket",
+"kategori": "Ikke sorteret"
+},
+{
+"navn": "hakket bolle",
+"kategori": "Ikke sorteret"
+},
+{
+"navn": "halve kartofler",
+"kategori": "Grøntsager"
+},
+{
+"navn": "hamburgerryg",
+"kategori": "Kød"
+},
+{
+"navn": "harekød",
+"kategori": "Kød"
+},
+{
+"navn": "havarti",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "havkat",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "havredrik",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "havregryn",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "havreklid",
+"kategori": "Bagning"
+},
+{
+"navn": "havtorn",
+"kategori": "Frugt"
+},
+{
+"navn": "hellefisk",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "helleflynder",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "helt",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "hestekød",
+"kategori": "Kød"
+},
+{
+"navn": "hindbær",
+"kategori": "Frugt"
+},
+{
+"navn": "hindbærmarmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "hindbærsaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "hirse",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "hirseflager",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "hjerte",
+"kategori": "Kød"
+},
+{
+"navn": "honning",
+"kategori": "Bagning"
+},
+{
+"navn": "honningmelon",
+"kategori": "Frugt"
+},
+{
+"navn": "hornfisk",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "hummer",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "hummer på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "hvedebrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "hvedebrød med fedtrige frø",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "hvedegryn",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "hvedekerner",
+"kategori": "Bagning"
+},
+{
+"navn": "hvedekim",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "hvedekimolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "hvedeklid",
+"kategori": "Bagning"
+},
+{
+"navn": "hvedemel",
+"kategori": "Bagning"
+},
+{
+"navn": "hvedeøl",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "hvid hvede",
+"kategori": "Bagning"
+},
+{
+"navn": "hvid hvede bolle",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "hvid hvede brød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "hvide bønner",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "hvidkål",
+"kategori": "Grøntsager"
+},
+{
+"navn": "hvidløg",
+"kategori": "Krydderier"
+},
+{
+"navn": "hvidvin",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "hvilling",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "hyben",
+"kategori": "Frugt"
+},
+{
+"navn": "hybensaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "hyldebær",
+"kategori": "Frugt"
+},
+{
+"navn": "hyldebærsaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "hytteost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "høne",
+"kategori": "Kød"
+},
+{
+"navn": "hørfrø",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "hørfrøolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "ingefær",
+"kategori": "Grøntsager"
+},
+{
+"navn": "instant kaffe",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "instant kaffe pulver",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "ising",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "jagtpølse",
+"kategori": "Kød"
+},
+{
+"navn": "jomfruhummer",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "jordbær",
+"kategori": "Frugt"
+},
+{
+"navn": "jordbær i sukkerlage på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "jordbærmarmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "jordbærsaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "jordnøddeolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "jordnøddesmør",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "jordskok",
+"kategori": "Grøntsager"
+},
+{
+"navn": "julebryg",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "julesalat",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kaffe",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "kaffebønne",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "kakao",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "kakao pulver",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "kakaosmør",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "kakifrugt (sharon)",
+"kategori": "Frugt"
+},
+{
+"navn": "kaktusfigen",
+"kategori": "Frugt"
+},
+{
+"navn": "kalkun",
+"kategori": "Kød"
+},
+{
+"navn": "kalkunkød",
+"kategori": "Kød"
+},
+{
+"navn": "kalv- og svinekød",
+"kategori": "Kød"
+},
+{
+"navn": "kalvekød",
+"kategori": "Kød"
+},
+{
+"navn": "kammerjunkere",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "kanel",
+"kategori": "Krydderier"
+},
+{
+"navn": "kaninkød",
+"kategori": "Kød"
+},
+{
+"navn": "kantarel",
+"kategori": "Grøntsager"
+},
+{
+"navn": "karry pulver",
+"kategori": "Krydderier"
+},
+{
+"navn": "karse",
+"kategori": "Krydderier"
+},
+{
+"navn": "kartoffel",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kartoffel kroketter",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kartoffel på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "kartoffel røsti",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kartoffel spiraler (curly fries)",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kartoffelbåde",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kartoffelmel",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "kartoffelmos",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kastanje",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "kaviar",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "kiks",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "kiks til ost",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "kikærter",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "kinakål",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kinaradise",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kippers i olie på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "kirsebær",
+"kategori": "Frugt"
+},
+{
+"navn": "kirsebærmarmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "kirsebærsaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "kiwi",
+"kategori": "Frugt"
+},
+{
+"navn": "kiwimarmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "klipfisk",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "knude",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "knudekål",
+"kategori": "Grøntsager"
+},
+{
+"navn": "knækbrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "kogt oksebryst",
+"kategori": "Kød"
+},
+{
+"navn": "kokosmel",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "kokosnød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "kokosolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "koldskål",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "kommen",
+"kategori": "Krydderier"
+},
+{
+"navn": "koncentreret blandet frugt- og bærsaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "koncentreret læskedrik",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "koncentreret tranebærsaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "kongeål (pighaj)",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "koriander",
+"kategori": "Krydderier"
+},
+{
+"navn": "krabbe",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "krabbekløer",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "krabbekløer på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "krebs",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "krydder",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "krydderskinke",
+"kategori": "Kød"
+},
+{
+"navn": "kråse",
+"kategori": "Kød"
+},
+{
+"navn": "kuller",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "kulmule",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "kumquat",
+"kategori": "Frugt"
+},
+{
+"navn": "kvark",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "kvæde",
+"kategori": "Frugt"
+},
+{
+"navn": "kylling",
+"kategori": "Kød"
+},
+{
+"navn": "kyllingekød",
+"kategori": "Kød"
+},
+{
+"navn": "kyllingepølse",
+"kategori": "Kød"
+},
+{
+"navn": "kålrabi (kålroe)",
+"kategori": "Grøntsager"
+},
+{
+"navn": "kærnemælk",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "kærnemælk med citronsaft",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "kødekstrakt",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "kødpølse",
+"kategori": "Kød"
+},
+{
+"navn": "kørvel",
+"kategori": "Grøntsager"
+},
+{
+"navn": "lactose pulver",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "lagerøl",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "laks",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "laks på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "lammekød",
+"kategori": "Kød"
+},
+{
+"navn": "lange",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "letmælk",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "letmælkskefir",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "lever",
+"kategori": "Kød"
+},
+{
+"navn": "leverpostej",
+"kategori": "Kød"
+},
+{
+"navn": "leverpølse",
+"kategori": "Kød"
+},
+{
+"navn": "levertran (sej)",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "likør",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "lime",
+"kategori": "Frugt"
+},
+{
+"navn": "linser",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "linsespirer",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "litchi",
+"kategori": "Frugt"
+},
+{
+"navn": "loganbær",
+"kategori": "Frugt"
+},
+{
+"navn": "loquat",
+"kategori": "Frugt"
+},
+{
+"navn": "lucerne",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "lucernespirer",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "lyssej",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "læskedrik",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "løg",
+"kategori": "Grøntsager"
+},
+{
+"navn": "madeira",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "majroe",
+"kategori": "Grøntsager"
+},
+{
+"navn": "majskimolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "majskolbe",
+"kategori": "Grøntsager"
+},
+{
+"navn": "majsmel",
+"kategori": "Bagning"
+},
+{
+"navn": "majsolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "majsstivelse",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "makaroni",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "makrel",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "makrel i tomat på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "malakoffpølse",
+"kategori": "Kød"
+},
+{
+"navn": "mandarin",
+"kategori": "Frugt"
+},
+{
+"navn": "mandarin på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "mandel",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "mandeldrik",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "mango",
+"kategori": "Frugt"
+},
+{
+"navn": "mangomarmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "maniok",
+"kategori": "Grøntsager"
+},
+{
+"navn": "marcipan",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "marcipanprodukt",
+"kategori": "Bagning"
+},
+{
+"navn": "margarine",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "maribo",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "marineret ansjos på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "marineret brisling (ansjovis) på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "marineret sild",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "marmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "mayonnaise",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "medisterpølse",
+"kategori": "Kød"
+},
+{
+"navn": "melbanan",
+"kategori": "Frugt"
+},
+{
+"navn": "milkshake",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "minarine",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "mineralvand",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "minimælk",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "mintgele",
+"kategori": "Konserves"
+},
+{
+"navn": "miso",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "morgenmadsprodukt",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "mozzarella",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "muskatnød",
+"kategori": "Krydderier"
+},
+{
+"navn": "musling",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "musling på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "myseost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "mælkebøtte",
+"kategori": "Grøntsager"
+},
+{
+"navn": "mørk hvidtøl",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "mørksej",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "müsli",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "müsli med tilsat sukker.",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "müsli uden tilsat sukker.",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "müslibar",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "nektarin",
+"kategori": "Frugt"
+},
+{
+"navn": "netmelon",
+"kategori": "Frugt"
+},
+{
+"navn": "nougat",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "nyre",
+"kategori": "Kød"
+},
+{
+"navn": "nøddepasta med cacao",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "okra",
+"kategori": "Grøntsager"
+},
+{
+"navn": "oksekød",
+"kategori": "Kød"
+},
+{
+"navn": "oksetalg",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "oliven",
+"kategori": "Konserves"
+},
+{
+"navn": "olivenolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "ost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "pak choi (bok choy)",
+"kategori": "Grøntsager"
+},
+{
+"navn": "palmekerneolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "palmeolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "paneret fiskefilet",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "paneret kuller",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "papaya",
+"kategori": "Frugt"
+},
+{
+"navn": "paradisæble",
+"kategori": "Frugt"
+},
+{
+"navn": "parmesan",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "passionsfrugt",
+"kategori": "Frugt"
+},
+{
+"navn": "pasta",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "pastinak",
+"kategori": "Grøntsager"
+},
+{
+"navn": "paté",
+"kategori": "Kød"
+},
+{
+"navn": "peanuts",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "peberfrugt",
+"kategori": "Grøntsager"
+},
+{
+"navn": "peberfrugt på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "peberrod",
+"kategori": "Grøntsager"
+},
+{
+"navn": "pecannød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "pekannød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "perlebyg",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "perleløg",
+"kategori": "Grøntsager"
+},
+{
+"navn": "perlespelt",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "persille",
+"kategori": "Krydderier"
+},
+{
+"navn": "persillerod",
+"kategori": "Grøntsager"
+},
+{
+"navn": "pesto",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "pighvarre",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "pilsner",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "pistacienød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "pizza topping (revet ost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "plantemargarine",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "pomelo",
+"kategori": "Frugt"
+},
+{
+"navn": "pommes frites",
+"kategori": "Grøntsager"
+},
+{
+"navn": "porre",
+"kategori": "Grøntsager"
+},
+{
+"navn": "porrer",
+"kategori": "Grøntsager"
+},
+{
+"navn": "porter/stout",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "portvin",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "poulard",
+"kategori": "Kød"
+},
+{
+"navn": "pumpernikkel",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "purløg",
+"kategori": "Krydderier"
+},
+{
+"navn": "pålæg i skiver",
+"kategori": "Ikke sorteret"
+},
+{
+"navn": "pære",
+"kategori": "Frugt"
+},
+{
+"navn": "pære på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "pærecider",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "pølsebrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "quinoa",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "rabarber",
+"kategori": "Grøntsager"
+},
+{
+"navn": "radise",
+"kategori": "Grøntsager"
+},
+{
+"navn": "rapsolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "rasp",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "reje",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "rejeost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "remoulade",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "ribs",
+"kategori": "Frugt"
+},
+{
+"navn": "ribsgele",
+"kategori": "Konserves"
+},
+{
+"navn": "ribssaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "ris",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "risdrik",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "risengryn",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "riskiks/riskage",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "risklid",
+"kategori": "Bagning"
+},
+{
+"navn": "rismel",
+"kategori": "Bagning"
+},
+{
+"navn": "risstivelse",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "roastbeef",
+"kategori": "Kød"
+},
+{
+"navn": "rodfrugter",
+"kategori": "Grøntsager"
+},
+{
+"navn": "rodfrugtfritter",
+"kategori": "Grøntsager"
+},
+{
+"navn": "rom",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "roquefort",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "rosenkål",
+"kategori": "Grøntsager"
+},
+{
+"navn": "rosin uden kerner",
+"kategori": "Frugt"
+},
+{
+"navn": "rosévin",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "rucola",
+"kategori": "Grøntsager"
+},
+{
+"navn": "rugbrød med fedtrige frø og kerner",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "rugkerner",
+"kategori": "Bagning"
+},
+{
+"navn": "rugmel",
+"kategori": "Bagning"
+},
+{
+"navn": "rugsigtemel (udmalingsgrad ca. 70 %)",
+"kategori": "Bagning"
+},
+{
+"navn": "rullepølse",
+"kategori": "Kød"
+},
+{
+"navn": "rundstykke",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "rygeost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "rype",
+"kategori": "Kød"
+},
+{
+"navn": "ræddike",
+"kategori": "Grøntsager"
+},
+{
+"navn": "rødbede på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "rødfisk",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "rødkål på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "rødspætte",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "rødtunge",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "rødvin",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "sagogryn (kartoffelstivelse)",
+"kategori": "Pasta, ris og korn"
+},
+{
+"navn": "sakkarin",
+"kategori": "Bagning"
+},
+{
+"navn": "salami",
+"kategori": "Kød"
+},
+{
+"navn": "salat",
+"kategori": "Grøntsager"
+},
+{
+"navn": "salatdressing",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "salt",
+"kategori": "Krydderier"
+},
+{
+"navn": "salt kød",
+"kategori": "Kød"
+},
+{
+"navn": "saltet bambusskud på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "saltet laks",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "saltet smør",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "samsø",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "sandart",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "sapodille (chiku)",
+"kategori": "Frugt"
+},
+{
+"navn": "sapote",
+"kategori": "Frugt"
+},
+{
+"navn": "sardin",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "sauce",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "savoykål",
+"kategori": "Grøntsager"
+},
+{
+"navn": "seitan",
+"kategori": "Ikke sorteret"
+},
+{
+"navn": "sej",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "selleri",
+"kategori": "Grøntsager"
+},
+{
+"navn": "sennep",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "sennep pulver",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "sesamfrø",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "sesamolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "sherry",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "sigtebrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "sigtemel",
+"kategori": "Bagning"
+},
+{
+"navn": "sild",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "sildepostej",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "sirup",
+"kategori": "Bagning"
+},
+{
+"navn": "skinke",
+"kategori": "Kød"
+},
+{
+"navn": "skinke på dåse",
+"kategori": "Kød"
+},
+{
+"navn": "skinkeost 30+ (smelteost med skinke)",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "skinkepølse",
+"kategori": "Kød"
+},
+{
+"navn": "skorzonerrod",
+"kategori": "Grøntsager"
+},
+{
+"navn": "skrubbe",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "skummetmælk",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "skummetmælksost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "skummetmælkspulver",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "skyr",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "skæreost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "smelteost",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "småkage",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "smør",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "smørbart blandingsprodukt",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "snaps",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "sodavand",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "soja sauce",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "sojadrik",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "sojamel",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "sojaolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "solbær",
+"kategori": "Frugt"
+},
+{
+"navn": "solbærgele",
+"kategori": "Konserves"
+},
+{
+"navn": "solbærmarmelade",
+"kategori": "Konserves"
+},
+{
+"navn": "solbærsaft",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "solsikkefrø",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "solsikkeolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "sorbitol",
+"kategori": "Bagning"
+},
+{
+"navn": "sortmund",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "spegepølse",
+"kategori": "Kød"
+},
+{
+"navn": "spegesild",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "speltmel",
+"kategori": "Bagning"
+},
+{
+"navn": "sperling",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "spidskommen",
+"kategori": "Krydderier"
+},
+{
+"navn": "spidskål",
+"kategori": "Grøntsager"
+},
+{
+"navn": "spinat",
+"kategori": "Grøntsager"
+},
+{
+"navn": "spinat på dåse",
+"kategori": "Konserves"
+},
+{
+"navn": "spirituosa",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "sprængt nakke",
+"kategori": "Kød"
+},
+{
+"navn": "squash",
+"kategori": "Grøntsager"
+},
+{
+"navn": "steak fries (tykke pommes frites med skræl)",
+"kategori": "Grøntsager"
+},
+{
+"navn": "stenbider",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "stikkelsbær",
+"kategori": "Frugt"
+},
+{
+"navn": "stjernefrugt",
+"kategori": "Frugt"
+},
+{
+"navn": "stykker",
+"kategori": "Ikke sorteret"
+},
+{
+"navn": "sukker",
+"kategori": "Bagning"
+},
+{
+"navn": "sukkerært (mangetout)",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "supperurter",
+"kategori": "Grøntsager"
+},
+{
+"navn": "surbrød",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "surbær (aroniabær)",
+"kategori": "Frugt"
+},
+{
+"navn": "svenbo",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "sveske",
+"kategori": "Frugt"
+},
+{
+"navn": "sveskejuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "sylte",
+"kategori": "Kød"
+},
+{
+"navn": "syltede asier",
+"kategori": "Konserves"
+},
+{
+"navn": "syltede brombær",
+"kategori": "Konserves"
+},
+{
+"navn": "syltede jordbær",
+"kategori": "Konserves"
+},
+{
+"navn": "syltede kirsebær",
+"kategori": "Konserves"
+},
+{
+"navn": "syltede solbær",
+"kategori": "Konserves"
+},
+{
+"navn": "syltede tyttebær",
+"kategori": "Konserves"
+},
+{
+"navn": "syltetøj",
+"kategori": "Konserves"
+},
+{
+"navn": "syre (krydderplante)",
+"kategori": "Krydderier"
+},
+{
+"navn": "syrnet fløde 9 % (fraiche 9%)",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "søde kartoffel fritter",
+"kategori": "Grøntsager"
+},
+{
+"navn": "sødmælk",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "sødmælk (uht)",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "sødmælkspulver",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "søtunge",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "tahin",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tamarind",
+"kategori": "Frugt"
+},
+{
+"navn": "tang",
+"kategori": "Grøntsager"
+},
+{
+"navn": "te",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "tebirkes",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "theboller o.l. (bløddejsboller)",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "tidselolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "tigerreje",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "tofu",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "tomatjuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "tomatketchup",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "tomatpure",
+"kategori": "Konserves"
+},
+{
+"navn": "tomatpure koncentreret",
+"kategori": "Konserves"
+},
+{
+"navn": "tranebær",
+"kategori": "Frugt"
+},
+{
+"navn": "tun",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "tun i olie på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "tun i tomat på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "tun i vand på dåse",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "tunge",
+"kategori": "Kød"
+},
+{
+"navn": "tungepølse",
+"kategori": "Kød"
+},
+{
+"navn": "tvebakker",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "tyttebær",
+"kategori": "Frugt"
+},
+{
+"navn": "tørrede brune linser",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "tørrede kikærter",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "tørrede le puy linser (delikatesse linser)",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "tørrede linser",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "tørrede mungbønner",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "tørrede sojabønner",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "tørret abrikos",
+"kategori": "Frugt"
+},
+{
+"navn": "tørret daddel",
+"kategori": "Frugt"
+},
+{
+"navn": "tørret dild",
+"kategori": "Krydderier"
+},
+{
+"navn": "tørret fersken",
+"kategori": "Frugt"
+},
+{
+"navn": "tørret figen",
+"kategori": "Frugt"
+},
+{
+"navn": "tørret græskarkerner",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tørret gær",
+"kategori": "Bagning"
+},
+{
+"navn": "tørret hasselnød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tørret hvidløg pulver",
+"kategori": "Krydderier"
+},
+{
+"navn": "tørret hyben pulver",
+"kategori": "Frugt"
+},
+{
+"navn": "tørret jordnød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tørret lollandske rosiner (beige-brun ært)",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "tørret paranød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tørret pecannød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tørret pinjekerner",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tørret pistacienød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tørret skinke",
+"kategori": "Kød"
+},
+{
+"navn": "tørret vallepulver",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "tørret valnød",
+"kategori": "Nødder og frø"
+},
+{
+"navn": "tørret æble",
+"kategori": "Frugt"
+},
+{
+"navn": "vaffelrør",
+"kategori": "Brød og bagværk"
+},
+{
+"navn": "valle",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "valle protein pulver",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "valnøddeolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "vand",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "vandmelon",
+"kategori": "Frugt"
+},
+{
+"navn": "vekao",
+"kategori": "Bagning"
+},
+{
+"navn": "vermouth",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "vinbjergssnegle",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "vindrue",
+"kategori": "Frugt"
+},
+{
+"navn": "vindruekerneolie",
+"kategori": "Olie, sauce og bouillon"
+},
+{
+"navn": "vodka",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "voksbønner",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "voksbønner på dåse",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "whisky",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "wienerpølse",
+"kategori": "Kød"
+},
+{
+"navn": "wienerpølse på dåse",
+"kategori": "Kød"
+},
+{
+"navn": "wokmix",
+"kategori": "Grøntsager"
+},
+{
+"navn": "yams",
+"kategori": "Grøntsager"
+},
+{
+"navn": "ylette naturel",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "ymer naturel",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt med frugt",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt med jordbær",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt med kirsebær",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt med müsli",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt med peach melba",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt med pære og banan",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt med skovbær",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "yoghurt naturel",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "ål",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "æble",
+"kategori": "Frugt"
+},
+{
+"navn": "æblecider",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "æblegele",
+"kategori": "Konserves"
+},
+{
+"navn": "æblejuice",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "æblemost",
+"kategori": "Drikkevarer"
+},
+{
+"navn": "æg",
+"kategori": "Mejeri og æg"
+},
+{
+"navn": "ærter",
+"kategori": "Bønner og linser"
+},
+{
+"navn": "ørred",
+"kategori": "Fisk og skaldyr"
+},
+{
+"navn": "østers",
+"kategori": "Fisk og skaldyr"
+}
+]
