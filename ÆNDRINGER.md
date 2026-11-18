@@ -2,6 +2,10 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.30.1 · Vinduet til ingrediensen rettet
+- Skrivefelterne var uden glas (manglede `type`). Nu er de glas.
+- Vinduet er delt i tre kort: Kategori, Aliaser og «Forbind med en anden» (ét felt og tre knapper: alias, slags af, samme som). Slet står nederst.
+
 ## 2.30.0 · Vindue til hver ingrediens og Ny kategori
 - **Tryk på en ingrediens** i Ingrediensværktøjet, så åbner et vindue som i Designeren. Det samler kategori, aliaser, slags af, samme som, saml med en anden og slet i rækkefølge med en kort forklaring. Knapperne gør det samme som før, og vinduet åbner igen efter en handling, så man kan fortsætte.
 - **Glasfelter med glasliste:** skriv i et felt, og de ingredienser der passer, vises som en glasliste under feltet (op til seks). Tryk på en for at vælge den. Erstatter browserens egen rullende liste.

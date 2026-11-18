@@ -1513,3 +1513,7 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .iv-forslag-r + .iv-forslag-r { box-shadow: inset 0 1px 0 var(--glaskant); }
 .iv-forslag-r small { font-size: 14px; color: var(--blyant); }
 .iv-forslag-r:hover, .iv-forslag-r:focus-visible { background: var(--flade-hover); outline: 0; }
+.iv-sek { margin: var(--m) 0 var(--pt); display: flex; flex-direction: column; }
+.iv-sek h3 { margin-top: 0; }
+.iv-sek > .lille { margin: 0; }
+.iv-sek .rakke { flex-wrap: wrap; }

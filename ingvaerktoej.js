@@ -223,7 +223,7 @@ ${linjer.join('\n')}
   // Feltet står lige før knappens række. Det kan stå flere steder for samme ingrediens (listen og de foreløbige), så det findes ud fra knappen.
   const valgIng = (el, id, hvad) => { const fe = el.closest('.rakke').previousElementSibling, inp = fe && (fe.matches('input') ? fe : fe.querySelector('input')), f = finIng(inp ? inp.value : ''); if (!f) { toast('Vælg ' + hvad + ' fra listen'); return null; } if (f.id === id) { toast('Vælg en anden ingrediens end den selv'); return null; } return f; };
   // Skrivefelt med en glasliste under: skriv, og de ingredienser der passer, vises. Tryk på en for at vælge den.
-  const vaelgFelt = (id, extra = '') => `<div class="iv-vaelg"><input id="${id}" class="felt felt-m" data-vaelg autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="${id}-liste"${extra}><div class="iv-forslag" id="${id}-liste" role="listbox" hidden></div></div>`;
+  const vaelgFelt = (id, extra = '') => `<div class="iv-vaelg"><input id="${id}" type="text" class="felt felt-m" data-vaelg autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="${id}-liste"${extra}><div class="iv-forslag" id="${id}-liste" role="listbox" hidden></div></div>`;
   const kobling = (i, attr, tekst, knap, h, ikon, fb = '') => `<label for="${fb}${attr}-${i.id}">${tekst}</label>
     ${vaelgFelt(`${fb}${attr}-${i.id}`)}
     <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-${attr}" data-h="${h}" data-n="${i.id}">${ik(ikon)} ${knap}</button></div>`;
@@ -255,7 +255,7 @@ ${linjer.join('\n')}
     if (!alle.length) return `<p class="lille">${T.length ? 'Ingen forslag passer.' : 'Ingen forslag at gennemgå.'}</p>`;
     const række = t => { const k = tvKat(t.kategori); return `<div class="iv-regel" data-id="${t.id}"><p class="tekst-s" data-tpdata>Fra DTU: ${esc(t.eksempler || t.forslag)}${t.antal > 1 ? ` (${t.antal} rækker)` : ''}</p>
       <label for="tvn-${t.id}">Navn</label>
-      <input id="tvn-${t.id}" class="felt felt-m" value="${esc(t.forslag)}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input id="tvn-${t.id}" type="text" class="felt felt-m" value="${esc(t.forslag)}" autocomplete="off" autocapitalize="off" spellcheck="false">
       <label for="tvk-${t.id}">Kategori</label>
       <select id="tvk-${t.id}" class="felt felt-m">${kat.map(c => `<option value="${c.id}"${c.id === k ? ' selected' : ''}>${esc(katNavn(c))}</option>`).join('')}</select>
       <div class="rakke venstre"><button type="button" class="knap mini gem" data-tpid="iv-tv-opret" data-h="ivTvOpret" aria-label="Opret ${esc(t.forslag)}">${ik('tjek')} Opret</button>
@@ -324,28 +324,28 @@ ${linjer.join('\n')}
     const d = ark(`<div class="iv-ing-ark" data-ingid="${i.id}">
       <div class="tp-top"><h2 data-tpdata>${esc(i.navn)}</h2><div class="rakke"><button type="button" class="knap annuller" data-tpid="iv-ing-luk" data-h="lukArk">Luk</button></div></div>
       ${i.foreloebig ? '<p class="lille">Ny ingrediens, lavet af appen. Vælg en kategori og tryk «Godkend», eller gør den til alias af en, der findes.</p>' : ''}
-      <h3>Kategori</h3>
-      <select id="kat-${i.id}" class="felt felt-m">${katValg(i)}</select>
-      <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-kat" data-h="ivKat" data-n="${i.id}">${ik('tjek')} Gem kategori</button>
-        <button type="button" class="knap mini" data-tpid="iv-kat-ny" data-h="ivNyKat">${ik('plus')} Ny kategori</button></div>
-      <h3>Aliaser</h3>
-      <p class="lille">Andre navne i opskrifter, som betyder «${esc(i.navn)}».</p>
-      ${rs.map(regel).join('') || '<p class="lille">Ingen aliaser endnu.</p>'}
-      <label for="al-${i.id}">Nyt alias</label>
-      <input id="al-${i.id}" class="felt felt-m" placeholder="fx kyllingefilet" autocomplete="off" autocapitalize="off" spellcheck="false" data-alias="${i.id}">
-      <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-alias-nyt" data-h="ivAliasNy" data-n="${i.id}" aria-label="Tilføj alias til ${esc(i.navn)}">${ik('plus')} Tilføj alias</button></div>
-      <h3>Slags af</h3>
-      <p class="lille">${fae ? `Er en slags «${esc(fae)}».` : 'Er en variant af et fællesnavn, fx frisk timian er en slags timian.'}${vars.length ? ` Slags af denne: ${esc(vars.join(', '))}.` : ''}</p>
-      ${kobling(i, 'slags', `«${esc(i.navn)}» er en slags …`, 'Gør til slags af', 'ivSlags', 'tjek')}
-      ${fae ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-slags-fjern" data-h="ivSlagsFjern" data-n="${i.id}">${ik('fjern')} Ikke en slags af «${esc(fae)}»</button></div>` : ''}
-      <h3>Samme som</h3>
-      <p class="lille">${sam.length ? `Kan erstatte: ${esc(sam.join(', '))}.` : 'Kan erstatte en anden ingrediens 1:1, fx kyllingebryst og hønsebryst.'}</p>
-      ${kobling(i, 'samme', `«${esc(i.navn)}» er samme som …`, 'Gør samme som', 'ivSamme', 'tjek')}
-      ${sam.length ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-samme-fjern" data-h="ivSammeFjern" data-n="${i.id}">${ik('fjern')} Ikke samme som de andre</button></div>` : ''}
-      <h3>Saml med en anden</h3>
-      <p class="lille">«${esc(i.navn)}» bliver et alias. Opskrifter og Derhjemme flyttes med.</p>
-      ${kobling(i, 'tilalias', `Gør «${esc(i.navn)}» til alias af …`, 'Gør til alias', 'ivTilAlias', 'tjek')}
-      <h3>Slet</h3>
+      <section class="iv-sek tp-ramme"><h3>Kategori</h3>
+        <select id="kat-${i.id}" class="felt felt-m">${katValg(i)}</select>
+        <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-kat" data-h="ivKat" data-n="${i.id}">${ik('tjek')} Gem kategori</button>
+          <button type="button" class="knap mini" data-tpid="iv-kat-ny" data-h="ivNyKat">${ik('plus')} Ny kategori</button></div></section>
+      <section class="iv-sek tp-ramme"><h3>Aliaser</h3>
+        <p class="lille">Andre navne i opskrifter, som betyder «${esc(i.navn)}».</p>
+        ${rs.map(regel).join('') || '<p class="lille">Ingen aliaser endnu.</p>'}
+        <label for="al-${i.id}">Nyt alias</label>
+        <input id="al-${i.id}" type="text" class="felt felt-m" placeholder="fx kyllingefilet" autocomplete="off" autocapitalize="off" spellcheck="false" data-alias="${i.id}">
+        <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-alias-nyt" data-h="ivAliasNy" data-n="${i.id}" aria-label="Tilføj alias til ${esc(i.navn)}">${ik('plus')} Tilføj alias</button></div></section>
+      <section class="iv-sek tp-ramme"><h3>Forbind med en anden</h3>
+        <p class="lille">Skriv navnet på den anden ingrediens, og vælg den på listen. Vælg så, hvordan de hænger sammen.</p>
+        <label for="forbind-${i.id}">Den anden ingrediens</label>
+        ${vaelgFelt('forbind-' + i.id)}
+        <div class="rakke venstre">
+          <button type="button" class="knap mini" data-tpid="iv-tilalias" data-h="ivTilAlias" data-n="${i.id}">${ik('tjek')} Alias af den</button>
+          <button type="button" class="knap mini" data-tpid="iv-slags" data-h="ivSlags" data-n="${i.id}">${ik('tjek')} Slags af den</button>
+          <button type="button" class="knap mini" data-tpid="iv-samme" data-h="ivSamme" data-n="${i.id}">${ik('tjek')} Samme som den</button></div>
+        <p class="lille"><strong>Alias:</strong> «${esc(i.navn)}» er bare et andet navn, og forsvinder som egen ingrediens. Opskrifter og Derhjemme flyttes med.</p>
+        <p class="lille"><strong>Slags af:</strong> en variant, fx frisk timian er en slags timian.${fae ? ` Nu: slags af «${esc(fae)}».` : ''}${vars.length ? ` Slags af denne: ${esc(vars.join(', '))}.` : ''}</p>
+        <p class="lille"><strong>Samme som:</strong> kan erstatte den 1:1, fx kyllingebryst og hønsebryst.${sam.length ? ` Nu: ${esc(sam.join(', '))}.` : ''}</p>
+        ${fae || sam.length ? `<div class="rakke venstre">${fae ? `<button type="button" class="knap mini slet" data-tpid="iv-slags-fjern" data-h="ivSlagsFjern" data-n="${i.id}">${ik('fjern')} Ikke slags af «${esc(fae)}»</button>` : ''}${sam.length ? `<button type="button" class="knap mini slet" data-tpid="iv-samme-fjern" data-h="ivSammeFjern" data-n="${i.id}">${ik('fjern')} Ikke samme som de andre</button>` : ''}</div>` : ''}</section>
       <div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-slet-ing" data-h="ivSletIng" data-n="${i.id}" aria-label="Slet ${esc(i.navn)}">${ik('slet')} Slet ingrediensen</button>
         ${i.foreloebig ? `<button type="button" class="knap mini gem" data-tpid="iv-fb-ok" data-h="ivFbGodkend" data-n="${i.id}">${ik('tjek')} Godkend</button>` : ''}</div>
     </div>`);
@@ -355,7 +355,7 @@ ${linjer.join('\n')}
   function aabnNyKat() {
     const d = ark(`<h2>Ny kategori</h2><small>Fx «Krydderurter». Den kommer nederst, før «Ikke sorteret».</small>
       <label for="nyKatNavn">Navn</label>
-      <input id="nyKatNavn" class="felt felt-m" autocomplete="off" autocapitalize="sentences" spellcheck="false" maxlength="40">
+      <input id="nyKatNavn" type="text" class="felt felt-m" autocomplete="off" autocapitalize="sentences" spellcheck="false" maxlength="40">
       <div id="arkfejl"></div>
       <div class="rakke"><button type="button" class="knap annuller" data-tpid="annuller" data-h="lukArk">Annuller</button><button type="button" class="knap gem" data-tpid="gem" data-h="ivNyKatGem">${ik('tjek')} Opret</button></div>`);
     $('.ark-bag', d).addEventListener('click', lukArk);
@@ -385,7 +385,7 @@ ${linjer.join('\n')}
     const valgt = kat || '', d = ark(`<h2>${fra ? 'Gør til egen ingrediens' : 'Ny ingrediens'}</h2>
       ${fra ? `<small>«${esc(fra.tekst)}» er ikke længere et alias. Opskrifter, der allerede er gemt, ændres ikke.</small>` : '<small>Skriv selve varen, fx «løg», ikke «hakket løg».</small>'}
       <label for="nyNavn">Navn</label>
-      <input id="nyNavn" class="felt felt-m" value="${esc(navn)}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input id="nyNavn" type="text" class="felt felt-m" value="${esc(navn)}" autocomplete="off" autocapitalize="off" spellcheck="false">
       <label for="nyKat">Kategori</label>
       <select id="nyKat" class="felt felt-m"><option value="">${IKKE_SORTERET}</option>${[...D.kat].filter(k => k.navn_norm !== 'andet').sort((a, b) => a.raekkefolge - b.raekkefolge).map(k => `<option value="${k.id}"${k.id === valgt ? ' selected' : ''}>${esc(katNavn(k))}</option>`).join('')}</select>
       <div id="arkfejl"></div>
@@ -402,7 +402,7 @@ ${linjer.join('\n')}
     return ed.varer.map((v, i) => `<div class="iv-vare"><label for="rgv${i}">${n > 1 ? 'Vare ' + (i + 1) : 'Vare'}</label>
       ${vaelgFelt('rgv' + i, ` value="${esc(v.navn)}"`)}
       <label for="rgf${i}">Tilberedning (valgfrit)</label>
-      <input id="rgf${i}" class="felt felt-m" value="${esc(v.f)}" placeholder="fx finthakket" autocomplete="off" autocapitalize="off">
+      <input id="rgf${i}" type="text" class="felt felt-m" value="${esc(v.f)}" placeholder="fx finthakket" autocomplete="off" autocapitalize="off">
       ${n > 2 ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-vare-fjern" data-h="rgFjern" data-v="${i}" aria-label="Fjern vare ${i + 1}">${ik('fjern')} Fjern</button></div>` : ''}</div>`).join('')
       + (ed.slags === 'del' || ed.slags === 'eller' ? `<div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-vare-ny" data-h="rgTilfoej">${ik('plus')} Tilføj vare</button></div>` : '');
   };
@@ -418,7 +418,7 @@ ${linjer.join('\n')}
     const d = ark(`<h2>${ed.id ? 'Tilpas reglen' : 'Ny regel'}</h2>
       <small>En regel fortæller appen, hvad en tekst i en opskrift betyder.</small>
       <label for="rgtekst">Når der står</label>
-      <input id="rgtekst" class="felt felt-m" value="${esc(ed.tekst)}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input id="rgtekst" type="text" class="felt felt-m" value="${esc(ed.tekst)}" autocomplete="off" autocapitalize="off" spellcheck="false">
       <fieldset class="iv-valg"><legend>Så betyder det</legend>${SLAGS.map(([k, t]) => `<label class="skift"><input type="radio" name="rgslags" value="${k}"${ed.slags === k ? ' checked' : ''}> <span>${t}</span></label>`).join('')}</fieldset>
       <p class="lille" id="rghint"></p>
       <div id="rgvarer"></div>
