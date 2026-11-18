@@ -1,8 +1,8 @@
 // Hvad har du derhjemme? Et felt pr. ingrediens, sorteret efter kategori. Alt gemmes i Supabase:
-// «ingredienser» er kataloget (navn -> kategori). Det lærer appen af, hver gang du skifter kategori.
+// «ingredienser» er kataloget (navn -> kategori). Kategorien ændres kun i Ingrediensværktøjet.
 const Hjemme = (() => {
   const ENH = ['stk', 'g', 'kg', 'ml', 'dl', 'l', 'pk', 'dåse', 'bundt', 'fed'];
-  let D = { kat: [], ing: [], hj: [] }, valgtIng = null, laaser = false, ved = null;
+  let D = { kat: [], ing: [], hj: [] }, laaser = false, ved = null;
   const norm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
   const ingAf = id => D.ing.find(i => i.id === id);
   const katAf = id => D.kat.find(k => k.id === id);
@@ -34,8 +34,7 @@ const Hjemme = (() => {
   // Mængden som stepper (opdatering 6): − og + går i trin efter enheden. Feltet kan stadig skrives i.
   const TRIN = { g: 25, ml: 25, kg: 0.5, dl: 0.5, l: 0.5 };
   const trinKnap = (d, l) => `<button type="button" class="rund" data-h="hjTrin" data-v="${d}" aria-label="${l}">${Ikoner.svg(d < 0 ? 'fjern' : 'plus')}</button>`;
-  // Lagerlinjen (opdatering 7): kategorien som knap med navnet og «Fjern» (rød, noget forsvinder fra listen). På smal skærm står kun ikonerne.
-  const katKnap = i => { const k = katNavn(i && i.kategori_id && katAf(i.kategori_id)); return `<button type="button" class="knap mini hj-kat" data-h="hjKat" aria-label="Kategori: ${esc(k)}. Tryk for at skifte." title="Skift kategori">${ik('tag')}<span class="hj-bred">${esc(k)}</span></button>`; };
+  // Lagerlinjen (opdatering 7): navn og «Fjern» (rød, noget forsvinder fra listen). Kategorien ændres kun i Ingrediensværktøjet. På smal skærm står kun ikonerne.
   const fjernKnap = (h, v, navn) => `<button type="button" class="knap mini slet hj-fjern" data-h="${h}"${v !== '' ? ` data-v="${v}"` : ''} aria-label="Fjern ${esc(navn)} fra listen" title="Fjern fra listen">${ik('slet')}<span class="hj-bred">Fjern</span></button>`;
   const mgdStepper = v => `<div class="stepper hj-stepper" role="group" aria-label="Mængde">${trinKnap(-1, 'Mindre')}<input class="hj-mgd" type="text" inputmode="decimal" autocomplete="off" aria-label="Mængde" value="${v}" placeholder="–">${trinKnap(1, 'Mere')}</div>`;
   const nej = (n, id) => { toast(`«${n}» står allerede på listen. Ret mængden her.`); fremhaev(id); };
@@ -46,7 +45,7 @@ const Hjemme = (() => {
       ${mgdStepper(Number(h.maengde) > 0 ? esc(visTal(Number(h.maengde))) : '')}
       <select class="hj-enh" aria-label="Enhed">${enhHtml(h.enhed)}</select>
       <input class="hj-navn" type="text" autocomplete="off" enterkeyhint="next" aria-label="Ingrediens" value="${esc(i ? i.navn : '')}">
-      ${katKnap(i)}${fjernKnap('hjFjern', '', i ? i.navn : '')}</div>`;
+      ${fjernKnap('hjFjern', '', i ? i.navn : '')}</div>`;
   }
   const LUKKET = new Set(lager.hent('hjLukket', [])); // kategorier, der er foldet sammen
   function tegn() {
@@ -119,13 +118,6 @@ const Hjemme = (() => {
     Object.assign(h, ny);
     tegn();
   }
-  async function gemKat(ingId, katId) {
-    const [ny] = await api(`ingredienser?id=eq.${enc(ingId)}`, { method: 'PATCH', body: { kategori_id: katId } });
-    Object.assign(ingAf(ingId), ny);
-    lukArk(); tegn();
-    toast(`${ingAf(ingId).navn} står nu under ${katId ? katNavn(katAf(katId)) : IKKE_SORTERET}`);
-  }
-
   const ids = () => new Set(D.hj.map(h => h.ingrediens_id)); // det, der er derhjemme, til «Hvad kan jeg lave?»
   // Lægger listen ind i en boks på siden. «aendret» kaldes, hver gang listen ændrer sig.
   const LISTE = '<h2>Hvad har du derhjemme?</h2><div id="hj-liste"></div>';
@@ -153,21 +145,6 @@ const Hjemme = (() => {
 
   Object.assign(H, {
     hjFold(el) { const g = el.dataset.v; LUKKET.has(g) ? LUKKET.delete(g) : LUKKET.add(g); lager.gem('hjLukket', [...LUKKET]); tegn(); const ny = $(`#hj-liste .hj-fold[data-v="${g}"]`); if (ny) ny.focus(); },
-    hjKat(el) {
-      const h = D.hj.find(x => x.id === el.closest('.hj-rk').dataset.id), i = h && ingAf(h.ingrediens_id);
-      if (!i) return;
-      valgtIng = i.id;
-      const kat = [...D.kat].sort((x, y) => x.raekkefolge - y.raekkefolge || x.navn.localeCompare(y.navn, 'da'));
-      const d = ark(`<h2>Kategori</h2><small>${esc(i.navn)} hører til:</small>
-        <div class="hj-katvalg">${kat.map(k => `<button type="button" class="chip${k.id === i.kategori_id || (!i.kategori_id && k.navn_norm === 'andet') ? ' valgt' : ''}" data-h="hjVaelgKat" data-v="${k.id}">${esc(katNavn(k))}</button>`).join('')}
-          ${kat.some(k => k.navn_norm === 'andet') ? '' : `<button type="button" class="chip${i.kategori_id ? '' : ' valgt'}" data-h="hjVaelgKat" data-v="">${IKKE_SORTERET}</button>`}</div>
-        <label for="hj_nykat">Ny kategori</label>
-        <div class="linjeform"><input id="hj_nykat" type="text" maxlength="30" autocomplete="off" placeholder="fx Brød"><button type="button" class="knap gem" data-h="hjNyKat">Gem</button></div>
-        <div id="arkfejl"></div>
-        <div class="rakke">${Ikoner.rund('luk', 'Luk', 'data-tpid="luk" data-h="lukArk"')}</div>`);
-      $('.ark-bag', d).addEventListener('click', lukArk);
-    },
-    hjVaelgKat(el) { return gemKat(valgtIng, el.dataset.v || null); },
     hjTrin(el) { // − og + i mængden. På listen gemmes det med det samme (som når feltet ændres).
       const rk = el.closest('.hj-rk, #hj-ny'), inp = rk.querySelector('.hj-mgd'), t = TRIN[rk.querySelector('.hj-enh').value] || 1;
       const nu = inp.value.trim() ? tal(inp.value) : 0;
@@ -178,16 +155,6 @@ const Hjemme = (() => {
       if (rk.id !== 'hj-ny' && !rk.classList.contains('gn-rk')) inp.dispatchEvent(new Event('change', { bubbles: true }));
     },
     hjTilfoej() { return tilfoej().catch(err => { console.error(err); fejlbesked('Det blev ikke gemt. Tjek internettet, og tryk på «Tilføj» igen.'); }); },
-    async hjNyKat() {
-      const navn = $('#hj_nykat').value.trim().replace(/\s+/g, ' '), n = norm(navn);
-      if (!n) { $('#arkfejl').innerHTML = '<div class="fejlboks">Skriv et navn til kategorien.</div>'; return; }
-      let k = D.kat.find(x => x.navn_norm === n);
-      if (!k) {
-        [k] = await api('ingrediens_kategorier', { method: 'POST', body: { navn, navn_norm: n, raekkefolge: Math.max(0, ...D.kat.filter(x => x.navn_norm !== 'andet').map(x => x.raekkefolge)) + 1 } });
-        D.kat.push(k);
-      }
-      await gemKat(valgtIng, k.id);
-    },
     async hjFjern(el) {
       const rk = el.closest('.hj-rk'), id = rk.dataset.id, h = D.hj.find(x => x.id === id);
       await api(`hjemme?id=eq.${enc(id)}`, { method: 'DELETE' });
@@ -204,7 +171,6 @@ const Hjemme = (() => {
   // Retur: videre til næste felt, eller gem det nye felt og lav plads til det næste
   document.addEventListener('keydown', async e => {
     if (e.key !== 'Enter' || e.isComposing) return;
-    if (e.target.id === 'hj_nykat') { e.preventDefault(); return H.hjNyKat().catch(() => fejlbesked('Kategorien blev ikke oprettet. Tjek internettet, og tryk retur igen.')); }
     const rk = e.target.closest && e.target.closest('.hj-rk, #hj-ny');
     if (!rk || !app.contains(rk)) return;
     e.preventDefault();

@@ -46,21 +46,12 @@ const Katalog = (() => {
     }
     await hent();
   }
-  // Import (links, tekst og «Opdater med Claude»): Claudes kategori lægges på en kendt ingrediens, der ikke har nogen. claude: navn -> kategorinavn.
-  async function katFraClaude(liste, claude = {}) {
-    for (const x of liste) {
-      if (!x || 'g' in x || Array.isArray(x.eller)) continue;
-      const l = laes(x.n), { k } = dele(x.n), ck = claude[k] ? katId(claude[k]) : null, i = ck && l.udfald === 'kendt' && l.slags === 'vare' && ing.find(c => c.id === l.varer[0].id);
-      if (i && !i.kategori_id) { await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: ck } }); i.kategori_id = ck; }
-    }
-  }
   // Ved «Gem» (opdatering 4c, fase 5): hver linje får ingrediensens id og navn fra kataloget.
   // En tekst, appen kender (navn, alias eller regel), bruges uden spørgsmål: en regel kan dele linjen, gøre den til «eller» eller slette den.
   // Ukendte linjer er spurgt om i forvejen (afklar). Svarede man «Ikke nu», gemmes linjen, som den står, uden vare, og der spørges igen næste gang.
   // svar: fra afklar. imp: { claude } fra import. Import retter selv ved præcis én, der ligner («tæt på», valg 6). Den opretter intet.
   async function knyt(liste, svar = {}, imp = null) {
     await hent();
-    if (imp) await katFraClaude(liste, imp.claude || {});
     if (imp) log(liste.filter(x => x && !('g' in x) && !Array.isArray(x.eller)).map(x => { const l = laes(x.n); return l.udfald === 'taet' && l.varer[0] ? { slags: 'taet', tekst: dele(x.n).n, ingrediens_id: l.varer[0].id, note: 'rettet til «' + ingNavn(l.varer[0].id) + '»' } : null; }), 'import');
     return liste.flatMap(x => knytLinje(x, svar, imp));
   }

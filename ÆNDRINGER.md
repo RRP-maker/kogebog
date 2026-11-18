@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.29.0 · Kategori og sletning kun i Ingrediensværktøjet
+- **Skift kategori** og **Slet ingrediensen** står ved hver ingrediens i værktøjet (og «Slet» ved de foreløbige). Sletning afvises, hvis ingrediensen står i en opskrift eller «Derhjemme», har aliaser eller er fællesnavn. Der gemmes en kopi først.
+- **Uden for værktøjet kan kategorien ikke ændres:** kategoriknappen i «Derhjemme» og arket til at skifte eller lave kategorier er væk, og import sætter ikke længere en kategori på en kendt ingrediens. Nye ingredienser får stadig en kategori, når de oprettes.
+- Beslutning: det er et valg i appen, ikke en spærring i databasen, for værktøjet bruger samme adgang som resten af appen.
+
 ## 2.28.0 · DTU-forslag i Ingrediensværktøjet og kildeangivelse
 - **DTU-forslag:** en ny sektion i værktøjet (tabellen `ingrediens_tvivl`, `supabase/dtu-tvivl.sql`) med de DTU-navne, scriptet ikke kunne afgøre. Ret navn og kategori og tryk «Opret», eller «Spring over». «Opret alle viste» tager de 25 viste på én gang. Søgefeltet indsnævrer listen.
 - **Kilder:** Indstillinger og README nævner DTU Fødevaredatabasen (Frida) 6.1 og licensen CC BY 4.0, og at navnene er ændret.

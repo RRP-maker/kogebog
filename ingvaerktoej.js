@@ -224,7 +224,13 @@ ${linjer.join('\n')}
   const kobling = (i, attr, tekst, knap, h, ikon, fb = '') => `<label for="${fb}${attr}-${i.id}">${tekst}</label>
     <input id="${fb}${attr}-${i.id}" class="felt felt-m" list="ivliste" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-${attr}" data-h="${h}" data-n="${i.id}">${ik(ikon)} ${knap}</button></div>`;
-  const handlinger = (i, fae, sam) => `${kobling(i, 'slags', `«${esc(i.navn)}» er en slags …`, 'Gør til slags af', 'ivSlags', 'tjek')}
+  const katValg = i => [...D.kat].sort((a, b) => a.raekkefolge - b.raekkefolge).map(k => `<option value="${k.id}"${k.id === i.kategori_id || (!i.kategori_id && k.navn_norm === 'andet') ? ' selected' : ''}>${esc(katNavn(k))}</option>`).join('');
+  const katSlet = (i, fb = '') => `<label for="${fb}kat-${i.id}">Kategori</label>
+    <select id="${fb}kat-${i.id}" class="felt felt-m">${katValg(i)}</select>
+    <div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-kat" data-h="ivKat" data-n="${i.id}">${ik('tjek')} Gem kategori</button>
+      <button type="button" class="knap mini slet" data-tpid="iv-slet-ing" data-h="ivSletIng" data-n="${i.id}" aria-label="Slet ${esc(i.navn)}">${ik('slet')} Slet ingrediensen</button></div>`;
+  const handlinger = (i, fae, sam) => `${katSlet(i)}
+    ${kobling(i, 'slags', `«${esc(i.navn)}» er en slags …`, 'Gør til slags af', 'ivSlags', 'tjek')}
     ${fae ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-slags-fjern" data-h="ivSlagsFjern" data-n="${i.id}">${ik('fjern')} Ikke en slags af «${esc(fae)}»</button></div>` : ''}
     ${kobling(i, 'samme', `«${esc(i.navn)}» er samme som …`, 'Gør samme som', 'ivSamme', 'tjek')}
     ${sam.length ? `<div class="rakke venstre"><button type="button" class="knap mini slet" data-tpid="iv-samme-fjern" data-h="ivSammeFjern" data-n="${i.id}">${ik('fjern')} Ikke samme som de andre</button></div>` : ''}
@@ -238,7 +244,8 @@ ${linjer.join('\n')}
     const række = i => `<div class="iv-regel"><p class="tekst-s" data-tpdata><strong>${esc(i.navn)}</strong> · ${flertal(brugt.get(i.id) || 0, 'opskrift', 'opskrifter')}</p>
       <label for="fk-${i.id}">Kategori</label>
       <select id="fk-${i.id}" class="felt felt-m" data-fkat="${i.id}">${kat.map(k => `<option value="${k.id}"${k.id === i.kategori_id ? ' selected' : ''}>${esc(katNavn(k))}</option>`).join('')}</select>
-      <div class="rakke venstre"><button type="button" class="knap mini gem" data-tpid="iv-fb-ok" data-h="ivFbGodkend" data-n="${i.id}" aria-label="Godkend ${esc(i.navn)}">${ik('tjek')} Godkend</button></div>
+      <div class="rakke venstre"><button type="button" class="knap mini gem" data-tpid="iv-fb-ok" data-h="ivFbGodkend" data-n="${i.id}" aria-label="Godkend ${esc(i.navn)}">${ik('tjek')} Godkend</button>
+        <button type="button" class="knap mini slet" data-tpid="iv-slet-ing" data-h="ivSletIng" data-n="${i.id}" aria-label="Slet ${esc(i.navn)}">${ik('slet')} Slet</button></div>
       ${kobling(i, 'tilalias', `Eller gør «${esc(i.navn)}» til alias af …`, 'Gør til alias', 'ivTilAlias', 'tjek', 'fb-')}</div>`;
     return `<h2>Foreløbige ingredienser (${f.length})</h2><p class="lille">Appen har oprettet dem uden at spørge, fordi de ikke fandtes. Vælg kategori og tryk «Godkend», eller gør dem til alias af en ingrediens, der findes. Så bliver teksten stående i opskrifterne.</p>
       ${f.map(række).join('')}${f.length > 1 ? `<div class="rakke venstre"><button type="button" class="knap mini" data-tpid="iv-fb-alle" data-h="ivFbAlle">${ik('tjek')} Godkend alle</button></div>` : ''}`;
@@ -682,6 +689,25 @@ ${linjer.join('\n')}
       const liste = [...document.querySelectorAll('#iv-tvliste .iv-regel')].map(tvRaekke);
       if (!liste.length || !await bekraeft(`Vil du oprette alle ${liste.length} viste med navnene og kategorierne, som de står nu? Der gemmes ikke en kopi, men ingen eksisterende ingredienser ændres.`, 'Opret')) return;
       await tvOpret(liste);
+    },
+    async ivKat(el) { // skift kategori. Kun her kan en ingrediens få en anden kategori.
+      const i = D.ing.find(x => x.id === el.dataset.n), sel = el.closest('.rakke').previousElementSibling, k = D.kat.find(x => x.id === (sel && sel.value));
+      if (!i || !k) return toast('Vælg en kategori');
+      if (k.id === i.kategori_id) return toast(`«${i.navn}» står allerede under ${katNavn(k)}`);
+      try { await api(`ingredienser?id=eq.${enc(i.id)}`, { method: 'PATCH', body: { kategori_id: k.id } }); }
+      catch (e) { console.error(e); return fejlbesked('Kategorien blev ikke gemt. Tjek internettet, og prøv igen.'); }
+      await efterRegel(`«${i.navn}» står nu under ${katNavn(k)}`);
+    },
+    async ivSletIng(el) { // slet en ingrediens. Kun hvis den ikke bruges nogen steder, så intet mister sin vare.
+      const i = D.ing.find(x => x.id === el.dataset.n);
+      if (!i) return;
+      const iOps = D.ops.filter(o => ingListe(o).some(x => x.id === i.id || (x.el || []).includes(i.id) || (x.og || []).includes(i.id) || (Array.isArray(x.eller) && x.eller.includes(i.id))));
+      const hvorfor = [iOps.length && `den står i ${flertal(iOps.length, 'opskrift', 'opskrifter')}, fx «${iOps[0].titel}»`, D.hj.some(h => h.ingrediens_id === i.id) && 'den står i «Derhjemme»',
+        D.regler.some(r => r.resultat.some(v => v.id === i.id)) && 'den har aliaser eller er med i en regel. Fjern dem først',
+        D.ing.some(x => x.faelles_id === i.id) && 'den er fællesnavn for andre. Fjern «slags af» på dem først'].filter(Boolean);
+      if (hvorfor.length) return fejlbesked(`«${i.navn}» kan ikke slettes: ${hvorfor.join('; ')}. Lad den gå op i en anden ingrediens med «Gør til alias af …» i stedet.`);
+      if (!await bekraeft(`Vil du slette «${i.navn}»? Der gemmes en kopi først, som du kan gendanne nederst på siden.`, 'Slet')) return;
+      await retPakke({ slet: [i.id] }, 'før sletning', `«${i.navn}» er slettet`);
     },
     ivEgen(el) { // et alias eller en regel bliver til en ingrediens for sig selv
       const r = D.regler.find(x => x.id === el.dataset.v);
