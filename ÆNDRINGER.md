@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.27.0 · Ingrediensværktøjet: foreløbige ingredienser, samme som og slags af
+- **Foreløbige ingredienser:** en ny sektion øverst i værktøjet med det, appen har oprettet uden at spørge. Vælg kategori og tryk «Godkend» (eller «Godkend alle»), eller gør dem til alias af en ingrediens, der findes.
+- **Ved hver ingrediens** (søg i «Ingredienser og aliaser»): «er en slags …» (fællesnavn, ét niveau), «er samme som …» (gruppe på mindst to, 1:1) og «Gør til alias af …». Alias bruger den gamle sammenlægning (`ingrediens_ret`): opskrifter og Derhjemme følger med, og det gamle navn bliver et alias. Sammenlægning findes kun her.
+- Alle ændringer gemmer en kopi først. «Samme som» og «slags» står også i oversigten.
+
 ## 2.26.0 · Ingen ingrediensspørgsmål til slutbrugeren
 - **Ingen spørgsmålsark mere** ved «Gem», import, åbning af en opskrift og «Derhjemme». Kendt bruges. Én, der ligner præcis én, rettes selv og skrives til «Til gennemgang». Alt andet bliver en foreløbig ingrediens i «Ikke sorteret», som godkendes i Ingrediensværktøjet.
 - **«Samme som»** (`ens_gruppe`): ingredienser i samme gruppe kan erstatte hinanden 1:1 (kyllingebryst og hønsebryst). Det bruges kun, når appen tjekker, om du har det derhjemme.
