@@ -148,183 +148,44 @@ const Katalog = (() => {
     });
   }
 
-  // ---------- Spørgsmålet ved «Gem» (Styr på ingredienser, fase 5) ----------
-  // Ét ark med alle tekster, appen ikke kender. Svarene: en af de lignende, «Opret ny», «Del selv» og «Ikke nu».
-  // Svarene huskes som regel (et alias eller en regel), så der ikke spørges igen. «Ikke nu» spørger igen næste gang.
-  // hjemme: «Derhjemme» spørger også, når teksten er et fællesnavn (vælg frisk eller tørret). Der er ingen «Del selv».
-  // imp: import, som selv retter «tæt på» og ikke spørger om dem. kat: Claudes kategorier (navn -> kategorinavn). titel: opskriften, der spørges for. note: ekstra tekst øverst.
-  // Svar: tekst -> { id } (valgt eller oprettet), true (en regel er gemt) eller false («Ikke nu»). null: man gik tilbage.
-  // felt: et element, spørgsmålet står i (en eksisterende opskrift, fase 7) i stedet for i et ark. «Skjul» giver null.
-  // ordn: spørg også om navnet på en ingrediens, der står for flere varer («salt og peber»). Svaret gælder kun den opskrift: { slags, varer }, for teksten kan ikke blive en regel.
-  const husk = new Map(); // svarene, til arket åbnes igen (fx efter «Tilbage»)
-  const AFSLAGS = [['vare', 'Én vare med tilberedning'], ['del', 'Flere varer, linjen deles'], ['eller', 'Én af flere varer'], ['slet', 'Ikke en vare, linjen slettes']];
-  const varianter = id => ing.filter(i => i.faelles_id === id).map(i => i.id);
+  // ---------- Ingen spørgsmål til slutbrugeren (Styr på ingredienser, 2.26.0) ----------
+  // Alt, der skulle afklares, afgøres her uden spørgsmål. Spørgsmålene hører til i Ingrediensværktøjet.
+  // Kendt (navn, alias eller regel): bruges. Én, der ligner præcis én («tæt på»): rettes selv og skrives til «Til gennemgang».
+  // Alt andet oprettes som en foreløbig ingrediens i «Ikke sorteret» (foreloebig = true), som du godkender i Ingrediensværktøjet.
+  // Tekster med «og» eller «eller», hvor en del er ukendt, røres ikke (der oprettes ikke en ingrediens, der hedder «salt eller xyz»).
+  // imp: import retter selv «tæt på» (i knyt). kat: Claudes kategorier (navn -> kategorinavn). Alle andre valg (felt, gem, tilbage, titel, note, ordn) er ikke i brug mere.
+  // Svar: tekst -> { id, ny? }. Teksterne, der var kendte eller blev stående, er ikke med.
   const ingNavn = id => (ing.find(i => i.id === id) || {}).navn || '';
-  function forslagDel(t) { // «salt og peber» -> del: salt + peber, «smør eller margarine» -> eller
-    const eller = / eller /.test(t), dele = t.split(eller ? / eller / : / og |\s*[,&+/]\s*/).map(x => x.trim()).filter(Boolean);
-    return { slags: dele.length > 1 ? (eller ? 'eller' : 'del') : 'vare', varer: (dele.length > 1 ? dele : [t]).map(x => { const i = ing.find(c => c.navn_norm === x); return { navn: i ? i.navn : '', f: '' }; }) };
-  }
-  async function afklar(tekster, { hjemme = false, imp = false, kat: ck = {}, titel = '', note = '', gem = 'Gem', tilbage = 'Tilbage', felt = null, ordn = false } = {}) {
+  const rent = n => norm(String(n).replace(/[(),;]/g, ' ')).slice(0, 60).trim();
+  async function afklar(tekster, { hjemme = false, imp = false, kat: ck = {}, ordn = false } = {}) {
     await hent();
-    const sp = [], set = new Set();
+    const ud = {}, nye = [], poster = [], set = new Set(), andet = kat.find(k => k.navn_norm === 'andet');
     for (const t of tekster) {
       const d = dele(t);
       if (!d.n || set.has(d.n)) continue;
       set.add(d.n);
       const l = laes(t);
-      if (imp && l.udfald === 'taet') continue;
-      if (!hjemme && l.udfald !== 'kendt' && flereAf(d.k)) continue; // alle dele er kendte varer: linjen samles uden spørgsmål
-      let valg = l.lignende, fast = false;
-      const fler = ordn && l.udfald === 'kendt' && l.via === 'navn' && OGELLER.test(d.k) && !flereAf(d.k);
-      if (l.udfald === 'kendt' && !fler) {
-        if (!hjemme) continue;
-        const ids = l.varer.map(v => v.id);
-        if (l.slags === 'vare' && !varianter(ids[0]).length) continue;
-        valg = ids; fast = true; // et fællesnavn eller en regel med flere varer: vælg én. Det huskes ikke som regel.
-      }
-      if (hjemme) valg = [...new Set(valg.flatMap(id => varianter(id).length ? varianter(id) : [id]))].slice(0, 6);
-      const gl = husk.get(d.n);
-      sp.push({ ...d, l, valg, fast, fler, s: gl || { valg: 'ikke', navn: d.k, kat: katId(ck[d.k] || ck[d.n] || '') || gaet(d.k) || '', ...forslagDel(d.n) } });
+      if (l.udfald === 'kendt' || (imp && l.udfald === 'taet') || (!hjemme && flereAf(d.k))) continue;
+      if (l.udfald === 'taet') { const id = l.varer[0].id; ud[d.n] = { id }; poster.push({ slags: 'taet', tekst: d.n, ingrediens_id: id, note: 'rettet til «' + ingNavn(id) + '»' }); continue; }
+      if (OGELLER.test(d.k)) continue;
+      const navn = rent(d.k);
+      if (!navn) continue;
+      nye.push({ navn, kategori_id: katId(ck[d.k] || ck[d.n] || '') || gaet(d.k) || (andet && andet.id) || null, foreloebig: true });
+      ud[d.n] = { navn };
     }
-    if (!sp.length) return {};
-    const katValg = v => `<option value="">${IKKE_SORTERET}</option>` + sorteret().filter(k => k.navn_norm !== 'andet').map(k => `<option value="${k.id}"${k.id === v ? ' selected' : ''}>${esc(katNavn(k))}</option>`).join('');
-    const hint = it => {
-      if (it.fast) return it.l.slags === 'vare' ? 'Det er et fællesnavn. Vælg, hvilken du har derhjemme.' : 'Teksten står for flere varer. Vælg den, du har derhjemme.';
-      const ens = it.fler ? 'Det er en ingrediens i kataloget, men den står for flere varer.' : it.l.udfald === 'taet' ? `Appen kender den ikke. Den ligner «${ingNavn(it.valg[0])}».` : it.valg.length ? 'Appen kender den ikke. Måske er det en af disse.' : 'Appen kender den ikke, og ingen ingredienser ligner.';
-      return [ens, it.fler ? 'Vælg «Del selv» for at dele linjen. Det gælder kun denne opskrift.' : it.l.ogEller && !hjemme && 'Der står flere varer. Vælg «Del selv» for at dele linjen.', it.f && `«${it.f}» bliver stående på linjen.`].filter(Boolean).join(' ');
-    };
-    const radio = (i, v, tekst, s) => `<label class="skift"><input type="radio" name="af${i}" value="${v}"${s.valg === v ? ' checked' : ''}> <span>${tekst}</span></label>`;
-    const delRaekker = (i, s) => {
-      const n = s.slags === 'slet' ? 0 : s.slags === 'vare' ? 1 : Math.max(2, s.varer.length);
-      while (s.varer.length < n) s.varer.push({ navn: '', f: '' });
-      s.varer.length = n;
-      return s.varer.map((v, j) => `<div class="iv-vare"><label for="afv${i}_${j}">${n > 1 ? 'Vare ' + (j + 1) : 'Vare'}</label>
-        <input id="afv${i}_${j}" class="felt felt-m" list="afliste" value="${esc(v.navn)}" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <label for="aff${i}_${j}">Tilberedning (valgfrit)</label>
-        <input id="aff${i}_${j}" class="felt felt-m" value="${esc(v.f)}" placeholder="fx finthakket" autocomplete="off" autocapitalize="off"></div>`).join('')
-        + (n > 1 ? `<div class="rakke venstre"><button type="button" class="knap mini" data-af="vare" data-i="${i}">${ik('plus')} Tilføj vare</button></div>` : '');
-    };
-    const item = (it, i) => `<fieldset class="iv-valg af-sp" data-i="${i}"><legend>Hvad er «<span data-tpdata>${esc(it.n)}</span>»?</legend>
-      <p class="lille">${esc(hint(it))}</p>
-      ${it.valg.map(id => radio(i, 'v:' + id, `<span data-tpdata>${esc(ingNavn(id))}</span>`, it.s)).join('')}
-      ${it.fast || it.fler ? '' : radio(i, 'ny', 'Opret ny ingrediens', it.s)}
-      <div class="af-ny" ${it.s.valg === 'ny' ? '' : 'hidden'}>
-        <label for="afn${i}">Navn på den nye ingrediens</label>
-        <input id="afn${i}" class="felt felt-m" value="${esc(it.s.navn)}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="afnh${i}">
-        <p class="lille" id="afnh${i}">Kun selve varen, fx «løg», ikke «hakket løg».</p>
-        <label for="afk${i}">Kategori</label>
-        <select id="afk${i}" class="felt felt-m">${katValg(it.s.kat)}</select></div>
-      ${it.fast || hjemme ? '' : `${radio(i, 'del', 'Del selv', it.s)}
-      <div class="af-del" ${it.s.valg === 'del' ? '' : 'hidden'}>
-        <fieldset class="iv-valg"><legend>Teksten er</legend>${AFSLAGS.map(([k, t]) => `<label class="skift"><input type="radio" name="afs${i}" value="${k}"${it.s.slags === k ? ' checked' : ''}> <span>${t}</span></label>`).join('')}</fieldset>
-        <div class="af-varer">${delRaekker(i, it.s)}</div></div>`}
-      ${radio(i, 'ikke', hjemme ? 'Tilføj den ikke' : 'Ikke nu', it.s)}</fieldset>`;
-    return new Promise(svar => {
-      const en = sp.length === 1, top = felt
-        ? `<h2 id="ordn-h">${en ? 'Appen er i tvivl om en ingrediens' : `Appen er i tvivl om ${sp.length} ingredienser`}</h2>
-        <small>Vælg, hvad ${en ? 'den' : 'de'} er, så virker søgningen og «Hvad kan jeg lave?» rigtigt. Vælger du «Ikke nu», spørger appen igen, næste gang du åbner opskriften.</small>`
-        : `<h2>Hvad betyder ${en ? 'teksten' : 'teksterne'}?</h2>
-        ${titel ? `<p class="tekst-m">I opskriften «<span data-tpdata>${esc(titel)}</span>»</p>` : ''}
-        <small>${en ? 'Appen kender ikke denne ingrediens' : `Appen kender ikke ${sp.length} af ingredienserne`}. Vælg, hvad ${en ? 'den' : 'de'} er. ${hjemme ? '' : 'Dit svar huskes, så du ikke bliver spurgt igen. Vælger du «Ikke nu», gemmes linjen, som den står, og du bliver spurgt igen næste gang.'}${note ? ' ' + esc(note) : ''}</small>`;
-      const html = `${top}
-        ${sp.map(item).join('')}
-        <datalist id="afliste">${[...ing].filter(i => !hjemme || !varianter(i.id).length).sort((a, b) => a.navn.localeCompare(b.navn, 'da')).map(i => `<option value="${esc(i.navn)}"></option>`).join('')}</datalist>
-        <div id="arkfejl"></div>
-        <div class="rakke"><button type="button" class="knap annuller" data-tpid="${felt ? 'ordn-skjul' : 'annuller'}" data-af="tilbage">${esc(tilbage)}</button><button type="button" class="knap gem" data-tpid="${felt ? 'ordn-gem' : 'gem'}" data-af="gem">${ik('tjek')} ${esc(gem)}</button></div>`;
-      let d;
-      if (felt) { d = document.createElement('section'); d.setAttribute('aria-labelledby', 'ordn-h'); d.innerHTML = html; felt.replaceChildren(d); }
-      else d = ark(html);
-      const laesIt = (it, i) => { // arkets felter ind i svaret
-        const s = it.s, v = $(`input[name="af${i}"]:checked`, d), sl = $(`input[name="afs${i}"]:checked`, d);
-        if (v) s.valg = v.value;
-        if ($('#afn' + i, d)) { s.navn = $('#afn' + i, d).value; s.kat = $('#afk' + i, d).value; }
-        if (sl) s.slags = sl.value;
-        s.varer.forEach((x, j) => { const a = $(`#afv${i}_${j}`, d), b = $(`#aff${i}_${j}`, d); if (a) x.navn = a.value; if (b) x.f = b.value; });
-        husk.set(it.n, s);
-      };
-      const alleLaes = () => sp.forEach(laesIt);
-      const fejlVis = liste => { $('#arkfejl', d).innerHTML = liste.length ? `<div class="fejlboks" role="alert" tabindex="-1">${liste.map(esc).join('<br>')}</div>` : ''; const b = $('#arkfejl .fejlboks', d); if (b) b.focus(); };
-      d.addEventListener('change', e => {
-        const fs = e.target.closest('.af-sp'); if (!fs) return;
-        const i = Number(fs.dataset.i), it = sp[i];
-        laesIt(it, i);
-        const ny = $('.af-ny', fs); if (ny) ny.hidden = it.s.valg !== 'ny';
-        const dl = $('.af-del', fs); if (dl) dl.hidden = it.s.valg !== 'del';
-        if (e.target.name === 'afs' + i) $('.af-varer', fs).innerHTML = delRaekker(i, it.s);
-      });
-      const luk = ud => { if (felt) felt.replaceChildren(); else lukArk(); svar(ud); };
-      d.addEventListener('click', async e => {
-        const a = e.target.closest('[data-af]');
-        if (!a && e.target.closest('.ark-bag')) { alleLaes(); return luk(null); }
-        if (!a) return;
-        if (a.dataset.af === 'tilbage') { alleLaes(); return luk(null); }
-        if (a.dataset.af === 'vare') { const i = Number(a.dataset.i); laesIt(sp[i], i); sp[i].s.varer.push({ navn: '', f: '' }); const fs = a.closest('.af-sp'); $('.af-varer', fs).innerHTML = delRaekker(i, sp[i].s); $(`#afv${i}_${sp[i].s.varer.length - 1}`, d).focus(); return; }
-        alleLaes();
-        // Tjek svarene, før noget gemmes
-        const fejl = [], nye = [], regl = [], ud = {};
-        sp.forEach(it => {
-          const s = it.s, hvad = `«${it.n}»`;
-          if (s.valg === 'ikke') { ud[it.n] = false; return; }
-          if (s.valg.startsWith('v:')) { const id = s.valg.slice(2); ud[it.n] = { id }; if (!it.fast && it.k !== (ing.find(i => i.id === id) || {}).navn_norm) regl.push({ tekst: it.k, slags: 'vare', resultat: [{ id }] }); return; }
-          if (s.valg === 'ny') {
-            const n = norm(s.navn);
-            if (!n) return fejl.push(`${hvad}: skriv et navn på den nye ingrediens.`);
-            if (/[(),;]/.test(n)) return fejl.push(`${hvad}: navnet må ikke have komma eller parentes.`);
-            const i = ing.find(c => c.navn_norm === n), r = regler.find(c => c.tekst === n);
-            if (r) return fejl.push(`${hvad}: «${n}» er allerede en regel. Vælg en af de lignende, eller skriv et andet navn.`);
-            if (hjemme && i && varianter(i.id).length) return fejl.push(`${hvad}: «${n}» er et fællesnavn. Vælg en af varianterne.`);
-            if (!i) nye.push({ navn: n, kategori_id: s.kat || null });
-            ud[it.n] = { navn: n, ny: !i };
-            if (it.k !== n) regl.push({ tekst: it.k, slags: 'vare', ny: n });
-            return;
-          }
-          const res = []; // «Del selv»
-          if (s.slags !== 'slet') s.varer.forEach((v, j) => {
-            const n = norm(v.navn), hvilken = s.varer.length > 1 ? 'vare ' + (j + 1) : 'varen';
-            if (!n) return fejl.push(`${hvad}: vælg ${hvilken} fra listen.`);
-            const m = ing.find(c => c.navn_norm === n);
-            if (!m) { const l = laes(n).lignende.slice(0, 3).map(id => '«' + ingNavn(id) + '»'); return fejl.push(`${hvad}: «${v.navn.trim()}» findes ikke i kataloget.${l.length ? ' Mente du ' + l.join(', ') + '?' : ''} Vælg ${hvilken} fra listen, eller vælg «Opret ny ingrediens».`); }
-            if (res.some(x => x.id === m.id)) return fejl.push(`${hvad}: «${m.navn}» står to gange.`);
-            res.push({ id: m.id, ...(v.f.trim() && { f: v.f.trim() }) });
-          });
-          if (it.fler) { ud[it.n] = { slags: s.slags, varer: res }; return; } // gælder kun denne opskrift
-          if (s.slags === 'vare' && res.length === 1 && !res[0].f && it.k === ingNavn(res[0].id)) { ud[it.n] = { id: res[0].id }; return; }
-          regl.push({ tekst: it.n, slags: s.slags, resultat: res });
-          ud[it.n] = true;
-        });
-        if (fejl.length) return fejlVis(fejl);
-        const knap = $('[data-af="gem"]', d), kt = knap.lastChild;
-        knap.disabled = true; kt.textContent = ' Gemmer…';
-        const andre = []; // regler, en anden enhed nåede at lave først: den, der findes, gælder
-        try {
-          await opret(nye);
-          const kilde = imp ? 'import' : hjemme ? 'derhjemme' : ordn ? 'opskrift (åbnet)' : 'opskrift (gemt)', poster = nye.map(n => ({ slags: 'ny', tekst: n.navn, ingrediens_id: (ing.find(c => c.navn_norm === norm(n.navn)) || {}).id }));
-          for (const it of sp) { const u = ud[it.n]; if (u && u.navn) ud[it.n] = { id: ing.find(c => c.navn_norm === u.navn).id, ny: u.ny }; }
-          for (const r of regl) {
-            const resultat = r.ny ? [{ id: ing.find(c => c.navn_norm === r.ny).id }] : r.resultat;
-            const g = await api('rpc/ingrediens_regel_gem', { method: 'POST', body: { p: { tekst: r.tekst, slags: r.slags, resultat } } });
-            if (!g.ok && g.grund === 'findes') andre.push(r.tekst); else if (g.ok) poster.push({ slags: 'alias', tekst: r.tekst, ingrediens_id: resultat[0] && resultat[0].id, note: r.slags });
-          }
-          await hent();
-          log(poster, kilde);
-        } catch (err) {
-          console.error(err);
-          knap.disabled = false; kt.textContent = ' ' + gem;
-          return fejlVis(['Svarene blev ikke gemt. Tjek internettet, og tryk på «' + gem + '» igen.']);
-        }
-        sp.forEach(it => husk.delete(it.n));
-        if (andre.length) toast(`${andre.map(t => '«' + t + '»').join(', ')} havde allerede en regel fra en anden enhed. Den bruges.`);
-        luk(ud);
-      });
-    });
+    const kilde = imp ? 'import' : hjemme ? 'derhjemme' : ordn ? 'opskrift (åbnet)' : 'opskrift (gemt)';
+    await opret(nye);
+    for (const [n, u] of Object.entries(ud)) if (u.navn) { const i = ing.find(c => c.navn_norm === u.navn); if (i) { ud[n] = { id: i.id, ny: true }; poster.push({ slags: 'ny', tekst: u.navn, ingrediens_id: i.id }); } else delete ud[n]; }
+    log(poster, kilde);
+    return ud;
   }
-  // «Derhjemme»: ingrediensen, en tekst står for efter afklar. null: ingen (ukendt, «Tilføj den ikke» eller et fællesnavn).
+  // «Derhjemme»: ingrediensen, en tekst står for efter afklar. Et fællesnavn må stå her (timian dækker frisk og tørret timian). null: ingen.
   function hjemmeId(tekst, svar = {}) {
     const s = svar[dele(tekst).n];
     if (s === false) return null;
     if (s && s.id) return s.id;
     const l = laes(tekst);
-    return l.udfald === 'kendt' && l.slags === 'vare' && !varianter(l.varer[0].id).length ? l.varer[0].id : null;
+    return l.udfald === 'kendt' && l.varer[0] ? l.varer[0].id : null;
   }
 
   // ---------- Læs et skrevet navn (Styr på ingredienser) ----------
@@ -403,7 +264,10 @@ const Katalog = (() => {
   const sikr = () => hentet ? Promise.resolve() : hent().catch(e => console.error(e));
   function I() { // opslag: id -> ingrediens, fællesnavn -> varianter, id -> aliaser, skrevet tekst -> varer
     if (idx) return idx;
-    idx = { id: new Map(ing.map(i => [i.id, i])), var: new Map(), alias: new Map(), tekst: new Map() };
+    idx = { id: new Map(ing.map(i => [i.id, i])), var: new Map(), alias: new Map(), tekst: new Map(), ens: new Map() };
+    const grp = new Map(); // «samme som»: ingredienser med samme ens_gruppe
+    for (const i of ing) if (i.ens_gruppe) { if (!grp.has(i.ens_gruppe)) grp.set(i.ens_gruppe, []); grp.get(i.ens_gruppe).push(i.id); }
+    for (const m of grp.values()) for (const id of m) idx.ens.set(id, m.filter(x => x !== id));
     for (const i of ing) if (i.faelles_id) { if (!idx.var.has(i.faelles_id)) idx.var.set(i.faelles_id, []); idx.var.get(i.faelles_id).push(i.id); }
     for (const r of regler) if (erAlias(r)) { const id = r.resultat[0].id; if (!idx.alias.has(id)) idx.alias.set(id, []); idx.alias.get(id).push(r.tekst); }
     return idx;
@@ -431,8 +295,9 @@ const Katalog = (() => {
     return [[x.id, ...(x.el || [])].filter(har).map(nm).join(' eller '), ...(x.og || []).filter(har).map(nm)].join(' og ');
   }
   const medNavn = x => x && !('g' in x) ? { ...x, n: navn(x) } : x;
-  // Det, der dækker en vare: varen selv og, er den et fællesnavn, dets varianter. Tørret timian dækker ikke frisk timian.
-  const daekker = id => [id, ...(I().var.get(id) || [])];
+  // Det, der dækker en vare (ét skridt, aldrig to): varen selv, dens varianter (er den et fællesnavn), dens fællesnavn (er den en variant) og dem, den er «samme som».
+  // Timian dækker frisk og tørret timian. Frisk timian dækker timian, men ikke tørret timian.
+  const daekker = id => { const i = I().id.get(id); return [...new Set([id, ...(I().var.get(id) || []), ...(i && i.faelles_id ? [i.faelles_id] : []), ...(I().ens.get(id) || [])])]; };
   // Er linjen opfyldt af det, der er derhjemme (et Set af id'er)? En «eller»-linje er opfyldt af én af varerne.
   // En linje uden kendt vare er opfyldt, hvis det samme navn står derhjemme.
   // Krav: hvad linjen skal have. En liste af grupper, hvor én vare i hver gruppe er nok: «eller» er én gruppe, «og» er en gruppe pr. vare. null: ingen kendt vare.

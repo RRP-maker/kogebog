@@ -8,10 +8,10 @@ const Hjemme = (() => {
   const katAf = id => D.kat.find(k => k.id === id);
   const enhHtml = v => (ENH.includes(v) || !v ? ENH : [...ENH, v]).map(e => `<option${e === (v || 'stk') ? ' selected' : ''}>${esc(e)}</option>`).join('');
 
-  // Navnene som ingredienser (navn -> ingrediens). Ukendte navne og fællesnavne spørges der om først i ét ark (Katalog.afklar).
-  // Intet oprettes uden et valg. Et navn, man ikke svarer på, er ikke med. null: man gik tilbage.
+  // Navnene som ingredienser (navn -> ingrediens). Intet spørges der om (Katalog.afklar): én, der ligner præcis én, rettes selv, og en ukendt bliver en foreløbig ingrediens.
+  // Et fællesnavn (timian) må stå derhjemme.
   async function findIng(navne, gem = 'Gem') {
-    const svar = await Katalog.afklar(navne, { hjemme: true, gem, tilbage: 'Annuller' });
+    const svar = await Katalog.afklar(navne, { hjemme: true });
     if (!svar) return null;
     if (Object.values(svar).some(x => x && x.ny)) D.ing = await api('ingredienser?select=*');
     const ud = new Map();

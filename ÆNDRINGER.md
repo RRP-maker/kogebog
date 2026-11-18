@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.26.0 · Ingen ingrediensspørgsmål til slutbrugeren
+- **Ingen spørgsmålsark mere** ved «Gem», import, åbning af en opskrift og «Derhjemme». Kendt bruges. Én, der ligner præcis én, rettes selv og skrives til «Til gennemgang». Alt andet bliver en foreløbig ingrediens i «Ikke sorteret», som godkendes i Ingrediensværktøjet.
+- **«Samme som»** (`ens_gruppe`): ingredienser i samme gruppe kan erstatte hinanden 1:1 (kyllingebryst og hønsebryst). Det bruges kun, når appen tjekker, om du har det derhjemme.
+- **Kun ét skridt:** universalmel «samme som» mel dækker mel, men ikke hvedemel, som er en variant af mel.
+- **Fællesnavne derhjemme:** timian derhjemme dækker frisk og tørret timian. Frisk timian dækker timian, men ikke tørret timian.
+- **SQL:** `supabase/ingredienser-regler.sql` (kørt). Beslutning: mængde derhjemme bruges ikke til at afgøre, om en opskrift kan laves. Lagerlinjen med mængde og «træk fra» er uændret.
+
 ## 2.25.0 · Rettelser efter 2.24.0
 - **Opskriftssiden:** titel og stjerne står side om side igen (stjernen faldt ned på en ekstra række og forskød alle linjer på iPhone). Portionerne står inde i stepperen: «− 2 portioner +» (1 portion, når der er én).
 - **Madplanens hoved:** valgene i kortet bliver inden for kortets bredde. Chipsene ombrydes i stedet for at blive skåret af.

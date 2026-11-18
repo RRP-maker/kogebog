@@ -698,7 +698,7 @@ async function ordnVedAabning(r) {
 function ordnFelt(r, tekster, maal) {
   const felt = $('#ordn', maal);
   if (!felt) return;
-  Katalog.afklar(tekster, { felt, ordn: true, gem: 'Gem svar', tilbage: 'Skjul' }).then(async svar => {
+  Katalog.afklar(tekster, { ordn: true }).then(async svar => {
     if (!svar) return felt.remove(); // «Skjul»
     const foer = ingListe(r), liste = Katalog.ordn(foer, svar), aendret = JSON.stringify(liste) !== JSON.stringify(foer);
     try {
