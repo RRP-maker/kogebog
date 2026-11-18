@@ -2,6 +2,10 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.31.0 · Ingredienserne i kategorier
+- **Alle ingredienser står nu i kategorier** i Ingrediensværktøjet. Hver kategori er et afsnit, der er lukket til at begynde med, med antal i overskriften. Det erstatter «Se oversigt». Rækkerne ser ud som før, kun rækkefølgen er ny (kategori, så alfabetisk).
+- Søgningen åbner de kategorier, der har et hit. «Navne, der ligner hinanden» (fra oversigten) står nederst som eget afsnit.
+
 ## 2.30.2 · Ny kategori åbner ingrediensen igen
 - Efter «Ny kategori» åbner ingrediensens vindue igen. Nye kategorier lægges efter den sidste almindelige, ikke efter «Ikke sorteret». Lidt luft mellem knapper og felter i vinduet.
 
