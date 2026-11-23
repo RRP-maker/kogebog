@@ -443,13 +443,16 @@ function placerFrem() {
 new MutationObserver(placerFrem).observe(app, { childList: true, subtree: true });
 addEventListener('resize', placerFrem);
 if (document.fonts) document.fonts.ready.then(placerFrem);
+const FANER = new Set(['#/opskrifter', '#/tips', '#/forslag', '#/forslag/madplan', '#/mere']); // menuens faner: skift mellem dem er hyppige og står på samme niveau, så kun en kort fade, ingen sidebevægelse
+const UD_MS = { samme: 70, andet: 90 }; // det gamle toner ud (samme tal som --ud-tid i style.css)
 async function route() {
   const id = ++visning;
+  const forrige = sidsteHash;
   foelgSpor(); foelgKnap();
   lukArk(); slipSkaerm(); sidsteValg = ''; navTilpas(null);
   Hjaelper.side(null);
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
-  app.dataset.retning = sporRetning || (dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme');
+  app.dataset.retning = FANER.has(location.hash) && FANER.has(forrige) ? 'samme' : sporRetning || (dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme');
   dybde = dele.length;
   if (a === 'forslag' || a === 'hjemme') opskriftFra = a === 'forslag' && b === 'madplan' ? '#/forslag/madplan' : '#/forslag'; else if (a !== 'opskrifter' || !b) opskriftFra = null;
   if (a !== 'opskrifter') FIL = null; // søgning og filtre huskes kun, mens man er i opskrifterne
@@ -459,7 +462,7 @@ async function route() {
   if (!iRuder) rudeFuld = false; document.body.classList.toggle('rude-fuld', iRuder && rudeFuld); // fuld skærm er midlertidig: slukker, når man lukker opskriften
   if (!bliv && !foerste && app.firstChild) {
     app.classList.remove('sideind'); app.classList.add('sideud');
-    await new Promise(r => setTimeout(r, 120));
+    await new Promise(r => setTimeout(r, app.dataset.retning === 'samme' ? UD_MS.samme : UD_MS.andet));
     if (id !== visning) return;
   }
   foerste = false; indKlar = !bliv;

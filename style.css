@@ -585,18 +585,17 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 
 /* Sideskift: det gamle toner ud, det nye glider ind fra den vej, man går.
    Bundbjælken i trin-tilstand er undtaget, fordi den sidder fast på skærmen. */
-#app.sideud > :not(.lav), #app.sideud .lav > :not(.lav-bund) { animation: sideud .12s ease-in both; }
-#app.sideind > :not(.lav), #app.sideind .lav > :not(.lav-bund), .trinind > * { animation: sideind .34s var(--ud) both; }
-#app.sideind > :nth-child(2) { animation-delay: .03s; }
-#app.sideind > :nth-child(3) { animation-delay: .06s; }
-#app.sideind > :nth-child(4) { animation-delay: .09s; }
-#app.sideind > :nth-child(n+5) { animation-delay: .12s; }
-#app { --fra: 0px; --til: 0px; }
-#app[data-retning=frem] { --fra: 36px; --til: -14px; }
-#app[data-retning=tilbage] { --fra: -36px; --til: 14px; }
-@keyframes sideud { to { opacity: 0; transform: translateX(var(--til)) scale(.985); } }
-@keyframes sideind { from { opacity: 0; transform: translateX(var(--fra)) scale(.975); filter: blur(5px); } }
-.henter { animation: toning .2s .3s both; }
+#app.sideud > :not(.lav), #app.sideud .lav > :not(.lav-bund) { animation: sideud var(--ud-tid) ease-in both; }
+#app.sideind > :not(.lav), #app.sideind .lav > :not(.lav-bund), .trinind > * { animation: sideind var(--ind-tid) var(--ud) both; }
+/* Ét skift for hele siden: ingen forsinkelse pr. element, ingen sløring og ingen skalering (skalering og sidebevægelse er kendte udløsere ved reduceret bevægelse). Længderne står i app.js (UD_MS) og her. */
+#app { --fra: 0px; --til: 0px; --ud-tid: .09s; --ind-tid: .22s; }
+#app[data-retning=frem] { --fra: 24px; --til: -12px; }
+#app[data-retning=tilbage] { --fra: -24px; --til: 12px; }
+/* Fanerne i menuen skiftes ofte: kun en kort fade, ingen sidebevægelse */
+#app[data-retning=samme] { --ud-tid: .07s; --ind-tid: .15s; }
+@keyframes sideud { to { opacity: 0; transform: translateX(var(--til)); } }
+@keyframes sideind { from { opacity: 0; transform: translateX(var(--fra)); } }
+.henter { animation: toning .2s .15s both; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -1073,8 +1072,8 @@ body[data-side=lav] #nav { display: none; }
   body:not([data-side=lav]) .h-boble { right: auto; left: 4px; border-radius: 22px 22px 22px 6px; transform-origin: 0 100%; }
   body[data-side=lav] main { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
   .lav-bund { position: static; margin: var(--m) 0 var(--pt); max-width: 704px; }
-  #app.sideud .lav > .lav-bund { animation: sideud .12s ease-in both; }
-  #app.sideind .lav > .lav-bund { animation: sideind .34s var(--ud) both; }
+  #app.sideud .lav > .lav-bund { animation: sideud var(--ud-tid) ease-in both; }
+  #app.sideind .lav > .lav-bund { animation: sideind var(--ind-tid) var(--ud) both; }
 }
 
 /* Lav højde (telefon på langs): navigationen står i siden, intet sidder fast, og hjælperen er skjult */

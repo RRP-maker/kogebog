@@ -2,6 +2,13 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.35.0 · Roligere sideskift
+- **Ét skift for hele siden.** Før kom hvert element ind for sig med forsinkelse (op til 0,12 s), skalering og sløring (5 px), og skiftet tog ca. 0,5 s. Nu glider siden ind som én flade: ud på 0,09 s og ind på 0,22 s. Sløring og skalering er fjernet (skalering og sidebevægelse er blandt de kendte udløsere ved reduceret bevægelse), og sidebevægelsen er kortet fra 36 til 24 px.
+- **Faner skifter kun med en kort fade.** Skift mellem menuens faner (Opskrifter, Tips, Hvad kan jeg lave?, Madplan, Indstillinger) er hyppige og på samme niveau: ud på 0,07 s og ind på 0,15 s uden sidebevægelse. At gå ind i noget (forside → fane, liste → opskrift) glider ind fra højre, og at gå op eller Tilbage glider fra venstre.
+- **«Henter…»** vises efter 0,15 s i stedet for 0,3 s, så et langsomt skifte ikke ser tomt ud.
+- Længderne står i `style.css` (`--ud-tid`, `--ind-tid` på `#app`) og `UD_MS` i `app.js`. Reduceret bevægelse virker som før (alle animationer ca. 0 ms).
+- Testet (headless Chrome, 390 px): retning og varighed ved alle skift (menu, ind, Tilbage), ingen forsinkelse og ingen sløring, og med reduceret bevægelse slået til. Hvordan det *føles*, er ikke målt og skal ses på din egen telefon. Overgang mellem kort og opskrift (View Transitions) er ikke med.
+
 ## 2.34.1 · Kun det, man trykker på, reagerer. Ens steppere
 - **Kort krymper ikke længere, når noget inde i dem trykkes.** `:active` gælder også alle forfædre, så et tryk på en knap, et felt eller en stepper i et kort fik hele kortet til at krympe og glimte. Nu reagerer et kort kun som helhed, når selve kortet er knappen (link, knap eller opskriftskortet med sit link). Kort med felter og knapper (Tilføj ingrediens, madplanens kort, tip) reagerer slet ikke som helhed. Samme regel gælder glansen fra fingeren (`pointerdown` i `app.js`).
 - **Alle steppere ser ens ud** (som på Hvad kan jeg lave?): runde knapper à 26 px og et gennemsigtigt tal uden ramme, 18 px, på samme højde. Før havde Madplan knapperne et par pixel for højt (`felt-s` skubbede dem), og tallet i formularen (tid, portioner) stod i en hvid kasse. Bredden af tallet bestemmes stadig af den enkelte stepper.
