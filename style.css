@@ -585,8 +585,8 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 
 /* Sideskift: det gamle toner ud, det nye glider ind fra den vej, man går.
    Bundbjælken i trin-tilstand er undtaget, fordi den sidder fast på skærmen. */
-#app.sideud > :not(.lav), #app.sideud .lav > :not(.lav-bund) { animation: sideud var(--ud-tid) ease-in both; }
-#app.sideind > :not(.lav), #app.sideind .lav > :not(.lav-bund), .trinind > * { animation: sideind var(--ind-tid) var(--ud) both; }
+#app.sideud > :not(.lav):not(.henter), #app.sideud .lav > :not(.lav-bund) { animation: sideud var(--ud-tid) ease-in both; }
+#app.sideind > :not(.lav):not(.henter), #app.sideind .lav > :not(.lav-bund), .trinind > * { animation: sideind var(--ind-tid) var(--ud) both; }
 /* Ét skift for hele siden: ingen forsinkelse pr. element, ingen sløring og ingen skalering (skalering og sidebevægelse er kendte udløsere ved reduceret bevægelse). Længderne står i app.js (UD_MS) og her. */
 #app { --fra: 0px; --til: 0px; --ud-tid: .09s; --ind-tid: .22s; }
 #app[data-retning=frem] { --fra: 24px; --til: -12px; }
@@ -595,7 +595,16 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 #app[data-retning=samme] { --ud-tid: .07s; --ind-tid: .15s; }
 @keyframes sideud { to { opacity: 0; transform: translateX(var(--til)); } }
 @keyframes sideind { from { opacity: 0; transform: translateX(var(--fra)); } }
-.henter { animation: toning .2s .15s both; }
+/* «Henter…» vises først efter 2 sek. Er siden klar før, ses den slet ikke. */
+.henter, .henter-sen { animation: toning .2s 2s both; }
+
+/* Sideskift med View Transitions (opdatering 2.36): hele siden toner over, billedet på kortet følger med op på opskriften.
+   Bundbjælken og toppen står stille, fordi de er ens i begge billeder. Intet i siden kan trykkes, mens billederne ligger over, så ::view-transition lader tryk gå igennem. */
+::view-transition { pointer-events: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--vt-tid, .2s); animation-timing-function: ease-out; }
+html[data-vt=samme] { --vt-tid: .14s; }
+::view-transition-group(opsk-bil) { animation-duration: .32s; animation-timing-function: var(--ud); border-radius: 16px; overflow: clip; }
+::view-transition-old(opsk-bil), ::view-transition-new(opsk-bil) { height: 100%; object-fit: cover; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

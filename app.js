@@ -149,6 +149,47 @@ function spilInd() {
 new MutationObserver(() => {
   if (indKlar && app.firstChild && !$('.henter', app)) { indKlar = false; spilInd(); }
 }).observe(app, { childList: true });
+// ---------- Sideskift med View Transitions (2.36.0) ----------
+// Browseren tager et billede af den gamle side og toner over til den nye. Billedet på kortet og billedet øverst på opskriften glider over i hinanden.
+// Den gamle side står højst VT_MAKS ms, så kommer «Henter…» frem (samme 2 sek. som .henter). Uden understøttelse, med reduceret bevægelse, i to ruder og i Designer bruges klasserne sideud/sideind.
+const VT_MAKS = 2000;
+let aktivVT = null;
+const ventMs = ms => new Promise(r => setTimeout(r, ms));
+const kanVT = () => !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches
+  && !document.body.classList.contains('tilpas-menu') && !document.body.classList.contains('tilpas-form');
+const opskId = h => (/^#\/opskrifter\/([^/?]+)$/.exec(h) || [])[1];
+// Billedet får et navn, hvis det er i syne (et billede uden for skærmen ville flyve ind udefra)
+function navngivBillede(erOpskriften, rid) {
+  let bil;
+  if (erOpskriften) bil = $('.opsk-billeder .bil-stor img', app);
+  else { const a = [...app.querySelectorAll('a.opskort-link')].find(l => l.getAttribute('href') === '#/opskrifter/' + rid); bil = a && $('img.opskort-bil', a.closest('.opskort')); }
+  if (!bil) return;
+  const r = bil.getBoundingClientRect();
+  if (!r.width || r.bottom < 0 || r.top > innerHeight) return;
+  bil.style.viewTransitionName = 'opsk-bil'; bil.dataset.vtn = '';
+}
+async function skiftMedVT(id, forrige, vis) {
+  const rod = document.documentElement, nyId = opskId(location.hash), gammelId = opskId(forrige);
+  if (gammelId) navngivBillede(true, gammelId); else if (nyId) navngivBillede(false, nyId); // den gamle side
+  rod.dataset.vt = app.dataset.retning;
+  let sent = false, t;
+  const vt = aktivVT = document.startViewTransition(async () => {
+    if (id !== visning) return;
+    // Mens billedet af den gamle side står, går 2-sekunders-ventetiden på «Henter…» i stå: den skal vises med det samme, når tiden er gået
+    const grænse = new Promise(r => { t = setTimeout(() => { sent = true; indKlar = true; app.querySelectorAll('.henter, .henter-sen').forEach(e => { e.style.animationDelay = '0s'; }); r(); }, VT_MAKS); });
+    await Promise.race([vis(true), grænse]);
+    clearTimeout(t);
+    if (sent) return; // «Henter…» står der: ingen billede at følge
+    const im = $('.opsk-billeder .bil-stor img', app);
+    if (im && !im.complete) await Promise.race([im.decode().catch(() => {}), ventMs(400)]);
+    if (nyId) navngivBillede(true, nyId); else if (gammelId) navngivBillede(false, gammelId); // den nye side
+  });
+  vt.ready.catch(() => {});
+  vt.updateCallbackDone.catch(() => {});
+  await vt.finished.catch(() => {});
+  document.querySelectorAll('[data-vtn]').forEach(el => { el.style.viewTransitionName = ''; delete el.dataset.vtn; });
+  if (aktivVT === vt) { aktivVT = null; rod.removeAttribute('data-vt'); }
+}
 function fejl(e) {
   console.error(e);
   app.innerHTML = `<div class="fejlboks">Siden kunne ikke hentes. Tjek internettet, og prøv igen.</div>
@@ -448,6 +489,7 @@ const UD_MS = { samme: 70, andet: 90 }; // det gamle toner ud (samme tal som --u
 async function route() {
   const id = ++visning;
   const forrige = sidsteHash;
+  if (aktivVT) { try { aktivVT.skipTransition(); } catch (e) { /* intet at springe over */ } }
   foelgSpor(); foelgKnap();
   lukArk(); slipSkaerm(); sidsteValg = ''; navTilpas(null);
   Hjaelper.side(null);
@@ -460,12 +502,9 @@ async function route() {
   const iRuder = ruderAktiv() && a === 'opskrifter' && !!b && b !== 'ny' && !c, iForslag = ruderAktiv() && (a === 'forslag' || a === 'hjemme') && !b, bliv = iRuder && !!app.querySelector('.ruder');
   document.body.classList.toggle('ruder-vist', iRuder || iForslag);
   if (!iRuder) rudeFuld = false; document.body.classList.toggle('rude-fuld', iRuder && rudeFuld); // fuld skærm er midlertidig: slukker, når man lukker opskriften
-  if (!bliv && !foerste && app.firstChild) {
-    app.classList.remove('sideind'); app.classList.add('sideud');
-    await new Promise(r => setTimeout(r, app.dataset.retning === 'samme' ? UD_MS.samme : UD_MS.andet));
-    if (id !== visning) return;
-  }
-  foerste = false; indKlar = !bliv;
+  // Selve sidebygningen. Med View Transitions (medVT) står den gamle side, til den nye er klar
+  const vis = async (medVT) => {
+  foerste = false; indKlar = !bliv && !medVT;
   window.scrollTo(0, 0);
   document.body.dataset.side = c === 'lav' ? 'lav' : (a || 'forside');
   // Navigationen viser, hvor man er
@@ -490,6 +529,14 @@ async function route() {
     if (a === 'opskrifter' && b) return await opskriftSide(b);
     return await liste(a);
   } catch (e) { fejl(e); }
+  };
+  if (!bliv && !foerste && app.firstChild) {
+    if (kanVT()) return skiftMedVT(id, forrige, vis);
+    app.classList.remove('sideind'); app.classList.add('sideud');
+    await new Promise(r => setTimeout(r, app.dataset.retning === 'samme' ? UD_MS.samme : UD_MS.andet));
+    if (id !== visning) return;
+  }
+  return vis(false);
 }
 window.addEventListener('hashchange', route);
 
@@ -505,7 +552,7 @@ async function forside() {
       <a class="knap" href="#/forslag">${ik('kurv')} Hvad kan jeg lave?</a>
     </nav>
     <h2>Favoritter</h2>
-    <div id="favoritter"><p class="lille">Henter…</p></div>`;
+    <div id="favoritter"><p class="lille henter-sen">Henter…</p></div>`;
   Hjaelper.side([
     { tekst: 'Se her! Tryk på Opskrifter, når du vil finde en ret.', maal: 'forside|opskrifter', bev: 'salto' },
     { tekst: 'Her er Tips. Det er små råd til køkkenet.', maal: 'forside|tips', bev: 'skridt' },
@@ -550,7 +597,7 @@ const ruderAktiv = () => toRuder() && BRED.matches;
 let rudeFuld = false; // to ruder: opskriften fylder hele bredden, og listen er skjult (knappen ved siden af Luk)
 const iOpskrifter = () => /^#\/opskrifter(\/(?!ny$)[^/]+)?$/.test(location.hash);
 BRED.addEventListener('change', () => { if (toRuder() && (iOpskrifter() || /^#\/(forslag|hjemme)\/?$/.test(location.hash))) route(); });
-const HENTER = '<p class="tomt">Henter…</p>';
+const HENTER = '<p class="tomt henter-sen">Henter…</p>';
 // Ruller kun listen (ikke siden), så den valgte opskrift kan ses
 function visValgt() {
   const p = $('#rude-liste'), v = p && p.querySelector('.opskort[aria-current]');

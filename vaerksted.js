@@ -188,7 +188,7 @@ const Vaerksted = (() => {
 
   async function side(under) { // under: «ingredienser» = Ingrediensværktøjet. Det ses kun, når Værkstedet er låst op.
     if (oplaast()) { ssSaet(true); return under === 'ingredienser' ? IngVaerktoej.side() : oplaastSide(); }
-    app.innerHTML = `${Ikoner.tilbage('#/mere')}<h2>Værkstedet</h2><p class="lille">Henter…</p>`;
+    app.innerHTML = `${Ikoner.tilbage('#/mere')}<h2>Værkstedet</h2><p class="lille henter-sen">Henter…</p>`;
     const rk = await hentRaekke();
     if (location.hash.startsWith('#/vaerksted')) laastSide(rk); // man kan have forladt siden, mens koden blev hentet
   }

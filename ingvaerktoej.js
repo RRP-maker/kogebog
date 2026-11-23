@@ -606,7 +606,7 @@ ${linjer.join('\n')}
       api('ingrediens_tvivl?select=*&order=kategori,forslag&limit=1000').catch(() => [])]);
   }
   async function side() {
-    app.innerHTML = `${Ikoner.tilbage('#/vaerksted')}<h2>Ingrediensværktøj</h2><p class="lille">Henter…</p>`;
+    app.innerHTML = `${Ikoner.tilbage('#/vaerksted')}<h2>Ingrediensværktøj</h2><p class="lille henter-sen">Henter…</p>`;
     R = null; valg = {}; rettelse = null; soeg = ''; ed = null;
     await hentSiden();
     if (location.hash === '#/vaerksted/ingredienser') tegn(); // man kan have forladt siden, mens der blev hentet
