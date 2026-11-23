@@ -1657,6 +1657,10 @@ if (document.fonts) document.fonts.ready.then(rasterIgen);
 document.addEventListener('pointerdown', e => {
   const el = e.target.closest('.knap, .tilbage, .rund, .rk-knap, .kort, .fane');
   if (!el || el.disabled) return;
+  if (el.classList.contains('kort')) { // et kort glimter kun, når selve kortet er knappen. Et felt, en knap eller tom flade inde i det gør ikke.
+    const inde = e.target.closest('button, a, input, select, textarea, label, summary, [data-h]');
+    if (!(el.matches('a, button, [data-h]') ? inde === el : !!inde && inde.matches('.opskort-link') && el.contains(inde))) return;
+  }
   const r = el.getBoundingClientRect();
   el.style.setProperty('--rx', (e.clientX - r.left) + 'px'); el.style.setProperty('--ry', (e.clientY - r.top) + 'px');
   el.classList.remove('tryk'); void el.offsetWidth; el.classList.add('tryk');

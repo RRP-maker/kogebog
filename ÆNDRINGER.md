@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.34.1 · Kun det, man trykker på, reagerer. Ens steppere
+- **Kort krymper ikke længere, når noget inde i dem trykkes.** `:active` gælder også alle forfædre, så et tryk på en knap, et felt eller en stepper i et kort fik hele kortet til at krympe og glimte. Nu reagerer et kort kun som helhed, når selve kortet er knappen (link, knap eller opskriftskortet med sit link). Kort med felter og knapper (Tilføj ingrediens, madplanens kort, tip) reagerer slet ikke som helhed. Samme regel gælder glansen fra fingeren (`pointerdown` i `app.js`).
+- **Alle steppere ser ens ud** (som på Hvad kan jeg lave?): runde knapper à 26 px og et gennemsigtigt tal uden ramme, 18 px, på samme højde. Før havde Madplan knapperne et par pixel for højt (`felt-s` skubbede dem), og tallet i formularen (tid, portioner) stod i en hvid kasse. Bredden af tallet bestemmes stadig af den enkelte stepper.
+- Testet (headless Chrome, 390 px): tryk på knap, felt og tom flade i Tilføj ingrediens-kortet og i opskriftskortet (kortet står stille, kun det trykkede reagerer, og kortet selv reagerer på sit link og billede). Alle seks steppere målt ens. Ikke prøvet på iPhone.
+
 ## 2.34.0 · Tilbage går ét niveau op, og Frem husker, hvor man kom fra
 - **Tilbage er lineær.** Den går til siden over, ikke til den side, man sidst så: fra en opskrift til listen, fra Opskrifter, Tips, Hvad kan jeg lave?, Madplan og Indstillinger til forsiden. Før gik Tilbage fra Madplan fx til Opskrifter, hvis man kom derfra (2.33.0 fulgte historikken). Madplan har nu Tilbage til forsiden i stedet for til «Hvad kan jeg lave?», fordi den står på samme niveau i bjælken.
 - **Frem vises aldrig af sig selv.** Efter et Tilbage står en runde Frem-knap lige til højre for Tilbage (på forsiden, hvor der ingen Tilbage er, står den på Tilbages plads). Den husker siderne, man gik tilbage fra, så man kan gå frem igen side for side (fx forside → Opskrifter → opskriften). Knappens navn siger, hvor den fører hen («Frem til Opskrifter»).

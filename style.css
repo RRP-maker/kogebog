@@ -168,7 +168,8 @@ main > .knap.stor { align-self: stretch; }
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 64px; padding: 0 18px;
   border-radius: 24px; line-height: 32px;
 }
-.fane:active, .kort:active, .favknap:active { transform: scale(.97); }
+/* Et kort reagerer kun som helhed, når selve kortet er knappen (link, knap eller opskriftskortet). Et felt, en knap eller tom flade inde i et kort får ikke kortet til at krympe (:active gælder også alle forfædre). */
+.fane:active, :is(a, button, [data-h]).kort:active:not(:has(:is(button, a, input, select, textarea, label, summary, [data-h]):active)), .opskort:has(.opskort-link:active), .favknap:active { transform: scale(.97); }
 .knap.stor { font-size: 24px; padding: 0 24px; border-radius: 32px; }
 .rund { width: 64px; height: 64px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 24px; padding: 0; flex: none; }
 .rakke { display: flex; flex-wrap: wrap; gap: 32px 10px; margin: var(--m) 0 var(--pt); align-items: flex-start; }
@@ -627,7 +628,7 @@ body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjae
 .knap, .tilbage, .rund, .chip, .rk-knap, .favknap { transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s var(--ud), background-color .16s; }
 .kort, .fane { transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s var(--ud); }
 .knap:active, .rund:active, .chip:active, .rk-knap:active { transform: scale(.93); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
-.kort:active, .fane:active { transform: scale(.975); transition-duration: .09s, .2s; transition-timing-function: ease-out; }
+.fane:active, :is(a, button, [data-h]).kort:active:not(:has(:is(button, a, input, select, textarea, label, summary, [data-h]):active)), .opskort:has(.opskort-link:active) { transform: scale(.975); transition-duration: .09s, .2s; transition-timing-function: ease-out; }
 .knap::after, .tilbage::after, .rund::after, .rk-knap::after, .kort::after, .fane::after {
   content: ""; position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; pointer-events: none;
   background: radial-gradient(circle, rgba(var(--lys-rgb), .85), rgba(var(--lys-rgb), 0) 70%); transform: scale(0); opacity: 0;
@@ -1359,9 +1360,10 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 /* ---------- Opdatering 6: Stepper, Søg og filtrer, Opskriftskort, Tilføj ingrediens, lagerlinjen, taleboblen og standardfarverne ---------- */
 /* Stepper (KogebogPillStepper): glaspille på 32 px med 2 px luft. − og + er runde glasknapper med repoets ikoner (fjern, plus). */
 .stepper { gap: 2px; padding: 0 2px; border-radius: 16px; }
-.stepper .rund { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(var(--lys-rgb), .55); color: var(--blaek); }
+.stepper .rund { width: 26px; height: 26px; margin: 0; top: 0; border-radius: 50%; border: 1px solid rgba(var(--lys-rgb), .55); color: var(--blaek); }
 .stepper .rund .ikon { width: 16px; height: 16px; }
-.stepper input, .stepper input.felt-s { font-variant-numeric: tabular-nums; }
+/* Tallet i alle steppere: gennemsigtigt og uden ramme (ikke et skrivefelt i feltet), ens på alle sider. Bredden bestemmes af den enkelte stepper. */
+.stepper input[type=text], .stepper input.felt-s { height: 28px; margin: 0; top: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; font-size: 18px; text-align: center; font-variant-numeric: tabular-nums; }
 
 /* Søg og filtrer: søgefeltet er én glasrække (felt M, runding 22 px) med en knap for, hvad der søges i. Knappen har fast bredde, så den ikke hopper. */
 .soegblok { display: flex; align-items: center; gap: 8px; height: 64px; box-sizing: border-box; margin: var(--m) 0 var(--pt); padding: 0 16px 0 4px; border-radius: 22px;
@@ -1406,9 +1408,8 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .hj-ny-rk .hj-tilfoej { margin-left: auto; }
 .hj-ok { margin: 0; color: var(--gem); font-size: 17px; line-height: 32px; }
 .hj-ok:empty { height: 0; }
-/* Mængden som stepper i både kortet og lagerlinjen */
-.hj-stepper input, .hj-rk.felt-s .hj-stepper input { width: 32px; height: 28px; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; font-size: 18px; text-align: center; }
-.hj-stepper .rund { width: 26px; height: 26px; }
+/* Mængden som stepper i både kortet og lagerlinjen (resten som alle steppere) */
+.hj-stepper input, .hj-rk.felt-s .hj-stepper input { width: 32px; }
 /* Lagerlinjen (PantryMatch): stepper, enhed, navnet, kategori og Fjern på én række à 32 px */
 
 /* Taleboblen (SpeechBubbleGlass): glas med en hale mod Grydelil og navnet øverst. Indholdet ruller inde i boblen. */
