@@ -43,7 +43,7 @@
   <link rel="preload" href="skrifter/patrick-hand-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Versionen står kun her. Den bruges til ?v= på filerne, til cachens navn i sw.js og til teksten under Indstillinger. Hæv den (og datoen), når filer ændres. -->
   <script>
-    window.KOGEBOG = { version: '2.32.0', dato: '2026-11-18' };
+    window.KOGEBOG = { version: '2.33.0', dato: '2026-11-23' };
     // style.css hentes uden at blokere første tegning (media=print, til den er hentet), så indlæsningsskærmen ses med det samme. app.js starter, når CssKlar er opfyldt.
     window.CssKlar = new Promise(function (r) { window.CssOK = r; });
     document.write('<link rel="stylesheet" href="style.css?v=' + KOGEBOG.version + '" media="print" onload="this.media=\'all\';CssOK()" onerror="this.media=\'all\';CssOK()">');
@@ -70,7 +70,7 @@
   </header>
   <!-- Navigation: bjælke nederst (telefon, tablet), sidebjælke (bred skærm med mus), i siden ved lav højde -->
   <nav id="nav" aria-label="Hovedmenu">
-    <a class="nav-hjem" href="#/" data-nav="forside"><span data-ikon="hus"></span><span>Kogebog</span></a>
+    <a class="nav-hjem" href="#/" data-nav="forside" aria-label="Forside"><span data-ikon="hus"></span><span><span class="nav-bar">Forside</span><span class="nav-side">Kogebog</span></span></a>
     <a href="#/opskrifter" data-nav="opskrifter"><span data-ikon="gryde"></span><span>Opskrifter</span></a>
     <a href="#/tips" data-nav="tips"><span data-ikon="paere"></span><span>Tips</span></a>
     <a href="#/forslag" data-nav="forslag"><span data-ikon="kurv"></span><span>Hvad kan jeg lave?</span></a>

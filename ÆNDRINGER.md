@@ -2,6 +2,12 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.33.0 · Forsiden er altid ét tryk væk, og Tilbage følger historikken
+- **Forside-knap i bjælken.** Navigationsbjælken (telefon og tablet) har nu «Forside» først. Før fandtes knappen kun i sidebjælken på bred skærm («Kogebog»), så på telefonen var der ingen vej til forsiden uden at gå tilbage side for side.
+- **Tilbage og Frem passer sammen.** Appens runde «Tilbage» lagde før en ny side oven på historikken (A, B, A), så browserens Tilbage og Frem bagefter hoppede forkert rundt. Nu går «Tilbage» ét skridt i den rigtige historik (`history.go`), så browserens Frem fører til siden, man kom fra. Rediger- og ny-sider springes stadig over. Er siden åbnet direkte (ingen historik), bruges knappens eget link som før.
+- Sideskiftets retning (ind fra højre eller venstre) følger nu også browserens Tilbage og Frem.
+- Testet (headless Chrome, 390 px, mock-data): forside via bjælken, Tilbage og Frem i browseren, appens Tilbage fra en opskrift (historikkens længde uændret), browserens Frem bagefter, direkte åbnet opskrift. Bjælken med seks knapper er målt (ingen tekst løber over). Ikke prøvet på iPhone.
+
 ## 2.32.0 · Import fra filer, og importen tåler mere rod
 - **«Vælg fil»** under «Importér opskrift»: Word (.docx), PDF med tekst, RTF, tekst og Markdown, mails (.eml), gemte hjemmesider (.html), JSON og CSV. Alt læses i appen (`filleser.js`) uden pakker, og intet sendes ud. En scannet PDF (et billede) giver en fejl, der siger det.
 - Sætter man JSON, HTML-kode, RTF, en mail eller en CSV ind i feltet, læses den på samme måde.

@@ -1026,7 +1026,7 @@ html { scroll-padding-top: 64px; }
 #nav > :nth-child(6n+5) { animation-delay: 120ms; } #nav > :nth-child(6n) { animation-delay: 150ms; }
 #nav a[aria-current=page] .ikon { animation: nav-valgt .4s var(--ud); }
 @media (prefers-reduced-motion: reduce) { #nav > * { animation-delay: 0s !important; } #nav a[aria-current=page] .ikon { animation: none; } }
-#nav .nav-hjem { display: none; }
+#nav .nav-side { display: none; } /* Forside-knappen står først i bjælken (som «Forside») og i sidebjælken (som «Kogebog») */
 @media (hover: hover) { #nav a:hover:not([aria-current=page]) { background: var(--flade-hover); } }
 /* Bjælkens fire tilstande (opdatering 4b). Normal: navigationen. Designer i gang (body.tilpas): Fortryd, Gentag, Tilføj og Designer. Designer på pause: navigationen og Designer-knappen.
    Tilpas (body.tilpas-form, formularen): Fortryd, Gentag, Gem, Tilføj tip og Annuller. Designer i gang går forud. */
@@ -1062,6 +1062,7 @@ body[data-side=lav] #nav { display: none; }
   #nav { left: 0; right: auto; top: 0; bottom: 0; width: var(--nav-l); max-width: none; height: auto; box-sizing: border-box; margin: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 16px 10px; border-radius: 0; border-width: 0 1px 0 0; }
   #nav a, #nav .nav-knap { flex-direction: row; justify-content: flex-start; gap: 10px; height: 48px; flex: none; padding: 0 12px; border-radius: 16px; font-size: 18px; line-height: 22px; text-align: left; }
   #nav .nav-hjem { display: flex; height: 64px; font: 28px/32px var(--hoved); }
+  #nav .nav-bar { display: none; } #nav .nav-side { display: inline; }
   .top { left: calc(var(--nav-l) + 10px); }
   .lav-bund { left: calc(var(--nav-l) + 10px); }
   #nav #tilpas-knap { margin-top: auto; }

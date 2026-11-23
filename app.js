@@ -406,16 +406,22 @@ setInterval(() => {
 
 // ---------- Router ----------
 let opskriftFra = null; // kom man til opskriften fra Hvad kan jeg lave?, fører tilbage-knappen dertil
-const spor = []; // de sider, man har været på, så «Tilbage» kan gå til den forrige
+const spor = []; // browserens historik: plads k (gemt i history.state.kb) = siden, så «Tilbage» går gennem den rigtige historik, og browserens Tilbage og Frem passer sammen med den
+let sporNu = -1, sporRetning = null;
 const formSide = h => /\/(rediger|ny)$/.test(h) || h === '#/import';
+function foelgSpor() { // ny side lægges efter den nuværende (det, der lå foran, glemmes). Tilbage og frem i historikken flytter kun pladsen.
+  const k = history.state && history.state.kb;
+  if (Number.isInteger(k)) { sporRetning = sporNu < 0 || k === sporNu ? null : k < sporNu ? 'tilbage' : 'frem'; sporNu = k; }
+  else { sporNu++; spor.length = sporNu; sporRetning = null; history.replaceState({ kb: sporNu }, ''); }
+  spor[sporNu] = location.hash || '#/';
+}
 async function route() {
   const id = ++visning;
-  const nuHash = location.hash || '#/';
-  if (spor[spor.length - 2] === nuHash) spor.pop(); else if (spor[spor.length - 1] !== nuHash) spor.push(nuHash);
+  foelgSpor();
   lukArk(); slipSkaerm(); sidsteValg = ''; navTilpas(null);
   Hjaelper.side(null);
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
-  app.dataset.retning = dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme';
+  app.dataset.retning = sporRetning || (dele.length > dybde ? 'frem' : dele.length < dybde ? 'tilbage' : 'samme');
   dybde = dele.length;
   if (a === 'forslag' || a === 'hjemme') opskriftFra = a === 'forslag' && b === 'madplan' ? '#/forslag/madplan' : '#/forslag'; else if (a !== 'opskrifter' || !b) opskriftFra = null;
   if (a !== 'opskrifter') FIL = null; // søgning og filtre huskes kun, mens man er i opskrifterne
@@ -1586,10 +1592,10 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('click', async e => {
   const tb = e.target.closest('a.tilbage:not(.fortryd):not(.direkte)');
-  if (tb) { // gå til den side, man kom fra. Rediger- og ny-sider springes over.
-    let i = spor.length - 2;
-    while (i >= 0 && (formSide(spor[i]) || spor[i] === spor[spor.length - 1])) i--;
-    if (i >= 0) { e.preventDefault(); const mål = spor[i]; spor.length = i + 1; if (location.hash === mål) route(); else location.hash = mål; return; }
+  if (tb) { // ét skridt tilbage i den rigtige historik (så browserens Frem bagefter fører til siden, man kom fra). Rediger- og ny-sider springes over. Uden historik (siden åbnet direkte) bruges linket.
+    let i = sporNu - 1;
+    while (i >= 0 && (!spor[i] || formSide(spor[i]) || spor[i] === spor[sporNu])) i--;
+    if (i >= 0) { e.preventDefault(); history.go(i - sporNu); return; }
   }
   const el = e.target.closest('[data-h]');
   if (!el) return;
