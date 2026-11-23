@@ -146,7 +146,7 @@ const Madplan = (() => {
     ST.dage = ST.plan.length;
     P = new Map(pool(() => true).map(x => [x.r.id, x]));
     fortrydes = []; gentages = [];
-    app.innerHTML = `${Ikoner.tilbage('#/forslag')}<h1>Madplan</h1>
+    app.innerHTML = `${Ikoner.tilbage('#/')}<h1>Madplan</h1>
       <section class="kort mp-indst" data-tpid="${'kort:↶ Fortryd\n      Gentag ↷\n      Ryd madpl'}" aria-label="Valg til madplanen">
         <div class="mp-a"><div id="mp-knapper"></div>
           <button type="button" class="knap hoved felt felt-m" data-tpid="mp-generer" data-h="mpGenerer">${ik('gryde')} Generer ny madplan</button></div>

@@ -30,6 +30,7 @@ const Ikoner = (() => {
     fjern: `<path d="M6.5 12h11" stroke-width="2.6"/>`, // Fjern fra en liste (tingen findes stadig). × er kun Luk.
     luk: `<path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke-width="2.2"/>`,
     tilbage: `<path d="M14.5 5.5 8 12l6.5 6.5" stroke-width="2.4"/>`,
+    frem: `<path d="M9.5 5.5 16 12l-6.5 6.5" stroke-width="2.4"/>`,
     hjaelp: `<path d="M9 9.2a3 3 0 1 1 4.4 2.6c-.9.5-1.4 1.2-1.4 2.2v.6" stroke-width="2.2"/><circle cx="12" cy="18.2" r="1.2" fill="currentColor" stroke="none"/>`,
     // Navigationsbjælkens tilstande (opdatering 4b): Tilføj, Annuller, Designer, fuld og lille skærm
     plus: `<path d="M12 5.5v13M5.5 12h13" stroke-width="2.4"/>`,

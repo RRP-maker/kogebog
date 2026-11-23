@@ -2,6 +2,14 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.34.0 · Tilbage går ét niveau op, og Frem husker, hvor man kom fra
+- **Tilbage er lineær.** Den går til siden over, ikke til den side, man sidst så: fra en opskrift til listen, fra Opskrifter, Tips, Hvad kan jeg lave?, Madplan og Indstillinger til forsiden. Før gik Tilbage fra Madplan fx til Opskrifter, hvis man kom derfra (2.33.0 fulgte historikken). Madplan har nu Tilbage til forsiden i stedet for til «Hvad kan jeg lave?», fordi den står på samme niveau i bjælken.
+- **Frem vises aldrig af sig selv.** Efter et Tilbage står en runde Frem-knap lige til højre for Tilbage (på forsiden, hvor der ingen Tilbage er, står den på Tilbages plads). Den husker siderne, man gik tilbage fra, så man kan gå frem igen side for side (fx forside → Opskrifter → opskriften). Knappens navn siger, hvor den fører hen («Frem til Opskrifter»).
+- **Frem glemmes,** så snart man går et andet sted hen end med de to knapper (bjælken, et link, browserens knapper). Frem findes ikke i trin for trin og ikke i listen i to ruder.
+- **Historikken holdes pæn:** er den side, Tilbage eller Frem fører til, den samme som browserens forrige eller næste, bruges browserens historik i stedet for en ny post. Sideskiftet glider ind fra venstre ved Tilbage og fra højre ved Frem.
+- Frem er med i `FAST` i Designer (flyttes ikke): `placerFrem` i `app.js` sætter den ved siden af Tilbage.
+- Testet (headless Chrome, 390 og 1280 px, mock-data): forside → Opskrifter → opskrift, Tilbage to gange, Frem to gange, Frem forsvinder, når stakken er tom, og når man går via bjælken, Madplan → Tilbage til forsiden, browserens Tilbage og Frem. Ikke prøvet på iPhone, og skærmlæser er ikke testet.
+
 ## 2.33.0 · Forsiden er altid ét tryk væk, og Tilbage følger historikken
 - **Forside-knap i bjælken.** Navigationsbjælken (telefon og tablet) har nu «Forside» først. Før fandtes knappen kun i sidebjælken på bred skærm («Kogebog»), så på telefonen var der ingen vej til forsiden uden at gå tilbage side for side.
 - **Tilbage og Frem passer sammen.** Appens runde «Tilbage» lagde før en ny side oven på historikken (A, B, A), så browserens Tilbage og Frem bagefter hoppede forkert rundt. Nu går «Tilbage» ét skridt i den rigtige historik (`history.go`), så browserens Frem fører til siden, man kom fra. Rediger- og ny-sider springes stadig over. Er siden åbnet direkte (ingen historik), bruges knappens eget link som før.

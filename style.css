@@ -1518,3 +1518,5 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .iv-sek h3 { margin-top: 0; }
 .iv-sek > .lille { margin: 0; }
 .iv-sek .rakke { flex-wrap: wrap; margin-bottom: var(--m); }
+/* Frem: samme runde knap som Tilbage, lige til højre for den (placeret af placerFrem i app.js). Kun efter et Tilbage. */
+.tilbage.frem.frem-ved { position: absolute; margin: 0; }

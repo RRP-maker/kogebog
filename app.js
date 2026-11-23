@@ -406,18 +406,46 @@ setInterval(() => {
 
 // ---------- Router ----------
 let opskriftFra = null; // kom man til opskriften fra Hvad kan jeg lave?, fører tilbage-knappen dertil
-const spor = []; // browserens historik: plads k (gemt i history.state.kb) = siden, så «Tilbage» går gennem den rigtige historik, og browserens Tilbage og Frem passer sammen med den
+const spor = []; // browserens historik: plads k (gemt i history.state.kb) = siden. Bruges til at lade Tilbage og Frem bruge historikken, når siden er den samme, så browserens egne knapper passer sammen med appens
 let sporNu = -1, sporRetning = null;
-const formSide = h => /\/(rediger|ny)$/.test(h) || h === '#/import';
 function foelgSpor() { // ny side lægges efter den nuværende (det, der lå foran, glemmes). Tilbage og frem i historikken flytter kun pladsen.
   const k = history.state && history.state.kb;
   if (Number.isInteger(k)) { sporRetning = sporNu < 0 || k === sporNu ? null : k < sporNu ? 'tilbage' : 'frem'; sporNu = k; }
   else { sporNu++; spor.length = sporNu; sporRetning = null; history.replaceState({ kb: sporNu }, ''); }
   spor[sporNu] = location.hash || '#/';
 }
+// «Tilbage» går ét niveau op (en underside til siden over, en øverste side til forsiden), ikke til den side, man sidst så. «Frem» findes kun efter et Tilbage og husker siderne, man gik tilbage fra. Går man et andet sted hen, glemmes de.
+let fremStak = [], knap = null, sidsteHash = null; // knap: {hash, retning} = det skift, en af knapperne har sat i gang
+function foelgKnap() {
+  const h = location.hash || '#/';
+  if (h === sidsteHash) return;
+  sidsteHash = h;
+  if (knap && knap.hash === h) sporRetning = sporRetning || knap.retning; else fremStak.length = 0;
+  knap = null;
+}
+const FREM_NAVN = { '#/opskrifter': 'Opskrifter', '#/tips': 'Tips', '#/forslag': 'Hvad kan jeg lave?', '#/forslag/madplan': 'Madplan', '#/mere': 'Indstillinger', '#/': 'forsiden' };
+const fremNavn = h => FREM_NAVN[h] || (/^#\/opskrifter\/[^/]+$/.test(h) ? 'opskriften' : 'siden');
+// Frem-knappen står lige til højre for Tilbage. Findes Tilbage ikke (forsiden), står den på Tilbages plads øverst.
+function placerFrem() {
+  const f0 = app.querySelector('a.frem'), maal = fremStak[fremStak.length - 1], tb = app.querySelector('a.tilbage:not(.fortryd):not(.direkte)');
+  if (!maal || document.body.dataset.side === 'lav' || (!tb && document.body.classList.contains('ruder-vist'))) { if (f0) f0.remove(); return; }
+  let f = f0;
+  if (!f) { f = document.createElement('a'); f.className = 'tilbage direkte frem'; f.dataset.tpid = 'frem'; f.innerHTML = ik('frem'); }
+  if (f.getAttribute('href') !== maal) { const t = 'Frem til ' + fremNavn(maal); f.setAttribute('href', maal); f.setAttribute('aria-label', t); f.title = t; }
+  f.classList.toggle('frem-ved', !!tb);
+  if (tb) {
+    if (tb.nextElementSibling !== f) tb.after(f);
+    const l = (tb.offsetLeft + tb.offsetWidth + 8) + 'px', t = tb.offsetTop + 'px';
+    if (f.style.left !== l) f.style.left = l;
+    if (f.style.top !== t) f.style.top = t;
+  } else { f.style.left = f.style.top = ''; if (app.firstElementChild !== f) app.prepend(f); }
+}
+new MutationObserver(placerFrem).observe(app, { childList: true, subtree: true });
+addEventListener('resize', placerFrem);
+if (document.fonts) document.fonts.ready.then(placerFrem);
 async function route() {
   const id = ++visning;
-  foelgSpor();
+  foelgSpor(); foelgKnap();
   lukArk(); slipSkaerm(); sidsteValg = ''; navTilpas(null);
   Hjaelper.side(null);
   const dele = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = dele;
@@ -1591,11 +1619,16 @@ document.addEventListener('keydown', e => {
   }
 });
 document.addEventListener('click', async e => {
-  const tb = e.target.closest('a.tilbage:not(.fortryd):not(.direkte)');
-  if (tb) { // ét skridt tilbage i den rigtige historik (så browserens Frem bagefter fører til siden, man kom fra). Rediger- og ny-sider springes over. Uden historik (siden åbnet direkte) bruges linket.
-    let i = sporNu - 1;
-    while (i >= 0 && (!spor[i] || formSide(spor[i]) || spor[i] === spor[sporNu])) i--;
-    if (i >= 0) { e.preventDefault(); history.go(i - sporNu); return; }
+  const fr = e.target.closest('a.frem'), tb = !fr && e.target.closest('a.tilbage:not(.fortryd):not(.direkte)');
+  if (fr && !e.defaultPrevented) { // Frem: til den side, man senest gik tilbage fra
+    fremStak.pop(); knap = { hash: fr.hash || '#/', retning: 'frem' };
+    if (spor[sporNu + 1] === knap.hash) { e.preventDefault(); history.forward(); }
+    return;
+  }
+  if (tb && !e.defaultPrevented) { // Tilbage: ét niveau op, som knappens eget link siger. Siden, man går fra, huskes til Frem.
+    fremStak.push(location.hash || '#/'); knap = { hash: tb.hash || '#/', retning: 'tilbage' };
+    if (spor[sporNu - 1] === knap.hash) { e.preventDefault(); history.back(); } // lige den side, man kom fra: historikken holdes pæn
+    return;
   }
   const el = e.target.closest('[data-h]');
   if (!el) return;
