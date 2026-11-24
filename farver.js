@@ -117,7 +117,7 @@ const Farver = (() => {
     function vis() {
       const t = tema(), f = farve(), h = hex(f), a = afledt(valgt, h, t), ok = a.kTekst >= 4.5 && a.kKant >= 3;
       $f('#sf-tema').textContent = t === 'moerk' ? 'mørkt' : 'lyst';
-      $f('#sf-lys').value = S.lys; $f('#sf-styrke').value = S.styrke;
+      $f('#sf-lys').value = S.lys; $f('#sf-styrke').value = S.styrke; skyderSynk(rod);
       $f('#sf-lys-v').textContent = S.lys + ' %'; $f('#sf-styrke-v').textContent = S.styrke + ' %';
       hjul.dataset.mode = S.mode; hjul.style.setProperty('--lys', S.lys / 100);
       draabe.style.left = (S.nx * 50 + 50) + '%'; draabe.style.top = (S.ny * 50 + 50) + '%'; draabe.style.setProperty('--gf', `${f.r}, ${f.g}, ${f.b}`);

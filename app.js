@@ -137,6 +137,12 @@ const Glid = (() => {
 const info = t => { app.innerHTML = `<p class="tomt">${t}</p>`; };
 const henter = () => { app.innerHTML = '<p class="tomt henter">Henter…</p>'; };
 
+// ---------- Skydere ----------
+// Den fyldte del af banen følger tommelfingeren: --p (0 til 1) sættes her, når skyderen flyttes og når en side sætter værdien (kald skyderSynk bagefter).
+const skyderP = el => { const a = Number(el.min || 0), b = Number(el.max || 100); el.style.setProperty('--p', b > a ? Math.min(1, Math.max(0, (Number(el.value) - a) / (b - a))) : 0); };
+const skyderSynk = rod => (rod || document).querySelectorAll('input[type=range]').forEach(skyderP);
+document.addEventListener('input', e => { if (e.target.matches && e.target.matches('input[type=range]')) skyderP(e.target); });
+
 // ---------- Sideskift ----------
 // Det nye indhold glider ind, når det er klar (ikke mens der står «Henter…»).
 let indKlar = false, foerste = true, dybde = 0, indTimer;
@@ -466,24 +472,24 @@ function foelgKnap() {
 }
 const FREM_NAVN = { '#/opskrifter': 'Opskrifter', '#/tips': 'Tips', '#/forslag': 'Hvad kan jeg lave?', '#/forslag/madplan': 'Madplan', '#/mere': 'Indstillinger', '#/': 'forsiden' };
 const fremNavn = h => FREM_NAVN[h] || (/^#\/opskrifter\/[^/]+$/.test(h) ? 'opskriften' : 'siden');
-// Frem-knappen står lige til højre for Tilbage. Findes Tilbage ikke (forsiden), står den på Tilbages plads øverst.
-function placerFrem() {
-  const f0 = app.querySelector('a.frem'), maal = fremStak[fremStak.length - 1], tb = app.querySelector('a.tilbage:not(.fortryd):not(.direkte)');
-  if (!maal || document.body.dataset.side === 'lav' || (!tb && document.body.classList.contains('ruder-vist'))) { if (f0) f0.remove(); return; }
-  let f = f0;
-  if (!f) { f = document.createElement('a'); f.className = 'tilbage direkte frem'; f.dataset.tpid = 'frem'; f.innerHTML = ik('frem'); }
-  if (f.getAttribute('href') !== maal) { const t = 'Frem til ' + fremNavn(maal); f.setAttribute('href', maal); f.setAttribute('aria-label', t); f.title = t; }
-  f.classList.toggle('frem-ved', !!tb);
-  if (tb) {
-    if (tb.nextElementSibling !== f) tb.after(f);
-    const l = (tb.offsetLeft + tb.offsetWidth + 8) + 'px', t = tb.offsetTop + 'px';
-    if (f.style.left !== l) f.style.left = l;
-    if (f.style.top !== t) f.style.top = t;
-  } else { f.style.left = f.style.top = ''; if (app.firstElementChild !== f) app.prepend(f); }
+// Tilbage og Frem er én pille (Ikoner.tilbage), som altid vises. Siderne giver den deres Tilbage; her får Frem sit link, når der er en side at gå frem til (ellers er den grå).
+// Sider uden egen pille (forsiden og formularer) får en med grå Tilbage. Ikke i trin for trin, i to ruder uden pille, og mens siden hentes.
+function opdaterTf() {
+  let tf = app.querySelector('.tf');
+  if (!tf) {
+    if (document.body.dataset.side === 'lav' || document.body.classList.contains('ruder-vist') || !app.firstElementChild || app.querySelector('.henter')) return;
+    app.insertAdjacentHTML('afterbegin', Ikoner.tilbage(null));
+    tf = app.firstElementChild;
+  }
+  const fr = tf.querySelector('.tf-frem'), maal = fremStak[fremStak.length - 1];
+  if (maal) {
+    if (fr.getAttribute('href') !== maal) { const t = 'Frem til ' + fremNavn(maal); fr.setAttribute('href', maal); fr.setAttribute('aria-label', t); fr.title = t; }
+    fr.removeAttribute('aria-disabled'); fr.removeAttribute('role');
+  } else if (fr.hasAttribute('href')) {
+    fr.removeAttribute('href'); fr.setAttribute('role', 'link'); fr.setAttribute('aria-disabled', 'true'); fr.setAttribute('aria-label', 'Frem'); fr.title = 'Frem';
+  }
 }
-new MutationObserver(placerFrem).observe(app, { childList: true, subtree: true });
-addEventListener('resize', placerFrem);
-if (document.fonts) document.fonts.ready.then(placerFrem);
+new MutationObserver(opdaterTf).observe(app, { childList: true, subtree: true });
 const FANER = new Set(['#/opskrifter', '#/tips', '#/forslag', '#/forslag/madplan', '#/mere']); // menuens faner: skift mellem dem er hyppige og står på samme niveau, så kun en kort fade, ingen sidebevægelse
 const UD_MS = { samme: 70, andet: 90 }; // det gamle toner ud (samme tal som --ud-tid i style.css)
 async function route() {
@@ -1669,7 +1675,7 @@ document.addEventListener('keydown', e => {
   }
 });
 document.addEventListener('click', async e => {
-  const fr = e.target.closest('a.frem'), tb = !fr && e.target.closest('a.tilbage:not(.fortryd):not(.direkte)');
+  const fr = e.target.closest('a.tf-frem[href]'), tb = !fr && e.target.closest('a.tf-tilbage[href]');
   if (fr && !e.defaultPrevented) { // Frem: til den side, man senest gik tilbage fra
     fremStak.pop(); knap = { hash: fr.hash || '#/', retning: 'frem' };
     if (spor[sporNu + 1] === knap.hash) { e.preventDefault(); history.forward(); }
@@ -1705,8 +1711,8 @@ if (window.ResizeObserver) { const ro = new ResizeObserver(rasterIgen); ['main',
 if (document.fonts) document.fonts.ready.then(rasterIgen);
 // Tryk-animation: glansen starter, hvor fingeren rammer
 document.addEventListener('pointerdown', e => {
-  const el = e.target.closest('.knap, .tilbage, .rund, .rk-knap, .kort, .fane');
-  if (!el || el.disabled) return;
+  const el = e.target.closest('.tf-del, .knap, .tilbage, .rund, .rk-knap, .kort, .fane'); // en halvdel af pillen reagerer for sig
+  if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
   if (el.classList.contains('kort')) { // et kort glimter kun, når selve kortet er knappen. Et felt, en knap eller tom flade inde i det gør ikke.
     const inde = e.target.closest('button, a, input, select, textarea, label, summary, [data-h]');
     if (!(el.matches('a, button, [data-h]') ? inde === el : !!inde && inde.matches('.opskort-link') && el.contains(inde))) return;

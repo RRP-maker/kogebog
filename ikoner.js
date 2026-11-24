@@ -50,7 +50,11 @@ const Ikoner = (() => {
   const stjerner = (n, af = 5) => Array.from({ length: af }, (_, i) => svg(i < n ? 'stjerne' : 'stjerne0')).join('');
   // Runde knapper uden tekst: ikonet bærer betydningen, aria-label giver navnet. Synligt 44 px (tryk-mål), fylder én række i nettet.
   const rund = (navn, label, attr = '', kl = '') => `<button type="button" class="rund rund-s ${navn}${kl ? ' ' + kl : ''}" aria-label="${label}" title="${label}" ${attr}>${svg(navn)}</button>`;
-  const tilbage = (href, kl = '') => `<a class="tilbage${kl ? ' ' + kl : ''}" data-tpid="tilbage" href="${href}" aria-label="Tilbage" title="Tilbage">${svg('tilbage')}</a>`;
+  // Tilbage og Frem er én glaspille med ‹ og ›. Den vises altid; en halvdel, der ikke kan bruges (ingen side over, ingen side at gå frem til), er grå og uden link (aria-disabled).
+  // href = null: der er ingen side over (forsiden). Frem får sit link af opdaterTf i app.js.
+  const tilbage = (href, kl = '') => `<div class="tilbage tf${kl ? ' ' + kl : ''}" data-tpid="tilbage" role="group" aria-label="Tilbage og frem">`
+    + (href ? `<a class="tf-del tf-tilbage" href="${href}" aria-label="Tilbage" title="Tilbage">${svg('tilbage')}</a>` : `<a class="tf-del tf-tilbage" role="link" aria-disabled="true" aria-label="Tilbage" title="Tilbage">${svg('tilbage')}</a>`)
+    + `<a class="tf-del tf-frem" role="link" aria-disabled="true" aria-label="Frem" title="Frem">${svg('frem')}</a></div>`;
   return { svg, stjerner, rund, tilbage, navne: Object.keys(D) };
 })();
 

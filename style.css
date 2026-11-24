@@ -49,18 +49,18 @@
   --lys-rgb: 255, 255, 255; /* glassets lyskanter: hvidt lys, ikke en farve med betydning */
   /* Farveroller: lyst tema. Mørkt tema overskriver dem i [data-tema="moerk"] nederst i filen. */
   --papir: #fffdf5; --papir-rgb: 255, 253, 245; --linje: #cfe0f2; --margen: #f0a3a3;
-  --blaek: #22386b; --blaek-rgb: 34, 56, 107; --blyant: #56638a; --skyg-rgb: 34, 56, 107; --skyg-hex: #22386b;
+  --blaek: #22386b; --blaek-rgb: 34, 56, 107; --blyant: #56638a; --skyg-rgb: 34, 56, 107;
   --paa-lys: #22386b; /* blæk på de bløde gule, grønne og lyserøde flader: samme i begge temaer */
   --tomat: #d9432f; --tomat-mork: #b5301f; --smor: #ffd95a; --mynte: #c4ebcd; --rosa: #ffcdc6;
   --gryde: #4a9fb5; --gryde-mork: #2a768b; --guld: #e8a400;
   --tp-groen: #2a7a46; --tp-guld: #8a5f00; --tp-rosa: #b8335f;
   /* Symbolernes flader */
-  --ik-smoer: #ffd95a; --ik-rosa: #ffcdc6; --ik-tomat: #e5604d; --ik-himmel: #a9d6e6; --ik-mynte: #c4ebcd; --ik-gryde: #4a9fb5; --ik-orange: #f08a3c; --ik-brod: #e8b25c; --ik-guld: #e8a400; --ik-blad: #6fbf86; --ik-papir: #fffdf5; --ik-hvid: #ffffff;
+  --ik-smoer: #ffd95a; --ik-rosa: #ffcdc6; --ik-himmel: #a9d6e6; --ik-mynte: #c4ebcd; --ik-gryde: #4a9fb5; --ik-orange: #f08a3c; --ik-guld: #e8a400; --ik-papir: #fffdf5;
   --himmel: #9fd6e6;
   /* Feltfarver i Tilpas: tekst på dem (--paa-felt) kan altid læses */
   --fl-smoer: #ffd95a; --fl-mynte: #a0e2b2; --fl-rosa: #ffbeb6; --fl-himmel: #cfe6f5; --fl-hvid: #fff; --fl-rod: #c2321f; --fl-gryde: #2a768b; --fl-indigo: #22386b; --paa-felt: #22386b;
   --gul: linear-gradient(135deg, rgba(255, 217, 90, .95), rgba(255, 200, 60, .8)); --gul-svag: rgba(255, 217, 90, .4); --gul-staerk: rgba(255, 217, 90, .7); --blaa-svag: rgba(111, 183, 217, .22);
-  --h-skaft: #d9a066; --h-kind: #ff9d94; --h-indre: #17404f; --h-tunge: #ff8f9c; --h-tungestreg: #d9566b;
+  --h-skaft: #d9a066; --h-indre: #17404f; --h-tunge: #ff8f9c; --h-tungestreg: #d9566b;
   --link: #0b5c9c; --stjerne-fra: #8089aa;
   --fejl-bg: #fff0ee; --fejl-tekst: #7a1f16;
   /* Rigtig Liquid Glass: næsten klart, med en svag hvid tone, sløring og lysbrydning af det bagved, en skarp lyskant foroven til venstre og en blød kant forneden til højre. Ingen farve af sig selv. */
@@ -223,7 +223,7 @@ main > .knap.stor { align-self: stretch; }
 .tekst { white-space: pre-wrap; overflow-wrap: anywhere; }
 .tilbage { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; height: 32px; padding: 0 14px 0 10px; border-radius: 16px; font-size: 18px; color: var(--blaek); line-height: 32px; touch-action: manipulation; top: calc(var(--l0) - 32px); } /* lille felt: kanterne på to linjer */
 /* Tilbage er rund med ‹ (opdatering 4a). «Annuller» øverst på formularen (.fortryd) beholder teksten. */
-.tilbage:not(.fortryd), .rund.rund-s { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; margin: -6px 0; border-radius: 50%; font-size: 18px; flex: none; }
+.tilbage:not(.fortryd):not(.tf), .rund.rund-s { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; margin: -6px 0; border-radius: 50%; font-size: 18px; flex: none; }
 .rund-s .ikon, .rk-fjern .ikon { width: 24px; height: 24px; }
 .tilbage:not(.fortryd) .ikon { width: 26px; height: 26px; }
 
@@ -632,18 +632,18 @@ body.tilpas-menu[data-side=lav] #hjaelper, body.tilpas-menu[data-side=lav] #hjae
 .sw.valgt { outline: 3px solid var(--blaek); outline-offset: 2px; }
 
 /* Tryk-animationer: knappen trykkes ned, fjedrer tilbage, og en glasglans løber ud fra fingeren */
-.knap, .tilbage, .rund, .rk-knap, .kort, .fane { position: relative; overflow: hidden; }
+.knap, .tilbage, .rund, .rk-knap, .kort, .fane, .tf-del { position: relative; overflow: hidden; }
 .knap, .tilbage, .rund, .chip, .rk-knap, .favknap { transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s var(--ud), background-color .16s; }
 .kort, .fane { transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s var(--ud); }
 .knap:active, .rund:active, .chip:active, .rk-knap:active { transform: scale(.93); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
 .fane:active, :is(a, button, [data-h]).kort:active:not(:has(:is(button, a, input, select, textarea, label, summary, [data-h]):active)), .opskort:has(.opskort-link:active) { transform: scale(.975); transition-duration: .09s, .2s; transition-timing-function: ease-out; }
-.knap::after, .tilbage::after, .rund::after, .rk-knap::after, .kort::after, .fane::after {
+.knap::after, .tilbage::after, .rund::after, .rk-knap::after, .kort::after, .fane::after, .tf-del::after {
   content: ""; position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; pointer-events: none;
   background: radial-gradient(circle, rgba(var(--lys-rgb), .85), rgba(var(--lys-rgb), 0) 70%); transform: scale(0); opacity: 0;
 }
 .tryk::after { animation: glans .6s var(--ud); }
 @keyframes glans { from { transform: scale(0); opacity: 1; } to { transform: scale(16); opacity: 0; } }
-.tilbage:active { transform: scale(.93); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
+.tilbage:not(.tf):active { transform: scale(.93); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
 input[type=checkbox], input[type=radio] { transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
 input[type=checkbox]:active, input[type=radio]:active { transform: scale(.8); }
 
@@ -896,12 +896,12 @@ textarea.felt-s { height: 32px; min-height: 0; padding: 0 12px; font-size: 18px;
 [data-tema="moerk"] {
   color-scheme: dark;
   --papir: #1a1f2e; --papir-rgb: 26, 31, 46; --linje: #2b3450; --margen: #7a4350;
-  --blaek: #e9edf9; --blaek-rgb: 233, 237, 249; --blyant: #b6bed8; --skyg-rgb: 0, 0, 0; --skyg-hex: #000000;
+  --blaek: #e9edf9; --blaek-rgb: 233, 237, 249; --blyant: #b6bed8; --skyg-rgb: 0, 0, 0;
   --tomat: #ff7561; --tomat-mork: #ff9d8c; --smor: #ffd95a; --mynte: #bfe8c9; --rosa: #ffcdc6;
   --gryde: #5bb0c6; --gryde-mork: #86cde0; --guld: #ffc933;
   --tp-groen: #7fd49a; --tp-guld: #ffc933; --tp-rosa: #ff8fb3;
   /* Symbolernes flader: dybere toner, så blækstregen (lys i mørkt tema) står tydeligt */
-  --ik-smoer: #9a7612; --ik-rosa: #a8505a; --ik-tomat: #c0402f; --ik-himmel: #3f7d99; --ik-mynte: #3f8058; --ik-gryde: #2f8298; --ik-orange: #b8621f; --ik-brod: #9a732b; --ik-guld: #a87800; --ik-blad: #3d8a58; --ik-papir: #3b4363; --ik-hvid: #3b4363;
+  --ik-smoer: #9a7612; --ik-rosa: #a8505a; --ik-himmel: #3f7d99; --ik-mynte: #3f8058; --ik-gryde: #2f8298; --ik-orange: #b8621f; --ik-guld: #a87800; --ik-papir: #3b4363;
   --fl-smoer: #8a6a12; --fl-mynte: #2f7a52; --fl-rosa: #9a4a56; --fl-himmel: #2f6f90; --fl-hvid: #2a3250; --fl-indigo: #3a58b4; --paa-felt: #fff;
   --link: #8fc6f7; --stjerne-fra: #5f6a8c;
   --fejl-bg: #3b2028; --fejl-tekst: #ffb9ac;
@@ -1246,10 +1246,10 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .kort, .fane { transition: transform var(--fjeder-tid) var(--fjeder), box-shadow .2s var(--ud); }
 @media (hover: hover) {
   :is(.knap, .chip, .rk-knap):hover:not(:disabled) { transform: scale(1.018); }
-  :is(.rund, .tilbage:not(.fortryd)):hover:not(:disabled) { transform: scale(1.05); }
+  :is(.rund, .tilbage:not(.fortryd):not(.tf)):hover:not(:disabled) { transform: scale(1.05); }
 }
 .knap:active:not(:disabled), .chip:active, .rk-knap:active { transform: scale(.965); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
-:is(.rund, .tilbage:not(.fortryd)):active:not(:disabled) { transform: scale(.94); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
+:is(.rund, .tilbage:not(.fortryd):not(.tf)):active:not(:disabled) { transform: scale(.94); transition-duration: .07s, .2s, .16s; transition-timing-function: ease-out; }
 
 /* Glasboble, der glider (NavBar, SearchFilter og ThemeSwitch). app.js (Glid) flytter den hen under det valgte. --bf er boblens farve. */
 .glidboble { position: absolute; left: 0; top: 0; z-index: -1; width: 0; height: 0; pointer-events: none; opacity: 0;
@@ -1343,7 +1343,18 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .glas-rk { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .glas-rk label small { display: inline; }
 .glas-rk output { flex: none; font-variant-numeric: tabular-nums; color: var(--blyant); }
-.glas-panel input[type=range] { display: block; width: 100%; height: 32px; margin: 0; accent-color: var(--gryde-mork); cursor: pointer; }
+/* Skydere: en rund bane, der er fyldt op til tommelfingeren (--p sættes af skyderP i app.js), og en rund glastommel. Rækken er 32 px. */
+input[type=range] { --p: .5; --bane: 16px; --tommel: 28px; --stop: calc(var(--tommel) / 2 + (100% - var(--tommel)) * var(--p));
+  -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 32px; margin: 0; padding: 0; background: transparent; cursor: pointer; touch-action: pan-y; }
+input[type=range]::-webkit-slider-runnable-track { height: var(--bane); border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(var(--blaek-rgb), .2);
+  background: linear-gradient(rgba(var(--lys-rgb), .28), rgba(var(--lys-rgb), 0) 60%) 0 0 / 100% 100% no-repeat, linear-gradient(90deg, var(--gryde-mork) var(--stop), rgba(var(--blaek-rgb), .1) var(--stop)); }
+input[type=range]::-moz-range-track { height: var(--bane); border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(var(--blaek-rgb), .2);
+  background: linear-gradient(rgba(var(--lys-rgb), .28), rgba(var(--lys-rgb), 0) 60%) 0 0 / 100% 100% no-repeat, linear-gradient(90deg, var(--gryde-mork) var(--stop), rgba(var(--blaek-rgb), .1) var(--stop)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: var(--tommel); height: var(--tommel); margin-top: calc((var(--bane) - var(--tommel)) / 2); border-radius: 50%; border: 1px solid var(--glaskant); background: var(--boble); box-shadow: var(--skygge), var(--glans); transition: transform var(--fjeder-tid) var(--fjeder); }
+input[type=range]::-moz-range-thumb { box-sizing: border-box; width: var(--tommel); height: var(--tommel); border-radius: 50%; border: 1px solid var(--glaskant); background: var(--boble); box-shadow: var(--skygge), var(--glans); transition: transform var(--fjeder-tid) var(--fjeder); }
+input[type=range]:active::-webkit-slider-thumb { transform: scale(1.14); transition-duration: .1s; }
+input[type=range]:active::-moz-range-thumb { transform: scale(1.14); transition-duration: .1s; }
+input[type=range]:disabled { opacity: .5; cursor: default; }
 .glas-status { margin: 0; color: var(--blyant); font-size: 17px; line-height: 32px; }
 .glas-status.lav { color: var(--fejl-tekst); }
 .glas-panel h3 { margin: 32px 0 0; }
@@ -1527,5 +1538,14 @@ div.opsk-billeder { margin: var(--m) 0 var(--pt); gap: 8px; } /* forside 224 px 
 .iv-sek h3 { margin-top: 0; }
 .iv-sek > .lille { margin: 0; }
 .iv-sek .rakke { flex-wrap: wrap; margin-bottom: var(--m); }
-/* Frem: samme runde knap som Tilbage, lige til højre for den (placeret af placerFrem i app.js). Kun efter et Tilbage. */
-.tilbage.frem.frem-ved { position: absolute; margin: 0; }
+/* Tilbage og Frem: én glaspille à 96 × 44 px (6 kolonner) med ‹ og ›. Hver halvdel reagerer for sig. En halvdel, der ikke kan bruges, er grå og uden link (aria-disabled). */
+.tilbage.tf { display: inline-flex; width: 96px; height: 44px; margin: -6px 0; padding: 0; gap: 0; border-radius: 22px; flex: none; }
+.tf-del { flex: 1 1 0; display: grid; place-items: center; height: 100%; color: var(--blaek); text-decoration: none; touch-action: manipulation; transition: background-color .16s; }
+.tf-tilbage { border-radius: 22px 0 0 22px; }
+.tf-frem { border-radius: 0 22px 22px 0; }
+.tf-del .ikon { transition: transform var(--fjeder-tid) var(--fjeder); }
+.tf-del[aria-disabled=true] { color: color-mix(in srgb, var(--blaek) 42%, transparent); cursor: default; }
+.tf-del:not([aria-disabled=true]):active { background: rgba(var(--blaek-rgb), .1); transition-duration: .07s; }
+.tf-del:not([aria-disabled=true]):active .ikon { transform: scale(.82); transition-duration: .07s; transition-timing-function: ease-out; }
+@media (hover: hover) { .tf-del:not([aria-disabled=true]):hover { background: rgba(var(--blaek-rgb), .06); } }
+.tf-del:focus-visible { outline-offset: -5px; }

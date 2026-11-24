@@ -37,7 +37,7 @@ const Glas = (() => {
     const $g = s => rod.querySelector(s), R = { frost: $g('#glas-frost'), sloer: $g('#glas-sloer') };
     const gem = () => { lager.gem('glas', S); anvend(); vis(); };
     function vis() {
-      R.frost.value = S.frost; R.sloer.value = S.sloer;
+      R.frost.value = S.frost; R.sloer.value = S.sloer; skyderSynk(rod);
       $g('#glas-frost-v').textContent = tal(S.frost);
       $g('#glas-sloer-v').textContent = tal(S.sloer, 1) + ' (' + Math.round(18 * S.sloer / STD.sloer) + ' px)';
       const kr = kontrast(), ok = kr >= 4.5;
