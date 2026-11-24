@@ -595,8 +595,8 @@ body[data-side=lav] #hjaelper-vis { bottom: calc(96px + var(--nav-b) + env(safe-
 #app[data-retning=samme] { --ud-tid: .07s; --ind-tid: .15s; }
 @keyframes sideud { to { opacity: 0; transform: translateX(var(--til)); } }
 @keyframes sideind { from { opacity: 0; transform: translateX(var(--fra)); } }
-/* «Henter…» vises først efter 2 sek. Er siden klar før, ses den slet ikke. */
-.henter, .henter-sen { animation: toning .2s 2s both; }
+/* «Henter…» vises efter 0,15 s (samme tid som VT_MAKS i app.js). Er siden klar før, ses den slet ikke. */
+.henter, .henter-sen { animation: toning .2s .15s both; }
 
 /* Sideskift med View Transitions (opdatering 2.36): hele siden toner over, billedet på kortet følger med op på opskriften.
    Bundbjælken og toppen står stille, fordi de er ens i begge billeder. Intet i siden kan trykkes, mens billederne ligger over, så ::view-transition lader tryk gå igennem. */

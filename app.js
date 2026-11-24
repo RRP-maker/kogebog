@@ -151,8 +151,8 @@ new MutationObserver(() => {
 }).observe(app, { childList: true });
 // ---------- Sideskift med View Transitions (2.36.0) ----------
 // Browseren tager et billede af den gamle side og toner over til den nye. Billedet på kortet og billedet øverst på opskriften glider over i hinanden.
-// Den gamle side står højst VT_MAKS ms, så kommer «Henter…» frem (samme 2 sek. som .henter). Uden understøttelse, med reduceret bevægelse, i to ruder og i Designer bruges klasserne sideud/sideind.
-const VT_MAKS = 2000;
+// Den gamle side står højst VT_MAKS ms (samme tid som ventetiden på «Henter…»), så toner den over til «Henter…», og siden glider ind, når den er klar. Uden understøttelse, med reduceret bevægelse, i to ruder og i Designer bruges klasserne sideud/sideind.
+const VT_MAKS = 150;
 let aktivVT = null;
 const ventMs = ms => new Promise(r => setTimeout(r, ms));
 const kanVT = () => !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -175,7 +175,7 @@ async function skiftMedVT(id, forrige, vis) {
   let sent = false, t;
   const vt = aktivVT = document.startViewTransition(async () => {
     if (id !== visning) return;
-    // Mens billedet af den gamle side står, går 2-sekunders-ventetiden på «Henter…» i stå: den skal vises med det samme, når tiden er gået
+    // Mens billedet af den gamle side står, går ventetiden på «Henter…» i stå: den skal vises med det samme, når tiden er gået
     const grænse = new Promise(r => { t = setTimeout(() => { sent = true; indKlar = true; app.querySelectorAll('.henter, .henter-sen').forEach(e => { e.style.animationDelay = '0s'; }); r(); }, VT_MAKS); });
     await Promise.race([vis(true), grænse]);
     clearTimeout(t);

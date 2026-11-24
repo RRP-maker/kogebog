@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.36.1 · «Henter…» efter 0,15 s igen, og den gamle side står ikke frosset
+- **Fejl i 2.36.0:** «Henter…» skulle vises efter 2 sek., og View Transitions holdt den gamle side frosset i op til 2 sek. imens. Det føltes langsomt og uden animation, fordi der ikke skete noget på skærmen, før siden var hentet.
+- **Nu:** «Henter…» vises efter 0,15 s som i 2.35.0 (`.henter`, `.henter-sen`), og den gamle side står højst lige så længe (`VT_MAKS = 150` i `app.js`). Er siden klar inden da, glider kortets billede over i opskriften. Er den ikke, toner den gamle side over til «Henter…» (0,2 s), og siden glider ind, når den er klar. Der sker altså noget på skærmen inden for 0,15 s ved hvert skift.
+- Testet (headless Chrome, 390 px): hentetid 0 ms (billedet glider, «Henter…» ses ikke) og 700 ms (overgang til «Henter…» efter 0,15 s, indgang når siden er klar, ingen fejl). Ikke prøvet på iPhone/Safari, og hvordan det *føles*, er ikke målt.
+
 ## 2.36.0 · «Henter…» efter 2 sek. og glidende skift mellem kort og opskrift
 - **«Henter…» vises først efter 2 sek.** (`.henter` og `.henter-sen`, før 0,15 s). Er siden klar før, ses teksten slet ikke. Alle «Henter…»-tekster følger samme regel (listen, opskriften, forsidens favoritter, Værkstedet, Ingrediensværktøjet).
 - **Fejl rettet:** i den gamle sideskifts-vej (`sideud`) lå «Henter…» under sideskiftets egen animation og var usynlig, så et langsomt skifte så tomt ud. `.henter` er nu undtaget.
