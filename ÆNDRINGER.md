@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.37.1 · Runde halvdele i pillen og solid skydertommel
+- **Pillens halvdele er runde knapper** (42 px) inde i pillen. Før var de halve rektangler, så tryk og glans blev klippet af en skarp lodret kant midt i pillen. Nu følger tryk, glans og fokusring cirklen.
+- **Skydertommelen er dækkende** (en solid bund under glasset). Før skinnede banens fyldkant igennem og lavede et lodret «søm» i tommelen i mørkt tema.
+- Testet (headless Chrome, mørkt tema): tryk på Frem, mål af halvdelene, skyder med fyld. Ikke prøvet på iPhone.
+
 ## 2.37.0 · Tilbage/Frem-pille og nye skydere
 - **Tilbage og Frem er én glaspille** med ‹ og › (96 × 44 px, 6 kolonner, samme plads som den runde Tilbage). Den vises altid. En halvdel, der ikke kan bruges, er grå og kan ikke trykkes: Tilbage på forsiden og på sider uden side over, Frem så længe man ikke har gået tilbage. Den grå halvdel har ingen `href` og står som `aria-disabled` for skærmlæsere. Hver halvdel reagerer for sig (ikonet krymper, glansen løber ud fra fingeren), så et tryk rammer aldrig hele pillen.
 - **Forsiden og formularerne** havde ingen Tilbage og får nu en pille med grå Tilbage (`opdaterTf` i `app.js`). Ikke med i trin for trin og i listen i to ruder (der er ingen Tilbage dér, og sidebjælken har Forside).
