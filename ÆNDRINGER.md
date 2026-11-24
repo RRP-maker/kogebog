@@ -2,6 +2,11 @@
 
 Nyeste øverst. Hver version har et git-tag (`v1.1.0` osv.). Beslutninger skrives under versionen.
 
+## 2.37.2 · Skyderens fyld ender rundt, og pillen er to runde dele
+- **Skyderens fyldte linje ender nu med en rund ende** (som i dit eksempel) og lyser igennem den gennemsigtige glastommel. Før var enden en lodret kant.
+- **Pillens knapper laver ikke længere en ny cirkel ved tryk.** Pillen er to runde dele (en svag ring), og en trykket del trykkes ind (indre skygge og lidt mørkere flade), mens ikonet krymper. Glansen er fjernet fra de to dele.
+- Testet (headless Chrome, lys og mørk, tryk holdt nede): set på skærmbilleder. Ikke prøvet på iPhone.
+
 ## 2.37.1 · Runde halvdele i pillen og solid skydertommel
 - **Pillens halvdele er runde knapper** (42 px) inde i pillen. Før var de halve rektangler, så tryk og glans blev klippet af en skarp lodret kant midt i pillen. Nu følger tryk, glans og fokusring cirklen.
 - **Skydertommelen er dækkende** (en solid bund under glasset). Før skinnede banens fyldkant igennem og lavede et lodret «søm» i tommelen i mørkt tema.

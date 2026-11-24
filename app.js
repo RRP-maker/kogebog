@@ -1713,6 +1713,7 @@ if (document.fonts) document.fonts.ready.then(rasterIgen);
 document.addEventListener('pointerdown', e => {
   const el = e.target.closest('.tf-del, .knap, .tilbage, .rund, .rk-knap, .kort, .fane'); // en halvdel af pillen reagerer for sig
   if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+  if (el.classList.contains('tf-del')) return; // pillens runde dele trykkes ind (CSS), de får ikke en glans
   if (el.classList.contains('kort')) { // et kort glimter kun, når selve kortet er knappen. Et felt, en knap eller tom flade inde i det gør ikke.
     const inde = e.target.closest('button, a, input, select, textarea, label, summary, [data-h]');
     if (!(el.matches('a, button, [data-h]') ? inde === el : !!inde && inde.matches('.opskort-link') && el.contains(inde))) return;
